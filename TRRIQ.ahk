@@ -30,8 +30,14 @@ gosub MainLoop
 
 fileout := fileOut1 . fileout2
 
-FileDelete, %fileNam%.csv
-FileAppend, %fileOut%, %fileNam%.csv
+SplitPath, A_ScriptDir,,fileDir
+IfInString, fileDir, Users\TC
+	fileNameOut := "Import.csv"
+else
+	fileNameOut := "\\childrens\files\Cardio\EP\HoltER Database\Import\Import.csv"
+
+FileDelete, %fileNameOut%
+FileAppend, %fileOut%, %fileNameOut%
 
 ExitApp
 
