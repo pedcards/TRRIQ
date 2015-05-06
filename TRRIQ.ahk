@@ -26,6 +26,30 @@ if (%0%) {																; For each parameter:
 }
 splitpath, fileIn,,,,fileNam
 
+/*	Read outdocs.csv for Cardiologist and Fellow names
+*/
+Docs := Object()
+tmpIdxG := 0
+Loop, Read, outdocs.csv
+{
+	tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
+	tmpline := A_LoopReadLine
+	StringSplit, tmp, tmpline, `, , `"
+	if ((tmp1="Name") or (tmp1="FELLOWS")) {						; Skip section headers
+		continue
+	}
+	if (tmp1) {
+		tmpIdx += 1
+		StringSplit, tmpPrv, tmp1, %A_Space%`"
+		tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2
+		Docs[tmpGrp,tmpIdx]:=tmpPrv
+		outGrpV[tmpGrp] := "callGrp" . tmpIdxG
+	}
+}
+outGrpV["Other"] := "callGrp" . (tmpIdxG+1)
+outGrpV["TO CALL"] := "callGrp" . (tmpIdxG+2)
+
+
 gosub MainLoop
 
 fileout := fileOut1 . fileout2
