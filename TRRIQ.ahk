@@ -18,6 +18,7 @@
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%
+FileInstall, pdftotext.exe, pdftotext.exe
 
 if (%0%) {																; For each parameter:
 	fileIn = %1%													; Gets parameter passed to script/exe.
