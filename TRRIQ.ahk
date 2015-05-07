@@ -31,8 +31,8 @@ gosub MainLoop
 fileout := fileOut1 . fileout2
 
 SplitPath, A_ScriptDir,,fileDir
-IfInString, fileDir, Users\TC
-	fileNameOut := "Import.csv"
+IfInString, fileDir, Dropbox
+	fileNameOut := ".\Import\Import.csv"
 else
 	fileNameOut := "\\childrens\files\Cardio\EP\HoltER Database\Import\Import.csv"
 
