@@ -131,13 +131,13 @@ Holter:
 	labels[2] := ["Total_beats", "Min", "Avg", "Max", "HRV"]
 	fieldvals(strX(holtVals,"Heart Rate Data",1,0,"Heart Rate Variability",1,0,nn),2,"hrd")
 	
-	fields[3] := ["Total VE Beats", "Vent Runs", "Beats", "Longest", "Fastest", "Triplets", "Couplets", "Single/Interp PVC", "R on T", "Single/Late VE's", "Bi/Trigeminy"]
-	labels[3] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Triplets", "Couplets", "SinglePVC_InterpPVC", "R_on_T", "SingleVE_LateVE", "Bigem_Trigem"]
-	fieldvals(strX(holtVals,"Ventricular Ectopy",nn,0,"Supraventricular Ectopy",1,23,nn),3,"ve")
+	fields[3] := ["Total VE Beats", "Vent Runs", "Beats", "Longest", "Fastest", "Triplets", "Couplets", "Single/Interp PVC", "R on T", "Single/Late VE's", "Bi/Trigeminy", "Supraventricular Ectopy"]
+	labels[3] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Triplets", "Couplets", "SinglePVC_InterpPVC", "R_on_T", "SingleVE_LateVE", "Bigem_Trigem", "SVE"]
+	fieldvals(strX(holtVals,"Ventricular Ectopy",nn-1,0,"Supraventricular Ectopy",1,0,nn),3,"ve")
 
 	fields[4] := ["Total SVE Beats", "Atrial Runs", "Beats", "Longest", "Fastest", "Atrial Pairs", "Drop/Late", "Longest R-R", "Single PAC's", "Bi/Trigeminy", "Atrial Fibrillation"]
 	labels[4] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Pairs", "Drop_Late", "LongRR", "Single", "Bigem_Trigem", "AF"]
-	fieldvals(strX(holtVals,"Supraventricular Ectopy",nn,0,"Atrial Fibrillation",1,0,nn),4,"sve")
+	fieldvals(strX(holtVals,"Supraventricular Ectopy",nn-23,0,"Atrial Fibrillation",1,0,nn),4,"sve")
 	
 	tmp := columns(newtxt,"Technician's comments:","Signed :")
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
@@ -305,7 +305,7 @@ fieldvals(x,bl,bl2) {
 	for k, i in fields[bl]
 	{
 		j := fields[bl][k+1]
-		m := trim(stRegX(x,i,n,1,j,1,n), " `n")
+		m := trim(stRegX(x,i,n-1,1,j,1,n), " `n")
 		lbl := labels[bl][A_index]
 		cleanSpace(m)
 		cleanColon(m)
@@ -339,6 +339,7 @@ formatField(pre, lab, txt) {
 	}
 	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(s)?)|\(.*%\)")	; 	Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
+	txt := trim(txt)
 	
 ;	Lifewatch Holter specific search fixes
 	if (monType="H") {
@@ -349,7 +350,7 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_time",tx2)
 			return
 		}
-		if (txt ~= "^[0-9, ]{1,}\/[0-9, ]{1,}$") {							;	Split multiple number value results "5/0" into two fields, ignore date formats (5/1/12)
+		if (txt ~= "^[0-9,]{1,}\/[0-9,]{1,}$") {							;	Split multiple number value results "5/0" into two fields, ignore date formats (5/1/12)
 			tx1 := strX(txt,,1,1,"/",1,1,n)
 			tx2 := SubStr(txt,n+1)
 			lb1 := strX(lab,,1,1,"_",1,1,n)									;	label[] fields are named "xxx_yyy", split into "xxx" and "yyy"
