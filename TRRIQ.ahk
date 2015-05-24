@@ -27,6 +27,30 @@ if (%0%) {																; For each parameter:
 }
 splitpath, fileIn,,,,fileNam
 
+/*	Read outdocs.csv for Cardiologist and Fellow names
+*/
+Docs := Object()
+tmpIdxG := 0
+Loop, Read, outdocs.csv
+{
+	tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
+	tmpline := A_LoopReadLine
+	StringSplit, tmp, tmpline, `, , `"
+	if ((tmp1="Name") or (tmp1="FELLOWS")) {						; Skip section headers
+		continue
+	}
+	if (tmp1) {
+		tmpIdx += 1
+		StringSplit, tmpPrv, tmp1, %A_Space%`"
+		tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2
+		Docs[tmpGrp,tmpIdx]:=tmpPrv
+		outGrpV[tmpGrp] := "callGrp" . tmpIdxG
+	}
+}
+outGrpV["Other"] := "callGrp" . (tmpIdxG+1)
+outGrpV["TO CALL"] := "callGrp" . (tmpIdxG+2)
+
+
 gosub MainLoop
 
 fileout := fileOut1 . fileout2
@@ -107,15 +131,15 @@ Holter:
 	labels[2] := ["Total_beats", "Min", "Avg", "Max", "HRV"]
 	fieldvals(strX(holtVals,"Heart Rate Data",1,0,"Heart Rate Variability",1,0,nn),2,"hrd")
 	
-	fields[3] := ["Total VE Beats", "Vent Runs", "Beats", "Longest", "Fastest", "Triplets", "Couplets", "Single/Interp PVC", "R on T", "Single/Late VE's", "Bi/Trigeminy"]
-	labels[3] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Triplets", "Couplets", "SinglePVC_InterpPVC", "R_on_T", "SingleVE_LateVE", "Bigem_Trigem"]
-	fieldvals(strX(holtVals,"Ventricular Ectopy",nn,0,"Supraventricular Ectopy",1,23,nn),3,"ve")
+	fields[3] := ["Total VE Beats", "Vent Runs", "Beats", "Longest", "Fastest", "Triplets", "Couplets", "Single/Interp PVC", "R on T", "Single/Late VE's", "Bi/Trigeminy", "Supraventricular Ectopy"]
+	labels[3] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Triplets", "Couplets", "SinglePVC_InterpPVC", "R_on_T", "SingleVE_LateVE", "Bigem_Trigem", "SVE"]
+	fieldvals(strX(holtVals,"Ventricular Ectopy",nn,0,"Supraventricular Ectopy",1,0,nn),3,"ve")
 
 	fields[4] := ["Total SVE Beats", "Atrial Runs", "Beats", "Longest", "Fastest", "Atrial Pairs", "Drop/Late", "Longest R-R", "Single PAC's", "Bi/Trigeminy", "Atrial Fibrillation"]
 	labels[4] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Pairs", "Drop_Late", "LongRR", "Single", "Bigem_Trigem", "AF"]
-	fieldvals(strX(holtVals,"Supraventricular Ectopy",nn,0,"Atrial Fibrillation",1,0,nn),4,"sve")
+	fieldvals(strX(holtVals,"Supraventricular Ectopy",nn-23,0,"Atrial Fibrillation",1,0,nn),4,"sve")
 	
-	tmp := columns(newtxt,"Technician's comments:","Signed :")
+	tmp := columns(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:","Signed :")
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
 	fileout1 .= """INTERP""`n"
 	fileout2 .= """" . cleanspace(trim(tmp," `n")) . """`n"
@@ -315,6 +339,7 @@ formatField(pre, lab, txt) {
 	}
 	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(s)?)|\(.*%\)")	; 	Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
+	txt := trim(txt)
 	
 ;	Lifewatch Holter specific search fixes
 	if (monType="H") {
@@ -325,7 +350,7 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_time",tx2)
 			return
 		}
-		if (txt ~= "^[0-9, ]{1,}\/[0-9, ]{1,}$") {							;	Split multiple number value results "5/0" into two fields, ignore date formats (5/1/12)
+		if (txt ~= "^[0-9,]{1,}\/[0-9,]{1,}$") {							;	Split multiple number value results "5/0" into two fields, ignore date formats (5/1/12)
 			tx1 := strX(txt,,1,1,"/",1,1,n)
 			tx2 := SubStr(txt,n+1)
 			lb1 := strX(lab,,1,1,"_",1,1,n)									;	label[] fields are named "xxx_yyy", split into "xxx" and "yyy"
