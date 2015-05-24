@@ -133,13 +133,13 @@ Holter:
 	
 	fields[3] := ["Total VE Beats", "Vent Runs", "Beats", "Longest", "Fastest", "Triplets", "Couplets", "Single/Interp PVC", "R on T", "Single/Late VE's", "Bi/Trigeminy", "Supraventricular Ectopy"]
 	labels[3] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Triplets", "Couplets", "SinglePVC_InterpPVC", "R_on_T", "SingleVE_LateVE", "Bigem_Trigem", "SVE"]
-	fieldvals(strX(holtVals,"Ventricular Ectopy",nn-1,0,"Supraventricular Ectopy",1,0,nn),3,"ve")
+	fieldvals(strX(holtVals,"Ventricular Ectopy",nn,0,"Supraventricular Ectopy",1,0,nn),3,"ve")
 
 	fields[4] := ["Total SVE Beats", "Atrial Runs", "Beats", "Longest", "Fastest", "Atrial Pairs", "Drop/Late", "Longest R-R", "Single PAC's", "Bi/Trigeminy", "Atrial Fibrillation"]
 	labels[4] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Pairs", "Drop_Late", "LongRR", "Single", "Bigem_Trigem", "AF"]
 	fieldvals(strX(holtVals,"Supraventricular Ectopy",nn-23,0,"Atrial Fibrillation",1,0,nn),4,"sve")
 	
-	tmp := columns(newtxt,"Technician's comments:","Signed :")
+	tmp := columns(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:","Signed :")
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
 	fileout1 .= """INTERP""`n"
 	fileout2 .= """" . cleanspace(trim(tmp," `n")) . """`n"
@@ -305,7 +305,7 @@ fieldvals(x,bl,bl2) {
 	for k, i in fields[bl]
 	{
 		j := fields[bl][k+1]
-		m := trim(stRegX(x,i,n-1,1,j,1,n), " `n")
+		m := trim(stRegX(x,i,n,1,j,1,n), " `n")
 		lbl := labels[bl][A_index]
 		cleanSpace(m)
 		cleanColon(m)
