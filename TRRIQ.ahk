@@ -19,10 +19,22 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%
 FileInstall, pdftotext.exe, pdftotext.exe
 
+SplitPath, A_ScriptDir,,fileDir
+IfInString, fileDir, Dropbox 
+{
+	isAdmin = true
+	holterDir := ".\Holter PDFs"
+	fileNameOut := ".\Import\Import.csv"
+} else {
+	isAdmin = false
+	holterDir := "..\Holter PDFs"
+	fileNameOut := "..\Import\Import.csv"
+}
+
 if (%0%) {																; For each parameter:
 	fileIn = %1%													; Gets parameter passed to script/exe.
 } else {
-	FileSelectFile, fileIn,,\\childrens\files\Cardio\EP\HoltER Database\Holter PDFs, Select PDF file:, PDF files (*.pdf)
+	FileSelectFile, fileIn,, %holterDir%, Select PDF file:, PDF files (*.pdf)
 }
 splitpath, fileIn,,,,fileNam
 
@@ -53,12 +65,6 @@ splitpath, fileIn,,,,fileNam
 gosub MainLoop
 
 fileout := fileOut1 . fileout2
-
-SplitPath, A_ScriptDir,,fileDir
-IfInString, fileDir, Dropbox
-	fileNameOut := ".\Import\Import.csv"
-else
-	fileNameOut := "\\childrens\files\Cardio\EP\HoltER Database\Import\Import.csv"
 
 FileDelete, %fileNameOut%
 FileAppend, %fileOut%, %fileNameOut%
