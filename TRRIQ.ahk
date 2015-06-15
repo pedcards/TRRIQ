@@ -14,7 +14,6 @@
 	Sends report to HIM
 */
 
-#Include strx.ahk
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%
@@ -23,32 +22,32 @@ FileInstall, pdftotext.exe, pdftotext.exe
 if (%0%) {																; For each parameter:
 	fileIn = %1%													; Gets parameter passed to script/exe.
 } else {
-	FileSelectFile, fileIn,,, Select PDF file:, PDF files (*.pdf)
+	FileSelectFile, fileIn,,\\childrens\files\Cardio\EP\HoltER Database\Holter PDFs, Select PDF file:, PDF files (*.pdf)
 }
 splitpath, fileIn,,,,fileNam
 
 /*	Read outdocs.csv for Cardiologist and Fellow names
 */
-Docs := Object()
-tmpIdxG := 0
-Loop, Read, outdocs.csv
-{
-	tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
-	tmpline := A_LoopReadLine
-	StringSplit, tmp, tmpline, `, , `"
-	if ((tmp1="Name") or (tmp1="FELLOWS")) {						; Skip section headers
-		continue
-	}
-	if (tmp1) {
-		tmpIdx += 1
-		StringSplit, tmpPrv, tmp1, %A_Space%`"
-		tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2
-		Docs[tmpGrp,tmpIdx]:=tmpPrv
-		outGrpV[tmpGrp] := "callGrp" . tmpIdxG
-	}
-}
-outGrpV["Other"] := "callGrp" . (tmpIdxG+1)
-outGrpV["TO CALL"] := "callGrp" . (tmpIdxG+2)
+;~ Docs := Object()
+;~ tmpIdxG := 0
+;~ Loop, Read, outdocs.csv
+;~ {
+	;~ tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
+	;~ tmpline := A_LoopReadLine
+	;~ StringSplit, tmp, tmpline, `, , `"
+	;~ if ((tmp1="Name") or (tmp1="FELLOWS")) {						; Skip section headers
+		;~ continue
+	;~ }
+	;~ if (tmp1) {
+		;~ tmpIdx += 1
+		;~ StringSplit, tmpPrv, tmp1, %A_Space%`"
+		;~ tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2
+		;~ Docs[tmpGrp,tmpIdx]:=tmpPrv
+		;~ outGrpV[tmpGrp] := "callGrp" . tmpIdxG
+	;~ }
+;~ }
+;~ outGrpV["Other"] := "callGrp" . (tmpIdxG+1)
+;~ outGrpV["TO CALL"] := "callGrp" . (tmpIdxG+2)
 
 
 gosub MainLoop
@@ -421,3 +420,5 @@ cleanspace(ByRef txt) {
 	}
 	return txt
 }
+
+#Include strx.ahk
