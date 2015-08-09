@@ -31,7 +31,15 @@ IfInString, fileDir, Dropbox
 	fileNameOut := "..\Import\Import.csv"
 }
 
+phase := CMsgBox("Which task?","","Enter Holter|Process PDF","Q","")
+if (phase = "Enter Holter") {
+	gosub fetchDemo
+	ExitApp
+}
+
+
 if (%0%) {																; For each parameter:
+	; Parameter passed = Phase 2, 
 	fileIn = %1%													; Gets parameter passed to script/exe.
 } else {
 	FileSelectFile, fileIn,, %holterDir%, Select PDF file:, PDF files (*.pdf)
@@ -69,6 +77,49 @@ fileout := fileOut1 . fileout2
 FileDelete, %fileNameOut%
 FileAppend, %fileOut%, %fileNameOut%
 
+ExitApp
+
+FetchDemo:
+{
+	gosub fetchGUI
+	MsgBox
+	return
+}
+
+fetchGUI:
+{
+	fX1 = 12
+	fW1 = 60
+	fX2 = 92
+	fW2 = 190
+	fH =20
+	fY = 10
+	fYd = 30
+	Gui, fetch:Add, Text, % "x" fX1 " y" fY " w" (fW1+fW2) " h" fH , Patient demographics
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , First
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY " w" fW2 " h" fH , nameF
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Last
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY " w" fW2 " h" fH , nameL
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , MRN
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY " w" fW2 " h" fH , MRN
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , DOB
+	Gui, fetch:Add, DateTime, % "x" fX2 " y" fY " w" fW2 " h" fH , 
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Date placed
+	Gui, fetch:Add, DateTime, % "x" fX2 " y" fY " w" fW2 " h" fH , 
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
+	Gui, fetch:Add, DropDownList, % "x" fX2 " y" fY " w" fW2 " h" fH , DropDownList
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Reading EP
+	Gui, fetch:Add, DropDownList, % "x" fX2 " y" fY " w" fW2 " h" fH , DropDownList
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY " w" fW2 " h" fH , encNum
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Your initials
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY " w" fW2 " h" fH , MAinit
+	; Generated using SmartGUI Creator for SciTE
+	Gui, fetch:Show, AutoSize, Untitled GUI
+	return
+}
+
+GuiCloseFetch:
 ExitApp
 
 MainLoop:
@@ -428,3 +479,4 @@ cleanspace(ByRef txt) {
 }
 
 #Include strx.ahk
+#Include CMsgBox.ahk
