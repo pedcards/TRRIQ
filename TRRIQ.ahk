@@ -17,7 +17,9 @@
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%
+SetTitleMatchMode, 2
 FileInstall, pdftotext.exe, pdftotext.exe
+;FileInstall, outdocs.csv, outdocs.csv			; #Include this as stream at the end to avoid extra file?
 
 SplitPath, A_ScriptDir,,fileDir
 IfInString, fileDir, Dropbox 
@@ -31,9 +33,12 @@ IfInString, fileDir, Dropbox
 	fileNameOut := "..\Import\Import.csv"
 }
 
-phase := CMsgBox("Which task?","","Enter Holter|Process PDF","Q","")
+demVals := ["MRN","Account Number","DOB","Age","Sex","Loc","Provider","PCP"]
+
+phase := CMsgBox("Which task?","","*&Enter Holter|&Process PDF","Q","")
 if (phase = "Enter Holter") {
-	gosub fetchDemo
+	;gosub checkCIS
+	gosub fetchDem
 	ExitApp
 }
 
@@ -47,27 +52,27 @@ if (%0%) {																; For each parameter:
 splitpath, fileIn,,,,fileNam
 
 /*	Read outdocs.csv for Cardiologist and Fellow names
+Docs := Object()
+tmpIdxG := 0
+Loop, Read, outdocs.csv
+{
+	tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
+	tmpline := A_LoopReadLine
+	StringSplit, tmp, tmpline, `, , `"
+	if ((tmp1="Name") or (tmp1="FELLOWS")) {						; Skip section headers
+		continue
+	}
+	if (tmp1) {
+		tmpIdx += 1
+		StringSplit, tmpPrv, tmp1, %A_Space%`"
+		tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2
+		Docs[tmpGrp,tmpIdx]:=tmpPrv
+		outGrpV[tmpGrp] := "callGrp" . tmpIdxG
+	}
+}
+outGrpV["Other"] := "callGrp" . (tmpIdxG+1)
+outGrpV["TO CALL"] := "callGrp" . (tmpIdxG+2)
 */
-;~ Docs := Object()
-;~ tmpIdxG := 0
-;~ Loop, Read, outdocs.csv
-;~ {
-	;~ tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
-	;~ tmpline := A_LoopReadLine
-	;~ StringSplit, tmp, tmpline, `, , `"
-	;~ if ((tmp1="Name") or (tmp1="FELLOWS")) {						; Skip section headers
-		;~ continue
-	;~ }
-	;~ if (tmp1) {
-		;~ tmpIdx += 1
-		;~ StringSplit, tmpPrv, tmp1, %A_Space%`"
-		;~ tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2
-		;~ Docs[tmpGrp,tmpIdx]:=tmpPrv
-		;~ outGrpV[tmpGrp] := "callGrp" . tmpIdxG
-	;~ }
-;~ }
-;~ outGrpV["Other"] := "callGrp" . (tmpIdxG+1)
-;~ outGrpV["TO CALL"] := "callGrp" . (tmpIdxG+2)
 
 
 gosub MainLoop
@@ -79,11 +84,81 @@ FileAppend, %fileOut%, %fileNameOut%
 
 ExitApp
 
-FetchDemo:
+FetchDem:
 {
+	ptDem := Object()
+	mdX := Object()
+	mdY := Object()
+	ptDem["bit"] := 0
+	getDem := true
 	gosub fetchGUI
-	MsgBox
+	while (getDem) {
+		clipboard :=
+		ClipWait
+		if !ErrorLevel {
+			clk := parseClip(clipboard)
+			if !ErrorLevel {
+				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2
+				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]
+				ptDem["bit"] := (clk.bit) ? (ptDem["bit"] |= 2**clk.bit) : ptDem["bit"]
+				if (clk.field = "Provider") {
+					mdX[4] := mouseXpos
+					mdY[1] := mouseYpos
+					mdProv := true
+				}
+				if (clk.field = "Account Number") {
+					mdX[1] := mouseXpos
+					mdY[3] := mouseYpos
+					mdAcct := true
+				}
+				if (mdProv and mdAcct) {
+					mdXd := (mdX[4]-mdX[1])/3
+					mdX[2] := mdX[1]+mdXd
+					mdX[3] := mdX[2]+mdXd
+					mdY[2] := mdY[1]+(mdY[3]-mdY[1])/2
+					tmp := mouseGrab((mdX[3]-mdX[1])*0.95,mdY[1])
+					ptDem["nameL"] := strX(tmp,,1,0, ",",1,1)
+					ptDem["nameF"] := strX(tmp,",",1,2, "",1,1)
+					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2])
+					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2])
+					ptDem["Sex"] := mouseGrab(mdX[3],mdY[1])
+					ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
+					tmp := mouseGrab(mdX[3],mdY[3])
+					ptDem["Type"] := strX(tmp,,1,0, " [",1,2)
+					ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					mdProv := false
+					mdAcct := false
+				}
+			}
+		}
+		gosub fetchGUI
+	}
 	return
+}
+
+mouseGrab(x,y) {
+	MouseMove, %x%, %y%, 0
+	Click 2
+	sleep 100
+	ClipWait
+	clk := parseClip(clipboard)
+	return clk.value
+	
+}
+
+parseClip(clip) {
+	global demVals
+	StringSplit, val, clip, :
+	if (pos:=ObjHasValue(demVals, val1)) {
+		return {"field":val1, "value":val2, "bit":pos}
+	}
+	if (RegExMatch(clip,"O)(Outpatient)|(Inpatient)\s\[",valMatch)) {
+		return {"field":"Type", "value":clip}
+	}
+	if (RegExMatch(clip,"O)[A-Z\-\s]*, [A-Z\-]*",valMatch)) {
+		return {"field":"Name", "value":valMatch.value()}
+	}
+	return Error
 }
 
 fetchGUI:
@@ -95,31 +170,34 @@ fetchGUI:
 	fH =20
 	fY = 10
 	fYd = 30
-	Gui, fetch:Add, Text, % "x" fX1 " y" fY " w" (fW1+fW2) " h" fH , Patient demographics
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , First
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY " w" fW2 " h" fH , nameF
+	Gui, fetch:Destroy
+;	Gui, fetch:+DPIScale
+	Gui, fetch:Add, Button, % "x" fX1+10 " y" fY " w" fW1+fW2 " h" fH+10 , Grab CIS data
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd+20) " w" fW1 " h" fH , First
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameF"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Last
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY " w" fW2 " h" fH , nameL
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameL"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , MRN
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY " w" fW2 " h" fH , MRN
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["MRN"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , DOB
-	Gui, fetch:Add, DateTime, % "x" fX2 " y" fY " w" fW2 " h" fH , 
+	Gui, fetch:Add, DateTime, % "x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"], MM/dd/yyyy
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Date placed
-	Gui, fetch:Add, DateTime, % "x" fX2 " y" fY " w" fW2 " h" fH , 
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
-	Gui, fetch:Add, DropDownList, % "x" fX2 " y" fY " w" fW2 " h" fH , DropDownList
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Reading EP
-	Gui, fetch:Add, DropDownList, % "x" fX2 " y" fY " w" fW2 " h" fH , DropDownList
+	Gui, fetch:Add, DateTime, % "x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["EncDate"], MM/dd/yyyy
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY " w" fW2 " h" fH , encNum
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Account Number"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
+	Gui, fetch:Add, DropDownList, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Provider"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Reading EP
+	Gui, fetch:Add, DropDownList, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , DropDownList
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Your initials
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY " w" fW2 " h" fH , MAinit
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , MAinit
+	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2, Submit!
 	; Generated using SmartGUI Creator for SciTE
-	Gui, fetch:Show, AutoSize, Untitled GUI
+	Gui, fetch:Show, AutoSize, Enter Demographics
 	return
 }
 
-GuiCloseFetch:
+fetchGuiClose:
 ExitApp
 
 MainLoop:
@@ -476,6 +554,21 @@ cleanspace(ByRef txt) {
 			break
 	}
 	return txt
+}
+
+ObjHasValue(aObj, aValue, rx:="") {
+; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
+    for key, val in aObj
+		if (rx="RX") {
+			if (aValue ~= val) {
+				return, key, Errorlevel := 0
+			}
+		} else {
+			if (val = aValue) {
+				return, key, ErrorLevel := 0
+			}
+		}
+    return, false, errorlevel := 1
 }
 
 #Include strx.ahk
