@@ -22,65 +22,78 @@ FileInstall, pdftotext.exe, pdftotext.exe
 ;FileInstall, outdocs.csv, outdocs.csv			; #Include this as stream at the end to avoid extra file?
 
 SplitPath, A_ScriptDir,,fileDir
-IfInString, fileDir, Dropbox 
+IfInString, fileDir, Dropbox					; Change enviroment if run from development vs production directory
 {
 	isAdmin = true
 	holterDir := ".\Holter PDFs"
 	fileNameOut := ".\Import\Import.csv"
+	chipDir := ".\Chipotle\"
 } else {
 	isAdmin = false
 	holterDir := "..\Holter PDFs"
 	fileNameOut := "..\Import\Import.csv"
+	chipDir := "\\chmc16\Cardio\Inpatient List\Chipotle\"
 }
 
-demVals := ["MRN","Account Number","DOB","Age","Sex","Loc","Provider","PCP"]
-
-phase := CMsgBox("Which task?","","*&Enter Holter|&Process PDF","Q","")
-if (phase = "Enter Holter") {
-	;gosub checkCIS
-	gosub fetchDem
-	ExitApp
-}
-
-
-if (%0%) {																; For each parameter:
-	; Parameter passed = Phase 2, 
-	fileIn = %1%													; Gets parameter passed to script/exe.
-} else {
-	FileSelectFile, fileIn,, %holterDir%, Select PDF file:, PDF files (*.pdf)
-}
-splitpath, fileIn,,,,fileNam
-
-/*	Read outdocs.csv for Cardiologist and Fellow names
-Docs := Object()
-tmpIdxG := 0
-Loop, Read, outdocs.csv
+/*	Read outdocs.csv for Cardiologist and Fellow names 
+*/
+;Docs := Object()
+Docs := {}
+tmpChk := false
+Loop, Read, %chipDir%outdocs.csv
 {
 	tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
 	tmpline := A_LoopReadLine
 	StringSplit, tmp, tmpline, `, , `"
-	if ((tmp1="Name") or (tmp1="FELLOWS")) {						; Skip section headers
+	if ((tmp1="SCH") or (tmp1="FELLOWS")) {
+		tmpGrp:=tmp1
+		tmpChk:=true
+		tmpIdx:=0
 		continue
 	}
-	if (tmp1) {
-		tmpIdx += 1
-		StringSplit, tmpPrv, tmp1, %A_Space%`"
-		tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2
-		Docs[tmpGrp,tmpIdx]:=tmpPrv
-		outGrpV[tmpGrp] := "callGrp" . tmpIdxG
+	if !(tmp1) {
+		continue
 	}
+	if !(tmpChk) {
+		continue
+	}
+	tmpIdx += 1
+	StringSplit, tmpPrv, tmp1, %A_Space%`"
+	tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2				; F. Last
+	tmpPrv := tmpPrv2 ", " tmpPrv1								; Last, First
+	Docs[tmpGrp,tmpIdx] := tmpPrv
+	Docs[tmpGrp ".eml",tmpIdx] := tmp4
+	;MsgBox,,% Docs[tmpGrp,tmpIdx], % Docs[tmpGrp ".eml",tmpIdx]
 }
-outGrpV["Other"] := "callGrp" . (tmpIdxG+1)
-outGrpV["TO CALL"] := "callGrp" . (tmpIdxG+2)
-*/
 
+demVals := ["MRN","Account Number","DOB","Age","Sex","Loc","Provider","PCP"]
 
-gosub MainLoop
+if (%0%) {										; For each parameter,
+	fileIn := %1%								; Gets parameter dropped/passed to script/exe
+	phase := "Process PDF"
+}
 
-fileout := fileOut1 . fileout2
+if !(phase) {
+	phase := CMsgBox("Which task?","","*&Enter Holter|&Process PDF","Q","")
+}
+if (phase = "Enter Holter") {
+	gosub fetchDem
+	ExitApp
+}
+if (phase = "Process PDF") {
+	
+	FileSelectFile, fileIn,, %holterDir%, Select PDF file:, PDF files (*.pdf)
+	splitpath, fileIn,,,,fileNam
+	gosub MainLoop
 
-FileDelete, %fileNameOut%
-FileAppend, %fileOut%, %fileNameOut%
+	fileout := fileOut1 . fileout2
+
+	FileDelete, %fileNameOut%
+	FileAppend, %fileOut%, %fileNameOut%
+
+	ExitApp
+
+}
 
 ExitApp
 
@@ -172,7 +185,6 @@ fetchGUI:
 	fYd = 30
 	Gui, fetch:Destroy
 ;	Gui, fetch:+DPIScale
-	Gui, fetch:Add, Button, % "x" fX1+10 " y" fY " w" fW1+fW2 " h" fH+10 , Grab CIS data
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd+20) " w" fW1 " h" fH , First
 	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameF"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Last
@@ -191,7 +203,7 @@ fetchGUI:
 	Gui, fetch:Add, DropDownList, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , DropDownList
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Your initials
 	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , MAinit
-	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2, Submit!
+	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit", Submit!
 	; Generated using SmartGUI Creator for SciTE
 	Gui, fetch:Show, AutoSize, Enter Demographics
 	return
@@ -199,6 +211,19 @@ fetchGUI:
 
 fetchGuiClose:
 ExitApp
+
+fetchSubmit:
+{
+/* some error checking
+	Check for required elements
+	Error check and normalize Ordering MD name
+	Check for Lifewatch exe
+	Fill Lifewatch data and submit
+	The repeat the cycle
+*/
+	gosub fetchDem
+	return
+}
 
 MainLoop:
 {
@@ -573,3 +598,4 @@ ObjHasValue(aObj, aValue, rx:="") {
 
 #Include strx.ahk
 #Include CMsgBox.ahk
+#Include xml.ahk
