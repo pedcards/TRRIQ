@@ -24,14 +24,14 @@ FileInstall, pdftotext.exe, pdftotext.exe
 SplitPath, A_ScriptDir,,fileDir
 IfInString, fileDir, Dropbox					; Change enviroment if run from development vs production directory
 {
-	isAdmin = true
+	isAdmin := true
 	holterDir := ".\Holter PDFs"
-	fileNameOut := ".\Import\Import.csv"
+	importFld := ".\Import\"
 	chipDir := ".\Chipotle\"
 } else {
-	isAdmin = false
+	isAdmin := false
 	holterDir := "..\Holter PDFs"
-	fileNameOut := "..\Import\Import.csv"
+	importFld := "..\Import\"
 	chipDir := "\\chmc16\Cardio\Inpatient List\Chipotle\"
 }
 
@@ -81,15 +81,17 @@ if (phase = "Enter Holter") {
 	ExitApp
 }
 if (phase = "Process PDF") {
-	
-	FileSelectFile, fileIn,, %holterDir%, Select PDF file:, PDF files (*.pdf)
-	splitpath, fileIn,,,,fileNam
-	gosub MainLoop
-
-	fileout := fileOut1 . fileout2
-
-	FileDelete, %fileNameOut%
-	FileAppend, %fileOut%, %fileNameOut%
+	if (fileIn) {
+		splitpath, fileIn,,,,fileNam
+		gosub MainLoop
+		ExitApp
+	}
+	loop, %holterDir%\*.pdf
+	{
+		fileIn := A_LoopFileFullPath
+		MsgBox % fileIn
+		gosub MainLoop
+	}
 
 	ExitApp
 
@@ -105,7 +107,7 @@ FetchDem:
 	ptDem["bit"] := 0
 	getDem := true
 	gosub fetchGUI
-	while (getDem) {
+	while (getDem) {									; Repeat until we get tired of this
 		clipboard :=
 		ClipWait
 		if !ErrorLevel {
@@ -144,7 +146,9 @@ FetchDem:
 				}
 			}
 		}
-		gosub fetchGUI
+		gosub fetchGUI							; Update GUI with new info
+		
+		; This would be a good place to inject the data to the Lifewatch program
 	}
 	return
 }
@@ -231,11 +235,13 @@ MainLoop:
 	FileRead, maintxt, temp.txt
 	blocks := Object()
 	fields := Object()
+	fldval := {}
 	labels := Object()
 	newTxt := Object()
 	blk := Object()
 	blk2 := Object()
 	docs := Object()
+	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 
 	Loop, parse, maintxt, `n,`r,%A_Space%					; Identify filetype by text in first lines
@@ -254,8 +260,15 @@ MainLoop:
 			break
 		}
 		if A_Index>9												; only search in the first several lines
-			Break
-	}
+			Break													; might be possible to accomplish this with
+	}																; i:=substr(maintxt,1,1024)
+
+	fileout := fileOut1 . fileout2
+	tmpDate := parseDate(fldval["Test_Date"])
+	filenameOut := importFld . fldval["Name_L"] " " fldval["MRN"] " " tmpDate.MM tmpDate.DD tmpDate.YYYY
+	MsgBox % filenameOut
+	FileDelete, %fileNameOut%.csv
+	FileAppend, %fileOut%, %fileNameOut%.csv
 Return
 }
 
@@ -459,7 +472,7 @@ fieldvals(x,bl,bl2) {
 	bl	= which FIELD number to use
 	bl2	= label prefix
 */
-	global fields, labels
+	global fields, labels, fldval
 	
 	for k, i in fields[bl]
 	{
@@ -468,6 +481,7 @@ fieldvals(x,bl,bl2) {
 		lbl := labels[bl][A_index]
 		cleanSpace(m)
 		cleanColon(m)
+		fldval[lbl] := m
 		formatField(bl2,lbl,m)
 	}
 }
@@ -594,6 +608,26 @@ ObjHasValue(aObj, aValue, rx:="") {
 			}
 		}
     return, false, errorlevel := 1
+}
+
+parseDate(x) {
+; Disassembles "2/9/2015" or "2/9/2015 8:31" into Yr=2015 Mo=02 Da=09 Hr=08 Min=31
+	StringSplit, DT, x, %A_Space%
+	StringSplit, DY, DT1, /
+	StringSplit, DHM, DT2, :
+	return {"MM":zDigit(DY1), "DD":zDigit(DY2), "YYYY":DY3, "hr":zDigit(DHM1), "min":zDigit(DHM2), "Date":DT1, "Time":DT2}
+}
+
+niceDate(x) {
+	if !(x)
+		return error
+	FormatTime, x, %x%, MM/dd/yyyy
+	return x
+}
+
+zDigit(x) {
+; Add leading zero to a number
+	return SubStr("0" . x, -1)
 }
 
 #Include strx.ahk
