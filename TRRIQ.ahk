@@ -269,6 +269,7 @@ MainLoop:
 	MsgBox % filenameOut
 	FileDelete, %fileNameOut%.csv
 	FileAppend, %fileOut%, %fileNameOut%.csv
+	FileMove, %fileIn%, %filenameOut%.pdf, 1
 Return
 }
 
