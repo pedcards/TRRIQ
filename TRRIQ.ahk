@@ -89,7 +89,7 @@ if (phase = "Process PDF") {
 	loop, %holterDir%\*.pdf
 	{
 		fileIn := A_LoopFileFullPath
-		MsgBox % fileIn
+		;MsgBox % fileIn
 		gosub MainLoop
 	}
 
@@ -263,14 +263,39 @@ MainLoop:
 			Break													; might be possible to accomplish this with
 	}																; i:=substr(maintxt,1,1024)
 
+	gosub epRead
+	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"
+	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"
 	fileout := fileOut1 . fileout2
 	tmpDate := parseDate(fldval["Test_Date"])
 	filenameOut := importFld . fldval["Name_L"] " " fldval["MRN"] " " tmpDate.MM tmpDate.DD tmpDate.YYYY
-	MsgBox % filenameOut
+	;MsgBox % filenameOut
 	FileDelete, %fileNameOut%.csv
 	FileAppend, %fileOut%, %fileNameOut%.csv
 	FileMove, %fileIn%, %filenameOut%.pdf, 1
 Return
+}
+
+epRead:
+{
+	FileGetTime, dlDate, %fileIn%
+	FormatTime, dlDay, %dlDate%, dddd
+	if (dlDay="Friday") {
+		dlDate += 3, Days
+	}
+	FormatTime, dlDate, %dlDate%, yyyyMMdd
+	
+	y := new XML(chipDir "currlist.xml")
+	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun)|(Salerno)|(Seslar)", ymatch)
+	if !(ymatch := ymatch.value()) {
+		ymatch := cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
+	}
+	
+	; if dem_ordering is an EP, assign ymatch to dem_ordering
+	
+	fileOut1 .= ",""EP_read"""
+	fileOut2 .= ",""" ymatch """"
+return
 }
 
 Holter:
@@ -314,8 +339,8 @@ Holter:
 	
 	tmp := columns(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:","Signed :")
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
-	fileout1 .= """INTERP""`n"
-	fileout2 .= """" . cleanspace(trim(tmp," `n")) . """`n"
+	fileout1 .= """INTERP"""
+	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
 	
 return
 }
