@@ -25,12 +25,12 @@ SplitPath, A_ScriptDir,,fileDir
 IfInString, fileDir, Dropbox					; Change enviroment if run from development vs production directory
 {
 	isAdmin := true
-	holterDir := ".\Holter PDFs"
+	holterDir := ".\Holter PDFs\"
 	importFld := ".\Import\"
 	chipDir := ".\Chipotle\"
 } else {
 	isAdmin := false
-	holterDir := "..\Holter PDFs"
+	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
 	chipDir := "\\chmc16\Cardio\Inpatient List\Chipotle\"
 }
@@ -86,7 +86,7 @@ if (phase = "Process PDF") {
 		gosub MainLoop
 		ExitApp
 	}
-	loop, %holterDir%\*.pdf
+	loop, %holterDir%*.pdf
 	{
 		fileIn := A_LoopFileFullPath
 		;MsgBox % fileIn
@@ -268,11 +268,11 @@ MainLoop:
 	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"
 	fileout := fileOut1 . fileout2
 	tmpDate := parseDate(fldval["Test_Date"])
-	filenameOut := importFld . fldval["Name_L"] " " fldval["MRN"] " " tmpDate.MM tmpDate.DD tmpDate.YYYY
+	filenameOut := fldval["Name_L"] " " fldval["MRN"] " " tmpDate.MM tmpDate.DD tmpDate.YYYY
 	;MsgBox % filenameOut
-	FileDelete, %fileNameOut%.csv
-	FileAppend, %fileOut%, %fileNameOut%.csv
-	FileMove, %fileIn%, %filenameOut%.pdf, 1
+	FileDelete, %importFld%%fileNameOut%.csv
+	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv
+	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1
 Return
 }
 
