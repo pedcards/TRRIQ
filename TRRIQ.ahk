@@ -288,10 +288,13 @@ epRead:
 	y := new XML(chipDir "currlist.xml")
 	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun)|(Salerno)|(Seslar)", ymatch)
 	if !(ymatch := ymatch.value()) {
-		ymatch := cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
+		ymatch := epMon ? epMon : cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
+		epMon := ymatch
 	}
 	
-	; if dem_ordering is an EP, assign ymatch to dem_ordering
+	if (RegExMatch(fldval["ordering"], "Oi)(Chun)|(Salerno)|(Seslar)", epOrder))  {
+		ymatch := epOrder.value()
+	}
 	
 	fileOut1 .= ",""EP_read"""
 	fileOut2 .= ",""" ymatch """"
