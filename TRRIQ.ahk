@@ -78,7 +78,12 @@ if !(phase) {
 	phase := CMsgBox("Which task?","","*&Enter Holter|&Process PDF","Q","")
 }
 if (phase = "Enter Holter") {
+	gosub fetchGUI
 	gosub fetchDem
+	; This would be a good place to inject the data to the Lifewatch program
+
+	; Should repeat until quit fetchGUI with [x]
+	
 	ExitApp
 }
 if (phase = "Process PDF") {
@@ -90,7 +95,6 @@ if (phase = "Process PDF") {
 	loop, %holterDir%*.pdf
 	{
 		fileIn := A_LoopFileFullPath
-		;MsgBox % fileIn
 		gosub MainLoop
 	}
 
@@ -107,10 +111,9 @@ FetchDem:
 	mdY := Object()
 	ptDem["bit"] := 0
 	getDem := true
-	gosub fetchGUI
 	while (getDem) {									; Repeat until we get tired of this
 		clipboard :=
-		ClipWait
+		ClipWait, 2
 		if !ErrorLevel {
 			clk := parseClip(clipboard)
 			if !ErrorLevel {
@@ -146,10 +149,8 @@ FetchDem:
 					mdAcct := false
 				}
 			}
+			gosub fetchGUI							; Update GUI with new info
 		}
-		gosub fetchGUI							; Update GUI with new info
-		
-		; This would be a good place to inject the data to the Lifewatch program
 	}
 	return
 }
@@ -186,25 +187,25 @@ fetchGUI:
 	fW1 := 60,	fW2 := 190
 	fH := 20
 	fY := 10
-	fTxt := "To auto-grab demographic info:`n"
-		.	"	1) Double-click Encounter Number`n"
-		.	"	2) Double-click Provider"
+	fTxt := "	To auto-grab demographic info:`n"
+		.	"		1) Double-click Encounter #`n"
+		.	"		2) Double-click Provider"
 	Gui, fetch:Destroy
 	Gui, fetch:Add, Text, % "x" fX1 , % fTxt	
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd*2) " w" fW1 " h" fH , First
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameF"]
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameF"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Last
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameL"]
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameL"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , MRN
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["MRN"]
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["MRN"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , DOB
-	Gui, fetch:Add, DateTime, % "x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"], MM/dd/yyyy
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Date placed
-	Gui, fetch:Add, DateTime, % "x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["EncDate"], MM/dd/yyyy
+	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"], MM/dd/yyyy
+;	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Date placed
+;	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["EncDate"], MM/dd/yyyy
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Account Number"]
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Account Number"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Provider"]
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Provider"]
 ;	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Your initials
 ;	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % user
 	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit", Submit!
@@ -224,7 +225,15 @@ fetchSubmit:
 	Fill Lifewatch data and submit
 	The repeat the cycle
 */
-	gosub fetchDem
+	Gui, fetch:Destroy
+	if (ptDem["bit"]<256) {
+		MsgBox Too few elements!`nTry again!
+		gosub fetchGUI
+		return
+	}
+	FormatTime, tmp, A_Now, yyyyMMdd
+	ptDem["encDate"] := tmp
+	getDem := false
 	return
 }
 
