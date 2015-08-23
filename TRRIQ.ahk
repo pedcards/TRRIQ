@@ -37,8 +37,7 @@ IfInString, fileDir, Dropbox					; Change enviroment if run from development vs 
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
-;Docs := Object()
-Docs := {}
+Docs := Object()
 tmpChk := false
 Loop, Read, %chipDir%outdocs.csv
 {
@@ -65,6 +64,9 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 	;MsgBox,,% Docs[tmpGrp,tmpIdx], % Docs[tmpGrp ".eml",tmpIdx]
 }
+
+;MsgBox % Docs["SCH.eml",ObjHasValue(Docs["SCH"],"Chun, Terry")]
+;ExitApp
 
 demVals := ["MRN","Account Number","DOB","Age","Sex","Loc","Provider","PCP"]
 
@@ -240,7 +242,6 @@ MainLoop:
 	newTxt := Object()
 	blk := Object()
 	blk2 := Object()
-	docs := Object()
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 
@@ -534,7 +535,7 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 }
 
 formatField(pre, lab, txt) {
-	global monType
+	global monType, Docs
 	if (txt ~= "\d{1,2} hr \d{1,2} min") {
 		StringReplace, txt, txt, %A_Space%hr%A_space% , :
 		StringReplace, txt, txt, %A_Space%min , 
@@ -542,6 +543,14 @@ formatField(pre, lab, txt) {
 	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(s)?)|\(.*%\)")	; 	Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
 	txt := trim(txt)
+	
+	if (lab="Ordering") {
+		tmpCrd := checkCrd(txt)
+		fieldColAdd(pre,lab,tmpCrd.best)
+		fieldColAdd(pre,lab "_grp",tmpCrd.group)
+		fieldColAdd(pre,lab "_eml",Docs[tmpCrd.Group ".eml",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)])
+		return
+	}
 	
 ;	Lifewatch Holter specific search fixes
 	if (monType="H") {
@@ -604,6 +613,30 @@ fieldColAdd(pre,lab,txt) {
 	return
 }
 
+checkCrd(x) {
+/*	Compares pl_ProvCard vs array of cardiologists
+	x = name
+	returns array[match score, best match, best match group]
+*/
+	global Docs
+	fuzz := 0.1
+	for rowidx,row in Docs
+	{
+		if (substr(rowIdx,-3)=".eml")
+			continue
+		for colidx,item in row
+		{
+			res := fuzzysearch(x,item)
+			if (res<fuzz) {
+				fuzz := res
+				best:=item
+				group:=rowidx
+			}
+		}
+	}
+	return {"fuzz":fuzz,"best":best,"group":group}
+}
+
 cleancolon(ByRef txt) {
 	if substr(txt,1,1)=":" {
 		txt:=substr(txt,2)
@@ -662,3 +695,4 @@ zDigit(x) {
 #Include strx.ahk
 #Include CMsgBox.ahk
 #Include xml.ahk
+#Include sift3.ahk
