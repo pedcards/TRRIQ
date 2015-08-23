@@ -19,7 +19,6 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%
 SetTitleMatchMode, 2
 FileInstall, pdftotext.exe, pdftotext.exe
-;FileInstall, outdocs.csv, outdocs.csv			; #Include this as stream at the end to avoid extra file?
 
 SplitPath, A_ScriptDir,,fileDir
 IfInString, fileDir, Dropbox					; Change enviroment if run from development vs production directory
@@ -30,10 +29,11 @@ IfInString, fileDir, Dropbox					; Change enviroment if run from development vs 
 	chipDir := ".\Chipotle\"
 } else {
 	isAdmin := false
-	holterDir := "..\Holter PDFs\"
-	importFld := "..\Import\"
+	holterDir := "\\chmc16\Cardio\EP\Holter\Holter PDFs\"
+	importFld := "\\chmc16\Cardio\EP\Holter\Import\"
 	chipDir := "\\chmc16\Cardio\Inpatient List\Chipotle\"
 }
+user := A_UserName
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -62,9 +62,8 @@ Loop, Read, %chipDir%outdocs.csv
 	tmpPrv := tmpPrv2 ", " tmpPrv1								; Last, First
 	Docs[tmpGrp,tmpIdx] := tmpPrv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
-	;MsgBox,,% Docs[tmpGrp,tmpIdx], % Docs[tmpGrp ".eml",tmpIdx]
 }
-
+;MsgBox,,% Docs[tmpGrp,tmpIdx], % Docs[tmpGrp ".eml",tmpIdx]
 ;MsgBox % Docs["SCH.eml",ObjHasValue(Docs["SCH"],"Chun, Terry")]
 ;ExitApp
 
@@ -182,16 +181,17 @@ parseClip(clip) {
 
 fetchGUI:
 {
-	fX1 = 12
-	fW1 = 60
-	fX2 = 92
-	fW2 = 190
-	fH =20
-	fY = 10
-	fYd = 30
+	fYd := 30,	fXd := 80
+	fX1 := 12,	fX2 := fX1+fXd
+	fW1 := 60,	fW2 := 190
+	fH := 20
+	fY := 10
+	fTxt := "To auto-grab demographic info:`n"
+		.	"	1) Double-click Encounter Number`n"
+		.	"	2) Double-click Provider"
 	Gui, fetch:Destroy
-;	Gui, fetch:+DPIScale
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd+20) " w" fW1 " h" fH , First
+	Gui, fetch:Add, Text, % "x" fX1 , % fTxt	
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd*2) " w" fW1 " h" fH , First
 	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameF"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Last
 	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameL"]
@@ -204,13 +204,10 @@ fetchGUI:
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
 	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Account Number"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
-	Gui, fetch:Add, DropDownList, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Provider"]
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Reading EP
-	Gui, fetch:Add, DropDownList, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , DropDownList
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Your initials
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , MAinit
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Provider"]
+;	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Your initials
+;	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % user
 	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit", Submit!
-	; Generated using SmartGUI Creator for SciTE
 	Gui, fetch:Show, AutoSize, Enter Demographics
 	return
 }
