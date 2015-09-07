@@ -29,9 +29,9 @@ IfInString, fileDir, Dropbox					; Change enviroment if run from development vs 
 	chipDir := ".\Chipotle\"
 } else {
 	isAdmin := false
-	holterDir := "\\chmc16\Cardio\EP\Holter\Holter PDFs\"
-	importFld := "\\chmc16\Cardio\EP\Holter\Import\"
-	chipDir := "\\chmc16\Cardio\Inpatient List\Chipotle\"
+	holterDir := "\\chmc16\Cardio\EP\HoltER Database\Holter PDFs\"
+	importFld := "\\chmc16\Cardio\EP\HoltER Database\Import\"
+	chipDir := "\\chmc16\Cardio\Inpatient List\chipotle\"
 }
 user := A_UserName
 
@@ -67,7 +67,7 @@ Loop, Read, %chipDir%outdocs.csv
 ;MsgBox % Docs["SCH.eml",ObjHasValue(Docs["SCH"],"Chun, Terry")]
 ;ExitApp
 
-demVals := ["MRN","Account Number","DOB","Age","Sex","Loc","Provider","PCP"]
+demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
 if (%0%) {										; For each parameter,
 	fileIn := %1%								; Gets parameter dropped/passed to script/exe
@@ -78,8 +78,9 @@ if !(phase) {
 	phase := CMsgBox("Which task?","","*&Enter Holter|&Process PDF","Q","")
 }
 if (phase = "Enter Holter") {
-	gosub fetchGUI
-	gosub fetchDem
+	gosub fetchGUI								; Draw input GUI
+	gosub fetchDem								; Loop for grabbing demographics from CIS until accept
+	gosub zybitSet
 	; This would be a good place to inject the data to the Lifewatch program
 
 	; Should repeat until quit fetchGUI with [x]
@@ -141,12 +142,13 @@ FetchDem:
 					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2])
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2])
 					ptDem["Sex"] := mouseGrab(mdX[3],mdY[1])
-					ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
 					tmp := mouseGrab(mdX[3],mdY[3])
-					ptDem["Type"] := strX(tmp,,1,0, " [",1,2)
-					ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+						ptDem["Type"] := strX(tmp,,1,0, " [",1,2)
+						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
 					mdProv := false
 					mdAcct := false
+					WinClose, Custom Information: 
 				}
 			}
 			gosub fetchGUI							; Update GUI with new info
@@ -224,16 +226,52 @@ fetchSubmit:
 	Check for Lifewatch exe
 	Fill Lifewatch data and submit
 	The repeat the cycle
+demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Destroy
 	if (ptDem["bit"]<256) {
-		MsgBox Too few elements!`nTry again!
+		MsgBox,, % ptDem["bit"], % "Too few elements. Try again!`n`n"
+			. "First " ptDem["nameF"] "`n"
+			. "Last " ptDem["nameL"] "`n"
+			. "MRN " ptDem["mrn"] "`n"
+			. "ENC " ptDem["Account number"] "`n"
+			. "DOB " ptDem["DOB"] "`n"
+			. "Age " ptDem["Age"] "`n"
+			. "Sex " ptDem["Sex"] "`n"
+			. "Loc " ptDem["Loc"] "`n"
+			. "Prv " ptDem["Provider"] "`n"
+			. "PCP " PtDem["PCP"]
 		gosub fetchGUI
 		return
 	}
 	FormatTime, tmp, A_Now, yyyyMMdd
 	ptDem["encDate"] := tmp
 	getDem := false
+	return
+}
+
+zybitSet:
+{
+	if !(zyWinId := WinExist("ahk_exe ZybitRemote.exe")) {
+		MsgBox Must run Zybit Holter program!
+		return
+	}
+	if !WinExist("New Patient - Demographics") {
+		ControlClick, button0, ahk_id %zyWinId%
+	}
+	zyNewId := WinExist("New Patient - Demographics")
+	zyVals := {"Edit1":ptDem["nameL"],"Edit2":ptDem["nameF"]
+				,"Edit4":ptDem["Sex"],"Edit5":ptDem["DOB"]
+				,"Edit6":ptDem["mrn"],"Edit8":ptDem["Account number"]
+				,"Edit7":"Seattle"
+				,"Edit11":ptDem["Provider"],"Edit12":user }
+	for key,val in zyVals
+	{
+		ControlSetText, %key%, %val%, ahk_id %zyNewId%
+	}
+	
+	; Log the entry?
+	
 	return
 }
 
