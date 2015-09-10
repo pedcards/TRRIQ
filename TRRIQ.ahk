@@ -70,33 +70,39 @@ Loop, Read, %chipDir%outdocs.csv
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
 if (%0%) {										; For each parameter,
-	fileIn := %1%								; Gets parameter dropped/passed to script/exe
+	fileIn = %1%								; Gets parameter dropped/passed to script/exe
 	phase := "Process PDF"
 }
 
 if !(phase) {
-	phase := CMsgBox("Which task?","","*&Enter Holter|&Process PDF","Q","")
+	phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
 }
-if (phase = "Enter Holter") {
-	gosub fetchGUI								; Draw input GUI
-	gosub fetchDem								; Loop for grabbing demographics from CIS until accept
-	gosub zybitSet
-	; This would be a good place to inject the data to the Lifewatch program
-
-	; Should repeat until quit fetchGUI with [x]
-	
+if (phase = "Upload new Holter") {
+	Loop 
+	{
+		ptDem := Object()
+		gosub fetchGUI								; Draw input GUI
+		gosub fetchDem								; Grab demographics from CIS until accept
+		gosub zybitSet								; Fill in Zybit demographics
+	}
 	ExitApp
 }
 if (phase = "Process PDF") {
-	if (fileIn) {
+	if (instr(fileIn,".pdf")) {
 		splitpath, fileIn,,,,fileNam
 		gosub MainLoop
+		;MsgBox % fileIn "`n" fileNam
 		ExitApp
 	}
 	loop, %holterDir%*.pdf
 	{
 		fileIn := A_LoopFileFullPath
-		gosub MainLoop
+		RegExMatch(fileIn,"O)[0-9]{2}-[0-9]{2}-[0-9]{4}",nmDtMatch)
+		fileNmDt := RegExReplace(nmDtMatch.value(),"-")
+		FileGetTime, fileDt, %fileIn%, C
+		if !(substr(fileDt,1,8)=fileNmDt) {
+			gosub MainLoop
+		}
 	}
 
 	ExitApp
@@ -107,7 +113,6 @@ ExitApp
 
 FetchDem:
 {
-	ptDem := Object()
 	mdX := Object()
 	mdY := Object()
 	ptDem["bit"] := 0
@@ -120,11 +125,13 @@ FetchDem:
 			if !ErrorLevel {
 				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2
 				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]
-				ptDem["bit"] := (clk.bit) ? (ptDem["bit"] |= 2**clk.bit) : ptDem["bit"]
 				if (clk.field = "Provider") {
+					ptDem["Provider"] := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
 					mdX[4] := mouseXpos
 					mdY[1] := mouseYpos
 					mdProv := true
+					WinGetTitle, mdTitle, ahk_id %mouseWinID%
+					gosub getDemName
 				}
 				if (clk.field = "Account Number") {
 					mdX[1] := mouseXpos
@@ -136,19 +143,17 @@ FetchDem:
 					mdX[2] := mdX[1]+mdXd
 					mdX[3] := mdX[2]+mdXd
 					mdY[2] := mdY[1]+(mdY[3]-mdY[1])/2
-					tmp := mouseGrab((mdX[3]-mdX[1])*0.95,mdY[1])
-					ptDem["nameL"] := strX(tmp,,1,0, ",",1,1)
-					ptDem["nameF"] := strX(tmp,",",1,2, "",1,1)
 					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2])
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2])
-					ptDem["Sex"] := mouseGrab(mdX[3],mdY[1])
+					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]),1,1)
 					tmp := mouseGrab(mdX[3],mdY[3])
 						ptDem["Type"] := strX(tmp,,1,0, " [",1,2)
 						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
-					ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
+					if (instr(ptDem.Type,"Outpatient")) {
+						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
+					}
 					mdProv := false
 					mdAcct := false
-					WinClose, Custom Information: 
 				}
 			}
 			gosub fetchGUI							; Update GUI with new info
@@ -182,6 +187,15 @@ parseClip(clip) {
 	return Error
 }
 
+getDemName:
+{
+	if (RegExMatch(mdTitle, "i)\s\-\s\d{6,7}\s(Opened by)")) {
+		ptDem["nameL"] := strX(mdTitle,,1,0, ",",1,1)
+		ptDem["nameF"] := strX(mdTitle,",",1,2, " ",1,1)
+	}
+	return
+}
+
 fetchGUI:
 {
 	fYd := 30,	fXd := 80
@@ -193,6 +207,7 @@ fetchGUI:
 		.	"		1) Double-click Encounter #`n"
 		.	"		2) Double-click Provider"
 	Gui, fetch:Destroy
+	Gui, fetch:+AlwaysOnTop
 	Gui, fetch:Add, Text, % "x" fX1 , % fTxt	
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd*2) " w" fW1 " h" fH , First
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameF"]
@@ -229,24 +244,82 @@ fetchSubmit:
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Destroy
-	if (ptDem["bit"]<256) {
-		MsgBox,, % ptDem["bit"], % "Too few elements. Try again!`n`n"
+	ptDemChk := (RegExMatch(ptDem["nameF"],"i)[A-Z\-]")) && (RegExMatch(ptDem["nameL"],"i)[A-Z\-]")) 
+			&& (RegExMatch(ptDem["mrn"],"\d{6,7}")) && (RegExMatch(ptDem["Account Number"],"\d{8}")) 
+			&& (RegExMatch(ptDem["DOB"],"[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}")) && (RegExMatch(ptDem["Sex"],"[MF]")) 
+			&& (ptDem["Loc"]<>"") && (ptDem["Provider"]<>"")
+	if !(ptDemChk) {
+		MsgBox,, % "Data incomplete. Try again", % ""
 			. "First " ptDem["nameF"] "`n"
 			. "Last " ptDem["nameL"] "`n"
 			. "MRN " ptDem["mrn"] "`n"
 			. "ENC " ptDem["Account number"] "`n"
 			. "DOB " ptDem["DOB"] "`n"
-			. "Age " ptDem["Age"] "`n"
 			. "Sex " ptDem["Sex"] "`n"
 			. "Loc " ptDem["Loc"] "`n"
+			. "Type " ptDem["Type"] "`n"
+			. "Date " ptDem["EncDate"] "`n"
 			. "Prv " ptDem["Provider"] "`n"
-			. "PCP " PtDem["PCP"]
 		gosub fetchGUI
 		return
 	}
 	FormatTime, tmp, A_Now, yyyyMMdd
 	ptDem["encDate"] := tmp
 	getDem := false
+	Loop
+	{
+		gosub indGUI
+		WinWaitClose, Enter indications
+		if (indChoices)
+			break
+	}
+	return
+}
+
+indGUI:
+{
+	indOpts := ""
+		. "Abnormal Electrocardiogram/Rhythm Strip" "|"
+		. "Bradycardia" "|"
+		. "Chest Pain" "|"
+		. "Cyanosis" "|"
+		. "Dizziness" "|"
+		. "Electrolyte Disorder" "|"
+		. "Failure to thrive" "|"
+		. "Fever" "|"
+		. "History of Cardiovascular Disease" "|"
+		. "Hypertension" "|"
+		. "Kawasaki Disease" "|"
+		. "Medication requiring ECG surveillance" "|"
+		. "Palpitations" "|"
+		. "Premature Atrial Contractions (PAC's)" "|"
+		. "Premature Ventricular Contractions (PVC's)" "|"
+		. "Respiratory Distress" "|"
+		. "Shortness of Breath" "|"
+		. "Supraventricular Tachycardia (SVT)" "|"
+		. "Syncope" "|"
+		. "Tachycardia" "|"
+		. "OTHER"
+	Gui, ind:Destroy
+	Gui, ind:+AlwaysOnTop
+	Gui, ind:font, s12
+	Gui, ind:Add, Text, , Enter indications:
+	Gui, ind:Add, ListBox, r12 vIndChoices 8, %indOpts%
+	Gui, ind:Add, Button, gindSubmit, Submit
+	Gui, ind:Show, Autosize, Enter indications
+	return
+}
+
+indClose:
+ExitApp
+
+indSubmit:
+{
+	Gui, ind:Submit
+	if InStr(indChoices,"OTHER",Yes) {
+		InputBox, indOther, Other, Enter other indication
+		indChoices := RegExReplace(indChoices,"OTHER", "OTHER - " indOther)
+	}
 	return
 }
 
@@ -256,15 +329,22 @@ zybitSet:
 		MsgBox Must run Zybit Holter program!
 		return
 	}
-	if !WinExist("New Patient - Demographics") {
-		ControlClick, button0, ahk_id %zyWinId%
+	Loop
+	{
+		;ControlClick, button0, ahk_id %zyWinId%
+		if (zyNewId := WinExist("New Patient - Demographics")) {
+			break
+		}
+		MsgBox, 262192, Start NEW patient, Click OK when ready to inject demographic information
 	}
-	zyNewId := WinExist("New Patient - Demographics")
+	;zyNewId := WinExist("New Patient - Demographics")
 	zyVals := {"Edit1":ptDem["nameL"],"Edit2":ptDem["nameF"]
 				,"Edit4":ptDem["Sex"],"Edit5":ptDem["DOB"]
 				,"Edit6":ptDem["mrn"],"Edit8":ptDem["Account number"]
-				,"Edit7":"Seattle"
+				,"Edit7":ptDem["loc"]
+				,"Edit9":indChoices
 				,"Edit11":ptDem["Provider"],"Edit12":user }
+	WinActivate, ahk_id %zyNewId%
 	for key,val in zyVals
 	{
 		ControlSetText, %key%, %val%, ahk_id %zyNewId%
@@ -313,11 +393,12 @@ MainLoop:
 	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"
 	fileout := fileOut1 . fileout2
 	tmpDate := parseDate(fldval["Test_Date"])
-	filenameOut := fldval["Name_L"] " " fldval["MRN"] " " tmpDate.MM tmpDate.DD tmpDate.YYYY
+	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
 	;MsgBox % filenameOut
 	FileDelete, %importFld%%fileNameOut%.csv
 	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv
 	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1
+	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C
 Return
 }
 
@@ -389,6 +470,8 @@ Holter:
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
+	fileOut1 .= ",""Mon_type"""
+	fileOut2 .= ",""Philips Holter"""
 	
 return
 }
