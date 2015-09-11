@@ -63,9 +63,6 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp,tmpIdx] := tmpPrv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
-;MsgBox,,% Docs[tmpGrp,tmpIdx], % Docs[tmpGrp ".eml",tmpIdx]
-;MsgBox % Docs["SCH.eml",ObjHasValue(Docs["SCH"],"Chun, Terry")]
-;ExitApp
 
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
@@ -91,16 +88,13 @@ if (phase = "Process PDF") {
 	if (instr(fileIn,".pdf")) {
 		splitpath, fileIn,,,,fileNam
 		gosub MainLoop
-		;MsgBox % fileIn "`n" fileNam
 		ExitApp
 	}
 	loop, %holterDir%*.pdf
 	{
 		fileIn := A_LoopFileFullPath
-		RegExMatch(fileIn,"O)[0-9]{2}-[0-9]{2}-[0-9]{4}",nmDtMatch)
-		fileNmDt := RegExReplace(nmDtMatch.value(),"-")
 		FileGetTime, fileDt, %fileIn%, C
-		if !(substr(fileDt,1,8)=fileNmDt) {
+		if !(substr(fileDt,-5)="000000") {
 			gosub MainLoop
 		}
 	}
@@ -217,14 +211,10 @@ fetchGUI:
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["MRN"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , DOB
 	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"], MM/dd/yyyy
-;	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Date placed
-;	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["EncDate"], MM/dd/yyyy
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Account Number"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Provider"]
-;	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Your initials
-;	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH , % user
 	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit", Submit!
 	Gui, fetch:Show, AutoSize, Enter Demographics
 	return
@@ -331,7 +321,6 @@ zybitSet:
 	}
 	Loop
 	{
-		;ControlClick, button0, ahk_id %zyWinId%
 		if (zyNewId := WinExist("New Patient - Demographics")) {
 			break
 		}
