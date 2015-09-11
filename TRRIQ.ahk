@@ -315,9 +315,12 @@ indSubmit:
 
 zybitSet:
 {
-	if !(zyWinId := WinExist("ahk_exe ZybitRemote.exe")) {
-		MsgBox Must run Zybit Holter program!
-		return
+	Loop
+	{
+		if (zyWinId := WinExist("ahk_exe ZybitRemote.exe")) {
+			return
+		}
+		MsgBox, 262192, Inject demographics, Must run Zybit Holter program!
 	}
 	Loop
 	{
