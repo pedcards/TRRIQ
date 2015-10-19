@@ -435,11 +435,11 @@ Holter:
 	FileDelete tempfile.txt
 	FileAppend %newtxt%, tempfile.txt
 	
-	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
+	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
 
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
-		, "Source", "Billing Code", "Recorder Format", "Pt(.*?)Home(.*?)#", "Hookup Tech", "Pacemaker(.*?)Y/N.", "Medications"
+		, "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
 		, "Test Date", "Analysis Date", "Hookup Time", "Recording Time", "Analysis Time", "Reason for Test", "Group"]
 	labels[1] := ["Name_L", "Name_F", "Name_M", "MRN", "DOB", "Sex"
@@ -578,7 +578,7 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	col3	= string demarcates start of COLUMN 3
 	col4	= string demarcates start of COLUMN 4
 */
-	txt := strX(x,blk1,1,(incl ? 0 : StrLen(blk1)),blk2,1,StrLen(blk2))
+	txt := stRegX(x,blk1,1,(incl ? 0 : StrLen(blk1)),blk2,StrLen(blk2))
 	StringReplace, col2, col2, %A_space%, [ ]+, All
 	StringReplace, col3, col3, %A_space%, [ ]+, All
 	StringReplace, col4, col4, %A_space%, [ ]+, All
