@@ -98,9 +98,7 @@ if (phase = "Process PDF") {
 			gosub MainLoop
 		}
 	}
-
 	ExitApp
-
 }
 
 ExitApp
