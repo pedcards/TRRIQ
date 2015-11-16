@@ -441,9 +441,9 @@ Holter:
 		, "Physician", "Scanned By", "Reading Physician"
 		, "Test Date", "Analysis Date", "Hookup Time", "Recording Time", "Analysis Time", "Reason for Test", "Group"]
 	labels[1] := ["Name_L", "Name_F", "Name_M", "MRN", "DOB", "Sex"
-		, "Site", "Billing", "Device_SN", "VOID", "Hookup_tech", "VOID", "Meds"
+		, "Site", "Billing", "Device_SN", "VOID1", "Hookup_tech", "VOID2", "Meds"
 		, "Ordering", "Scanned_by", "Reading"
-		, "Test_date", "Scan_date", "Hookup_time", "Recording_time", "Analysis_time", "Indication", "VOID"]
+		, "Test_date", "Scan_date", "Hookup_time", "Recording_time", "Analysis_time", "Indication", "VOID3"]
 	fieldvals(demog,1,"dem")
 	
 	fields[2] := ["Total Beats", "Min HR", "Avg HR", "Max HR", "Heart Rate Variability"]
