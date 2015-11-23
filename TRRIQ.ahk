@@ -425,8 +425,8 @@ epRead:
 		ymatch := epOrder.value()
 	}
 	
-	fileOut1 .= ",""EP_read"""
-	fileOut2 .= ",""" ymatch """"
+	fileOut1 .= ",""EP_read"",""EP_date"",""MA"""
+	fileOut2 .= ",""" ymatch """,""" dlDate """,""" user ""
 return
 }
 
