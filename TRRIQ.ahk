@@ -17,59 +17,335 @@
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%
+SetTitleMatchMode, 2
 FileInstall, pdftotext.exe, pdftotext.exe
 
 SplitPath, A_ScriptDir,,fileDir
-IfInString, fileDir, Dropbox 
+IfInString, fileDir, Dropbox					; Change enviroment if run from development vs production directory
 {
-	isAdmin = true
-	holterDir := ".\Holter PDFs"
-	fileNameOut := ".\Import\Import.csv"
+	isAdmin := true
+	holterDir := ".\Holter PDFs\"
+	importFld := ".\Import\"
+	chipDir := ".\Chipotle\"
 } else {
-	isAdmin = false
-	holterDir := "..\Holter PDFs"
-	fileNameOut := "..\Import\Import.csv"
+	isAdmin := false
+	holterDir := "\\chmc16\Cardio\EP\HoltER Database\Holter PDFs\"
+	importFld := "\\chmc16\Cardio\EP\HoltER Database\Import\"
+	chipDir := "\\chmc16\Cardio\Inpatient List\chipotle\"
 }
+user := A_UserName
 
-if (%0%) {																; For each parameter:
-	fileIn = %1%													; Gets parameter passed to script/exe.
-} else {
-	FileSelectFile, fileIn,, %holterDir%, Select PDF file:, PDF files (*.pdf)
-}
-splitpath, fileIn,,,,fileNam
-
-/*	Read outdocs.csv for Cardiologist and Fellow names
+/*	Read outdocs.csv for Cardiologist and Fellow names 
 */
-;~ Docs := Object()
-;~ tmpIdxG := 0
-;~ Loop, Read, outdocs.csv
-;~ {
-	;~ tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
-	;~ tmpline := A_LoopReadLine
-	;~ StringSplit, tmp, tmpline, `, , `"
-	;~ if ((tmp1="Name") or (tmp1="FELLOWS")) {						; Skip section headers
-		;~ continue
-	;~ }
-	;~ if (tmp1) {
-		;~ tmpIdx += 1
-		;~ StringSplit, tmpPrv, tmp1, %A_Space%`"
-		;~ tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2
-		;~ Docs[tmpGrp,tmpIdx]:=tmpPrv
-		;~ outGrpV[tmpGrp] := "callGrp" . tmpIdxG
-	;~ }
-;~ }
-;~ outGrpV["Other"] := "callGrp" . (tmpIdxG+1)
-;~ outGrpV["TO CALL"] := "callGrp" . (tmpIdxG+2)
+Docs := Object()
+tmpChk := false
+Loop, Read, %chipDir%outdocs.csv
+{
+	tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
+	tmpline := A_LoopReadLine
+	StringSplit, tmp, tmpline, `, , `"
+	if ((tmp1="SCH") or (tmp1="FELLOWS")) {
+		tmpGrp:=tmp1
+		tmpChk:=true
+		tmpIdx:=0
+		continue
+	}
+	if !(tmp1) {
+		continue
+	}
+	if !(tmpChk) {
+		continue
+	}
+	tmpIdx += 1
+	StringSplit, tmpPrv, tmp1, %A_Space%`"
+	tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2				; F. Last
+	tmpPrv := tmpPrv2 ", " tmpPrv1								; Last, First
+	Docs[tmpGrp,tmpIdx] := tmpPrv
+	Docs[tmpGrp ".eml",tmpIdx] := tmp4
+}
 
+demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
-gosub MainLoop
+if (%0%) {										; For each parameter,
+	fileIn = %1%								; Gets parameter dropped/passed to script/exe
+	phase := "Process PDF"
+}
 
-fileout := fileOut1 . fileout2
-
-FileDelete, %fileNameOut%
-FileAppend, %fileOut%, %fileNameOut%
+if !(phase) {
+	phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
+}
+if (phase = "Upload new Holter") {
+	Loop 
+	{
+		ptDem := Object()
+		gosub fetchGUI								; Draw input GUI
+		gosub fetchDem								; Grab demographics from CIS until accept
+		gosub zybitSet								; Fill in Zybit demographics
+	}
+	ExitApp
+}
+if (phase = "Process PDF") {
+	if (instr(fileIn,".pdf")) {
+		splitpath, fileIn,,,,fileNam
+		gosub MainLoop
+		ExitApp
+	}
+	loop, %holterDir%*.pdf
+	{
+		fileIn := A_LoopFileFullPath
+		FileGetTime, fileDt, %fileIn%, C
+		if !(substr(fileDt,-5)="000000") {
+			gosub MainLoop
+		}
+	}
+	ExitApp
+}
 
 ExitApp
+
+FetchDem:
+{
+	mdX := Object()
+	mdY := Object()
+	ptDem["bit"] := 0
+	getDem := true
+	while (getDem) {									; Repeat until we get tired of this
+		clipboard :=
+		ClipWait, 2
+		if !ErrorLevel {
+			clk := parseClip(clipboard)
+			if !ErrorLevel {
+				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2
+				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]
+				if (clk.field = "Provider") {
+					ptDem["Provider"] := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+					mdX[4] := mouseXpos
+					mdY[1] := mouseYpos
+					mdProv := true
+					WinGetTitle, mdTitle, ahk_id %mouseWinID%
+					gosub getDemName
+				}
+				if (clk.field = "Account Number") {
+					mdX[1] := mouseXpos
+					mdY[3] := mouseYpos
+					mdAcct := true
+				}
+				if (mdProv and mdAcct) {
+					mdXd := (mdX[4]-mdX[1])/3
+					mdX[2] := mdX[1]+mdXd
+					mdX[3] := mdX[2]+mdXd
+					mdY[2] := mdY[1]+(mdY[3]-mdY[1])/2
+					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2])
+					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2])
+					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]),1,1)
+					tmp := mouseGrab(mdX[3],mdY[3])
+						ptDem["Type"] := strX(tmp,,1,0, " [",1,2)
+						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					if (instr(ptDem.Type,"Outpatient")) {
+						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
+					}
+					mdProv := false
+					mdAcct := false
+				}
+			}
+			gosub fetchGUI							; Update GUI with new info
+		}
+	}
+	return
+}
+
+mouseGrab(x,y) {
+	MouseMove, %x%, %y%, 0
+	Click 2
+	sleep 100
+	ClipWait
+	clk := parseClip(clipboard)
+	return clk.value
+	
+}
+
+parseClip(clip) {
+	global demVals
+	StringSplit, val, clip, :
+	if (pos:=ObjHasValue(demVals, val1)) {
+		return {"field":val1, "value":val2, "bit":pos}
+	}
+	if (RegExMatch(clip,"O)(Outpatient)|(Inpatient)\s\[",valMatch)) {
+		return {"field":"Type", "value":clip}
+	}
+	if (RegExMatch(clip,"O)[A-Z\-\s]*, [A-Z\-]*",valMatch)) {
+		return {"field":"Name", "value":valMatch.value()}
+	}
+	return Error
+}
+
+getDemName:
+{
+	if (RegExMatch(mdTitle, "i)\s\-\s\d{6,7}\s(Opened by)")) {
+		ptDem["nameL"] := strX(mdTitle,,1,0, ",",1,1)
+		ptDem["nameF"] := strX(mdTitle,",",1,2, " ",1,1)
+	}
+	return
+}
+
+fetchGUI:
+{
+	fYd := 30,	fXd := 80
+	fX1 := 12,	fX2 := fX1+fXd
+	fW1 := 60,	fW2 := 190
+	fH := 20
+	fY := 10
+	fTxt := "	To auto-grab demographic info:`n"
+		.	"		1) Double-click Encounter #`n"
+		.	"		2) Double-click Provider"
+	Gui, fetch:Destroy
+	Gui, fetch:+AlwaysOnTop
+	Gui, fetch:Add, Text, % "x" fX1 , % fTxt	
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd*2) " w" fW1 " h" fH , First
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameF"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Last
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameL"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , MRN
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["MRN"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , DOB
+	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"], MM/dd/yyyy
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Account Number"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Provider"]
+	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit", Submit!
+	Gui, fetch:Show, AutoSize, Enter Demographics
+	return
+}
+
+fetchGuiClose:
+ExitApp
+
+fetchSubmit:
+{
+/* some error checking
+	Check for required elements
+	Error check and normalize Ordering MD name
+	Check for Lifewatch exe
+	Fill Lifewatch data and submit
+	The repeat the cycle
+demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
+*/
+	Gui, fetch:Destroy
+	ptDemChk := (RegExMatch(ptDem["nameF"],"i)[A-Z\-]")) && (RegExMatch(ptDem["nameL"],"i)[A-Z\-]")) 
+			&& (RegExMatch(ptDem["mrn"],"\d{6,7}")) && (RegExMatch(ptDem["Account Number"],"\d{8}")) 
+			&& (RegExMatch(ptDem["DOB"],"[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}")) && (RegExMatch(ptDem["Sex"],"[MF]")) 
+			&& (ptDem["Loc"]<>"") && (ptDem["Provider"]<>"")
+	if !(ptDemChk) {
+		MsgBox,, % "Data incomplete. Try again", % ""
+			. "First " ptDem["nameF"] "`n"
+			. "Last " ptDem["nameL"] "`n"
+			. "MRN " ptDem["mrn"] "`n"
+			. "ENC " ptDem["Account number"] "`n"
+			. "DOB " ptDem["DOB"] "`n"
+			. "Sex " ptDem["Sex"] "`n"
+			. "Loc " ptDem["Loc"] "`n"
+			. "Type " ptDem["Type"] "`n"
+			. "Date " ptDem["EncDate"] "`n"
+			. "Prv " ptDem["Provider"] "`n"
+		gosub fetchGUI
+		return
+	}
+	FormatTime, tmp, A_Now, yyyyMMdd
+	ptDem["encDate"] := tmp
+	getDem := false
+	Loop
+	{
+		gosub indGUI
+		WinWaitClose, Enter indications
+		if (indChoices)
+			break
+	}
+	return
+}
+
+indGUI:
+{
+	indOpts := ""
+		. "Abnormal Electrocardiogram/Rhythm Strip" "|"
+		. "Bradycardia" "|"
+		. "Chest Pain" "|"
+		. "Cyanosis" "|"
+		. "Dizziness" "|"
+		. "Electrolyte Disorder" "|"
+		. "Failure to thrive" "|"
+		. "Fever" "|"
+		. "History of Cardiovascular Disease" "|"
+		. "Hypertension" "|"
+		. "Kawasaki Disease" "|"
+		. "Medication requiring ECG surveillance" "|"
+		. "Palpitations" "|"
+		. "Premature Atrial Contractions (PAC's)" "|"
+		. "Premature Ventricular Contractions (PVC's)" "|"
+		. "Respiratory Distress" "|"
+		. "Shortness of Breath" "|"
+		. "Supraventricular Tachycardia (SVT)" "|"
+		. "Syncope" "|"
+		. "Tachycardia" "|"
+		. "OTHER"
+	Gui, ind:Destroy
+	Gui, ind:+AlwaysOnTop
+	Gui, ind:font, s12
+	Gui, ind:Add, Text, , Enter indications:
+	Gui, ind:Add, ListBox, r12 vIndChoices 8, %indOpts%
+	Gui, ind:Add, Button, gindSubmit, Submit
+	Gui, ind:Show, Autosize, Enter indications
+	return
+}
+
+indClose:
+ExitApp
+
+indSubmit:
+{
+	Gui, ind:Submit
+	if InStr(indChoices,"OTHER",Yes) {
+		InputBox, indOther, Other, Enter other indication
+		indChoices := RegExReplace(indChoices,"OTHER", "OTHER - " indOther)
+	}
+	return
+}
+
+zybitSet:
+{
+	Loop
+	{
+		if (zyWinId := WinExist("ahk_exe ZybitRemote.exe")) {
+			return
+		}
+		MsgBox, 262193, Inject demographics, Must run Zybit Holter program!
+		IfMsgBox Cancel
+			ExitApp
+	}
+	Loop
+	{
+		if (zyNewId := WinExist("New Patient - Demographics")) {
+			break
+		}
+		MsgBox, 262192, Start NEW patient, Click OK when ready to inject demographic information
+	}
+	;zyNewId := WinExist("New Patient - Demographics")
+	zyVals := {"Edit1":ptDem["nameL"],"Edit2":ptDem["nameF"]
+				,"Edit4":ptDem["Sex"],"Edit5":ptDem["DOB"]
+				,"Edit6":ptDem["mrn"],"Edit8":ptDem["Account number"]
+				,"Edit7":ptDem["loc"]
+				,"Edit9":indChoices
+				,"Edit11":ptDem["Provider"],"Edit12":user }
+	WinActivate, ahk_id %zyNewId%
+	for key,val in zyVals
+	{
+		ControlSetText, %key%, %val%, ahk_id %zyNewId%
+	}
+	
+	; Log the entry?
+	
+	return
+}
 
 MainLoop:
 {
@@ -77,11 +353,12 @@ MainLoop:
 	FileRead, maintxt, temp.txt
 	blocks := Object()
 	fields := Object()
+	fldval := {}
 	labels := Object()
 	newTxt := Object()
 	blk := Object()
 	blk2 := Object()
-	docs := Object()
+	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 
 	if (InStr(maintxt,"Holter Report")) {							; Search maintxt for identifying strings
@@ -94,35 +371,6 @@ MainLoop:
 		MsgBox No match!
 		ExitApp
 	}
-
-	;~ Loop, parse, maintxt, `n,`r,%A_Space%					; Identify filetype by text in first lines
-	;~ {
-		;~ i:=A_LoopField										; Search for first case insensitive string match
-		;~ if (InStr(i,"Holter")=1) {
-			;~ gosub Holter
-			;~ break
-		;~ }
-		;~ if (InStr(i,"TRANSTELEPHONIC ARRHYTHMIA")=1) {
-			;~ gosub EventRec
-			;~ break
-		;~ }
-<<<<<<< HEAD
-		if (RegExMatch(i,"i)zio.*xt.*PATCH")) {
-			gosub Zio
-			break
-		}
-		if A_Index>9												; only search in the first several lines
-			Break
-	}
-Return
-=======
-		;~ if (RegExMatch(i,"i)zio.*xt.*PATCH")) {
-			;~ gosub Zio
-			;~ break
-		;~ }
-		;~ if A_Index>9												; only search in the first several lines
-			;~ Break													; might be possible to accomplish this with
-	;~ }																; i:=substr(maintxt,1,1024)
 
 	gosub epRead
 	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"
@@ -161,7 +409,6 @@ epRead:
 	fileOut1 .= ",""EP_read"",""EP_date"",""MA"""
 	fileOut2 .= ",""" ymatch """,""" dlDate """,""" user ""
 return
->>>>>>> release/0.7
 }
 
 Holter:
@@ -178,17 +425,17 @@ Holter:
 	FileDelete tempfile.txt
 	FileAppend %newtxt%, tempfile.txt
 	
-    demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
+	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
 
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
-        , "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
+		, "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
 		, "Test Date", "Analysis Date", "Hookup Time", "Recording Time", "Analysis Time", "Reason for Test", "Group"]
 	labels[1] := ["Name_L", "Name_F", "Name_M", "MRN", "DOB", "Sex"
-		, "Site", "Billing", "Device_SN", "VOID", "Hookup_tech", "VOID", "Meds"
+		, "Site", "Billing", "Device_SN", "VOID1", "Hookup_tech", "VOID2", "Meds"
 		, "Ordering", "Scanned_by", "Reading"
-		, "Test_date", "Scan_date", "Hookup_time", "Recording_time", "Analysis_time", "Indication", "VOID"]
+		, "Test_date", "Scan_date", "Hookup_time", "Recording_time", "Analysis_time", "Indication", "VOID3"]
 	fieldvals(demog,1,"dem")
 	
 	fields[2] := ["Total Beats", "Min HR", "Avg HR", "Max HR", "Heart Rate Variability"]
@@ -206,8 +453,10 @@ Holter:
 	;tmp := columns(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:","")
 	tmp := strX(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:",1,13,"",1,0)
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
-	fileout1 .= """INTERP""`n"
-	fileout2 .= """" . cleanspace(trim(tmp," `n")) . """`n"
+	fileout1 .= """INTERP"""
+	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
+	fileOut1 .= ",""Mon_type"""
+	fileOut2 .= ",""Philips Holter"""
 	
 return
 }
@@ -320,7 +569,7 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	col3	= string demarcates start of COLUMN 3
 	col4	= string demarcates start of COLUMN 4
 */
-    txt := stRegX(x,blk1,1,(incl ? 0 : StrLen(blk1)),blk2,StrLen(blk2))
+	txt := stRegX(x,blk1,1,(incl ? 0 : StrLen(blk1)),blk2,StrLen(blk2))
 	StringReplace, col2, col2, %A_space%, [ ]+, All
 	StringReplace, col3, col3, %A_space%, [ ]+, All
 	StringReplace, col4, col4, %A_space%, [ ]+, All
@@ -365,7 +614,7 @@ fieldvals(x,bl,bl2) {
 	bl	= which FIELD number to use
 	bl2	= label prefix
 */
-	global fields, labels
+	global fields, labels, fldval
 	
 	for k, i in fields[bl]
 	{
@@ -374,6 +623,7 @@ fieldvals(x,bl,bl2) {
 		lbl := labels[bl][A_index]
 		cleanSpace(m)
 		cleanColon(m)
+		fldval[lbl] := m
 		formatField(bl2,lbl,m)
 	}
 }
@@ -397,7 +647,7 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 }
 
 formatField(pre, lab, txt) {
-	global monType
+	global monType, Docs
 	if (txt ~= "\d{1,2} hr \d{1,2} min") {
 		StringReplace, txt, txt, %A_Space%hr%A_space% , :
 		StringReplace, txt, txt, %A_Space%min , 
@@ -405,6 +655,14 @@ formatField(pre, lab, txt) {
 	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(s)?)")			; 	Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
 	txt := trim(txt)
+	
+	if (lab="Ordering") {
+		tmpCrd := checkCrd(txt)
+		fieldColAdd(pre,lab,tmpCrd.best)
+		fieldColAdd(pre,lab "_grp",tmpCrd.group)
+		fieldColAdd(pre,lab "_eml",Docs[tmpCrd.Group ".eml",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)])
+		return
+	}
 	
 ;	Lifewatch Holter specific search fixes
 	if (monType="H") {
@@ -474,6 +732,30 @@ fieldColAdd(pre,lab,txt) {
 	return
 }
 
+checkCrd(x) {
+/*	Compares pl_ProvCard vs array of cardiologists
+	x = name
+	returns array[match score, best match, best match group]
+*/
+	global Docs
+	fuzz := 0.1
+	for rowidx,row in Docs
+	{
+		if (substr(rowIdx,-3)=".eml")
+			continue
+		for colidx,item in row
+		{
+			res := fuzzysearch(x,item)
+			if (res<fuzz) {
+				fuzz := res
+				best:=item
+				group:=rowidx
+			}
+		}
+	}
+	return {"fuzz":fuzz,"best":best,"group":group}
+}
+
 cleancolon(ByRef txt) {
 	if substr(txt,1,1)=":" {
 		txt:=substr(txt,2)
@@ -494,4 +776,42 @@ cleanspace(ByRef txt) {
 	return txt
 }
 
+ObjHasValue(aObj, aValue, rx:="") {
+; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
+    for key, val in aObj
+		if (rx="RX") {
+			if (aValue ~= val) {
+				return, key, Errorlevel := 0
+			}
+		} else {
+			if (val = aValue) {
+				return, key, ErrorLevel := 0
+			}
+		}
+    return, false, errorlevel := 1
+}
+
+parseDate(x) {
+; Disassembles "2/9/2015" or "2/9/2015 8:31" into Yr=2015 Mo=02 Da=09 Hr=08 Min=31
+	StringSplit, DT, x, %A_Space%
+	StringSplit, DY, DT1, /
+	StringSplit, DHM, DT2, :
+	return {"MM":zDigit(DY1), "DD":zDigit(DY2), "YYYY":DY3, "hr":zDigit(DHM1), "min":zDigit(DHM2), "Date":DT1, "Time":DT2}
+}
+
+niceDate(x) {
+	if !(x)
+		return error
+	FormatTime, x, %x%, MM/dd/yyyy
+	return x
+}
+
+zDigit(x) {
+; Add leading zero to a number
+	return SubStr("0" . x, -1)
+}
+
 #Include strx.ahk
+#Include CMsgBox.ahk
+#Include xml.ahk
+#Include sift3.ahk
