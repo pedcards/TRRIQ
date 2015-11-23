@@ -372,25 +372,6 @@ MainLoop:
 		ExitApp
 	}
 
-	;~ Loop, parse, maintxt, `n,`r,%A_Space%					; Identify filetype by text in first lines
-	;~ {
-		;~ i:=A_LoopField										; Search for first case insensitive string match
-		;~ if (InStr(i,"Holter")=1) {
-			;~ gosub Holter
-			;~ break
-		;~ }
-		;~ if (InStr(i,"TRANSTELEPHONIC ARRHYTHMIA")=1) {
-			;~ gosub EventRec
-			;~ break
-		;~ }
-		;~ if (RegExMatch(i,"i)zio.*xt.*PATCH")) {
-			;~ gosub Zio
-			;~ break
-		;~ }
-		;~ if A_Index>9												; only search in the first several lines
-			;~ Break													; might be possible to accomplish this with
-	;~ }																; i:=substr(maintxt,1,1024)
-
 	gosub epRead
 	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"
 	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"
