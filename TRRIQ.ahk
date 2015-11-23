@@ -84,17 +84,29 @@ MainLoop:
 	docs := Object()
 	summBl := summ := ""
 
-	Loop, parse, maintxt, `n,`r,%A_Space%					; Identify filetype by text in first lines
-	{
-		i:=A_LoopField										; Search for first case insensitive string match
-		if (InStr(i,"Holter Ext")=1) {
-			gosub Holter
-			break
-		}
+	if (InStr(maintxt,"Holter Report")) {							; Search maintxt for identifying strings
+		gosub Holter
+	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
+		gosub EventRec
+	} else if (RegExMatch(maintxt,"i)zio.*xt.*patch")) {
+		gosub Zio
+	} else {
+		MsgBox No match!
+		ExitApp
+	}
+
+	;~ Loop, parse, maintxt, `n,`r,%A_Space%					; Identify filetype by text in first lines
+	;~ {
+		;~ i:=A_LoopField										; Search for first case insensitive string match
+		;~ if (InStr(i,"Holter")=1) {
+			;~ gosub Holter
+			;~ break
+		;~ }
 		;~ if (InStr(i,"TRANSTELEPHONIC ARRHYTHMIA")=1) {
 			;~ gosub EventRec
 			;~ break
 		;~ }
+<<<<<<< HEAD
 		if (RegExMatch(i,"i)zio.*xt.*PATCH")) {
 			gosub Zio
 			break
@@ -103,6 +115,53 @@ MainLoop:
 			Break
 	}
 Return
+=======
+		;~ if (RegExMatch(i,"i)zio.*xt.*PATCH")) {
+			;~ gosub Zio
+			;~ break
+		;~ }
+		;~ if A_Index>9												; only search in the first several lines
+			;~ Break													; might be possible to accomplish this with
+	;~ }																; i:=substr(maintxt,1,1024)
+
+	gosub epRead
+	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"
+	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"
+	fileout := fileOut1 . fileout2
+	tmpDate := parseDate(fldval["Test_Date"])
+	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
+	;MsgBox % filenameOut
+	FileDelete, %importFld%%fileNameOut%.csv
+	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv
+	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1
+	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C
+Return
+}
+
+epRead:
+{
+	FileGetTime, dlDate, %fileIn%
+	FormatTime, dlDay, %dlDate%, dddd
+	if (dlDay="Friday") {
+		dlDate += 3, Days
+	}
+	FormatTime, dlDate, %dlDate%, yyyyMMdd
+	
+	y := new XML(chipDir "currlist.xml")
+	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun)|(Salerno)|(Seslar)", ymatch)
+	if !(ymatch := ymatch.value()) {
+		ymatch := epMon ? epMon : cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
+		epMon := ymatch
+	}
+	
+	if (RegExMatch(fldval["ordering"], "Oi)(Chun)|(Salerno)|(Seslar)", epOrder))  {
+		ymatch := epOrder.value()
+	}
+	
+	fileOut1 .= ",""EP_read"",""EP_date"",""MA"""
+	fileOut2 .= ",""" ymatch """,""" dlDate """,""" user ""
+return
+>>>>>>> release/0.7
 }
 
 Holter:
@@ -144,7 +203,8 @@ Holter:
 	labels[4] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Pairs", "Drop_Late", "LongRR", "Single", "Bigem_Trigem", "AF"]
 	fieldvals(strX(holtVals,"Supraventricular Ectopy",nn-23,0,"Atrial Fibrillation",1,0,nn),4,"sve")
 	
-	tmp := columns(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:","Signed :")
+	;tmp := columns(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:","")
+	tmp := strX(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:",1,13,"",1,0)
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
 	fileout1 .= """INTERP""`n"
 	fileout2 .= """" . cleanspace(trim(tmp," `n")) . """`n"
@@ -342,17 +402,24 @@ formatField(pre, lab, txt) {
 		StringReplace, txt, txt, %A_Space%hr%A_space% , :
 		StringReplace, txt, txt, %A_Space%min , 
 	}
-	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(s)?)|\(.*%\)")	; 	Remove units from numbers
+	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(s)?)")			; 	Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
 	txt := trim(txt)
 	
 ;	Lifewatch Holter specific search fixes
 	if (monType="H") {
-		if InStr(txt," at ") {												;	Split timed results "139 at 8:31:47 AM" into two fields
-			tx1 := strX(txt,,1,1," at ",1,4,n)								;		labels e.g. xxx and xxx_time
-			tx2 := SubStr(txt,n+4)											;		result e.g. "139" and "8:31:47 AM"
+		if txt ~= ("^[0-9]+.*at.*(AM|PM)$") {								;	Split timed results "139 at 8:31:47 AM" into two fields
+			tx1 := trim(strX(txt,,1,1," at",1,3))							;		labels e.g. xxx and xxx_time
+			tx2 := trim(strX(txt," at",1,3,"",1,0))							;		result e.g. "139" and "8:31:47 AM"
 			fieldColAdd(pre,lab,tx1)
 			fieldColAdd(pre,lab "_time",tx2)
+			return
+		}
+		if (txt ~= "^[0-9]+\s\([0-9.]+\%\)$") {								;	Split percents |\(.*%\)
+			tx1 := trim(strX(txt,,1,1,"(",1,1))
+			tx2 := trim(strX(txt,"(",1,1,"%",1,0))
+			fieldColAdd(pre,lab,tx1)
+			fieldColAdd(pre,lab "_per",tx2)
 			return
 		}
 		if (txt ~= "^[0-9,]{1,}\/[0-9,]{1,}$") {							;	Split multiple number value results "5/0" into two fields, ignore date formats (5/1/12)
