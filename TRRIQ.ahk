@@ -671,7 +671,7 @@ formatField(pre, lab, txt) {
 		StringReplace, txt, txt, %A_Space%hr%A_space% , :
 		StringReplace, txt, txt, %A_Space%min , 
 	}
-	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(s)?)|\(.*%\)")	; 	Remove units from numbers
+	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(s)?)")	; 	Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
 	txt := trim(txt)
 	
@@ -685,13 +685,15 @@ formatField(pre, lab, txt) {
 	
 ;	Lifewatch Holter specific search fixes
 	if (monType="H") {
-		if InStr(txt," at ") {												;	Split timed results "139 at 8:31:47 AM" into two fields
-			tx1 := strX(txt,,1,1," at ",1,4,n)								;		labels e.g. xxx and xxx_time
-			tx2 := SubStr(txt,n+4)											;		result e.g. "139" and "8:31:47 AM"
+		if txt ~= ("^[0-9]+.*at.*(AM|PM)$") {								;	Split timed results "139 at 8:31:47 AM" into two fields
+			tx1 := trim(strX(txt,,1,1," at",1,3))							;		labels e.g. xxx and xxx_time
+			tx2 := trim(strX(txt," at",1,3,"",1,0))								;		result e.g. "139" and "8:31:47 AM"
 			fieldColAdd(pre,lab,tx1)
 			fieldColAdd(pre,lab "_time",tx2)
 			return
 		}
+		;~ if (txt ~= "^[0-9]+\s\([0-9.]+\%\)$") {								;	Split percents |\(.*%\)
+		;~ }
 		if (txt ~= "^[0-9,]{1,}\/[0-9,]{1,}$") {							;	Split multiple number value results "5/0" into two fields, ignore date formats (5/1/12)
 			tx1 := strX(txt,,1,1,"/",1,1,n)
 			tx2 := SubStr(txt,n+1)
