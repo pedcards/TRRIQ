@@ -469,7 +469,8 @@ Holter:
 	labels[4] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Pairs", "Drop_Late", "LongRR", "Single", "Bigem_Trigem", "AF"]
 	fieldvals(strX(holtVals,"Supraventricular Ectopy",nn-23,0,"Atrial Fibrillation",1,0,nn),4,"sve")
 	
-	tmp := columns(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:","Signed :")
+	;tmp := columns(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:","")
+	tmp := strX(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:",1,13,"",1,0)
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
