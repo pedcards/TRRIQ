@@ -407,7 +407,7 @@ epRead:
 	}
 	
 	fileOut1 .= ",""EP_read"",""EP_date"",""MA"""
-	fileOut2 .= ",""" ymatch """,""" dlDate """,""" user ""
+	fileOut2 .= ",""" ymatch """,""" niceDate(dlDate) """,""" user ""
 return
 }
 
