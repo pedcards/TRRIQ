@@ -21,7 +21,7 @@ SetTitleMatchMode, 2
 FileInstall, pdftotext.exe, pdftotext.exe
 
 SplitPath, A_ScriptDir,,fileDir
-IfInString, fileDir, Dropbox					; Change enviroment if run from development vs production directory
+IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
 	isAdmin := true
 	holterDir := ".\Holter PDFs\"
@@ -29,9 +29,11 @@ IfInString, fileDir, Dropbox					; Change enviroment if run from development vs 
 	chipDir := ".\Chipotle\"
 } else {
 	isAdmin := false
-	holterDir := "\\chmc16\Cardio\EP\HoltER Database\Holter PDFs\"
-	importFld := "\\chmc16\Cardio\EP\HoltER Database\Import\"
-	chipDir := "\\chmc16\Cardio\Inpatient List\chipotle\"
+	;holterDir := "\\chmc16\Cardio\EP\HoltER Database\Holter PDFs\"
+	;importFld := "\\chmc16\Cardio\EP\HoltER Database\Import\"
+	holterDir := "..\Holter PDFs\"
+	importFld := "..\Import\"
+	chipDir := "\\childrens\files\HCChipotle\"
 }
 user := A_UserName
 
