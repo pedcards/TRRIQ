@@ -46,23 +46,27 @@ Loop, Read, %chipDir%outdocs.csv
 	tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
 	tmpline := A_LoopReadLine
 	StringSplit, tmp, tmpline, `, , `"
-	if ((tmp1="SCH") or (tmp1="FELLOWS")) {
-		tmpGrp:=tmp1
-		tmpChk:=true
-		tmpIdx:=0
+	if ((tmp1="Name") or (tmp1="end") or !(tmp1)) {					; header, end, or blank lines
 		continue
 	}
-	if !(tmp1) {
+	if (tmp4="group") {												; skip group names
 		continue
 	}
-	if !(tmpChk) {
+	if (tmp2="" and tmp3="" and tmp4="") {							; Fields 2,3,4 blank = new group
+		tmpGrp := tmp1
+		tmpIdx := 0
+		tmpIdxG += 1
+		outGrps.Insert(tmpGrp)
 		continue
 	}
+	if !(instr(tmp4,"seattlechildrens.org")) {						; skip non-children's providers
+		continue
+	}																; Otherwise format Crd name to first initial, last name
 	tmpIdx += 1
 	StringSplit, tmpPrv, tmp1, %A_Space%`"
-	tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2				; F. Last
-	tmpPrv := tmpPrv2 ", " tmpPrv1								; Last, First
-	Docs[tmpGrp,tmpIdx] := tmpPrv
+	;tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2					; F. Last
+	tmpPrv := tmpPrv2 ", " tmpPrv1									; Last, First
+	Docs[tmpGrp,tmpIdx]:=tmpPrv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
