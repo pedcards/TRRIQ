@@ -80,7 +80,7 @@ if (%0%) {										; For each parameter,
 if !(phase) {
 	phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
 }
-if (phase = "Upload new Holter") {
+if (instr(phase,"new")) {
 	Loop 
 	{
 		ptDem := Object()
@@ -90,7 +90,7 @@ if (phase = "Upload new Holter") {
 	}
 	ExitApp
 }
-if (phase = "Process PDF") {
+if (instr(phase,"PDF")) {
 	if (instr(fileIn,".pdf")) {
 		splitpath, fileIn,,,,fileNam
 		gosub MainLoop
