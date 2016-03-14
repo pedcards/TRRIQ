@@ -663,7 +663,7 @@ formatField(pre, lab, txt) {
 	txt := trim(txt)
 	
 	if (lab="Ordering") {
-		tmpCrd := checkCrd(RegExReplace(txt,"i)Dr?\.?\s"))
+		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))
 		fieldColAdd(pre,lab,tmpCrd.best)
 		fieldColAdd(pre,lab "_grp",tmpCrd.group)
 		fieldColAdd(pre,lab "_eml",Docs[tmpCrd.Group ".eml",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)])
