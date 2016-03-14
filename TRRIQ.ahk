@@ -21,7 +21,7 @@ SetTitleMatchMode, 2
 FileInstall, pdftotext.exe, pdftotext.exe
 
 SplitPath, A_ScriptDir,,fileDir
-IfInString, fileDir, Dropbox					; Change enviroment if run from development vs production directory
+IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
 	isAdmin := true
 	holterDir := ".\Holter PDFs\"
@@ -29,9 +29,11 @@ IfInString, fileDir, Dropbox					; Change enviroment if run from development vs 
 	chipDir := ".\Chipotle\"
 } else {
 	isAdmin := false
-	holterDir := "\\chmc16\Cardio\EP\HoltER Database\Holter PDFs\"
-	importFld := "\\chmc16\Cardio\EP\HoltER Database\Import\"
-	chipDir := "\\chmc16\Cardio\Inpatient List\chipotle\"
+	;holterDir := "\\chmc16\Cardio\EP\HoltER Database\Holter PDFs\"
+	;importFld := "\\chmc16\Cardio\EP\HoltER Database\Import\"
+	holterDir := "..\Holter PDFs\"
+	importFld := "..\Import\"
+	chipDir := "\\childrens\files\HCChipotle\"
 }
 user := A_UserName
 
@@ -44,23 +46,27 @@ Loop, Read, %chipDir%outdocs.csv
 	tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
 	tmpline := A_LoopReadLine
 	StringSplit, tmp, tmpline, `, , `"
-	if ((tmp1="SCH") or (tmp1="FELLOWS")) {
-		tmpGrp:=tmp1
-		tmpChk:=true
-		tmpIdx:=0
+	if ((tmp1="Name") or (tmp1="end") or !(tmp1)) {					; header, end, or blank lines
 		continue
 	}
-	if !(tmp1) {
+	if (tmp4="group") {												; skip group names
 		continue
 	}
-	if !(tmpChk) {
+	if (tmp2="" and tmp3="" and tmp4="") {							; Fields 2,3,4 blank = new group
+		tmpGrp := tmp1
+		tmpIdx := 0
+		tmpIdxG += 1
+		outGrps.Insert(tmpGrp)
 		continue
 	}
+	if !(instr(tmp4,"seattlechildrens.org")) {						; skip non-children's providers
+		continue
+	}																; Otherwise format Crd name to first initial, last name
 	tmpIdx += 1
 	StringSplit, tmpPrv, tmp1, %A_Space%`"
-	tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2				; F. Last
-	tmpPrv := tmpPrv2 ", " tmpPrv1								; Last, First
-	Docs[tmpGrp,tmpIdx] := tmpPrv
+	;tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2					; F. Last
+	tmpPrv := tmpPrv2 ", " tmpPrv1									; Last, First
+	Docs[tmpGrp,tmpIdx]:=tmpPrv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
@@ -74,7 +80,7 @@ if (%0%) {										; For each parameter,
 if !(phase) {
 	phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
 }
-if (phase = "Upload new Holter") {
+if (instr(phase,"new")) {
 	Loop 
 	{
 		ptDem := Object()
@@ -84,7 +90,7 @@ if (phase = "Upload new Holter") {
 	}
 	ExitApp
 }
-if (phase = "Process PDF") {
+if (instr(phase,"PDF")) {
 	if (instr(fileIn,".pdf")) {
 		splitpath, fileIn,,,,fileNam
 		gosub MainLoop
@@ -407,7 +413,7 @@ epRead:
 	}
 	
 	fileOut1 .= ",""EP_read"",""EP_date"",""MA"""
-	fileOut2 .= ",""" ymatch """,""" niceDate(dlDate) """,""" user ""
+	fileOut2 .= ",""" ymatch """,""" niceDate(dlDate) """,""" user """"
 return
 }
 
@@ -657,7 +663,7 @@ formatField(pre, lab, txt) {
 	txt := trim(txt)
 	
 	if (lab="Ordering") {
-		tmpCrd := checkCrd(txt)
+		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))
 		fieldColAdd(pre,lab,tmpCrd.best)
 		fieldColAdd(pre,lab "_grp",tmpCrd.group)
 		fieldColAdd(pre,lab "_eml",Docs[tmpCrd.Group ".eml",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)])
