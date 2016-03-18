@@ -241,7 +241,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	ptDemChk := (RegExMatch(ptDem["nameF"],"i)[A-Z\-]")) && (RegExMatch(ptDem["nameL"],"i)[A-Z\-]")) 
 			&& (RegExMatch(ptDem["mrn"],"\d{6,7}")) && (RegExMatch(ptDem["Account Number"],"\d{8}")) 
 			&& (RegExMatch(ptDem["DOB"],"[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}")) && (RegExMatch(ptDem["Sex"],"[MF]")) 
-			&& (ptDem["Loc"]<>"") && (ptDem["Provider"]<>"")
+			&& (ptDem["Loc"]~="[i)[a-z]+") && (ptDem["Provider"]~="i)[a-z]+")
 	if !(ptDemChk) {
 		MsgBox,, % "Data incomplete. Try again", % ""
 			. "First " ptDem["nameF"] "`n"
