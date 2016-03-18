@@ -322,7 +322,7 @@ zybitSet:
 	Loop
 	{
 		if (zyWinId := WinExist("ahk_exe ZybitRemote.exe")) {
-			return
+			break
 		}
 		MsgBox, 262193, Inject demographics, Must run Zybit Holter program!
 		IfMsgBox Cancel
