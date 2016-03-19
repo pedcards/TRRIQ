@@ -335,21 +335,26 @@ zybitSet:
 		}
 		MsgBox, 262192, Start NEW patient, Click OK when ready to inject demographic information
 	}
-	;zyNewId := WinExist("New Patient - Demographics")
 	zyVals := {"Edit1":ptDem["nameL"],"Edit2":ptDem["nameF"]
 				,"Edit4":ptDem["Sex"],"Edit5":ptDem["DOB"]
 				,"Edit6":ptDem["mrn"],"Edit8":ptDem["Account number"]
 				,"Edit7":ptDem["loc"]
 				,"Edit9":indChoices
 				,"Edit11":ptDem["Provider"],"Edit12":user }
-	WinActivate, ahk_id %zyNewId%
-	for key,val in zyVals
-	{
-		ControlSetText, %key%, %val%, ahk_id %zyNewId%
-	}
+	
+	zybitFill(zyNewId,zyVals)
 	
 	; Log the entry?
 	
+	return
+}
+
+zybitFill(win,fields) {
+	WinActivate, ahk_id %win%
+	for key,val in fields
+	{
+		ControlSetText, %key%, %val%, ahk_id %win%
+	}
 	return
 }
 
