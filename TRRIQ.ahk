@@ -29,8 +29,6 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	chipDir := ".\Chipotle\"
 } else {
 	isAdmin := false
-	;holterDir := "\\chmc16\Cardio\EP\HoltER Database\Holter PDFs\"
-	;importFld := "\\chmc16\Cardio\EP\HoltER Database\Import\"
 	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
@@ -362,6 +360,7 @@ MainLoop:
 {
 	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt
 	FileRead, maintxt, temp.txt
+	FileCopy, temp.txt, .\tempfiles\%filenam%.txt
 	blocks := Object()
 	fields := Object()
 	fldval := {}
@@ -372,7 +371,7 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 
-	if (InStr(maintxt,"Holter Report")) {							; Search maintxt for identifying strings
+	if (InStr(maintxt,"Holter")) {							; Search maintxt for identifying strings
 		gosub Holter
 	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
 		gosub EventRec
@@ -392,6 +391,7 @@ MainLoop:
 	;MsgBox % filenameOut
 	FileDelete, %importFld%%fileNameOut%.csv
 	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv
+	FileAppend, %fileOut%, .\tempfiles\%filenam%.csv
 	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1
 	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C
 Return
@@ -435,6 +435,7 @@ Holter:
 	}
 	FileDelete tempfile.txt
 	FileAppend %newtxt%, tempfile.txt
+	FileCopy tempfile.txt, .\tempfiles\%filenam%.txt
 	
 	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
