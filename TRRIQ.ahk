@@ -421,6 +421,7 @@ getMD:
 {
 	Gui, fetch:Hide
 	InputBox, ed_Crd, % "Enter responsible cardiologist"						; no call schedule for that day, must choose
+	Gui, fetch:Show
 	if (ed_Crd="")
 		return
 	tmpCrd := checkCrd(ed_Crd)
@@ -434,7 +435,6 @@ getMD:
 			ptDem.Provider := tmpCrd.best
 		}
 	}
-	Gui, fetch:Show
 	return
 }	
 
