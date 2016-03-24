@@ -123,16 +123,17 @@ FetchDem:
 				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2
 				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]
 				if (clk.field = "Provider") {
-					ptDem["Provider"] := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+					if (clk.value) {
+						ptDem["Provider"] := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+					}
 					mdX[4] := mouseXpos
 					mdY[1] := mouseYpos
 					mdProv := true
 					WinGetTitle, mdTitle, ahk_id %mouseWinID%
-					if (ptDem.Provider=", ") {
-						ptDem.Provider:=""
+					gosub getDemName
+					if !(ptDem.Provider) {
 						gosub getMD
 					}
-					gosub getDemName
 				}
 				if (clk.field = "Account Number") {
 					mdX[1] := mouseXpos
@@ -206,6 +207,7 @@ fetchGUI:
 	fW1 := 60,	fW2 := 190
 	fH := 20
 	fY := 10
+	EncNum := ptDem["Account Number"]
 	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
 	fTxt := "	To auto-grab demographic info:`n"
 		.	"		1) Double-click Account Number #`n"
@@ -224,7 +226,7 @@ fetchGUI:
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Date placed
 	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncDt CHOOSE" encDT, MM/dd/yyyy
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
-	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Account Number"]
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncNum", % encNum
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Provider"]
 	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit", Submit!
@@ -248,6 +250,9 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Destroy
 	if !(ptDem.Provider) {
 		gosub getMD
+	}
+	if !(ptDem["Account Number"]) {
+		ptDem["Account Number"] := EncNum
 	}
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
 	ptDem.EncDate := EncDt
