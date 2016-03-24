@@ -68,6 +68,7 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
+y := new XML(chipDir "currlist.xml")
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
 if (%0%) {										; For each parameter,
@@ -414,29 +415,37 @@ assignMD:
 	if !(ptDem.EncDate) {														; must have a date to figure it out
 		return
 	}
+	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
 	inptMD := checkCrd(ptDem.Provider) 
 	if (inptMD.fuzz=0) {														; attg is Crd
 		ptDem.Loc := "Inpatient"												; set Loc so it won't fail
 		return
+	} 
+	if (ymatch := y.selectSingleNode("//call[@date='" encDT "']/Ward_A").text) {
+		inptMD := checkCrd(strX(ymatch," ",1,1) ", " strX(ymatch,"",1,0," ",1,1))
+		if (inptMD.fuzz=0) {													; on-call Cards that day 
+			ptDem.Loc := "Inpatient"
+			ptDem.Provider := inptMD.best
+		} else {
+			MsgBox No match
+		}
+		return
 	}
-	MsgBox,, % ptDem.Provider, % inptMD.fuzz "`n" inptMD.best
-	InputBox, ed_Crd, % "Change " CrdType, %ed_Crd%,,,,,,,,%ed_Crd%
+	InputBox, ed_Crd, % "Enter responsible cardiologist"						; no call schedule for that day, must choose
 	if (ed_Crd="")
 		return
 	tmpCrd := checkCrd(ed_Crd)
 	if (tmpCrd.fuzz=0) {										; Perfect match found
-		ed_Crd := tmpCrd.best
+		ptDem.Provider := tmpCrd.best
+		ptDem.Loc := "Inpatient"
 	} else {													; less than perfect
-		MsgBox, 262180, % CrdType
+		MsgBox, 262180, Cardiologist
 			, % "Did you mean: " tmpCrd.best "?`n`n`n"
-			. "YES = change to """ tmpCrd.best """`n`n"
-			. "NO = keep """ ed_Crd """"
 		IfMsgBox, Yes
-			ed_Crd := tmpCrd.best
-	}
-	if (ed_type="SchCard") and !(checkCrd(ed_Crd).group="SCH") {
-		MsgBox, 16, Provider error, Must be an SCH main campus provider!
-		return
+		{
+			ptDem.Provider := tmpCrd.best
+			ptDem.Loc := "Inpatient"
+		}
 	}
 return
 }
@@ -450,7 +459,6 @@ epRead:
 	}
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
 	
-	y := new XML(chipDir "currlist.xml")
 	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun)|(Salerno)|(Seslar)", ymatch)
 	if !(ymatch := ymatch.value()) {
 		ymatch := epMon ? epMon : cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
