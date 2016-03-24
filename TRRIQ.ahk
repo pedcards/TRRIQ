@@ -131,9 +131,6 @@ FetchDem:
 					mdProv := true
 					WinGetTitle, mdTitle, ahk_id %mouseWinID%
 					gosub getDemName
-					if !(ptDem.Provider) {
-						gosub getMD
-					}
 				}
 				if (clk.field = "Account Number") {
 					mdX[1] := mouseXpos
@@ -247,13 +244,12 @@ fetchSubmit:
 	The repeat the cycle
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
+	Gui, fetch:Submit
 	Gui, fetch:Destroy
 	if !(ptDem.Provider) {
 		gosub getMD
 	}
-	if !(ptDem["Account Number"]) {
-		ptDem["Account Number"] := EncNum
-	}
+	ptDem["Account Number"] := EncNum
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
 	ptDem.EncDate := EncDt
 	if (instr(ptDem.Type,"Inpatient")) {										; we must find who recommended it
@@ -320,7 +316,7 @@ indGUI:
 	Gui, ind:Destroy
 	Gui, ind:+AlwaysOnTop
 	Gui, ind:font, s12
-	Gui, ind:Add, Text, , Enter indications:
+	Gui, ind:Add, Text, , % "Enter indications: " ptDem["Account Number"] " - " encNum
 	Gui, ind:Add, ListBox, r12 vIndChoices 8, %indOpts%
 	Gui, ind:Add, Button, gindSubmit, Submit
 	Gui, ind:Show, Autosize, Enter indications
