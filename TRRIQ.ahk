@@ -201,8 +201,7 @@ fetchGUI:
 	fW1 := 60,	fW2 := 190
 	fH := 20
 	fY := 10
-	EncDT := ptDem.EncDate
-	encDT := parseDate(encDT).YYYY . parseDate(encDT).MM . parseDate(encDT).DD
+	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
 	fTxt := "	To auto-grab demographic info:`n"
 		.	"		1) Double-click Account Number #`n"
 		.	"		2) Double-click Provider"
@@ -216,7 +215,7 @@ fetchGUI:
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , MRN
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["MRN"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , DOB
-	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"], MM/dd/yyyy
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Date placed
 	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncDt CHOOSE" encDT, MM/dd/yyyy
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
@@ -244,30 +243,32 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Destroy
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
 	ptDem.EncDate := EncDt
-	if (instr(ptDem.Type,"Inpatient")) {						; we must find who recommended it
+	if (instr(ptDem.Type,"Inpatient")) {										; we must find who recommended it
 		gosub assignMD
 	}
-	ptDemChk := (RegExMatch(ptDem["nameF"],"i)[A-Z\-]+")) && (RegExMatch(ptDem["nameL"],"i)[A-Z\-]+")) 
-			&& (RegExMatch(ptDem["mrn"],"\d{6,7}")) && (RegExMatch(ptDem["Account Number"],"\d{8}")) 
-			&& (RegExMatch(ptDem["DOB"],"[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}")) && (RegExMatch(ptDem["Sex"],"[MF]")) 
-			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Provider"]~="i)[a-z]+")
-	if !(ptDemChk) {
+	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 
+			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 
+			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 
+			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)patient")
+			&& (ptDem["Provider"]) && (ptDem["EncDate"])
+	if !(ptDemChk) {															; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
-			. "First " ptDem["nameF"] "`n"
-			. "Last " ptDem["nameL"] "`n"
-			. "MRN " ptDem["mrn"] "`n"
-			. "ENC " ptDem["Account number"] "`n"
-			. "DOB " ptDem["DOB"] "`n"
-			. "Sex " ptDem["Sex"] "`n"
-			. "Loc " ptDem["Loc"] "`n"
-			. "Type " ptDem["Type"] "`n"
-			. "Date " ptDem["EncDate"] "`n"
-			. "Prv " ptDem["Provider"] "`n"
+			. ((ptDem["nameF"]) ? "" : "First name`n")
+			. ((ptDem["nameL"]) ? "" : "Last name`n")
+			. ((ptDem["mrn"]) ? "" : "MRN`n")
+			. ((ptDem["Account number"]) ? "" : "Account number`n")
+			. ((ptDem["DOB"]) ? "" : "DOB`n")
+			. ((ptDem["Sex"]) ? "" : "Sex`n")
+			;~ . ((ptDem["Loc"]) ? "" : "Location`n")
+			. ((ptDem["Type"]) ? "" : "Visit type`n")
+			. ((ptDem["EncDate"]) ? "" : "Date Holter placed`n")
+			. ((ptDem["Provider"]) ? "" : "Provider`n")
+			. "`nREQUIRED!"
 		gosub fetchGUI
 		return
 	}
-	FormatTime, tmp, A_Now, yyyyMMdd
-	ptDem["encDate"] := tmp
+	;~ FormatTime, tmp, A_Now, yyyyMMdd
+	;~ ptDem["encDate"] := tmp
 	getDem := false
 	Loop
 	{
@@ -410,8 +411,33 @@ Return
 
 assignMD:
 {
-	inptMD := checkCrd(ptDem.Provider)
+	if !(ptDem.EncDate) {														; must have a date to figure it out
+		return
+	}
+	inptMD := checkCrd(ptDem.Provider) 
+	if (inptMD.fuzz=0) {														; attg is Crd
+		ptDem.Loc := "Inpatient"												; set Loc so it won't fail
+		return
+	}
 	MsgBox,, % ptDem.Provider, % inptMD.fuzz "`n" inptMD.best
+	InputBox, ed_Crd, % "Change " CrdType, %ed_Crd%,,,,,,,,%ed_Crd%
+	if (ed_Crd="")
+		return
+	tmpCrd := checkCrd(ed_Crd)
+	if (tmpCrd.fuzz=0) {										; Perfect match found
+		ed_Crd := tmpCrd.best
+	} else {													; less than perfect
+		MsgBox, 262180, % CrdType
+			, % "Did you mean: " tmpCrd.best "?`n`n`n"
+			. "YES = change to """ tmpCrd.best """`n`n"
+			. "NO = keep """ ed_Crd """"
+		IfMsgBox, Yes
+			ed_Crd := tmpCrd.best
+	}
+	if (ed_type="SchCard") and !(checkCrd(ed_Crd).group="SCH") {
+		MsgBox, 16, Provider error, Must be an SCH main campus provider!
+		return
+	}
 return
 }
 
