@@ -150,9 +150,6 @@ FetchDem:
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
 						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
 					}
-					if (instr(ptDem.Type,"Inpatient")) {						; enter date placed, then find who recommended it
-						gosub assignMD
-					}
 					mdProv := false
 					mdAcct := false
 				}
@@ -245,8 +242,11 @@ fetchSubmit:
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Destroy
-		FormatTime, EncDt, %EncDt%, MM/dd/yyyy
-		ptDem.EncDate := EncDt
+	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
+	ptDem.EncDate := EncDt
+	if (instr(ptDem.Type,"Inpatient")) {						; we must find who recommended it
+		gosub assignMD
+	}
 	ptDemChk := (RegExMatch(ptDem["nameF"],"i)[A-Z\-]+")) && (RegExMatch(ptDem["nameL"],"i)[A-Z\-]+")) 
 			&& (RegExMatch(ptDem["mrn"],"\d{6,7}")) && (RegExMatch(ptDem["Account Number"],"\d{8}")) 
 			&& (RegExMatch(ptDem["DOB"],"[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}")) && (RegExMatch(ptDem["Sex"],"[MF]")) 
@@ -410,8 +410,8 @@ Return
 
 assignMD:
 {
-	
-	
+	inptMD := checkCrd(ptDem.Provider)
+	MsgBox,, % ptDem.Provider, % inptMD.fuzz "`n" inptMD.best
 return
 }
 
