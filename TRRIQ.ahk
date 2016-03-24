@@ -128,6 +128,10 @@ FetchDem:
 					mdY[1] := mouseYpos
 					mdProv := true
 					WinGetTitle, mdTitle, ahk_id %mouseWinID%
+					if (ptDem.Provider=", ") {
+						ptDem.Provider:=""
+						gosub getMD
+					}
 					gosub getDemName
 				}
 				if (clk.field = "Account Number") {
@@ -242,6 +246,9 @@ fetchSubmit:
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Destroy
+	if !(ptDem.Provider) {
+		gosub getMD
+	}
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
 	ptDem.EncDate := EncDt
 	if (instr(ptDem.Type,"Inpatient")) {										; we must find who recommended it
@@ -251,7 +258,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 
 			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)patient")
-			&& (ptDem["Provider"]) && (ptDem["EncDate"])
+			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])
 	if !(ptDemChk) {															; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
 			. ((ptDem["nameF"]) ? "" : "First name`n")
@@ -410,6 +417,27 @@ MainLoop:
 Return
 }
 
+getMD:
+{
+	Gui, fetch:Hide
+	InputBox, ed_Crd, % "Enter responsible cardiologist"						; no call schedule for that day, must choose
+	if (ed_Crd="")
+		return
+	tmpCrd := checkCrd(ed_Crd)
+	if (tmpCrd.fuzz=0) {										; Perfect match found
+		ptDem.Provider := tmpCrd.best
+	} else {													; less than perfect
+		MsgBox, 262180, Cardiologist
+			, % "Did you mean: " tmpCrd.best "?`n`n`n"
+		IfMsgBox, Yes
+		{
+			ptDem.Provider := tmpCrd.best
+		}
+	}
+	Gui, fetch:Show
+	return
+}	
+
 assignMD:
 {
 	if !(ptDem.EncDate) {														; must have a date to figure it out
@@ -431,22 +459,8 @@ assignMD:
 		}
 		return
 	}
-	InputBox, ed_Crd, % "Enter responsible cardiologist"						; no call schedule for that day, must choose
-	if (ed_Crd="")
-		return
-	tmpCrd := checkCrd(ed_Crd)
-	if (tmpCrd.fuzz=0) {										; Perfect match found
-		ptDem.Provider := tmpCrd.best
-		ptDem.Loc := "Inpatient"
-	} else {													; less than perfect
-		MsgBox, 262180, Cardiologist
-			, % "Did you mean: " tmpCrd.best "?`n`n`n"
-		IfMsgBox, Yes
-		{
-			ptDem.Provider := tmpCrd.best
-			ptDem.Loc := "Inpatient"
-		}
-	}
+	gosub getMD																	; when all else fails, ask
+	ptDem.Loc := "Inpatient"
 return
 }
 
