@@ -109,7 +109,7 @@ ExitApp
 
 FetchDem:
 {
-	mdX := Object()
+	mdX := Object()										; get mouse demographics
 	mdY := Object()
 	ptDem["bit"] := 0
 	getDem := true
@@ -133,6 +133,8 @@ FetchDem:
 					mdX[1] := mouseXpos
 					mdY[3] := mouseYpos
 					mdAcct := true
+					WinGetTitle, mdTitle, ahk_id %mouseWinID%
+					gosub getDemName
 				}
 				if (mdProv and mdAcct) {
 					mdXd := (mdX[4]-mdX[1])/3
@@ -144,9 +146,12 @@ FetchDem:
 					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]),1,1)
 					tmp := mouseGrab(mdX[3],mdY[3])
 						ptDem["Type"] := strX(tmp,,1,0, " [",1,2)
-						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
 					if (instr(ptDem.Type,"Outpatient")) {
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
+						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					}
+					if (instr(ptDem.Type,"Inpatient")) {						; enter date placed, then find who recommended it
+						gosub assignMD
 					}
 					mdProv := false
 					mdAcct := false
@@ -199,8 +204,10 @@ fetchGUI:
 	fW1 := 60,	fW2 := 190
 	fH := 20
 	fY := 10
+	EncDT := ptDem.EncDate
+	encDT := parseDate(encDT).YYYY . parseDate(encDT).MM . parseDate(encDT).DD
 	fTxt := "	To auto-grab demographic info:`n"
-		.	"		1) Double-click Encounter #`n"
+		.	"		1) Double-click Account Number #`n"
 		.	"		2) Double-click Provider"
 	Gui, fetch:Destroy
 	Gui, fetch:+AlwaysOnTop
@@ -213,6 +220,8 @@ fetchGUI:
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["MRN"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , DOB
 	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"], MM/dd/yyyy
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Date placed
+	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncDt CHOOSE" encDT, MM/dd/yyyy
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Account Number"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
@@ -236,6 +245,8 @@ fetchSubmit:
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Destroy
+		FormatTime, EncDt, %EncDt%, MM/dd/yyyy
+		ptDem.EncDate := EncDt
 	ptDemChk := (RegExMatch(ptDem["nameF"],"i)[A-Z\-]+")) && (RegExMatch(ptDem["nameL"],"i)[A-Z\-]+")) 
 			&& (RegExMatch(ptDem["mrn"],"\d{6,7}")) && (RegExMatch(ptDem["Account Number"],"\d{8}")) 
 			&& (RegExMatch(ptDem["DOB"],"[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}")) && (RegExMatch(ptDem["Sex"],"[MF]")) 
@@ -395,6 +406,13 @@ MainLoop:
 	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1
 	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C
 Return
+}
+
+assignMD:
+{
+	
+	
+return
 }
 
 epRead:
