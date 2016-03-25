@@ -29,8 +29,6 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	chipDir := ".\Chipotle\"
 } else {
 	isAdmin := false
-	;holterDir := "\\chmc16\Cardio\EP\HoltER Database\Holter PDFs\"
-	;importFld := "\\chmc16\Cardio\EP\HoltER Database\Import\"
 	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
@@ -70,6 +68,7 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
+y := new XML(chipDir "currlist.xml")
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
 if (%0%) {										; For each parameter,
@@ -111,7 +110,7 @@ ExitApp
 
 FetchDem:
 {
-	mdX := Object()
+	mdX := Object()										; get mouse demographics
 	mdY := Object()
 	ptDem["bit"] := 0
 	getDem := true
@@ -124,7 +123,9 @@ FetchDem:
 				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2
 				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]
 				if (clk.field = "Provider") {
-					ptDem["Provider"] := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+					if (clk.value) {
+						ptDem["Provider"] := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+					}
 					mdX[4] := mouseXpos
 					mdY[1] := mouseYpos
 					mdProv := true
@@ -135,6 +136,8 @@ FetchDem:
 					mdX[1] := mouseXpos
 					mdY[3] := mouseYpos
 					mdAcct := true
+					WinGetTitle, mdTitle, ahk_id %mouseWinID%
+					gosub getDemName
 				}
 				if (mdProv and mdAcct) {
 					mdXd := (mdX[4]-mdX[1])/3
@@ -146,9 +149,9 @@ FetchDem:
 					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]),1,1)
 					tmp := mouseGrab(mdX[3],mdY[3])
 						ptDem["Type"] := strX(tmp,,1,0, " [",1,2)
-						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
 					if (instr(ptDem.Type,"Outpatient")) {
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
+						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
 					}
 					mdProv := false
 					mdAcct := false
@@ -201,8 +204,10 @@ fetchGUI:
 	fW1 := 60,	fW2 := 190
 	fH := 20
 	fY := 10
+	EncNum := ptDem["Account Number"]
+	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
 	fTxt := "	To auto-grab demographic info:`n"
-		.	"		1) Double-click Encounter #`n"
+		.	"		1) Double-click Account Number #`n"
 		.	"		2) Double-click Provider"
 	Gui, fetch:Destroy
 	Gui, fetch:+AlwaysOnTop
@@ -214,9 +219,11 @@ fetchGUI:
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , MRN
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["MRN"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , DOB
-	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"], MM/dd/yyyy
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Date placed
+	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncDt CHOOSE" encDT, MM/dd/yyyy
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
-	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Account Number"]
+	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncNum", % encNum
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Provider"]
 	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit", Submit!
@@ -237,28 +244,40 @@ fetchSubmit:
 	The repeat the cycle
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
+	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	ptDemChk := (RegExMatch(ptDem["nameF"],"i)[A-Z\-]+")) && (RegExMatch(ptDem["nameL"],"i)[A-Z\-]+")) 
-			&& (RegExMatch(ptDem["mrn"],"\d{6,7}")) && (RegExMatch(ptDem["Account Number"],"\d{8}")) 
-			&& (RegExMatch(ptDem["DOB"],"[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}")) && (RegExMatch(ptDem["Sex"],"[MF]")) 
-			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Provider"]~="i)[a-z]+")
-	if !(ptDemChk) {
+	if !(ptDem.Provider) {
+		gosub getMD
+	}
+	ptDem["Account Number"] := EncNum
+	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
+	ptDem.EncDate := EncDt
+	if (instr(ptDem.Type,"Inpatient")) {										; we must find who recommended it
+		gosub assignMD
+	}
+	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 
+			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 
+			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 
+			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)patient")
+			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])
+	if !(ptDemChk) {															; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
-			. "First " ptDem["nameF"] "`n"
-			. "Last " ptDem["nameL"] "`n"
-			. "MRN " ptDem["mrn"] "`n"
-			. "ENC " ptDem["Account number"] "`n"
-			. "DOB " ptDem["DOB"] "`n"
-			. "Sex " ptDem["Sex"] "`n"
-			. "Loc " ptDem["Loc"] "`n"
-			. "Type " ptDem["Type"] "`n"
-			. "Date " ptDem["EncDate"] "`n"
-			. "Prv " ptDem["Provider"] "`n"
+			. ((ptDem["nameF"]) ? "" : "First name`n")
+			. ((ptDem["nameL"]) ? "" : "Last name`n")
+			. ((ptDem["mrn"]) ? "" : "MRN`n")
+			. ((ptDem["Account number"]) ? "" : "Account number`n")
+			. ((ptDem["DOB"]) ? "" : "DOB`n")
+			. ((ptDem["Sex"]) ? "" : "Sex`n")
+			;~ . ((ptDem["Loc"]) ? "" : "Location`n")
+			. ((ptDem["Type"]) ? "" : "Visit type`n")
+			. ((ptDem["EncDate"]) ? "" : "Date Holter placed`n")
+			. ((ptDem["Provider"]) ? "" : "Provider`n")
+			. "`nREQUIRED!"
 		gosub fetchGUI
 		return
 	}
-	FormatTime, tmp, A_Now, yyyyMMdd
-	ptDem["encDate"] := tmp
+	;~ FormatTime, tmp, A_Now, yyyyMMdd
+	;~ ptDem["encDate"] := tmp
 	getDem := false
 	Loop
 	{
@@ -297,7 +316,7 @@ indGUI:
 	Gui, ind:Destroy
 	Gui, ind:+AlwaysOnTop
 	Gui, ind:font, s12
-	Gui, ind:Add, Text, , Enter indications:
+	Gui, ind:Add, Text, , % "Enter indications: " ptDem["Account Number"] " - " encNum
 	Gui, ind:Add, ListBox, r12 vIndChoices 8, %indOpts%
 	Gui, ind:Add, Button, gindSubmit, Submit
 	Gui, ind:Show, Autosize, Enter indications
@@ -362,6 +381,7 @@ MainLoop:
 {
 	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt
 	FileRead, maintxt, temp.txt
+	FileCopy, temp.txt, .\tempfiles\%filenam%.txt
 	blocks := Object()
 	fields := Object()
 	fldval := {}
@@ -372,7 +392,7 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 
-	if (InStr(maintxt,"Holter Report")) {							; Search maintxt for identifying strings
+	if (InStr(maintxt,"Holter")) {							; Search maintxt for identifying strings
 		gosub Holter
 	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
 		gosub EventRec
@@ -392,9 +412,57 @@ MainLoop:
 	;MsgBox % filenameOut
 	FileDelete, %importFld%%fileNameOut%.csv
 	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv
+	FileAppend, %fileOut%, .\tempfiles\%filenam%.csv
 	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1
 	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C
 Return
+}
+
+getMD:
+{
+	Gui, fetch:Hide
+	InputBox, ed_Crd, % "Enter responsible cardiologist"						; no call schedule for that day, must choose
+	Gui, fetch:Show
+	if (ed_Crd="")
+		return
+	tmpCrd := checkCrd(ed_Crd)
+	if (tmpCrd.fuzz=0) {										; Perfect match found
+		ptDem.Provider := tmpCrd.best
+	} else {													; less than perfect
+		MsgBox, 262180, Cardiologist
+			, % "Did you mean: " tmpCrd.best "?`n`n`n"
+		IfMsgBox, Yes
+		{
+			ptDem.Provider := tmpCrd.best
+		}
+	}
+	return
+}	
+
+assignMD:
+{
+	if !(ptDem.EncDate) {														; must have a date to figure it out
+		return
+	}
+	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
+	inptMD := checkCrd(ptDem.Provider) 
+	if (inptMD.fuzz=0) {														; attg is Crd
+		ptDem.Loc := "Inpatient"												; set Loc so it won't fail
+		return
+	} 
+	if (ymatch := y.selectSingleNode("//call[@date='" encDT "']/Ward_A").text) {
+		inptMD := checkCrd(strX(ymatch," ",1,1) ", " strX(ymatch,"",1,0," ",1,1))
+		if (inptMD.fuzz=0) {													; on-call Cards that day 
+			ptDem.Loc := "Inpatient"
+			ptDem.Provider := inptMD.best
+		} else {
+			MsgBox No match
+		}
+		return
+	}
+	gosub getMD																	; when all else fails, ask
+	ptDem.Loc := "Inpatient"
+return
 }
 
 epRead:
@@ -406,7 +474,6 @@ epRead:
 	}
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
 	
-	y := new XML(chipDir "currlist.xml")
 	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun)|(Salerno)|(Seslar)", ymatch)
 	if !(ymatch := ymatch.value()) {
 		ymatch := epMon ? epMon : cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
@@ -435,6 +502,7 @@ Holter:
 	}
 	FileDelete tempfile.txt
 	FileAppend %newtxt%, tempfile.txt
+	FileCopy tempfile.txt, .\tempfiles\%filenam%.txt
 	
 	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
