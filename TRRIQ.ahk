@@ -68,6 +68,8 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
+siteVals := {"CRD":"Seattle","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","YAK":"Yakima","WEN":"Wenatchee"}
+
 y := new XML(chipDir "currlist.xml")
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
@@ -506,7 +508,9 @@ Holter:
 	
 	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
-
+	
+	gosub checkProc
+	
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
 		, "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
@@ -538,6 +542,37 @@ Holter:
 	fileOut2 .= ",""Philips Holter"""
 	
 return
+}
+
+CheckProc:
+{
+	chk1 := strX(demog,"Last Name",1,1,"First Name",1,10,nn)						; NameL				must be [A-Z]
+	chk2 := strX(demog,"First Name",nn,0,"Middle Initial",1,14,nn)					; NameF				must be [A-Z]
+	chk3 := strX(demog,"ID Number",nn,0,"Date of Birth",1,13,nn)					; MRN
+	chk4 := strX(demog,"Source",nn,0,"Billing Code",1,12,nn)						; Location			must be in SiteVals
+	chk5 := strX(demog,"Billing Code",nn,0,"Recorder Format",1,0)					; Billing code		must be valid number
+	
+	if ((chk1~="[^a-z]") 
+		&& (chk2~="[^a-z]") 
+		&& (ObjHasKey(siteVals,chk4)) 
+		&& (chk5~="\d{8}")) 
+	{
+		return																		;	All tests valid, uploaded with new TRRIQ process
+	}
+	
+	MsgBox % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3
+	gosub fetchGUI
+	gosub fetchDem
+	demog := RegExReplace(demog,"Last Name (.*) First Name","Last Name   " ptDem["nameL"] "   First Name")
+	demog := RegExReplace(demog,"First Name (.*) Middle Initial", "First Name   " ptDem["nameF"] "   Middle Initial")
+	demog := RegExReplace(demog,"ID Number (.*) Date of Birth", "ID Number   " ptDem["mrn"] "   Date of Birth")
+	demog := RegExReplace(demog,"Date of Birth (.*) Sex", "Date of Birth   " ptDem["DOB"] "   Sex")
+	demog := RegExReplace(demog,"Source (.*) Billing Code", "Source   " ptDem["Loc"] "   Billing Code")
+	demog := RegExReplace(demog,"Billing Code (.*) Recorder Format", "Billing Code   " ptDem["Account number"] "   Recorder Format")
+	demog := RegExReplace(demog,"Physician (.*) Scanned By", "Physician   " ptDem["Provider"] "   Scanned By")
+	demog := RegExReplace(demog,"Test Date (.*) Analysis Date", "Test Date   " ptDem["EncDate"] "   Analysis Date")
+	
+	return
 }
 
 Zio:
