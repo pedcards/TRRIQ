@@ -561,6 +561,7 @@ CheckProc:
 	}
 	
 	MsgBox % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
+	ptDem := Object()
 	gosub fetchGUI
 	gosub fetchDem
 	demog := RegExReplace(demog,"Last Name (.*) First Name","Last Name   " ptDem["nameL"] "   First Name")
@@ -571,6 +572,9 @@ CheckProc:
 	demog := RegExReplace(demog,"Billing Code (.*) Recorder Format", "Billing Code   " ptDem["Account number"] "   Recorder Format")
 	demog := RegExReplace(demog,"Physician (.*) Scanned By", "Physician   " ptDem["Provider"] "   Scanned By")
 	demog := RegExReplace(demog,"Test Date (.*) Analysis Date", "Test Date   " ptDem["EncDate"] "   Analysis Date")
+	
+	MsgBox % demog
+	ExitApp
 	
 	return
 }
