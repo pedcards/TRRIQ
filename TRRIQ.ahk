@@ -546,11 +546,11 @@ return
 
 CheckProc:
 {
-	chk1 := strX(demog,"Last Name",1,1,"First Name",1,10,nn)						; NameL				must be [A-Z]
-	chk2 := strX(demog,"First Name",nn,0,"Middle Initial",1,14,nn)					; NameF				must be [A-Z]
-	chk3 := strX(demog,"ID Number",nn,0,"Date of Birth",1,13,nn)					; MRN
-	chk4 := strX(demog,"Source",nn,0,"Billing Code",1,12,nn)						; Location			must be in SiteVals
-	chk5 := strX(demog,"Billing Code",nn,0,"Recorder Format",1,0)					; Billing code		must be valid number
+	chk1 := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
+	chk2 := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")					; NameF				must be [A-Z]
+	chk3 := trim(strX(demog,"ID Number",nn,9,"Date of Birth",1,13,nn)," `r`n")					; MRN
+	chk4 := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
+	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15))					; Billing code		must be valid number
 	
 	if ((chk1~="[^a-z]") 
 		&& (chk2~="[^a-z]") 
@@ -560,7 +560,7 @@ CheckProc:
 		return																		;	All tests valid, uploaded with new TRRIQ process
 	}
 	
-	MsgBox % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3
+	MsgBox % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
 	gosub fetchGUI
 	gosub fetchDem
 	demog := RegExReplace(demog,"Last Name (.*) First Name","Last Name   " ptDem["nameL"] "   First Name")
