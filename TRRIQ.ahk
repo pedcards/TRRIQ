@@ -564,17 +564,14 @@ CheckProc:
 	ptDem := Object()
 	gosub fetchGUI
 	gosub fetchDem
-	demog := RegExReplace(demog,"Last Name (.*) First Name","Last Name   " ptDem["nameL"] "   First Name")
-	demog := RegExReplace(demog,"First Name (.*) Middle Initial", "First Name   " ptDem["nameF"] "   Middle Initial")
-	demog := RegExReplace(demog,"ID Number (.*) Date of Birth", "ID Number   " ptDem["mrn"] "   Date of Birth")
-	demog := RegExReplace(demog,"Date of Birth (.*) Sex", "Date of Birth   " ptDem["DOB"] "   Sex")
-	demog := RegExReplace(demog,"Source (.*) Billing Code", "Source   " ptDem["Loc"] "   Billing Code")
-	demog := RegExReplace(demog,"Billing Code (.*) Recorder Format", "Billing Code   " ptDem["Account number"] "   Recorder Format")
-	demog := RegExReplace(demog,"Physician (.*) Scanned By", "Physician   " ptDem["Provider"] "   Scanned By")
-	demog := RegExReplace(demog,"Test Date (.*) Analysis Date", "Test Date   " ptDem["EncDate"] "   Analysis Date")
-	
-	MsgBox % demog
-	ExitApp
+	demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
+	demog := RegExReplace(demog,"i)First Name (.*)Middle Initial", "First Name   " ptDem["nameF"] "`nMiddle Initial")
+	demog := RegExReplace(demog,"i)ID Number (.*)Date of Birth", "ID Number   " ptDem["mrn"] "`nDate of Birth")
+	demog := RegExReplace(demog,"i)Date of Birth (.*)Sex", "Date of Birth   " ptDem["DOB"] "`nSex")
+	demog := RegExReplace(demog,"i)Source (.*)Billing Code", "Source   " ptDem["Loc"] "`nBilling Code")
+	demog := RegExReplace(demog,"i)Billing Code (.*)Recorder Format", "Billing Code   " ptDem["Account number"] "`nRecorder Format")
+	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
+	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
 	
 	return
 }
