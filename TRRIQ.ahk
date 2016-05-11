@@ -97,14 +97,20 @@ if (instr(phase,"PDF")) {
 		gosub MainLoop
 		ExitApp
 	}
+	holterLoops := 0
+	holtersDone := 
 	loop, %holterDir%*.pdf
 	{
 		fileIn := A_LoopFileFullPath
 		FileGetTime, fileDt, %fileIn%, C
-		if !(substr(fileDt,-5)="000000") {
-			gosub MainLoop
+		if (substr(fileDt,-5)="000000") {			; skip files with creation TIME midnight (already processed)
+			continue
 		}
+		gosub MainLoop
+		holterLoops++								; increment counter for processed counter
+		holtersDone .= A_LoopFileName "`n"			; add to list
 	}
+	MsgBox,, % "Holters processed (" holterLoops ")", % holtersDone
 	ExitApp
 }
 
