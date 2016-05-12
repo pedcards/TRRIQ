@@ -68,6 +68,8 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
+siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","YAK":"Yakima"}
+
 y := new XML(chipDir "currlist.xml")
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
@@ -95,14 +97,23 @@ if (instr(phase,"PDF")) {
 		gosub MainLoop
 		ExitApp
 	}
+	holterLoops := 0
+	holtersDone := 
 	loop, %holterDir%*.pdf
 	{
 		fileIn := A_LoopFileFullPath
 		FileGetTime, fileDt, %fileIn%, C
-		if !(substr(fileDt,-5)="000000") {
-			gosub MainLoop
+		if (substr(fileDt,-5)="000000") {			; skip files with creation TIME midnight (already processed)
+			continue
 		}
+		gosub MainLoop
+		if (fetchQuit=true) {
+			continue
+		}
+		holterLoops++													; increment counter for processed counter
+		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to list
 	}
+	MsgBox,, % "Holters processed (" holterLoops ")", % holtersDone
 	ExitApp
 }
 
@@ -152,6 +163,9 @@ FetchDem:
 					if (instr(ptDem.Type,"Outpatient")) {
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
 						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					}
+					if (instr(ptDem.Type,"Inpatient")) {
+						ptDem["Loc"] := "Inpatient"
 					}
 					mdProv := false
 					mdAcct := false
@@ -232,7 +246,10 @@ fetchGUI:
 }
 
 fetchGuiClose:
-ExitApp
+	Gui, fetch:destroy
+	getDem := false																	; break out of fetchDem loop
+	fetchQuit := true
+Return
 
 fetchSubmit:
 {
@@ -246,19 +263,23 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
+	if (ptDem.Type~=("i)(Inpatient|Emergency)")) {										; Inpt & ER, we must find who recommended it
+		gosub assignMD
+	} else if !(ObjHasKey(siteVals,ptDem.Loc)) {										; Otherwise, must be a CRDxxx location
+		MsgBox % "Invalid Loc`n" ptDem.Loc
+		gosub fetchGUI
+		return
+	}
 	if !(ptDem.Provider) {
 		gosub getMD
 	}
 	ptDem["Account Number"] := EncNum
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
 	ptDem.EncDate := EncDt
-	if (instr(ptDem.Type,"Inpatient")) {										; we must find who recommended it
-		gosub assignMD
-	}
 	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 
 			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 
-			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)patient")
+			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|emergency)")
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])
 	if !(ptDemChk) {															; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
@@ -268,7 +289,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			. ((ptDem["Account number"]) ? "" : "Account number`n")
 			. ((ptDem["DOB"]) ? "" : "DOB`n")
 			. ((ptDem["Sex"]) ? "" : "Sex`n")
-			;~ . ((ptDem["Loc"]) ? "" : "Location`n")
+			. ((ptDem["Loc"]) ? "" : "Location`n")
 			. ((ptDem["Type"]) ? "" : "Visit type`n")
 			. ((ptDem["EncDate"]) ? "" : "Date Holter placed`n")
 			. ((ptDem["Provider"]) ? "" : "Provider`n")
@@ -276,6 +297,17 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		gosub fetchGUI
 		return
 	}
+		;~ MsgBox % ""
+			;~ . "First name " ptDem["nameF"] "`n"
+			;~ . "Last name " ptDem["nameL"] "`n"
+			;~ . "MRN " ptDem["mrn"] "`n"
+			;~ . "Account number " ptDem["Account number"] "`n"
+			;~ . "DOB " ptDem["DOB"] "`n"
+			;~ . "Sex " ptDem["Sex"] "`n"
+			;~ . "Location " ptDem["Loc"] "`n"
+			;~ . "Visit type " ptDem["Type"] "`n"
+			;~ . "Date Holter placed " ptDem["EncDate"] "`n"
+			;~ . "Provider " ptDem["Provider"] "`n"
 	;~ FormatTime, tmp, A_Now, yyyyMMdd
 	;~ ptDem["encDate"] := tmp
 	getDem := false
@@ -402,6 +434,9 @@ MainLoop:
 		MsgBox No match!
 		ExitApp
 	}
+	if (fetchQuit=true) {
+		return
+	}
 
 	gosub epRead
 	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"
@@ -506,7 +541,12 @@ Holter:
 	
 	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
-
+	
+	gosub checkProc
+	if (fetchQuit=true) {												; fetchGUI was quit, so skip processing
+		return
+	}
+	
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
 		, "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
@@ -538,6 +578,42 @@ Holter:
 	fileOut2 .= ",""Philips Holter"""
 	
 return
+}
+
+CheckProc:
+{
+	chk1 := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
+	chk2 := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")					; NameF				must be [A-Z]
+	chk3 := trim(strX(demog,"ID Number",nn,9,"Date of Birth",1,13,nn)," `r`n")					; MRN
+	chk4 := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
+	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15))					; Billing code		must be valid number
+	
+	if ((chk1~="[^a-z]") 
+		&& (chk2~="[^a-z]") 
+		&& (ObjHasKey(siteVals,chk4)) 
+		&& (chk5~="\d{8}")) 
+	{
+		return																		;	All tests valid, uploaded with new TRRIQ process
+	}
+	
+	MsgBox % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
+	ptDem := Object()
+	ptDem["nameL"] := chk1
+	ptDem["nameF"] := chk2
+	ptDem["mrn"] := chk3
+	fetchQuit:=false
+	gosub fetchGUI
+	gosub fetchDem
+	demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
+	demog := RegExReplace(demog,"i)First Name (.*)Middle Initial", "First Name   " ptDem["nameF"] "`nMiddle Initial")
+	demog := RegExReplace(demog,"i)ID Number (.*)Date of Birth", "ID Number   " ptDem["mrn"] "`nDate of Birth")
+	demog := RegExReplace(demog,"i)Date of Birth (.*)Sex", "Date of Birth   " ptDem["DOB"] "`nSex")
+	demog := RegExReplace(demog,"i)Source (.*)Billing Code", "Source   " ptDem["Loc"] "`nBilling Code")
+	demog := RegExReplace(demog,"i)Billing Code (.*)Recorder Format", "Billing Code   " ptDem["Account number"] "`nRecorder Format")
+	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
+	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
+	
+	return
 }
 
 Zio:
@@ -705,6 +781,38 @@ fieldvals(x,bl,bl2) {
 		fldval[lbl] := m
 		formatField(bl2,lbl,m)
 	}
+}
+
+/* StrX parameters
+StrX( H, BS,BO,BT, ES,EO,ET, NextOffset )
+
+Parameters:
+H = HayStack. The "Source Text"
+BS = BeginStr. 
+Pass a String that will result at the left extreme of Resultant String.
+BO = BeginOffset. 
+Number of Characters to omit from the left extreme of "Source Text" while searching for BeginStr
+Pass a 0 to search in reverse ( from right-to-left ) in "Source Text"
+If you intend to call StrX() from a Loop, pass the same variable used as 8th Parameter, which will simplify the parsing process.
+BT = BeginTrim.
+Number of characters to trim on the left extreme of Resultant String
+Pass the String length of BeginStr if you want to omit it from Resultant String
+Pass a Negative value if you want to expand the left extreme of Resultant String
+ES = EndStr. Pass a String that will result at the right extreme of Resultant String
+EO = EndOffset.
+Can be only True or False.
+If False, EndStr will be searched from the end of Source Text.
+If True, search will be conducted from the search result offset of BeginStr or from offset 1 whichever is applicable.
+ET = EndTrim.
+Number of characters to trim on the right extreme of Resultant String
+Pass the String length of EndStr if you want to omit it from Resultant String
+Pass a Negative value if you want to expand the right extreme of Resultant String
+NextOffset : A name of ByRef Variable that will be updated by StrX() with the current offset, You may pass the same variable as Parameter 3, to simplify data parsing in a loop
+*/
+StrX( H,  BS="",BO=0,BT=1,   ES="",EO=0,ET=1,  ByRef N="" ) { ;    | by Skan | 19-Nov-2009
+Return SubStr(H,P:=(((Z:=StrLen(ES))+(X:=StrLen(H))+StrLen(BS)-Z-X)?((T:=InStr(H,BS,0,((BO
+<0)?(1):(BO))))?(T+BT):(X+1)):(1)),(N:=P+((Z)?((T:=InStr(H,ES,0,((EO)?(P+1):(0))))?(T-P+Z
++(0-ET)):(X+P)):(X)))-P) ; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
 }
 
 stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
@@ -890,7 +998,6 @@ zDigit(x) {
 	return SubStr("0" . x, -1)
 }
 
-#Include strx.ahk
 #Include CMsgBox.ahk
 #Include xml.ahk
 #Include sift3.ahk
