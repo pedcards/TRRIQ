@@ -68,7 +68,7 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
-siteVals := {"CRD":"Seattle","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","YAK":"Yakima","WEN":"Wenatchee"}
+siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","YAK":"Yakima"}
 
 y := new XML(chipDir "currlist.xml")
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
@@ -107,8 +107,11 @@ if (instr(phase,"PDF")) {
 			continue
 		}
 		gosub MainLoop
-		holterLoops++								; increment counter for processed counter
-		holtersDone .= A_LoopFileName "`n"			; add to list
+		if (fetchQuit=true) {
+			continue
+		}
+		holterLoops++													; increment counter for processed counter
+		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to list
 	}
 	MsgBox,, % "Holters processed (" holterLoops ")", % holtersDone
 	ExitApp
@@ -240,7 +243,10 @@ fetchGUI:
 }
 
 fetchGuiClose:
-ExitApp
+	Gui, fetch:destroy
+	getDem := false																	; break out of fetchDem loop
+	fetchQuit := true
+Return
 
 fetchSubmit:
 {
@@ -256,6 +262,13 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Destroy
 	if !(ptDem.Provider) {
 		gosub getMD
+	}
+	if (ObjHasKey(siteVals,ptDem.Loc)) {
+		MsgBox % "Valid Loc`n" ptDem.Loc
+	} else {
+		MsgBox % "Invalid Loc`n" ptDem.Loc
+		gosub fetchGUI
+		return
 	}
 	ptDem["Account Number"] := EncNum
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
@@ -276,7 +289,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			. ((ptDem["Account number"]) ? "" : "Account number`n")
 			. ((ptDem["DOB"]) ? "" : "DOB`n")
 			. ((ptDem["Sex"]) ? "" : "Sex`n")
-			;~ . ((ptDem["Loc"]) ? "" : "Location`n")
+			. ((ptDem["Loc"]) ? "" : "Location`n")
 			. ((ptDem["Type"]) ? "" : "Visit type`n")
 			. ((ptDem["EncDate"]) ? "" : "Date Holter placed`n")
 			. ((ptDem["Provider"]) ? "" : "Provider`n")
@@ -410,6 +423,9 @@ MainLoop:
 		MsgBox No match!
 		ExitApp
 	}
+	if (fetchQuit=true) {
+		return
+	}
 
 	gosub epRead
 	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"
@@ -516,6 +532,9 @@ Holter:
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
 	
 	gosub checkProc
+	if (fetchQuit=true) {												; fetchGUI was quit, so skip processing
+		return
+	}
 	
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
 		, "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
@@ -568,6 +587,10 @@ CheckProc:
 	
 	MsgBox % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
 	ptDem := Object()
+	ptDem["nameL"] := chk1
+	ptDem["nameF"] := chk2
+	ptDem["mrn"] := chk3
+	fetchQuit:=false
 	gosub fetchGUI
 	gosub fetchDem
 	demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
