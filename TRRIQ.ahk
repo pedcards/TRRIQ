@@ -297,17 +297,17 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		gosub fetchGUI
 		return
 	}
-		MsgBox % ""
-			. "First name " ptDem["nameF"] "`n"
-			. "Last name " ptDem["nameL"] "`n"
-			. "MRN " ptDem["mrn"] "`n"
-			. "Account number " ptDem["Account number"] "`n"
-			. "DOB " ptDem["DOB"] "`n"
-			. "Sex " ptDem["Sex"] "`n"
-			. "Location " ptDem["Loc"] "`n"
-			. "Visit type " ptDem["Type"] "`n"
-			. "Date Holter placed " ptDem["EncDate"] "`n"
-			. "Provider " ptDem["Provider"] "`n"
+		;~ MsgBox % ""
+			;~ . "First name " ptDem["nameF"] "`n"
+			;~ . "Last name " ptDem["nameL"] "`n"
+			;~ . "MRN " ptDem["mrn"] "`n"
+			;~ . "Account number " ptDem["Account number"] "`n"
+			;~ . "DOB " ptDem["DOB"] "`n"
+			;~ . "Sex " ptDem["Sex"] "`n"
+			;~ . "Location " ptDem["Loc"] "`n"
+			;~ . "Visit type " ptDem["Type"] "`n"
+			;~ . "Date Holter placed " ptDem["EncDate"] "`n"
+			;~ . "Provider " ptDem["Provider"] "`n"
 	;~ FormatTime, tmp, A_Now, yyyyMMdd
 	;~ ptDem["encDate"] := tmp
 	getDem := false
