@@ -164,6 +164,9 @@ FetchDem:
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
 						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
 					}
+					if (instr(ptDem.Type,"Inpatient")) {
+						ptDem["Loc"] := "Inpatient"
+					}
 					mdProv := false
 					mdAcct := false
 				}
@@ -260,26 +263,23 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	if !(ptDem.Provider) {
-		gosub getMD
-	}
-	if (ObjHasKey(siteVals,ptDem.Loc)) {
-		MsgBox % "Valid Loc`n" ptDem.Loc
-	} else {
+	if (ptDem.Type~=("i)(Inpatient|Emergency)")) {										; Inpt & ER, we must find who recommended it
+		gosub assignMD
+	} else if !(ObjHasKey(siteVals,ptDem.Loc)) {										; Otherwise, must be a CRDxxx location
 		MsgBox % "Invalid Loc`n" ptDem.Loc
 		gosub fetchGUI
 		return
 	}
+	if !(ptDem.Provider) {
+		gosub getMD
+	}
 	ptDem["Account Number"] := EncNum
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
 	ptDem.EncDate := EncDt
-	if (instr(ptDem.Type,"Inpatient")) {										; we must find who recommended it
-		gosub assignMD
-	}
 	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 
 			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 
-			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)patient")
+			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|emergency)")
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])
 	if !(ptDemChk) {															; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
@@ -297,6 +297,17 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		gosub fetchGUI
 		return
 	}
+		MsgBox % ""
+			. "First name " ptDem["nameF"] "`n"
+			. "Last name " ptDem["nameL"] "`n"
+			. "MRN " ptDem["mrn"] "`n"
+			. "Account number " ptDem["Account number"] "`n"
+			. "DOB " ptDem["DOB"] "`n"
+			. "Sex " ptDem["Sex"] "`n"
+			. "Location " ptDem["Loc"] "`n"
+			. "Visit type " ptDem["Type"] "`n"
+			. "Date Holter placed " ptDem["EncDate"] "`n"
+			. "Provider " ptDem["Provider"] "`n"
 	;~ FormatTime, tmp, A_Now, yyyyMMdd
 	;~ ptDem["encDate"] := tmp
 	getDem := false
