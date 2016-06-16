@@ -586,10 +586,10 @@ return
 CheckProc:
 {
 	chk1 := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
-	chk2 := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")					; NameF				must be [A-Z]
+	chk2 := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")				; NameF				must be [A-Z]
 	chk3 := trim(strX(demog,"ID Number",nn,9,"Date of Birth",1,13,nn)," `r`n")					; MRN
 	chk4 := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
-	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15))					; Billing code		must be valid number
+	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15))						; Billing code		must be valid number
 	
 	if ((chk1~="[^a-z]") 
 		&& (chk2~="[^a-z]") 
@@ -861,6 +861,11 @@ formatField(pre, lab, txt) {
 			tx2 := trim(strX(txt," at",1,3,"",1,0))							;		result e.g. "139" and "8:31:47 AM"
 			fieldColAdd(pre,lab,tx1)
 			fieldColAdd(pre,lab "_time",tx2)
+			return
+		}
+		if (lab~="i)(Longest|Fastest)") {
+			fieldColAdd(pre,lab,txt)
+			fieldColAdd(pre,lab "_time","")
 			return
 		}
 		if (txt ~= "^[0-9]+\s\([0-9.]+\%\)$") {								;	Split percents |\(.*%\)
