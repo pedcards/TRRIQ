@@ -263,7 +263,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	if (ptDem.Type~=("i)(Inpatient|Emergency)")) {										; Inpt & ER, we must find who recommended it
+	if (ptDem.Type~=("i)(Inpatient|Emergency)")) {										; Inpt & ER, we must find who recommended it from the Chipotle schedule
 		gosub assignMD
 	} else if !(ObjHasKey(siteVals,ptDem.Loc)) {										; Otherwise, must be a CRDxxx location
 		MsgBox % "Invalid Loc`n" ptDem.Loc
@@ -271,7 +271,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		return
 	}
 	if !(ptDem.Provider) {
-		gosub getMD
+		gosub getMD																		; No CRD provider, ask for it.
 	}
 	ptDem["Account Number"] := EncNum
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
@@ -281,7 +281,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 
 			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|emergency)")
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])
-	if !(ptDemChk) {															; all data elements must be present, otherwise retry
+	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
 			. ((ptDem["nameF"]) ? "" : "First name`n")
 			. ((ptDem["nameL"]) ? "" : "Last name`n")
@@ -596,7 +596,7 @@ CheckProc:
 		return																		;	All tests valid, uploaded with new TRRIQ process
 	}
 	
-	MsgBox % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
+	MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
 	ptDem := Object()
 	ptDem["nameL"] := chk1
 	ptDem["nameF"] := chk2
