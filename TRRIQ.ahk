@@ -68,7 +68,7 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
-siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","YAK":"Yakima"}
+siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
 
 y := new XML(chipDir "currlist.xml")
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
@@ -265,11 +265,14 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Destroy
 	if (ptDem.Type~=("i)(Inpatient|Emergency)")) {										; Inpt & ER, we must find who recommended it from the Chipotle schedule
 		gosub assignMD
-	} else if !(ObjHasKey(siteVals,ptDem.Loc)) {										; Otherwise, must be a CRDxxx location
+	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {											; Any EKG ECO DCT account (Holter-only), ask for ordering MD
+		gosub getMD
+	} else if !(ptDem.Loc~="i)CRD.*") {													; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
 		MsgBox % "Invalid Loc`n" ptDem.Loc
 		gosub fetchGUI
 		return
 	}
+	
 	if !(ptDem.Provider) {
 		gosub getMD																		; No CRD provider, ask for it.
 	}
@@ -590,7 +593,7 @@ CheckProc:
 	
 	if ((chk1~="[^a-z]") 
 		&& (chk2~="[^a-z]") 
-		&& (ObjHasKey(siteVals,chk4)) 
+		&& (chk4~="i)(CRD|EKG|ECO|DCT)") 
 		&& (chk5~="\d{8}")) 
 	{
 		return																		;	All tests valid, uploaded with new TRRIQ process
