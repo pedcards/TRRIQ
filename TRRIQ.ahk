@@ -68,7 +68,7 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
-siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","YAK":"Yakima"}
+siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
 
 y := new XML(chipDir "currlist.xml")
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
@@ -167,6 +167,10 @@ FetchDem:
 					if (instr(ptDem.Type,"Inpatient")) {
 						ptDem["Loc"] := "Inpatient"
 					}
+					if (instr(ptDem.Type,"Day Surg")) {
+						ptDem["Loc"] := "SurgCntr"
+						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					}
 					mdProv := false
 					mdAcct := false
 				}
@@ -178,13 +182,14 @@ FetchDem:
 }
 
 mouseGrab(x,y) {
+	BlockInput, On
 	MouseMove, %x%, %y%, 0
 	Click 2
+	BlockInput, Off
 	sleep 100
 	ClipWait
 	clk := parseClip(clipboard)
 	return clk.value
-	
 }
 
 parseClip(clip) {
@@ -193,7 +198,10 @@ parseClip(clip) {
 	if (pos:=ObjHasValue(demVals, val1)) {
 		return {"field":val1, "value":val2, "bit":pos}
 	}
-	if (RegExMatch(clip,"O)(Outpatient)|(Inpatient)\s\[",valMatch)) {
+	if (RegExMatch(clip,"O)(Outpatient|Inpatient)\s\[",valMatch)) {
+		return {"field":"Type", "value":clip}
+	}
+	if (clip~="Oi)(Day Surg)",valMatch) {
 		return {"field":"Type", "value":clip}
 	}
 	if (RegExMatch(clip,"O)[A-Z\-\s]*, [A-Z\-]*",valMatch)) {
@@ -263,15 +271,19 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	if (ptDem.Type~=("i)(Inpatient|Emergency)")) {										; Inpt & ER, we must find who recommended it
+	if (ptDem.Type~=("i)(Inpatient|ED)")) {										; Inpt & ER, we must find who recommended it from the Chipotle schedule
 		gosub assignMD
-	} else if !(ObjHasKey(siteVals,ptDem.Loc)) {										; Otherwise, must be a CRDxxx location
+	} else if (ptDem.Loc~="i)SurgCntr") {												; SURGCNTR, find who recommended it
+		gosub getMD
+	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {											; Any EKG ECO DCT account (Holter-only), ask for ordering MD
+		gosub getMD
+	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr).*") {													; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
 		MsgBox % "Invalid Loc`n" ptDem.Loc
 		gosub fetchGUI
 		return
 	}
 	if !(ptDem.Provider) {
-		gosub getMD
+		gosub getMD																		; No CRD provider, ask for it.
 	}
 	ptDem["Account Number"] := EncNum
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
@@ -279,9 +291,9 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 
 			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 
-			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|emergency)")
+			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|ED|day surg)")
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])
-	if !(ptDemChk) {															; all data elements must be present, otherwise retry
+	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
 			. ((ptDem["nameF"]) ? "" : "First name`n")
 			. ((ptDem["nameL"]) ? "" : "Last name`n")
@@ -583,20 +595,20 @@ return
 CheckProc:
 {
 	chk1 := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
-	chk2 := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")					; NameF				must be [A-Z]
+	chk2 := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")				; NameF				must be [A-Z]
 	chk3 := trim(strX(demog,"ID Number",nn,9,"Date of Birth",1,13,nn)," `r`n")					; MRN
 	chk4 := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
-	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15))					; Billing code		must be valid number
+	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15))						; Billing code		must be valid number
 	
 	if ((chk1~="[^a-z]") 
 		&& (chk2~="[^a-z]") 
-		&& (ObjHasKey(siteVals,chk4)) 
+		&& (chk4~="i)(CRD|EKG|ECO|DCT)") 
 		&& (chk5~="\d{8}")) 
 	{
 		return																		;	All tests valid, uploaded with new TRRIQ process
 	}
 	
-	MsgBox % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
+	MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
 	ptDem := Object()
 	ptDem["nameL"] := chk1
 	ptDem["nameF"] := chk2
@@ -858,6 +870,11 @@ formatField(pre, lab, txt) {
 			tx2 := trim(strX(txt," at",1,3,"",1,0))							;		result e.g. "139" and "8:31:47 AM"
 			fieldColAdd(pre,lab,tx1)
 			fieldColAdd(pre,lab "_time",tx2)
+			return
+		}
+		if (lab~="i)(Longest|Fastest)") {
+			fieldColAdd(pre,lab,txt)
+			fieldColAdd(pre,lab "_time","")
 			return
 		}
 		if (txt ~= "^[0-9]+\s\([0-9.]+\%\)$") {								;	Split percents |\(.*%\)
