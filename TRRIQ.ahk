@@ -167,6 +167,10 @@ FetchDem:
 					if (instr(ptDem.Type,"Inpatient")) {
 						ptDem["Loc"] := "Inpatient"
 					}
+					if (instr(ptDem.Type,"Day Surg")) {
+						ptDem["Loc"] := "SurgCntr"
+						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					}
 					mdProv := false
 					mdAcct := false
 				}
@@ -178,13 +182,14 @@ FetchDem:
 }
 
 mouseGrab(x,y) {
+	BlockInput, On
 	MouseMove, %x%, %y%, 0
 	Click 2
+	BlockInput, Off
 	sleep 100
 	ClipWait
 	clk := parseClip(clipboard)
 	return clk.value
-	
 }
 
 parseClip(clip) {
@@ -193,7 +198,10 @@ parseClip(clip) {
 	if (pos:=ObjHasValue(demVals, val1)) {
 		return {"field":val1, "value":val2, "bit":pos}
 	}
-	if (RegExMatch(clip,"O)(Outpatient)|(Inpatient)\s\[",valMatch)) {
+	if (RegExMatch(clip,"O)(Outpatient|Inpatient)\s\[",valMatch)) {
+		return {"field":"Type", "value":clip}
+	}
+	if (clip~="Oi)(Day Surg)",valMatch) {
 		return {"field":"Type", "value":clip}
 	}
 	if (RegExMatch(clip,"O)[A-Z\-\s]*, [A-Z\-]*",valMatch)) {
@@ -263,16 +271,17 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	if (ptDem.Type~=("i)(Inpatient|Emergency)")) {										; Inpt & ER, we must find who recommended it from the Chipotle schedule
+	if (ptDem.Type~=("i)(Inpatient|ED)")) {										; Inpt & ER, we must find who recommended it from the Chipotle schedule
 		gosub assignMD
+	} else if (ptDem.Loc~="i)SurgCntr") {												; SURGCNTR, find who recommended it
+		gosub getMD
 	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {											; Any EKG ECO DCT account (Holter-only), ask for ordering MD
 		gosub getMD
-	} else if !(ptDem.Loc~="i)CRD.*") {													; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
+	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr).*") {													; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
 		MsgBox % "Invalid Loc`n" ptDem.Loc
 		gosub fetchGUI
 		return
 	}
-	
 	if !(ptDem.Provider) {
 		gosub getMD																		; No CRD provider, ask for it.
 	}
@@ -282,7 +291,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 
 			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 
-			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|emergency)")
+			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|ED|day surg)")
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])
 	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
