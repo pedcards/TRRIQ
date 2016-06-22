@@ -73,14 +73,6 @@ siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevu
 y := new XML(chipDir "currlist.xml")
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
-/* ...Only used when PDF dropped on icon. No longer necessary?
- *
- *  if (%0%) {										; For each parameter,
- * 	fileIn = %1%								; Gets parameter dropped/passed to script/exe
- * 	phase := "Process PDF"
- * }
- */
-
 if !(phase) {
 	phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
 }
@@ -95,14 +87,6 @@ if (instr(phase,"new")) {
 	ExitApp
 }
 if (instr(phase,"PDF")) {
-/* 	if (instr(fileIn,".pdf")) {
- *		splitpath, fileIn,,,,fileNam
- *		gosub MainLoop
- *		ExitApp
- *	}
- *	
- *	filein is only got when file is fed to exe. Probably can delete?
- */	
 	holterLoops := 0
 	holtersDone := 
 	loop, %holterDir%*.pdf
