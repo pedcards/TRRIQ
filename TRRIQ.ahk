@@ -87,24 +87,26 @@ if (instr(phase,"new")) {
 	ExitApp
 }
 if (instr(phase,"PDF")) {
-	holterLoops := 0
+	holterLoops := 0								; Reset counters
 	holtersDone := 
-	loop, %holterDir%*.pdf
+	loop, %holterDir%*.pdf							; Process all PDF files in holterDir
 	{
-		fileIn := A_LoopFileFullPath
-		FileGetTime, fileDt, %fileIn%, C
-		if (substr(fileDt,-5)="000000") {			; skip files with creation TIME midnight (already processed)
+		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
+		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
+		if (substr(fileDt,-5)="000000") {								; skip files with creation TIME midnight (already processed)
 			continue
 		}
-		gosub MainLoop
-		if (fetchQuit=true) {
+		gosub MainLoop													; process the PDF
+		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
 			continue
 		}
 		holterLoops++													; increment counter for processed counter
-		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to list
+		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 	}
 	MsgBox,, % "Holters processed (" holterLoops ")", % holtersDone
 	ExitApp
+	/* Consider asking if complete. The MA's appear to run one PDF at a time, despite the efficiency loss.
+	*/
 }
 
 ExitApp
