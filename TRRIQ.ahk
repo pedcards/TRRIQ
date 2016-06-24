@@ -113,58 +113,63 @@ ExitApp
 
 FetchDem:
 {
-	mdX := Object()										; get mouse demographics
+	mdX := Object()										; clear Mouse Demographics X,Y coordinate arrays
 	mdY := Object()
-	ptDem["bit"] := 0
 	getDem := true
 	while (getDem) {									; Repeat until we get tired of this
 		clipboard :=
 		ClipWait, 2
-		if !ErrorLevel {
+		if !ErrorLevel {								; clipboard has data
 			clk := parseClip(clipboard)
-			if !ErrorLevel {
-				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2
-				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]
+			if !ErrorLevel {															; parseClip {field:value} matches valid data
+				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
+				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]			; populate ptDem.field with value; if value=null, keep same
 				if (clk.field = "Provider") {
-					if (clk.value) {
+					if (clk.value) {													; populate ptDem.Provider field with LAST,FIRST (strip MD, PHD, MI, etc)
 						ptDem["Provider"] := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
 					}
-					mdX[4] := mouseXpos
+					mdX[4] := mouseXpos													; demographics grid[4,1]
 					mdY[1] := mouseYpos
-					mdProv := true
+					mdProv := true														; we have got Provider
 					WinGetTitle, mdTitle, ahk_id %mouseWinID%
-					gosub getDemName
+					gosub getDemName													; extract patient name, MRN from window title (this is why it must be sister or parent VM).
 				}
 				if (clk.field = "Account Number") {
-					mdX[1] := mouseXpos
+					mdX[1] := mouseXpos													; demographics grid[1,3]
 					mdY[3] := mouseYpos
-					mdAcct := true
+					mdAcct := true														; we have got Acct Number
 					WinGetTitle, mdTitle, ahk_id %mouseWinID%
-					gosub getDemName
+					gosub getDemName													; extract patient name, MRN
 				}
-				if (mdProv and mdAcct) {
-					mdXd := (mdX[4]-mdX[1])/3
-					mdX[2] := mdX[1]+mdXd
+				if (mdProv and mdAcct) {												; we have both critical coordinates
+					mdXd := (mdX[4]-mdX[1])/3											; determine delta X between columns
+					mdX[2] := mdX[1]+mdXd												; determine remaining column positions
 					mdX[3] := mdX[2]+mdXd
-					mdY[2] := mdY[1]+(mdY[3]-mdY[1])/2
-					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2])
+					mdY[2] := mdY[1]+(mdY[3]-mdY[1])/2									; determine remaning row coordinate
+					/*	possible to just divide the window width into 6 columns
+						rather than dividing the space into delta X ?
+					*/
+					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2])							; grab remaining demographic values
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2])
 					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]),1,1)
-					tmp := mouseGrab(mdX[3],mdY[3])
-						ptDem["Type"] := strX(tmp,,1,0, " [",1,2)
-					if (instr(ptDem.Type,"Outpatient")) {
-						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
-						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
+						tmpType := strX(tmp,,1,0, " [",1,2)								; Type is everything up to " ["
+						tmpDate := strX(tmp," [",1,2, " ",1,1)							; Date is anything between " [" and " "
+					ptDem["Type"] := tmpType
+					
+					if (ptDem.Type="Outpatient") {
+						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])				; most outpatient locations are short strings, click the right half of cell to grab location name
+						ptDem["EncDate"] := tmpDate
 					}
-					if (instr(ptDem.Type,"Inpatient")) {
-						ptDem["Loc"] := "Inpatient"
+					if (ptDem.Type,"Inpatient") {										; could be actual inpatient or in SurgCntr
+						ptDem["Loc"] := "Inpatient"										; date is date of admission, so we will ignore date field
 					}
-					if (instr(ptDem.Type,"Day Surg")) {
-						ptDem["Loc"] := "SurgCntr"
-						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					if (ptDem.Type,"Day Surg") {
+						ptDem["Loc"] := "SurgCntr"										; fill the ptDem.Loc field
+						ptDem["EncDate"] := tmpDate										; date in SurgCntr
 					}
-					mdProv := false
-					mdAcct := false
+					mdProv := false														; processed demographic fields,
+					mdAcct := false														; so reset check bits
 				}
 			}
 			gosub fetchGUI							; Update GUI with new info
