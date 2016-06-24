@@ -71,7 +71,7 @@ Loop, Read, %chipDir%outdocs.csv
 siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
 
 y := new XML(chipDir "currlist.xml")
-demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
+demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
 	phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
@@ -195,9 +195,9 @@ mouseGrab(x,y) {
 
 parseClip(clip) {
 	global demVals
-	StringSplit, val, clip, :
-	if (pos:=ObjHasValue(demVals, val1)) {
-		return {"field":val1, "value":val2, "bit":pos}
+	StringSplit, val, clip, :															; break field into val1:val2
+	if (ObjHasValue(demVals, val1)) {													; field name in demVals
+		return {"field":val1, "value":val2}
 	}
 	if (RegExMatch(clip,"O)(Outpatient|Inpatient)\s\[",valMatch)) {
 		return {"field":"Type", "value":clip}
