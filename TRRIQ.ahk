@@ -179,6 +179,10 @@ FetchDem:
 }
 
 mouseGrab(x,y) {
+/*	Double click mouse coordinates x,y to grab cell contents
+	Process through parseClip to validate
+	Return the value portion of parseClip
+*/
 	BlockInput, On
 	MouseMove, %x%, %y%, 0
 	Click 2
