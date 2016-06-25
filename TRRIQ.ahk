@@ -199,8 +199,11 @@ parseClip(clip) {
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
 		return {"field":val1, "value":val2}
 	}
-	if (clip~="(Out|In)patient\s\[") {													; Outpatient|Inpatient types
+	if (clip~="Outpatient\s\[") {														; Outpatient type
 		return {"field":"Type", "value":clip}											; return original clip string (to be broken later)
+	}
+	if (clip~="Inpatient\s\[") {														; Inpatient types
+		return {"field":"Type", "value":"Inpatient"}									; return "Inpt"
 	}
 	if (clip~="Day Surg.*\s\[") {														; Day Surg type
 		return {"field":"Type"
@@ -312,9 +315,6 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			. ((ptDem["EncDate"]) ? "" : "Date Holter placed`n")
 			. ((ptDem["Provider"]) ? "" : "Provider`n")
 			. "`nREQUIRED!"
-		gosub fetchGUI
-		return
-	}
 		;~ MsgBox % ""
 			;~ . "First name " ptDem["nameF"] "`n"
 			;~ . "Last name " ptDem["nameL"] "`n"
@@ -326,8 +326,9 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			;~ . "Visit type " ptDem["Type"] "`n"
 			;~ . "Date Holter placed " ptDem["EncDate"] "`n"
 			;~ . "Provider " ptDem["Provider"] "`n"
-	;~ FormatTime, tmp, A_Now, yyyyMMdd
-	;~ ptDem["encDate"] := tmp
+		gosub fetchGUI
+		return
+	}
 	getDem := false																; done getting demographics
 	Loop
 	{
