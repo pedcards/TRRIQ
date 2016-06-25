@@ -196,19 +196,23 @@ mouseGrab(x,y) {
 parseClip(clip) {
 	global demVals
 	StringSplit, val, clip, :															; break field into val1:val2
-	if (ObjHasValue(demVals, val1)) {													; field name in demVals
+	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
 		return {"field":val1, "value":val2}
 	}
-	if (RegExMatch(clip,"O)(Outpatient|Inpatient)\s\[",valMatch)) {
-		return {"field":"Type", "value":clip}
+	if (clip~="(Out|In)patient\s\[") {													; Outpatient|Inpatient types
+		return {"field":"Type", "value":clip}											; return original clip string (to be broken later)
 	}
-	if (clip~="Oi)(Day Surg)",valMatch) {
-		return {"field":"Type", "value":clip}
+	if (clip~="Day Surg.*\s\[") {														; Day Surg type
+		return {"field":"Type"
+				, "value":"Day Surg"													; return "Day Surg"
+				, "date":strX(clip," [",1,2, " ",1,1)}									; and date
 	}
-	if (RegExMatch(clip,"O)[A-Z\-\s]*, [A-Z\-]*",valMatch)) {
-		return {"field":"Name", "value":valMatch.value()}
-	}
-	return Error
+	if (clip~="Emergency" {																; Emergency type
+		return {"field":"Type"
+				, "value":"Emergency"													; return "Day Surg"
+				, "date":strX(clip," [",1,2, " ",1,1)}									; and date
+		}
+	return Error																		; Anything else returns Error
 }
 
 getDemName:
