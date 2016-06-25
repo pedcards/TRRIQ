@@ -616,6 +616,7 @@ CheckProc:
 		return																		;	All tests valid, uploaded with new TRRIQ process
 	}
 	
+	Clipboard := chk1 ", " chk2
 	MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
 	ptDem := Object()
 	ptDem["nameL"] := chk1
