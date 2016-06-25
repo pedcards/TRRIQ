@@ -226,12 +226,12 @@ getDemName:
 
 fetchGUI:
 {
-	fYd := 30,	fXd := 80
-	fX1 := 12,	fX2 := fX1+fXd
-	fW1 := 60,	fW2 := 190
-	fH := 20
-	fY := 10
-	EncNum := ptDem["Account Number"]
+	fYd := 30,	fXd := 80									; fetchGUI delta Y, X
+	fX1 := 12,	fX2 := fX1+fXd								; x pos for title and input fields
+	fW1 := 60,	fW2 := 190									; width for title and input fields
+	fH := 20												; line heights
+	fY := 10												; y pos to start
+	EncNum := ptDem["Account Number"]						; we need these non-array variables for the Gui statements
 	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
 	fTxt := "	To auto-grab demographic info:`n"
 		.	"		1) Double-click Account Number #`n"
@@ -276,28 +276,29 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	if (ptDem.Type~=("i)(Inpatient|ED)")) {										; Inpt & ER, we must find who recommended it from the Chipotle schedule
+	if (ptDem.Type~="i)(Inpatient|Emergency)") {								; Inpt & ER, we must find who recommended it from the Chipotle schedule
 		gosub assignMD
-	} else if (ptDem.Loc~="i)SurgCntr") {												; SURGCNTR, find who recommended it
+	} else if (ptDem.Loc~="i)SurgCntr") {										; SURGCNTR, find who recommended it
 		gosub getMD
-	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {											; Any EKG ECO DCT account (Holter-only), ask for ordering MD
+	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {									; Any outpatient EKG ECO DCT account (Holter-only), ask for ordering MD
 		gosub getMD
-	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr).*") {													; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
+;	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr).*") {					; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
+	} else {																	; otherwise fail
 		MsgBox % "Invalid Loc`n" ptDem.Loc
 		gosub fetchGUI
 		return
 	}
 	if !(ptDem.Provider) {
-		gosub getMD																		; No CRD provider, ask for it.
+		gosub getMD																; No CRD provider, ask for it.
 	}
-	ptDem["Account Number"] := EncNum
-	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
+	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
+	FormatTime, EncDt, %EncDt%, MM/dd/yyyy										; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
-	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 
-			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 
-			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 
-			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|ED|day surg)")
-			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])
+	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 					; valid names
+			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 						; valid MRN and Acct numbers
+			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 		; valid DOB and Sex
+			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|emergency|day surg)")		; Loc is any string, type is either inpt/ER/day surg/any outpt
+			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])								; prov any string, encDate not null
 	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
 			. ((ptDem["nameF"]) ? "" : "First name`n")
@@ -327,12 +328,12 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			;~ . "Provider " ptDem["Provider"] "`n"
 	;~ FormatTime, tmp, A_Now, yyyyMMdd
 	;~ ptDem["encDate"] := tmp
-	getDem := false
+	getDem := false																; done getting demographics
 	Loop
 	{
 		gosub indGUI
 		WinWaitClose, Enter indications
-		if (indChoices)
+		if (indChoices)															; loop until we have filled indChoices
 			break
 	}
 	return
