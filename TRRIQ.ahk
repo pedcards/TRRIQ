@@ -217,8 +217,8 @@ parseClip(clip) {
 
 getDemName:
 {
-	if (RegExMatch(mdTitle, "i)\s\-\s\d{6,7}\s(Opened by)")) {
-		ptDem["nameL"] := strX(mdTitle,,1,0, ",",1,1)
+	if (RegExMatch(mdTitle, "i)\s\-\s\d{6,7}\s(Opened by)")) {							; Match window title "LAST, FIRST - 12345678 Opened by Chun, Terrence U, MD"
+		ptDem["nameL"] := strX(mdTitle,,1,0, ",",1,1)									; and parse the name
 		ptDem["nameF"] := strX(mdTitle,",",1,2, " ",1,1)
 	}
 	return
