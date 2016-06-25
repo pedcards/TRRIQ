@@ -207,7 +207,7 @@ parseClip(clip) {
 				, "value":"Day Surg"													; return "Day Surg"
 				, "date":strX(clip," [",1,2, " ",1,1)}									; and date
 	}
-	if (clip~="Emergency" {																; Emergency type
+	if (clip~="Emergency") {															; Emergency type
 		return {"field":"Type"
 				, "value":"Emergency"													; return "Day Surg"
 				, "date":strX(clip," [",1,2, " ",1,1)}									; and date
