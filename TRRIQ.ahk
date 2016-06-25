@@ -132,8 +132,9 @@ FetchDem:
 					mdY[1] := mouseYpos
 					mdProv := true														; we have got Provider
 					WinGetTitle, mdTitle, ahk_id %mouseWinID%
-					gosub getDemName													; extract patient name, MRN from window title (this is why it must be sister or parent VM).
-				}
+					gosub getDemName													; extract patient name, MRN from window title 
+					
+				}																		;(this is why it must be sister or parent VM).
 				if (clk.field = "Account Number") {
 					mdX[1] := mouseXpos													; demographics grid[1,3]
 					mdY[3] := mouseYpos
@@ -161,10 +162,10 @@ FetchDem:
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])				; most outpatient locations are short strings, click the right half of cell to grab location name
 						ptDem["EncDate"] := tmpDate
 					}
-					if (ptDem.Type,"Inpatient") {										; could be actual inpatient or in SurgCntr
+					if (ptDem.Type="Inpatient") {										; could be actual inpatient or in SurgCntr
 						ptDem["Loc"] := "Inpatient"										; date is date of admission, so we will ignore date field
 					}
-					if (ptDem.Type,"Day Surg") {
+					if (ptDem.Type="Day Surg") {
 						ptDem["Loc"] := "SurgCntr"										; fill the ptDem.Loc field
 						ptDem["EncDate"] := tmpDate										; date in SurgCntr
 					}
