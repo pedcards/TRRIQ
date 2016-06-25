@@ -300,7 +300,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 					; valid names
 			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 						; valid MRN and Acct numbers
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 		; valid DOB and Sex
-			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|emergency|day surg)")		; Loc is any string, type is either inpt/ER/day surg/any outpt
+			&& (ptDem["Loc"]) && (ptDem["Type"])													; Loc and type is not null
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])								; prov any string, encDate not null
 	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
