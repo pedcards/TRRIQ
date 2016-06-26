@@ -146,8 +146,8 @@ FetchDem:
 					gosub getDemName													; extract patient name, MRN from window title 
 					
 				}																		;(this is why it must be sister or parent VM).
-				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]			; populate ptDem.field with value; if value=null, keep same
 				if (clk.field = "Account Number") {
+					ptDem["Account Number"] := clk.value
 					mdX[1] := mouseXpos													; demographics grid[1,3]
 					mdY[3] := mouseYpos
 					mdAcct := true														; we have got Acct Number
@@ -184,6 +184,9 @@ FetchDem:
 					}
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
+				}
+				if !(clk.field~="(Provider|Account Number)") {							; all other values
+					ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
 				}
 			}
 			gosub fetchGUI							; Update GUI with new info
