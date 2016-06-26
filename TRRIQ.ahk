@@ -385,6 +385,7 @@ indSubmit:
 		InputBox, indOther, Other, Enter other indication
 		indChoices := RegExReplace(indChoices,"OTHER", "OTHER - " indOther)
 	}
+	ptDem["Indication"] := indChoices
 	return
 }
 
@@ -633,7 +634,7 @@ CheckProc:
 	demog := RegExReplace(demog,"i)Billing Code (.*)Recorder Format", "Billing Code   " ptDem["Account number"] "`nRecorder Format")
 	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
 	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
-	
+	demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
 	return
 }
 
