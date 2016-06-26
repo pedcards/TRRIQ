@@ -126,8 +126,19 @@ FetchDem:
 				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
 				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]			; populate ptDem.field with value; if value=null, keep same
 				if (clk.field = "Provider") {
-					if (clk.value) {													; populate ptDem.Provider field with LAST,FIRST (strip MD, PHD, MI, etc)
-						ptDem["Provider"] := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+					if (clk.value) {													; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
+						tmp := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+					}
+					if (ptDem.Provider) {												; Provider already exists
+						MsgBox, 4148
+							, Provider already exists
+							, % "Replace " ptDem.Provider "`n with `n" tmp "?"
+						IfMsgBox, Yes													; Check before replacing
+						{
+							ptDem.Provider := tmp
+						}
+					} else {															; Otherwise populate ptDem.Provider
+						ptDem.Provider := tmp
 					}
 					mdX[4] := mouseXpos													; demographics grid[4,1]
 					mdY[1] := mouseYpos
