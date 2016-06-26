@@ -609,32 +609,36 @@ CheckProc:
 	chk4 := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
 	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15))						; Billing code		must be valid number
 	
-	if ((chk1~="[^a-z]") 
+	if ((chk1~="[^a-z]")															; All tests valid, PDF was uploaded with new TRRIQ process 
 		&& (chk2~="[^a-z]") 
 		&& (chk4~="i)(CRD|EKG|ECO|DCT)") 
 		&& (chk5~="\d{8}")) 
 	{
-		return																		;	All tests valid, uploaded with new TRRIQ process
+		return
 	}
-	
-	Clipboard := chk1 ", " chk2
-	MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
-	ptDem := Object()
-	ptDem["nameL"] := chk1
-	ptDem["nameF"] := chk2
-	ptDem["mrn"] := chk3
-	fetchQuit:=false
-	gosub fetchGUI
-	gosub fetchDem
-	demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
-	demog := RegExReplace(demog,"i)First Name (.*)Middle Initial", "First Name   " ptDem["nameF"] "`nMiddle Initial")
-	demog := RegExReplace(demog,"i)ID Number (.*)Date of Birth", "ID Number   " ptDem["mrn"] "`nDate of Birth")
-	demog := RegExReplace(demog,"i)Date of Birth (.*)Sex", "Date of Birth   " ptDem["DOB"] "`nSex")
-	demog := RegExReplace(demog,"i)Source (.*)Billing Code", "Source   " ptDem["Loc"] "`nBilling Code")
-	demog := RegExReplace(demog,"i)Billing Code (.*)Recorder Format", "Billing Code   " ptDem["Account number"] "`nRecorder Format")
-	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
-	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
-	demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
+	else 																			; Not valid PDF, get demographics post hoc
+	{
+		Clipboard := chk1 ", " chk2
+		MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5 "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+		ptDem := Object()
+		ptDem["nameL"] := chk1
+		ptDem["nameF"] := chk2
+		ptDem["mrn"] := chk3
+		fetchQuit:=false
+		gosub fetchGUI
+		gosub fetchDem
+		demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
+		demog := RegExReplace(demog,"i)First Name (.*)Middle Initial", "First Name   " ptDem["nameF"] "`nMiddle Initial")
+		demog := RegExReplace(demog,"i)ID Number (.*)Date of Birth", "ID Number   " ptDem["mrn"] "`nDate of Birth")
+		demog := RegExReplace(demog,"i)Date of Birth (.*)Sex", "Date of Birth   " ptDem["DOB"] "`nSex")
+		demog := RegExReplace(demog,"i)Source (.*)Billing Code", "Source   " ptDem["Loc"] "`nBilling Code")
+		demog := RegExReplace(demog,"i)Billing Code (.*)Recorder Format", "Billing Code   " ptDem["Account number"] "`nRecorder Format")
+		demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
+		demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
+		demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
+		MsgBox % demog
+	}
 	return
 }
 
