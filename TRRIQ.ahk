@@ -432,10 +432,10 @@ zybitFill(win,fields) {
 
 MainLoop:
 {
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt
-	FileRead, maintxt, temp.txt
-	FileCopy, temp.txt, .\tempfiles\%filenam%.txt
-	blocks := Object()
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt							; convert PDF to txt file
+	FileRead, maintxt, temp.txt																; load into maintxt
+	FileCopy, temp.txt, .\tempfiles\%filenam%.txt											; copy into tempfiles
+	blocks := Object()																		; clear all objects
 	fields := Object()
 	fldval := {}
 	labels := Object()
@@ -445,7 +445,7 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 
-	if (InStr(maintxt,"Holter")) {							; Search maintxt for identifying strings
+	if (InStr(maintxt,"Holter")) {															; Search maintxt for identifying strings
 		gosub Holter
 	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
 		gosub EventRec
@@ -455,22 +455,21 @@ MainLoop:
 		MsgBox No match!
 		ExitApp
 	}
-	if (fetchQuit=true) {
-		return
+	if (fetchQuit=true) {																	; exited demographics fetchGUI
+		return																				; so skip processing this file
 	}
 
-	gosub epRead
-	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"
-	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"
-	fileout := fileOut1 . fileout2
-	tmpDate := parseDate(fldval["Test_Date"])
+	gosub epRead																			; find out which EP is reading today
+	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"											; make sure that there is only one `n 
+	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"											; on the header and data lines
+	fileout := fileOut1 . fileout2															; concatenate the header and data lines
+	tmpDate := parseDate(fldval["Test_Date"])												; get the study date
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
-	;MsgBox % filenameOut
-	FileDelete, %importFld%%fileNameOut%.csv
-	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv
-	FileAppend, %fileOut%, .\tempfiles\%filenam%.csv
-	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1
-	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C
+	FileDelete, %importFld%%fileNameOut%.csv												; clear any previous CSV
+	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv										; create a new CSV
+	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a copy of CSV in tempfiles
+	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1										; move the PDF to holterDir
+	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C	; set the time of PDF in holterDir to 000000 (processed)
 Return
 }
 
@@ -618,7 +617,7 @@ CheckProc:
 	}
 	else 																			; Not valid PDF, get demographics post hoc
 	{
-		Clipboard := chk1 ", " chk2
+		Clipboard := chk1 ", " chk2													; can just paste into CIS search bar
 		MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5 "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 		ptDem := Object()
