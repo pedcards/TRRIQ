@@ -440,7 +440,6 @@ MainLoop:
  *	move around the temp, CSV, and PDF files.
  */
 	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt							; convert PDF to txt file
-	FileCopy, temp.txt, .\tempfiles\%filenam%.txt											; make a copy in tempfiles
 	blocks := Object()																		; clear all objects
 	fields := Object()
 	fldval := {}
