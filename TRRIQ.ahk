@@ -124,7 +124,6 @@ FetchDem:
 			clk := parseClip(clipboard)
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
 				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
-				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]			; populate ptDem.field with value; if value=null, keep same
 				if (clk.field = "Provider") {
 					if (clk.value) {													; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmp := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
@@ -147,6 +146,7 @@ FetchDem:
 					gosub getDemName													; extract patient name, MRN from window title 
 					
 				}																		;(this is why it must be sister or parent VM).
+				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]			; populate ptDem.field with value; if value=null, keep same
 				if (clk.field = "Account Number") {
 					mdX[1] := mouseXpos													; demographics grid[1,3]
 					mdY[3] := mouseYpos
@@ -649,7 +649,7 @@ CheckProc:
 		ptDem["mrn"] := chk3
 		ptDem["Loc"] := chk4
 		ptDem["Account number"] := chk5
-		ptDem["Provider"] := chk6
+		ptDem["Provider"] := trim(RegExReplace(chk6,"i)$Dr\.? "))
 		ptDem["EncDate"] := chk7
 		ptDem["Indication"] := chk8
 		
