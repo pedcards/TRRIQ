@@ -433,6 +433,12 @@ zybitFill(win,fields) {
 
 MainLoop:
 {
+/*	This main loop accepts a %fileIn% filename,
+ *	determines the filetype based on header contents,
+ *	concatenates the CSV strings of header (fileOut1) and values (fileOut2)
+ *	into a single file (fileOut),
+ *	move around the temp, CSV, and PDF files.
+ */
 	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt							; convert PDF to txt file
 	FileRead, maintxt, temp.txt																; load into maintxt
 	FileCopy, temp.txt, .\tempfiles\%filenam%.txt											; copy into tempfiles
