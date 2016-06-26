@@ -460,6 +460,10 @@ MainLoop:
 			continue
 		newTxt .= i . "`n"										; only add lines with text in it
 	}
+	FileDelete tempfile.txt										; remove any leftover tempfile
+	FileAppend %newtxt%, tempfile.txt							; create new tempfile with newtxt result
+	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt			; move a copy into tempfiles for troubleshooting
+	
 
 	if (InStr(maintxt,"Holter")) {															; Processing loop based on identifying string in maintxt
 		gosub Holter
@@ -564,10 +568,6 @@ return
 Holter:
 {
 	monType := "H"
-	FileDelete tempfile.txt										; remove the old tempfile
-	FileAppend %newtxt%, tempfile.txt							; create new tempfile with newtxt result
-	FileCopy tempfile.txt, .\tempfiles\%fileNam%.txt			; make a copy in tempfiles for troubleshooting
-	
 	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
 	
