@@ -465,8 +465,9 @@ MainLoop:
 	if (fetchQuit=true) {																	; exited demographics fetchGUI
 		return																				; so skip processing this file
 	}
-
 	gosub epRead																			; find out which EP is reading today
+	/*	Output the results and move files around
+	*/
 	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"											; make sure that there is only one `n 
 	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"											; on the header and data lines
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
