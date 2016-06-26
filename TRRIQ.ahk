@@ -629,7 +629,7 @@ CheckProc:
 	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
 	chk6 := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
 	
-	if ((chk1~="[^a-z]")															; All tests valid, PDF was uploaded with new TRRIQ process 
+	if ((chk1~="[^a-z]")															; All tests valid, PDF has proper demographics by TRRIQ process
 		&& (chk2~="[^a-z]") 
 		&& (chk4~="i)(CRD|EKG|ECO|DCT)") 
 		&& (chk5~="\d{8}")
