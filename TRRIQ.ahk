@@ -176,6 +176,7 @@ FetchDem:
 					}
 					if (ptDem.Type="Inpatient") {										; could be actual inpatient or in SurgCntr
 						ptDem["Loc"] := "Inpatient"										; date is date of admission, so we will ignore date field
+						ptDem["EncDate"] := tmpDate
 					}
 					if (ptDem.Type="Day Surg") {
 						ptDem["Loc"] := "SurgCntr"										; fill the ptDem.Loc field
