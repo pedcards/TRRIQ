@@ -636,7 +636,7 @@ CheckProc:
 		&& (chk2~="[^a-z]") 
 		&& (chk4~="i)(CRD|EKG|ECO|DCT|Outpatient|Inpatient|Emergency|Day Surg)") 
 		&& (chk5~="\d{8}")
-		&& (chk6~="[^a-z]") 
+		&& (chk6~="[^a-z]"))
 	{
 		return																		; All tests valid, return to processing Holter
 	}
