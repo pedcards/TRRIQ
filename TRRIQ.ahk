@@ -91,8 +91,8 @@ if (instr(phase,"PDF")) {
 	holtersDone := 
 	loop, %holterDir%*.pdf							; Process all PDF files in holterDir
 	{
-		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
 		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
+		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
 		if (substr(fileDt,-5)="000000") {								; skip files with creation TIME midnight (already processed)
 			continue
 		}
