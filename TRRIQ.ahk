@@ -441,7 +441,6 @@ MainLoop:
  */
 	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt							; convert PDF to txt file
 	FileCopy, temp.txt, .\tempfiles\%filenam%.txt											; make a copy in tempfiles
-	FileRead, maintxt, temp.txt																; load into maintxt
 	blocks := Object()																		; clear all objects
 	fields := Object()
 	fldval := {}
@@ -451,6 +450,16 @@ MainLoop:
 	blk2 := Object()
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
+	
+	newTxt:=""													; clear the full txt variable
+	FileRead, maintxt, temp.txt									; load into maintxt
+	Loop, parse, maintxt, `n,`r									; clean up maintxt
+	{
+		i:=A_LoopField
+		if !(i)													; skip entirely blank lines
+			continue
+		newTxt .= i . "`n"										; only add lines with text in it
+	}
 
 	if (InStr(maintxt,"Holter")) {															; Processing loop based on identifying string in maintxt
 		gosub Holter
@@ -555,14 +564,6 @@ return
 Holter:
 {
 	monType := "H"
-	newTxt:=""													; clear the full txt variable
-	Loop, parse, maintxt, `n,`r									; first pass, clean up txt
-	{
-		i:=A_LoopField
-		if !(i)													; skip entirely blank lines
-			continue
-		newTxt .= i . "`n"										; only add lines with text in it
-	}
 	FileDelete tempfile.txt										; remove the old tempfile
 	FileAppend %newtxt%, tempfile.txt							; create new tempfile with newtxt result
 	FileCopy tempfile.txt, .\tempfiles\%fileNam%.txt			; make a copy in tempfiles for troubleshooting
