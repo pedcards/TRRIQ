@@ -629,13 +629,13 @@ CheckProc:
 	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
 	chk6 := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
 	
-	if ((chk1~="[^a-z]")															; All tests valid, PDF has proper demographics by TRRIQ process
+	if ((chk1~="[^a-z]")															; Check field values to see if proper demographics
 		&& (chk2~="[^a-z]") 
 		&& (chk4~="i)(CRD|EKG|ECO|DCT|Outpatient|Inpatient|Emergency|Day Surg)") 
 		&& (chk5~="\d{8}")
 		&& (chk6~="[^a-z]") 
 	{
-		return
+		return																		; All tests valid, return to processing Holter
 	}
 	else 																			; Not valid PDF, get demographics post hoc
 	{
@@ -643,12 +643,15 @@ CheckProc:
 		MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5 "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 		ptDem := Object()
-		ptDem["nameL"] := chk1
+		ptDem["nameL"] := chk1														; Placeholder values for fetchGUI
 		ptDem["nameF"] := chk2
 		ptDem["mrn"] := chk3
 		fetchQuit:=false
 		gosub fetchGUI
 		gosub fetchDem
+		/*	When fetchDem successfully completes,
+		 *	replace the fields in demog with newly acquired values
+		 */
 		demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
 		demog := RegExReplace(demog,"i)First Name (.*)Middle Initial", "First Name   " ptDem["nameF"] "`nMiddle Initial")
 		demog := RegExReplace(demog,"i)ID Number (.*)Date of Birth", "ID Number   " ptDem["mrn"] "`nDate of Birth")
@@ -658,7 +661,6 @@ CheckProc:
 		demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
 		demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
 		demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
-		MsgBox % demog
 	}
 	return
 }
