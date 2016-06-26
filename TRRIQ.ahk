@@ -439,8 +439,21 @@ MainLoop:
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
  */
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt							; convert PDF to txt file
-	blocks := Object()																		; clear all objects
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt					; convert PDF to txt file
+	newTxt:=""																		; clear the full txt variable
+	FileRead, maintxt, temp.txt														; load into maintxt
+	Loop, parse, maintxt, `n,`r														; clean up maintxt
+	{					
+		i:=A_LoopField					
+		if !(i)																		; skip entirely blank lines
+			continue					
+		newTxt .= i . "`n"															; only add lines with text in it
+	}					
+	FileDelete tempfile.txt															; remove any leftover tempfile
+	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
+	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt								; move a copy into tempfiles for troubleshooting
+
+	blocks := Object()																; clear all objects
 	fields := Object()
 	fldval := {}
 	labels := Object()
@@ -450,20 +463,6 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
-	newTxt:=""													; clear the full txt variable
-	FileRead, maintxt, temp.txt									; load into maintxt
-	Loop, parse, maintxt, `n,`r									; clean up maintxt
-	{
-		i:=A_LoopField
-		if !(i)													; skip entirely blank lines
-			continue
-		newTxt .= i . "`n"										; only add lines with text in it
-	}
-	FileDelete tempfile.txt										; remove any leftover tempfile
-	FileAppend %newtxt%, tempfile.txt							; create new tempfile with newtxt result
-	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt			; move a copy into tempfiles for troubleshooting
-	
-
 	if (InStr(maintxt,"Holter")) {															; Processing loop based on identifying string in maintxt
 		gosub Holter
 	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
