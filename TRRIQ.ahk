@@ -628,6 +628,8 @@ CheckProc:
 	chk4 := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
 	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
 	chk6 := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
+	chk7 := trim(strX(demog,"Test Date",nn,10,"Analysis Date",1,13,nn)," `r`n")					; Study date
+	chk8 := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
 	
 	if ((chk1~="[^a-z]")															; Check field values to see if proper demographics
 		&& (chk2~="[^a-z]") 
@@ -643,9 +645,15 @@ CheckProc:
 		MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5 "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 		ptDem := Object()
-		ptDem["nameL"] := chk1														; Placeholder values for fetchGUI
+		ptDem["nameL"] := chk1														; Placeholder values for fetchGUI from PDF
 		ptDem["nameF"] := chk2
 		ptDem["mrn"] := chk3
+		ptDem["Loc"] := chk4
+		ptDem["Account number"] := chk5
+		ptDem["Provider"] := chk6
+		ptDem["EncDate"] := chk7
+		ptDem["Indication"] := chk8
+		
 		fetchQuit:=false
 		gosub fetchGUI
 		gosub fetchDem
