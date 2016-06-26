@@ -631,7 +631,7 @@ CheckProc:
 	
 	if ((chk1~="[^a-z]")															; All tests valid, PDF has proper demographics by TRRIQ process
 		&& (chk2~="[^a-z]") 
-		&& (chk4~="i)(CRD|EKG|ECO|DCT)") 
+		&& (chk4~="i)(CRD|EKG|ECO|DCT|Outpatient|Inpatient|Emergency|Day Surg)") 
 		&& (chk5~="\d{8}")
 		&& (chk6~="[^a-z]") 
 	{
