@@ -91,6 +91,7 @@ if (instr(phase,"PDF")) {
 	holtersDone := 
 	loop, %holterDir%*.pdf							; Process all PDF files in holterDir
 	{
+		fileNam := RegExReplace(A_LoopFileName,"i)\.pdf")				; fileNam is name only without extension, no path
 		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
 		if (substr(fileDt,-5)="000000") {								; skip files with creation TIME midnight (already processed)
@@ -445,7 +446,7 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 
-	if (InStr(maintxt,"Holter")) {															; Search maintxt for identifying strings
+	if (InStr(maintxt,"Holter")) {															; Processing loop based on identifying string in maintxt
 		gosub Holter
 	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
 		gosub EventRec
@@ -467,7 +468,7 @@ MainLoop:
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
 	FileDelete, %importFld%%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv										; create a new CSV
-	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a copy of CSV in tempfiles
+	FileCopy, %importFld%%fileNameOut%.csv, .\tempfiles\*.*, 1								; create a copy of CSV in tempfiles
 	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1										; move the PDF to holterDir
 	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C	; set the time of PDF in holterDir to 000000 (processed)
 Return
@@ -555,9 +556,9 @@ Holter:
 			continue
 		newTxt .= i . "`n"										; only add lines with text in it
 	}
-	FileDelete tempfile.txt										; remove the original tempfile
-	FileAppend %newtxt%, tempfile.txt							; rewrite the tempfile with 
-	FileCopy tempfile.txt, .\tempfiles\%fileNameOut%.txt
+	FileDelete tempfile.txt										; remove the old tempfile
+	FileAppend %newtxt%, tempfile.txt							; create new tempfile with newtxt result
+	FileCopy tempfile.txt, .\tempfiles\%fileNam%.txt			; make a copy in tempfiles for troubleshooting
 	
 	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
