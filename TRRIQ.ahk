@@ -440,8 +440,8 @@ MainLoop:
  *	move around the temp, CSV, and PDF files.
  */
 	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt							; convert PDF to txt file
+	FileCopy, temp.txt, .\tempfiles\%filenam%.txt											; make a copy in tempfiles
 	FileRead, maintxt, temp.txt																; load into maintxt
-	FileCopy, temp.txt, .\tempfiles\%filenam%.txt											; copy into tempfiles
 	blocks := Object()																		; clear all objects
 	fields := Object()
 	fldval := {}
@@ -576,7 +576,8 @@ Holter:
 	}
 	
 	/* Holter PDF is valid. OK to process.
-	*/
+	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	 */
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
 		, "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
