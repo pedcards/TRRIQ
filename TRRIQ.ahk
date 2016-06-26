@@ -469,7 +469,6 @@ MainLoop:
 	fields := Object()
 	fldval := {}
 	labels := Object()
-	newTxt := Object()
 	blk := Object()
 	blk2 := Object()
 	fileOut1 := fileOut2 := ""
