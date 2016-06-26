@@ -68,9 +68,9 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
-siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
-
 y := new XML(chipDir "currlist.xml")
+
+siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
@@ -547,26 +547,28 @@ return
 Holter:
 {
 	monType := "H"
-	newTxt:=""
+	newTxt:=""													; clear the full txt variable
 	Loop, parse, maintxt, `n,`r									; first pass, clean up txt
 	{
 		i:=A_LoopField
 		if !(i)													; skip entirely blank lines
 			continue
-		newTxt .= i . "`n"
+		newTxt .= i . "`n"										; only add lines with text in it
 	}
-	FileDelete tempfile.txt
-	FileAppend %newtxt%, tempfile.txt
-	FileCopy tempfile.txt, .\tempfiles\%filenam%.txt
+	FileDelete tempfile.txt										; remove the original tempfile
+	FileAppend %newtxt%, tempfile.txt							; rewrite the tempfile with 
+	FileCopy tempfile.txt, .\tempfiles\%fileNameOut%.txt
 	
 	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
 	
-	gosub checkProc
-	if (fetchQuit=true) {												; fetchGUI was quit, so skip processing
-		return
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
 	}
 	
+	/* Holter PDF is valid. OK to process.
+	*/
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
 		, "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
