@@ -615,12 +615,14 @@ CheckProc:
 	chk2 := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")				; NameF				must be [A-Z]
 	chk3 := trim(strX(demog,"ID Number",nn,9,"Date of Birth",1,13,nn)," `r`n")					; MRN
 	chk4 := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
-	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15))						; Billing code		must be valid number
+	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
+	chk6 := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
 	
 	if ((chk1~="[^a-z]")															; All tests valid, PDF was uploaded with new TRRIQ process 
 		&& (chk2~="[^a-z]") 
 		&& (chk4~="i)(CRD|EKG|ECO|DCT)") 
-		&& (chk5~="\d{8}")) 
+		&& (chk5~="\d{8}")
+		&& (chk6~="[^a-z]") 
 	{
 		return
 	}
