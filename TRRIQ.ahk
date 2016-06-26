@@ -631,11 +631,10 @@ CheckProc:
 	chk7 := trim(strX(demog,"Test Date",nn,10,"Analysis Date",1,13,nn)," `r`n")					; Study date
 	chk8 := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
 	
-	if ((chk1~="[^a-z]")															; Check field values to see if proper demographics
-		&& (chk2~="[^a-z]") 
+	if (!(chk1~="[a-z]+")															; Check field values to see if proper demographics
+		&& !(chk2~="[a-z]+") 
 		&& (chk4~="i)(CRD|EKG|ECO|DCT|Outpatient|Inpatient|Emergency|Day Surg)") 
-		&& (chk5~="\d{8}")
-		&& (chk6~="[^a-z]"))
+		&& (chk5~="\d{8}"))
 	{
 		return																		; All tests valid, return to processing Holter
 	}
