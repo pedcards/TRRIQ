@@ -592,7 +592,7 @@ Holter:
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
-		, "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
+		, "Source", "Billing Code", "Recorder Format", "Pt\.?\sHome\s*(Phone)?\s*#?", "Hookup Tech", "Pacemaker\s*Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
 		, "Test Date", "Analysis Date", "Hookup Time", "Recording Time", "Analysis Time", "Reason for Test", "Group"]
 	labels[1] := ["Name_L", "Name_F", "Name_M", "MRN", "DOB", "Sex"
