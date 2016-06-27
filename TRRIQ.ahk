@@ -68,15 +68,10 @@ Loop, Read, %chipDir%outdocs.csv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
 
-siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
-
 y := new XML(chipDir "currlist.xml")
-demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
-if (%0%) {										; For each parameter,
-	fileIn = %1%								; Gets parameter dropped/passed to script/exe
-	phase := "Process PDF"
-}
+siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
+demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
 	phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
@@ -92,87 +87,106 @@ if (instr(phase,"new")) {
 	ExitApp
 }
 if (instr(phase,"PDF")) {
-	if (instr(fileIn,".pdf")) {
-		splitpath, fileIn,,,,fileNam
-		gosub MainLoop
-		ExitApp
-	}
-	holterLoops := 0
+	holterLoops := 0								; Reset counters
 	holtersDone := 
-	loop, %holterDir%*.pdf
+	loop, %holterDir%*.pdf							; Process all PDF files in holterDir
 	{
-		fileIn := A_LoopFileFullPath
-		FileGetTime, fileDt, %fileIn%, C
-		if (substr(fileDt,-5)="000000") {			; skip files with creation TIME midnight (already processed)
+		fileNam := RegExReplace(A_LoopFileName,"i)\.pdf")				; fileNam is name only without extension, no path
+		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
+		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
+		if (substr(fileDt,-5)="000000") {								; skip files with creation TIME midnight (already processed)
 			continue
 		}
-		gosub MainLoop
-		if (fetchQuit=true) {
+		gosub MainLoop													; process the PDF
+		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
 			continue
 		}
 		holterLoops++													; increment counter for processed counter
-		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to list
+		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 	}
 	MsgBox,, % "Holters processed (" holterLoops ")", % holtersDone
 	ExitApp
+	/* Consider asking if complete. The MA's appear to run one PDF at a time, despite the efficiency loss.
+	*/
 }
 
 ExitApp
 
 FetchDem:
 {
-	mdX := Object()										; get mouse demographics
+	mdX := Object()										; clear Mouse Demographics X,Y coordinate arrays
 	mdY := Object()
-	ptDem["bit"] := 0
 	getDem := true
 	while (getDem) {									; Repeat until we get tired of this
 		clipboard :=
 		ClipWait, 2
-		if !ErrorLevel {
+		if !ErrorLevel {								; clipboard has data
 			clk := parseClip(clipboard)
-			if !ErrorLevel {
-				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2
-				ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]
+			if !ErrorLevel {															; parseClip {field:value} matches valid data
+				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
 				if (clk.field = "Provider") {
-					if (clk.value) {
-						ptDem["Provider"] := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+					if (clk.value) {													; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
+						tmp := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
 					}
-					mdX[4] := mouseXpos
+					if (ptDem.Provider) {												; Provider already exists
+						MsgBox, 4148
+							, Provider already exists
+							, % "Replace " ptDem.Provider "`n with `n" tmp "?"
+						IfMsgBox, Yes													; Check before replacing
+						{
+							ptDem.Provider := tmp
+						}
+					} else {															; Otherwise populate ptDem.Provider
+						ptDem.Provider := tmp
+					}
+					mdX[4] := mouseXpos													; demographics grid[4,1]
 					mdY[1] := mouseYpos
-					mdProv := true
+					mdProv := true														; we have got Provider
 					WinGetTitle, mdTitle, ahk_id %mouseWinID%
-					gosub getDemName
-				}
+					gosub getDemName													; extract patient name, MRN from window title 
+					
+				}																		;(this is why it must be sister or parent VM).
 				if (clk.field = "Account Number") {
-					mdX[1] := mouseXpos
+					ptDem["Account Number"] := clk.value
+					mdX[1] := mouseXpos													; demographics grid[1,3]
 					mdY[3] := mouseYpos
-					mdAcct := true
+					mdAcct := true														; we have got Acct Number
 					WinGetTitle, mdTitle, ahk_id %mouseWinID%
-					gosub getDemName
+					gosub getDemName													; extract patient name, MRN
 				}
-				if (mdProv and mdAcct) {
-					mdXd := (mdX[4]-mdX[1])/3
-					mdX[2] := mdX[1]+mdXd
+				if (mdProv and mdAcct) {												; we have both critical coordinates
+					mdXd := (mdX[4]-mdX[1])/3											; determine delta X between columns
+					mdX[2] := mdX[1]+mdXd												; determine remaining column positions
 					mdX[3] := mdX[2]+mdXd
-					mdY[2] := mdY[1]+(mdY[3]-mdY[1])/2
-					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2])
+					mdY[2] := mdY[1]+(mdY[3]-mdY[1])/2									; determine remaning row coordinate
+					/*	possible to just divide the window width into 6 columns
+						rather than dividing the space into delta X ?
+					*/
+					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2])							; grab remaining demographic values
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2])
 					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]),1,1)
-					tmp := mouseGrab(mdX[3],mdY[3])
-						ptDem["Type"] := strX(tmp,,1,0, " [",1,2)
-					if (instr(ptDem.Type,"Outpatient")) {
-						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])
-						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
+						tmpType := strX(tmp,,1,0, " [",1,2)								; Type is everything up to " ["
+						tmpDate := strX(tmp," [",1,2, " ",1,1)							; Date is anything between " [" and " "
+					ptDem["Type"] := tmpType
+					
+					if (ptDem.Type="Outpatient") {
+						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])				; most outpatient locations are short strings, click the right half of cell to grab location name
+						ptDem["EncDate"] := tmpDate
 					}
-					if (instr(ptDem.Type,"Inpatient")) {
-						ptDem["Loc"] := "Inpatient"
+					if (ptDem.Type="Inpatient") {										; could be actual inpatient or in SurgCntr
+						ptDem["Loc"] := "Inpatient"										; date is date of admission
+						ptDem["EncDate"] := tmpDate
 					}
-					if (instr(ptDem.Type,"Day Surg")) {
-						ptDem["Loc"] := "SurgCntr"
-						ptDem["EncDate"] := strX(tmp," [",1,2, " ",1,1)
+					if (ptDem.Type="Day Surg") {
+						ptDem["Loc"] := "SurgCntr"										; fill the ptDem.Loc field
+						ptDem["EncDate"] := tmpDate										; date in SurgCntr
 					}
-					mdProv := false
-					mdAcct := false
+					mdProv := false														; processed demographic fields,
+					mdAcct := false														; so reset check bits
+				}
+				if !(clk.field~="(Provider|Account Number)") {							; all other values
+					ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
 				}
 			}
 			gosub fetchGUI							; Update GUI with new info
@@ -182,6 +196,10 @@ FetchDem:
 }
 
 mouseGrab(x,y) {
+/*	Double click mouse coordinates x,y to grab cell contents
+	Process through parseClip to validate
+	Return the value portion of parseClip
+*/
 	BlockInput, On
 	MouseMove, %x%, %y%, 0
 	Click 2
@@ -194,26 +212,33 @@ mouseGrab(x,y) {
 
 parseClip(clip) {
 	global demVals
-	StringSplit, val, clip, :
-	if (pos:=ObjHasValue(demVals, val1)) {
-		return {"field":val1, "value":val2, "bit":pos}
+	StringSplit, val, clip, :															; break field into val1:val2
+	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
+		return {"field":val1, "value":val2}
 	}
-	if (RegExMatch(clip,"O)(Outpatient|Inpatient)\s\[",valMatch)) {
-		return {"field":"Type", "value":clip}
+	if (clip~="Outpatient\s\[") {														; Outpatient type
+		return {"field":"Type", "value":clip}											; return original clip string (to be broken later)
 	}
-	if (clip~="Oi)(Day Surg)",valMatch) {
-		return {"field":"Type", "value":clip}
+	if (clip~="Inpatient\s\[") {														; Inpatient types
+		return {"field":"Type", "value":"Inpatient"}									; return "Inpt"
 	}
-	if (RegExMatch(clip,"O)[A-Z\-\s]*, [A-Z\-]*",valMatch)) {
-		return {"field":"Name", "value":valMatch.value()}
+	if (clip~="Day Surg.*\s\[") {														; Day Surg type
+		return {"field":"Type"
+				, "value":"Day Surg"													; return "Day Surg"
+				, "date":strX(clip," [",1,2, " ",1,1)}									; and date
 	}
-	return Error
+	if (clip~="Emergency") {															; Emergency type
+		return {"field":"Type"
+				, "value":"Emergency"													; return "Day Surg"
+				, "date":strX(clip," [",1,2, " ",1,1)}									; and date
+		}
+	return Error																		; Anything else returns Error
 }
 
 getDemName:
 {
-	if (RegExMatch(mdTitle, "i)\s\-\s\d{6,7}\s(Opened by)")) {
-		ptDem["nameL"] := strX(mdTitle,,1,0, ",",1,1)
+	if (RegExMatch(mdTitle, "i)\s\-\s\d{6,7}\s(Opened by)")) {							; Match window title "LAST, FIRST - 12345678 Opened by Chun, Terrence U, MD"
+		ptDem["nameL"] := strX(mdTitle,,1,0, ",",1,1)									; and parse the name
 		ptDem["nameF"] := strX(mdTitle,",",1,2, " ",1,1)
 	}
 	return
@@ -221,12 +246,12 @@ getDemName:
 
 fetchGUI:
 {
-	fYd := 30,	fXd := 80
-	fX1 := 12,	fX2 := fX1+fXd
-	fW1 := 60,	fW2 := 190
-	fH := 20
-	fY := 10
-	EncNum := ptDem["Account Number"]
+	fYd := 30,	fXd := 80									; fetchGUI delta Y, X
+	fX1 := 12,	fX2 := fX1+fXd								; x pos for title and input fields
+	fW1 := 60,	fW2 := 190									; width for title and input fields
+	fH := 20												; line heights
+	fY := 10												; y pos to start
+	EncNum := ptDem["Account Number"]						; we need these non-array variables for the Gui statements
 	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
 	fTxt := "	To auto-grab demographic info:`n"
 		.	"		1) Double-click Account Number #`n"
@@ -271,28 +296,29 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	if (ptDem.Type~=("i)(Inpatient|ED)")) {										; Inpt & ER, we must find who recommended it from the Chipotle schedule
+	if (ptDem.Type~="i)(Inpatient|Emergency)") {								; Inpt & ER, we must find who recommended it from the Chipotle schedule
 		gosub assignMD
-	} else if (ptDem.Loc~="i)SurgCntr") {												; SURGCNTR, find who recommended it
+	} else if (ptDem.Loc~="i)SurgCntr") {										; SURGCNTR, find who recommended it
 		gosub getMD
-	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {											; Any EKG ECO DCT account (Holter-only), ask for ordering MD
+	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {									; Any outpatient EKG ECO DCT account (Holter-only), ask for ordering MD
 		gosub getMD
-	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr).*") {													; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
+;	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr).*") {					; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
+	} else {																	; otherwise fail
 		MsgBox % "Invalid Loc`n" ptDem.Loc
 		gosub fetchGUI
 		return
 	}
 	if !(ptDem.Provider) {
-		gosub getMD																		; No CRD provider, ask for it.
+		gosub getMD																; No CRD provider, ask for it.
 	}
-	ptDem["Account Number"] := EncNum
-	FormatTime, EncDt, %EncDt%, MM/dd/yyyy
+	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
+	FormatTime, EncDt, %EncDt%, MM/dd/yyyy										; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
-	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 
-			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 
-			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 
-			&& (ptDem["Loc"]~="i)[a-z]+") && (ptDem["Type"]~="i)(patient|ED|day surg)")
-			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])
+	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 					; valid names
+			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 						; valid MRN and Acct numbers
+			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 		; valid DOB and Sex
+			&& (ptDem["Loc"]) && (ptDem["Type"])													; Loc and type is not null
+			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])								; prov any string, encDate not null
 	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
 		MsgBox,, % "Data incomplete. Try again", % ""
 			. ((ptDem["nameF"]) ? "" : "First name`n")
@@ -306,9 +332,6 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			. ((ptDem["EncDate"]) ? "" : "Date Holter placed`n")
 			. ((ptDem["Provider"]) ? "" : "Provider`n")
 			. "`nREQUIRED!"
-		gosub fetchGUI
-		return
-	}
 		;~ MsgBox % ""
 			;~ . "First name " ptDem["nameF"] "`n"
 			;~ . "Last name " ptDem["nameL"] "`n"
@@ -320,14 +343,15 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			;~ . "Visit type " ptDem["Type"] "`n"
 			;~ . "Date Holter placed " ptDem["EncDate"] "`n"
 			;~ . "Provider " ptDem["Provider"] "`n"
-	;~ FormatTime, tmp, A_Now, yyyyMMdd
-	;~ ptDem["encDate"] := tmp
-	getDem := false
+		gosub fetchGUI
+		return
+	}
+	getDem := false																; done getting demographics
 	Loop
 	{
 		gosub indGUI
 		WinWaitClose, Enter indications
-		if (indChoices)
+		if (indChoices)															; loop until we have filled indChoices
 			break
 	}
 	return
@@ -377,6 +401,7 @@ indSubmit:
 		InputBox, indOther, Other, Enter other indication
 		indChoices := RegExReplace(indChoices,"OTHER", "OTHER - " indOther)
 	}
+	ptDem["Indication"] := indChoices
 	return
 }
 
@@ -423,20 +448,36 @@ zybitFill(win,fields) {
 
 MainLoop:
 {
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt
-	FileRead, maintxt, temp.txt
-	FileCopy, temp.txt, .\tempfiles\%filenam%.txt
-	blocks := Object()
+/*	This main loop accepts a %fileIn% filename,
+ *	determines the filetype based on header contents,
+ *	concatenates the CSV strings of header (fileOut1) and values (fileOut2)
+ *	into a single file (fileOut),
+ *	move around the temp, CSV, and PDF files.
+ */
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt					; convert PDF to txt file
+	newTxt:=""																		; clear the full txt variable
+	FileRead, maintxt, temp.txt														; load into maintxt
+	Loop, parse, maintxt, `n,`r														; clean up maintxt
+	{					
+		i:=A_LoopField					
+		if !(i)																		; skip entirely blank lines
+			continue					
+		newTxt .= i . "`n"															; only add lines with text in it
+	}					
+	FileDelete tempfile.txt															; remove any leftover tempfile
+	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
+	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt								; move a copy into tempfiles for troubleshooting
+
+	blocks := Object()																; clear all objects
 	fields := Object()
 	fldval := {}
 	labels := Object()
-	newTxt := Object()
 	blk := Object()
 	blk2 := Object()
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
-
-	if (InStr(maintxt,"Holter")) {							; Search maintxt for identifying strings
+	
+	if (InStr(maintxt,"Holter")) {															; Processing loop based on identifying string in maintxt
 		gosub Holter
 	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
 		gosub EventRec
@@ -446,22 +487,22 @@ MainLoop:
 		MsgBox No match!
 		ExitApp
 	}
-	if (fetchQuit=true) {
-		return
+	if (fetchQuit=true) {																	; exited demographics fetchGUI
+		return																				; so skip processing this file
 	}
-
-	gosub epRead
-	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"
-	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"
-	fileout := fileOut1 . fileout2
-	tmpDate := parseDate(fldval["Test_Date"])
+	gosub epRead																			; find out which EP is reading today
+	/*	Output the results and move files around
+	*/
+	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"											; make sure that there is only one `n 
+	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"											; on the header and data lines
+	fileout := fileOut1 . fileout2															; concatenate the header and data lines
+	tmpDate := parseDate(fldval["Test_Date"])												; get the study date
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
-	;MsgBox % filenameOut
-	FileDelete, %importFld%%fileNameOut%.csv
-	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv
-	FileAppend, %fileOut%, .\tempfiles\%filenam%.csv
-	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1
-	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C
+	FileDelete, %importFld%%fileNameOut%.csv												; clear any previous CSV
+	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv										; create a new CSV
+	FileCopy, %importFld%%fileNameOut%.csv, .\tempfiles\*.*, 1								; create a copy of CSV in tempfiles
+	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1										; move the PDF to holterDir
+	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C	; set the time of PDF in holterDir to 000000 (processed)
 Return
 }
 
@@ -539,26 +580,17 @@ return
 Holter:
 {
 	monType := "H"
-	newTxt:=""
-	Loop, parse, maintxt, `n,`r									; first pass, clean up txt
-	{
-		i:=A_LoopField
-		if !(i)													; skip entirely blank lines
-			continue
-		newTxt .= i . "`n"
-	}
-	FileDelete tempfile.txt
-	FileAppend %newtxt%, tempfile.txt
-	FileCopy tempfile.txt, .\tempfiles\%filenam%.txt
-	
 	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
 	
-	gosub checkProc
-	if (fetchQuit=true) {												; fetchGUI was quit, so skip processing
-		return
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
 	}
 	
+	/* Holter PDF is valid. OK to process.
+	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	 */
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
 		, "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
@@ -581,7 +613,6 @@ Holter:
 	labels[4] := ["Total", "Runs", "Beats", "Longest", "Fastest", "Pairs", "Drop_Late", "LongRR", "Single", "Bigem_Trigem", "AF"]
 	fieldvals(strX(holtVals,"Supraventricular Ectopy",nn-23,0,"Atrial Fibrillation",1,0,nn),4,"sve")
 	
-	;tmp := columns(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:","")
 	tmp := strX(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:",1,13,"",1,0)
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
 	fileout1 .= """INTERP"""
@@ -598,33 +629,49 @@ CheckProc:
 	chk2 := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")				; NameF				must be [A-Z]
 	chk3 := trim(strX(demog,"ID Number",nn,9,"Date of Birth",1,13,nn)," `r`n")					; MRN
 	chk4 := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
-	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15))						; Billing code		must be valid number
+	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
+	chk6 := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
+	chk7 := trim(strX(demog,"Test Date",nn,10,"Analysis Date",1,13,nn)," `r`n")					; Study date
+	chk8 := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
 	
-	if ((chk1~="[^a-z]") 
-		&& (chk2~="[^a-z]") 
-		&& (chk4~="i)(CRD|EKG|ECO|DCT)") 
-		&& (chk5~="\d{8}")) 
+	if (!(chk1~="[a-z]+")															; Check field values to see if proper demographics
+		&& !(chk2~="[a-z]+") 
+		&& (chk4~="i)(CRD|EKG|ECO|DCT|Outpatient|Inpatient|Emergency|Day Surg)") 
+		&& (chk5~="\d{8}"))
 	{
-		return																		;	All tests valid, uploaded with new TRRIQ process
+		return																		; All tests valid, return to processing Holter
 	}
-	
-	MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5
-	ptDem := Object()
-	ptDem["nameL"] := chk1
-	ptDem["nameF"] := chk2
-	ptDem["mrn"] := chk3
-	fetchQuit:=false
-	gosub fetchGUI
-	gosub fetchDem
-	demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
-	demog := RegExReplace(demog,"i)First Name (.*)Middle Initial", "First Name   " ptDem["nameF"] "`nMiddle Initial")
-	demog := RegExReplace(demog,"i)ID Number (.*)Date of Birth", "ID Number   " ptDem["mrn"] "`nDate of Birth")
-	demog := RegExReplace(demog,"i)Date of Birth (.*)Sex", "Date of Birth   " ptDem["DOB"] "`nSex")
-	demog := RegExReplace(demog,"i)Source (.*)Billing Code", "Source   " ptDem["Loc"] "`nBilling Code")
-	demog := RegExReplace(demog,"i)Billing Code (.*)Recorder Format", "Billing Code   " ptDem["Account number"] "`nRecorder Format")
-	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
-	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
-	
+	else 																			; Not valid PDF, get demographics post hoc
+	{
+		Clipboard := chk1 ", " chk2													; can just paste into CIS search bar
+		MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5 "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+		ptDem := Object()
+		ptDem["nameL"] := chk1														; Placeholder values for fetchGUI from PDF
+		ptDem["nameF"] := chk2
+		ptDem["mrn"] := chk3
+		ptDem["Loc"] := chk4
+		ptDem["Account number"] := chk5
+		ptDem["Provider"] := trim(RegExReplace(chk6,"i)$Dr\.? "))
+		ptDem["EncDate"] := chk7
+		ptDem["Indication"] := chk8
+		
+		fetchQuit:=false
+		gosub fetchGUI
+		gosub fetchDem
+		/*	When fetchDem successfully completes,
+		 *	replace the fields in demog with newly acquired values
+		 */
+		demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
+		demog := RegExReplace(demog,"i)First Name (.*)Middle Initial", "First Name   " ptDem["nameF"] "`nMiddle Initial")
+		demog := RegExReplace(demog,"i)ID Number (.*)Date of Birth", "ID Number   " ptDem["mrn"] "`nDate of Birth")
+		demog := RegExReplace(demog,"i)Date of Birth (.*)Sex", "Date of Birth   " ptDem["DOB"] "`nSex")
+		demog := RegExReplace(demog,"i)Source (.*)Billing Code", "Source   " ptDem["Loc"] "`nBilling Code")
+		demog := RegExReplace(demog,"i)Billing Code (.*)Recorder Format", "Billing Code   " ptDem["Account number"] "`nRecorder Format")
+		demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
+		demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
+		demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
+	}
 	return
 }
 
@@ -671,7 +718,7 @@ Zio:
 	fieldvals(zrate,4,"rate")
 	
 	zevent := columns(znums,"Number of Triggered Events:","Ectopics",1)
-	fields[5] := ["Number of Triggered Events:","Findings within ± 45 sec of Triggers:","Number of Diary Entries:","Findings within ± 45 sec of Entries:"]
+	fields[5] := ["Number of Triggered Events:","Findings within ï¿½ 45 sec of Triggers:","Number of Diary Entries:","Findings within ï¿½ 45 sec of Entries:"]
 	labels[5] := ["Triggers","Trigger_Findings","Diary","Diary_Findings"]
 	fieldvals(zevent,5,"event")
 	
