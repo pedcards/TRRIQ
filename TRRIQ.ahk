@@ -289,14 +289,18 @@ fetchValid(field,rx,neg:=0) {
  *	any negative result returns demBit
  */
 	global ptDem, demBits
+	if !(ptDem[field]) {
+		demBits := 1
+		return "Red"
+	}
 	res := (ptDem[field]~=rx)
-	demBits := !(res)
 	if (neg) {
+		demBits := !(res)
 		return ((res)?"Default":"Red")
 	} else {
+		demBits := (res)
 		return ((res)?"Red":"Default")
 	}
-
 }
 
 fetchGuiClose:
