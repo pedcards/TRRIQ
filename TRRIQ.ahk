@@ -246,9 +246,9 @@ getDemName:
 
 fetchGUI:
 {
-	fYd := 30,	fXd := 80									; fetchGUI delta Y, X
+	fYd := 30,	fXd := 90									; fetchGUI delta Y, X
 	fX1 := 12,	fX2 := fX1+fXd								; x pos for title and input fields
-	fW1 := 60,	fW2 := 190									; width for title and input fields
+	fW1 := 80,	fW2 := 190									; width for title and input fields
 	fH := 20												; line heights
 	fY := 10												; y pos to start
 	EncNum := ptDem["Account Number"]						; we need these non-array variables for the Gui statements
@@ -276,9 +276,9 @@ fetchGUI:
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " cDefault", % ptDem["Type"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" fetchValid("Account Number","\d{8}",1), Encounter #
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncNum" " cDefault", % encNum
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" (!(checkCrd(ptDem.Provider).fuzz=0)?"Red":"Default"), Ordering MD
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" ((!(checkCrd(ptDem.Provider).fuzz=0)||!(ptDem.Provider))?"Red":"Default"), Ordering MD
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH  " cDefault", % ptDem["Provider"]
-	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit", Submit!
+	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit " ((demBits)?"Disabled":""), Submit!
 	Gui, fetch:Show, AutoSize, Enter Demographics
 	return
 }
