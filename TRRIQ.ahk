@@ -282,6 +282,22 @@ fetchGUI:
 	return
 }
 
+fetchValid(field,rx,neg:=0) {
+/* 	checks regex(rx) for ptDem[field] 
+ *	if neg, gives opposite result
+ *	any negative result returns demBit
+ */
+	global ptDem, demBits
+	res := (ptDem[field]~=rx)
+	demBits := !(res)
+	if (neg) {
+		return ((res)?"Default":"Red")
+	} else {
+		return ((res)?"Red":"Default")
+	}
+
+}
+
 fetchGuiClose:
 	Gui, fetch:destroy
 	getDem := false																	; break out of fetchDem loop
