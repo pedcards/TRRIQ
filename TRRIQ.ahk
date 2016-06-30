@@ -213,25 +213,32 @@ mouseGrab(x,y) {
 parseClip(clip) {
 	global demVals
 	StringSplit, val, clip, :															; break field into val1:val2
+	dt := strX(clip," [",1,2, " ",1,1)													; get date
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
-		return {"field":val1, "value":val2}
+		return {"field":val1
+				, "value":val2
+				, "date":dt}
 	}
 	if (clip~="Outpatient\s\[") {														; Outpatient type
-		return {"field":"Type", "value":clip}											; return original clip string (to be broken later)
+		return {"field":"Type"
+				, "value":"Outpatient"
+				, "date":dt}
 	}
 	if (clip~="Inpatient\s\[") {														; Inpatient types
-		return {"field":"Type", "value":"Inpatient"}									; return "Inpt"
+		return {"field":"Type"
+				, "value":"Inpatient"
+				, "date":dt}
 	}
 	if (clip~="Day Surg.*\s\[") {														; Day Surg type
 		return {"field":"Type"
-				, "value":"Day Surg"													; return "Day Surg"
-				, "date":strX(clip," [",1,2, " ",1,1)}									; and date
+				, "value":"Day Surg"
+				, "date":dt}
 	}
 	if (clip~="Emergency") {															; Emergency type
 		return {"field":"Type"
-				, "value":"Emergency"													; return "Day Surg"
-				, "date":strX(clip," [",1,2, " ",1,1)}									; and date
-		}
+				, "value":"Emergency"
+				, "date":dt}
+	}
 	return Error																		; Anything else returns Error
 }
 
