@@ -328,18 +328,12 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {						; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
-		gosub assignMD
-	}
-;~	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {									; Any outpatient EKG ECO DCT account (Holter-only), ask for ordering MD
-;~		gosub getMD
-;~	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr)") {					; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
-;~	} else {																	; otherwise fail
-;~		MsgBox % "Invalid Loc`n" ptDem.Loc
-;~		gosub fetchGUI
-;~		return
-	if !(ptDem.Provider) {
-		gosub getMD																; No CRD provider, ask for it.
+	if !(checkCrd(ptDem.Provider).fuzz=0) {										; Provider not recognized
+		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {					; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
+			gosub assignMD
+		} else {
+			gosub getMD															; Otherwise, ask for it.
+		}
 	}
 	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy										; and the properly formatted date 06/15/2016
