@@ -665,9 +665,9 @@ CheckProc:
 	chk8 := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
 	
 	if (!(chk1~="[a-z]+")															; Check field values to see if proper demographics
-		&& !(chk2~="[a-z]+") 
-		&& (chk4~="i)(CRD|EKG|ECO|DCT|Outpatient|Inpatient|Emergency|Day Surg)") 
-		&& (chk5~="\d{8}"))
+		&& !(chk2~="[a-z]+") 														; meaning names in ALL CAPS
+		;~ && (chk4~="i)(CRD|EKG|ECO|DCT|Outpatient|Inpatient|Emergency|Day Surg)") 
+		&& (chk5~="\d{8}"))															; and EncNum present
 	{
 		return																		; All tests valid, return to processing Holter
 	}
@@ -682,7 +682,7 @@ CheckProc:
 		ptDem["mrn"] := chk3
 		ptDem["Loc"] := chk4
 		;ptDem["Account number"] := chk5											; Don't include Acct Num to force click
-		ptDem["Provider"] := trim(RegExReplace(chk6,"i)$Dr\.? "))
+		ptDem["Provider"] := trim(RegExReplace(chk6,"i)$Dr(\.)? "))
 		ptDem["EncDate"] := chk7
 		ptDem["Indication"] := chk8
 		
