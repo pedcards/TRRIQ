@@ -327,16 +327,14 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Destroy
 	if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {						; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 		gosub assignMD
-;	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {									; Any outpatient EKG ECO DCT account (Holter-only), ask for ordering MD
-;		gosub getMD
-;	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr)") {					; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
-;	} else {																	; otherwise fail
-;		MsgBox % "Invalid Loc`n" ptDem.Loc
-;		gosub fetchGUI
-;		return
-	} else {
-		gosub getMD
 	}
+;~	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {									; Any outpatient EKG ECO DCT account (Holter-only), ask for ordering MD
+;~		gosub getMD
+;~	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr)") {					; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
+;~	} else {																	; otherwise fail
+;~		MsgBox % "Invalid Loc`n" ptDem.Loc
+;~		gosub fetchGUI
+;~		return
 	if !(ptDem.Provider) {
 		gosub getMD																; No CRD provider, ask for it.
 	}
