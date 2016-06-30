@@ -162,25 +162,21 @@ FetchDem:
 					/*	possible to just divide the window width into 6 columns
 						rather than dividing the space into delta X ?
 					*/
-					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2])							; grab remaining demographic values
-					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2])
-					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]),1,1)
+					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2]).value						; grab remaining demographic values
+					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2]).value
+					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]).value,1,1)
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
-						tmpType := strX(tmp,,1,0, " [",1,2)								; Type is everything up to " ["
-						tmpDate := strX(tmp," [",1,2, " ",1,1)							; Date is anything between " [" and " "
-					ptDem["Type"] := tmpType
+					ptDem["Type"] := tmp.value
+					ptDem["EncDate"] := tmp.date
 					
 					if (ptDem.Type="Outpatient") {
-						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])				; most outpatient locations are short strings, click the right half of cell to grab location name
-						ptDem["EncDate"] := tmpDate
+						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2]).value			; most outpatient locations are short strings, click the right half of cell to grab location name
 					}
 					if (ptDem.Type="Inpatient") {										; could be actual inpatient or in SurgCntr
 						ptDem["Loc"] := "Inpatient"										; date is date of admission
-						ptDem["EncDate"] := tmpDate
 					}
 					if (ptDem.Type="Day Surg") {
 						ptDem["Loc"] := "SurgCntr"										; fill the ptDem.Loc field
-						ptDem["EncDate"] := tmpDate										; date in SurgCntr
 					}
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
@@ -207,37 +203,39 @@ mouseGrab(x,y) {
 	sleep 100
 	ClipWait
 	clk := parseClip(clipboard)
-	return clk.value
+	return {"field":clk.field, "value":clk.value, "date":date}
 }
 
 parseClip(clip) {
 	global demVals
 	StringSplit, val, clip, :															; break field into val1:val2
 	dt := strX(clip," [",1,2, " ",1,1)													; get date
+	dd := parseDate(dt).YYYY . parseDate(dt).MM . parseDate(dt).DD
+	MsgBox % dt "`n" dd
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
 		return {"field":val1
 				, "value":val2
-				, "date":dt}
+				, "date":dd}
 	}
 	if (clip~="Outpatient\s\[") {														; Outpatient type
 		return {"field":"Type"
 				, "value":"Outpatient"
-				, "date":dt}
+				, "date":dd}
 	}
 	if (clip~="Inpatient\s\[") {														; Inpatient types
 		return {"field":"Type"
 				, "value":"Inpatient"
-				, "date":dt}
+				, "date":dd}
 	}
 	if (clip~="Day Surg.*\s\[") {														; Day Surg type
 		return {"field":"Type"
 				, "value":"Day Surg"
-				, "date":dt}
+				, "date":dd}
 	}
 	if (clip~="Emergency") {															; Emergency type
 		return {"field":"Type"
 				, "value":"Emergency"
-				, "date":dt}
+				, "date":dd}
 	}
 	return Error																		; Anything else returns Error
 }
