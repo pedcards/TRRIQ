@@ -167,7 +167,7 @@ FetchDem:
 					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]).value,1,1)
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
 					ptDem["Type"] := tmp.value
-					ptDem["EncDate"] := tmp.date
+					ptDem["EncDate"] := tmp.date										; and date
 					
 					if (ptDem.Type="Outpatient") {
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2]).value			; most outpatient locations are short strings, click the right half of cell to grab location name
@@ -176,14 +176,17 @@ FetchDem:
 						ptDem["Loc"] := "Inpatient"										; date is date of admission
 					}
 					if (ptDem.Type="Day Surg") {
-						ptDem["Loc"] := "SurgCntr"										; fill the ptDem.Loc field
+						ptDem["Loc"] := "SurgCntr"
+					}
+					if (ptDem.Type="Emergency") {
+						ptDem["Loc"] := "Emergency"
 					}
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
 				}
-				if !(clk.field~="(Provider|Account Number)") {							; all other values
-					ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
-				}
+				;~ if !(clk.field~="(Provider|Account Number)") {							; all other values
+					;~ ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
+				;~ }
 			}
 			gosub fetchGUI							; Update GUI with new info
 		}
