@@ -211,7 +211,6 @@ parseClip(clip) {
 	StringSplit, val, clip, :															; break field into val1:val2
 	dt := strX(clip," [",1,2, " ",1,1)													; get date
 	dd := parseDate(dt).YYYY . parseDate(dt).MM . parseDate(dt).DD
-	MsgBox % dt "`n" dd
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
 		return {"field":val1
 				, "value":val2
@@ -326,17 +325,17 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	if (ptDem.Type~="i)(Inpatient|Emergency)") {								; Inpt & ER, we must find who recommended it from the Chipotle schedule
+	if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {						; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 		gosub assignMD
-	} else if (ptDem.Loc~="i)SurgCntr") {										; SURGCNTR, find who recommended it
-		gosub getMD
-	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {									; Any outpatient EKG ECO DCT account (Holter-only), ask for ordering MD
-		gosub getMD
-	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr)") {					; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
+;	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {									; Any outpatient EKG ECO DCT account (Holter-only), ask for ordering MD
+;		gosub getMD
+;	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr)") {					; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
 ;	} else {																	; otherwise fail
-		MsgBox % "Invalid Loc`n" ptDem.Loc
-		gosub fetchGUI
-		return
+;		MsgBox % "Invalid Loc`n" ptDem.Loc
+;		gosub fetchGUI
+;		return
+	} else {
+		gosub getMD
 	}
 	if !(ptDem.Provider) {
 		gosub getMD																; No CRD provider, ask for it.
