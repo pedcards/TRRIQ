@@ -329,8 +329,8 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
 	if !(checkCrd(ptDem.Provider).fuzz=0) {										; Provider not recognized
-		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {					; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
-			gosub assignMD
+		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
+			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 		} else {
 			gosub getMD															; Otherwise, ask for it.
 		}
@@ -383,6 +383,10 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
 indGUI:
 {
+	if (ptDem.Indication)
+	{
+		return
+	}
 	indOpts := ""
 		. "Abnormal Electrocardiogram/Rhythm Strip" "|"
 		. "Bradycardia" "|"
@@ -408,7 +412,7 @@ indGUI:
 	Gui, ind:Destroy
 	Gui, ind:+AlwaysOnTop
 	Gui, ind:font, s12
-	Gui, ind:Add, Text, , % "Enter indications: " ptDem["Account Number"] " - " encNum
+	Gui, ind:Add, Text, , % "Enter indications: " ptDem["Indication"]
 	Gui, ind:Add, ListBox, r12 vIndChoices 8, %indOpts%
 	Gui, ind:Add, Button, gindSubmit, Submit
 	Gui, ind:Show, Autosize, Enter indications
@@ -656,11 +660,11 @@ CheckProc:
 	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
 	chk6 := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
 	chk7 := trim(strX(demog,"Test Date",nn,10,"Analysis Date",1,13,nn)," `r`n")					; Study date
-	chk8 := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
+;	chk8 := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
+	chk8 := trim(strX(demog,"Reason for Test",nn,16,"`n",1,1,nn)," `r`n")					; Indication
 	
 	if (!(chk1~="[a-z]+")															; Check field values to see if proper demographics
 		&& !(chk2~="[a-z]+") 														; meaning names in ALL CAPS
-		;~ && (chk4~="i)(CRD|EKG|ECO|DCT|Outpatient|Inpatient|Emergency|Day Surg)") 
 		&& (chk5~="\d{8}"))															; and EncNum present
 	{
 		return																		; All tests valid, return to processing Holter
@@ -676,7 +680,7 @@ CheckProc:
 		ptDem["mrn"] := chk3
 		ptDem["Loc"] := chk4
 		;ptDem["Account number"] := chk5											; Don't include Acct Num to force click
-		ptDem["Provider"] := trim(RegExReplace(chk6,"i)$Dr(\.)? "))
+		ptDem["Provider"] := trim(RegExReplace(chk6,"i)^Dr(\.)? "))
 		ptDem["EncDate"] := chk7
 		ptDem["Indication"] := chk8
 		
