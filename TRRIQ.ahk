@@ -373,20 +373,17 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	getDem := false																; done getting demographics
 	Loop
 	{
+		if (ptDem.Indication) {													; loop until we have filled indChoices
+			break
+		}
 		gosub indGUI
 		WinWaitClose, Enter indications
-		if (indChoices)															; loop until we have filled indChoices
-			break
 	}
 	return
 }
 
 indGUI:
 {
-	if (ptDem.Indication)
-	{
-		return
-	}
 	indOpts := ""
 		. "Abnormal Electrocardiogram/Rhythm Strip" "|"
 		. "Bradycardia" "|"
