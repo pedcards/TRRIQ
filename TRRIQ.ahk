@@ -126,18 +126,18 @@ FetchDem:
 				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
 				if (clk.field = "Provider") {
 					if (clk.value) {													; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
-						tmp := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
 					}
 					if (ptDem.Provider) {												; Provider already exists
 						MsgBox, 4148
 							, Provider already exists
-							, % "Replace " ptDem.Provider "`n with `n" tmp "?"
+							, % "Replace " ptDem.Provider "`n with `n" tmpPrv "?"
 						IfMsgBox, Yes													; Check before replacing
 						{
-							ptDem.Provider := tmp
+							ptDem.Provider := tmpPrv
 						}
 					} else {															; Otherwise populate ptDem.Provider
-						ptDem.Provider := tmp
+						ptDem.Provider := tmpPrv
 					}
 					mdX[4] := mouseXpos													; demographics grid[4,1]
 					mdY[1] := mouseYpos
@@ -162,32 +162,31 @@ FetchDem:
 					/*	possible to just divide the window width into 6 columns
 						rather than dividing the space into delta X ?
 					*/
-					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2])							; grab remaining demographic values
-					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2])
-					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]),1,1)
+					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2]).value						; grab remaining demographic values
+					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2]).value
+					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]).value,1,1)
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
-						tmpType := strX(tmp,,1,0, " [",1,2)								; Type is everything up to " ["
-						tmpDate := strX(tmp," [",1,2, " ",1,1)							; Date is anything between " [" and " "
-					ptDem["Type"] := tmpType
+					ptDem["Type"] := tmp.value
+					ptDem["EncDate"] := tmp.date										; and date
 					
 					if (ptDem.Type="Outpatient") {
-						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2])				; most outpatient locations are short strings, click the right half of cell to grab location name
-						ptDem["EncDate"] := tmpDate
+						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2]).value			; most outpatient locations are short strings, click the right half of cell to grab location name
 					}
 					if (ptDem.Type="Inpatient") {										; could be actual inpatient or in SurgCntr
 						ptDem["Loc"] := "Inpatient"										; date is date of admission
-						ptDem["EncDate"] := tmpDate
 					}
 					if (ptDem.Type="Day Surg") {
-						ptDem["Loc"] := "SurgCntr"										; fill the ptDem.Loc field
-						ptDem["EncDate"] := tmpDate										; date in SurgCntr
+						ptDem["Loc"] := "SurgCntr"
+					}
+					if (ptDem.Type="Emergency") {
+						ptDem["Loc"] := "Emergency"
 					}
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
 				}
-				if !(clk.field~="(Provider|Account Number)") {							; all other values
-					ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
-				}
+				;~ if !(clk.field~="(Provider|Account Number)") {							; all other values
+					;~ ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
+				;~ }
 			}
 			gosub fetchGUI							; Update GUI with new info
 		}
@@ -207,31 +206,39 @@ mouseGrab(x,y) {
 	sleep 100
 	ClipWait
 	clk := parseClip(clipboard)
-	return clk.value
+	return {"field":clk.field, "value":clk.value, "date":date}
 }
 
 parseClip(clip) {
 	global demVals
 	StringSplit, val, clip, :															; break field into val1:val2
+	dt := strX(clip," [",1,2, " ",1,1)													; get date
+	dd := parseDate(dt).YYYY . parseDate(dt).MM . parseDate(dt).DD
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
-		return {"field":val1, "value":val2}
+		return {"field":val1
+				, "value":val2
+				, "date":dd}
 	}
 	if (clip~="Outpatient\s\[") {														; Outpatient type
-		return {"field":"Type", "value":clip}											; return original clip string (to be broken later)
+		return {"field":"Type"
+				, "value":"Outpatient"
+				, "date":dd}
 	}
 	if (clip~="Inpatient\s\[") {														; Inpatient types
-		return {"field":"Type", "value":"Inpatient"}									; return "Inpt"
+		return {"field":"Type"
+				, "value":"Inpatient"
+				, "date":dd}
 	}
 	if (clip~="Day Surg.*\s\[") {														; Day Surg type
 		return {"field":"Type"
-				, "value":"Day Surg"													; return "Day Surg"
-				, "date":strX(clip," [",1,2, " ",1,1)}									; and date
+				, "value":"Day Surg"
+				, "date":dd}
 	}
 	if (clip~="Emergency") {															; Emergency type
 		return {"field":"Type"
-				, "value":"Emergency"													; return "Day Surg"
-				, "date":strX(clip," [",1,2, " ",1,1)}									; and date
-		}
+				, "value":"Emergency"
+				, "date":dd}
+	}
 	return Error																		; Anything else returns Error
 }
 
@@ -246,36 +253,61 @@ getDemName:
 
 fetchGUI:
 {
-	fYd := 30,	fXd := 80									; fetchGUI delta Y, X
+	fYd := 30,	fXd := 90									; fetchGUI delta Y, X
 	fX1 := 12,	fX2 := fX1+fXd								; x pos for title and input fields
-	fW1 := 60,	fW2 := 190									; width for title and input fields
+	fW1 := 80,	fW2 := 190									; width for title and input fields
 	fH := 20												; line heights
 	fY := 10												; y pos to start
 	EncNum := ptDem["Account Number"]						; we need these non-array variables for the Gui statements
 	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
+	demBits := 0											; clear the error check
 	fTxt := "	To auto-grab demographic info:`n"
 		.	"		1) Double-click Account Number #`n"
 		.	"		2) Double-click Provider"
 	Gui, fetch:Destroy
 	Gui, fetch:+AlwaysOnTop
 	Gui, fetch:Add, Text, % "x" fX1 , % fTxt	
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd*2) " w" fW1 " h" fH , First
-	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameF"]
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Last
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd*2) " w" fW1 " h" fH " c" fetchValid("nameF","[a-z]"), First
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " cDefault", % ptDem["nameF"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" fetchValid("nameL","[a-z]"), Last
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["nameL"]
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , MRN
-	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["MRN"]
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , DOB
-	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH, % ptDem["DOB"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" fetchValid("MRN","\d{6,7}",1), MRN
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " cDefault", % ptDem["MRN"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" fetchValid("DOB","\d{1,2}/\d{1,2}/\d{2,4}",1), DOB
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " cDefault", % ptDem["DOB"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Date placed
 	Gui, fetch:Add, DateTime, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncDt CHOOSE" encDT, MM/dd/yyyy
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Encounter #
-	Gui, fetch:Add, Edit, % "x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncNum", % encNum
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH , Ordering MD
-	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH , % ptDem["Provider"]
-	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit", Submit!
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" fetchValid("Loc","i)[a-z]+",1), Location
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " cDefault", % ptDem["Loc"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" fetchValid("Type","i)[a-z]+",1), Type
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " cDefault", % ptDem["Type"]
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" fetchValid("Account Number","\d{8}",1), Encounter #
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncNum" " cDefault", % encNum
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" ((!(checkCrd(ptDem.Provider).fuzz=0)||!(ptDem.Provider))?"Red":"Default"), Ordering MD
+	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH  " cDefault", % ptDem["Provider"]
+	Gui, fetch:Add, Button, % "x" fX1+10 " y" (fY += fYD) " h" fH+10 " w" fW1+fW2 " gfetchSubmit " ((demBits)?"Disabled":""), Submit!
 	Gui, fetch:Show, AutoSize, Enter Demographics
 	return
+}
+
+fetchValid(field,rx,neg:=0) {
+/* 	checks regex(rx) for ptDem[field] 
+ *	if neg, gives opposite result
+ *	any negative result returns demBit
+ */
+	global ptDem, demBits
+	if !(ptDem[field]) {
+		demBits := 1
+		return "Red"
+	}
+	res := (ptDem[field]~=rx)
+	if (neg) {
+		demBits := !(res)
+		return ((res)?"Default":"Red")
+	} else {
+		demBits := (res)
+		return ((res)?"Red":"Default")
+	}
 }
 
 fetchGuiClose:
@@ -296,20 +328,12 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	if (ptDem.Type~="i)(Inpatient|Emergency)") {								; Inpt & ER, we must find who recommended it from the Chipotle schedule
-		gosub assignMD
-	} else if (ptDem.Loc~="i)SurgCntr") {										; SURGCNTR, find who recommended it
-		gosub getMD
-	} else if (ptDem.Loc~="i)(EKG|ECO|DCT)") {									; Any outpatient EKG ECO DCT account (Holter-only), ask for ordering MD
-		gosub getMD
-;	} else if !(ptDem.Loc~="i)(CRD|EKG|ECO|DCT|SurgCntr).*") {					; Not any CRDxxx location, must be an appropriate encounter (CRD,EKG,ECO,DCT or Inpt or ER)
-	} else {																	; otherwise fail
-		MsgBox % "Invalid Loc`n" ptDem.Loc
-		gosub fetchGUI
-		return
-	}
-	if !(ptDem.Provider) {
-		gosub getMD																; No CRD provider, ask for it.
+	if !(checkCrd(ptDem.Provider).fuzz=0) {										; Provider not recognized
+		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
+			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
+		} else {
+			gosub getMD															; Otherwise, ask for it.
+		}
 	}
 	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy										; and the properly formatted date 06/15/2016
@@ -359,6 +383,10 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
 indGUI:
 {
+	if (ptDem.Indication)
+	{
+		return
+	}
 	indOpts := ""
 		. "Abnormal Electrocardiogram/Rhythm Strip" "|"
 		. "Bradycardia" "|"
@@ -384,7 +412,7 @@ indGUI:
 	Gui, ind:Destroy
 	Gui, ind:+AlwaysOnTop
 	Gui, ind:font, s12
-	Gui, ind:Add, Text, , % "Enter indications: " ptDem["Account Number"] " - " encNum
+	Gui, ind:Add, Text, , % "Enter indications: " ptDem["Indication"]
 	Gui, ind:Add, ListBox, r12 vIndChoices 8, %indOpts%
 	Gui, ind:Add, Button, gindSubmit, Submit
 	Gui, ind:Show, Autosize, Enter indications
@@ -592,7 +620,7 @@ Holter:
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
-		, "Source", "Billing Code", "Recorder Format", "Pt\s*?Home\s*?(Phone)?\s*?#?", "Hookup Tech", "Pacemaker\s*?Y/N.", "Medications"
+		, "Source", "Billing Code", "Recorder Format", "Pt\.?\sHome\s*(Phone)?\s*#?", "Hookup Tech", "Pacemaker\s*Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
 		, "Test Date", "Analysis Date", "Hookup Time", "Recording Time", "Analysis Time", "Reason for Test", "Group"]
 	labels[1] := ["Name_L", "Name_F", "Name_M", "MRN", "DOB", "Sex"
@@ -632,12 +660,12 @@ CheckProc:
 	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
 	chk6 := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
 	chk7 := trim(strX(demog,"Test Date",nn,10,"Analysis Date",1,13,nn)," `r`n")					; Study date
-	chk8 := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
+;	chk8 := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
+	chk8 := trim(strX(demog,"Reason for Test",nn,16,"`n",1,1,nn)," `r`n")					; Indication
 	
 	if (!(chk1~="[a-z]+")															; Check field values to see if proper demographics
-		&& !(chk2~="[a-z]+") 
-		&& (chk4~="i)(CRD|EKG|ECO|DCT|Outpatient|Inpatient|Emergency|Day Surg)") 
-		&& (chk5~="\d{8}"))
+		&& !(chk2~="[a-z]+") 														; meaning names in ALL CAPS
+		&& (chk5~="\d{8}"))															; and EncNum present
 	{
 		return																		; All tests valid, return to processing Holter
 	}
@@ -651,8 +679,8 @@ CheckProc:
 		ptDem["nameF"] := chk2
 		ptDem["mrn"] := chk3
 		ptDem["Loc"] := chk4
-		ptDem["Account number"] := chk5
-		ptDem["Provider"] := trim(RegExReplace(chk6,"i)$Dr\.? "))
+		;ptDem["Account number"] := chk5											; Don't include Acct Num to force click
+		ptDem["Provider"] := trim(RegExReplace(chk6,"i)^Dr(\.)? "))
 		ptDem["EncDate"] := chk7
 		ptDem["Indication"] := chk8
 		
