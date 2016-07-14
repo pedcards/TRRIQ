@@ -695,7 +695,7 @@ CheckProc:
 	ptDem["mrn"] := chk_MRN
 	ptDem["Loc"] := chk_Loc
 	ptDem["Account number"] := chk_Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(chk_Prov,"i)^Dr(\.)? "))
+	ptDem["Provider"] := trim(RegExReplace(chk_Prov,"i)^Dr\.(\s)?"))
 	ptDem["EncDate"] := chk_Date
 	ptDem["Indication"] := chk_Ind
 	
