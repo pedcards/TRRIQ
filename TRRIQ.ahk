@@ -650,27 +650,27 @@ return
 
 CheckProc:
 {
-	chk1 := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
-	chk2 := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")				; NameF				must be [A-Z]
-	chk3 := trim(strX(demog,"ID Number",nn,9,"Date of Birth",1,13,nn)," `r`n")					; MRN
-	chk4 := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
-	chk5 := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
-	chk6 := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
-	chk7 := trim(strX(demog,"Test Date",nn,10,"Analysis Date",1,13,nn)," `r`n")					; Study date
-;	chk8 := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
-	chk8 := trim(strX(demog,"Reason for Test",nn,16,"`n",1,1,nn)," `r`n")					; Indication
+	chk_Last := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
+	chk_First := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")				; NameF				must be [A-Z]
+	chk_MRN := trim(strX(demog,"ID Number",nn,9,"Date of Birth",1,13,nn)," `r`n")					; MRN
+	chk_Loc := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
+	chk_Acct := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
+	chk_Prov := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
+	chk_Date := trim(strX(demog,"Test Date",nn,10,"Analysis Date",1,13,nn)," `r`n")					; Study date
+;	chk_Ind := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
+	chk_Ind := trim(strX(demog,"Reason for Test",nn,16,"`n",1,1,nn)," `r`n")					; Indication
 	
-	Clipboard := chk1 ", " chk2														; fill clipboard with name, so can just paste into CIS search bar
-	if (!(chk1~="[a-z]+")															; Check field values to see if proper demographics
-		&& !(chk2~="[a-z]+") 														; meaning names in ALL CAPS
-		&& (chk5~="\d{8}"))															; and EncNum present
+	Clipboard := chk_Last ", " chk_First														; fill clipboard with name, so can just paste into CIS search bar
+	if (!(chk_Last~="[a-z]+")															; Check field values to see if proper demographics
+		&& !(chk_First~="[a-z]+") 														; meaning names in ALL CAPS
+		&& (chk_Acct~="\d{8}"))															; and EncNum present
 	{
 		MsgBox, 4128, Valid PDF, % ""
-			. chk1 ", " chk2 "`n"
-			. "MRN " chk3 "`n"
-			. "Acct " chk5 "`n"
-			. "Ordering: " chk6 "`n"
-			. "Study date: " chk7 "`n`n"
+			. chk_Last ", " chk_First "`n"
+			. "MRN " chk_MRN "`n"
+			. "Acct " chk_Acct "`n"
+			. "Ordering: " chk_Prov "`n"
+			. "Study date: " chk_Date "`n`n"
 			. "Is all the information correct?`n"
 			. "If NO, reacquire demographics."
 		IfMsgBox, Yes																; All tests valid
@@ -679,25 +679,25 @@ CheckProc:
 		} 
 		else 																		; Select NO, reacquire demographics
 		{
-			MsgBox, 4086, Adjust demographics, % chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5 "`n`n"
+			MsgBox, 4096, Adjust demographics, % chk_Last ", " chk_First "`n   " chk_MRN "`n   " chk_Loc "`n   " chk_Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 		}
 	}
 	else 																			; Not valid PDF, get demographics post hoc
 	{
-		MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5 "`n`n"
+		MsgBox, 4096,, % "Validation failed for:`n   " chk_Last ", " chk_First "`n   " chk_MRN "`n   " chk_Loc "`n   " chk_Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
 	; Either invalid PDF or want to correct values
 	ptDem := Object()																; initialize/clear ptDem array
-	ptDem["nameL"] := chk1															; Placeholder values for fetchGUI from PDF
-	ptDem["nameF"] := chk2
-	ptDem["mrn"] := chk3
-	ptDem["Loc"] := chk4
-	ptDem["Account number"] := chk5													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(chk6,"i)^Dr(\.)? "))
-	ptDem["EncDate"] := chk7
-	ptDem["Indication"] := chk8
+	ptDem["nameL"] := chk_Last															; Placeholder values for fetchGUI from PDF
+	ptDem["nameF"] := chk_First
+	ptDem["mrn"] := chk_MRN
+	ptDem["Loc"] := chk_Loc
+	ptDem["Account number"] := chk_Acct													; If want to force click, don't include Acct Num
+	ptDem["Provider"] := trim(RegExReplace(chk_Prov,"i)^Dr(\.)? "))
+	ptDem["EncDate"] := chk_Date
+	ptDem["Indication"] := chk_Ind
 	
 	fetchQuit:=false
 	gosub fetchGUI
