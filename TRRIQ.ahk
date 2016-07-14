@@ -660,43 +660,61 @@ CheckProc:
 ;	chk8 := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
 	chk8 := trim(strX(demog,"Reason for Test",nn,16,"`n",1,1,nn)," `r`n")					; Indication
 	
+	Clipboard := chk1 ", " chk2														; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk1~="[a-z]+")															; Check field values to see if proper demographics
 		&& !(chk2~="[a-z]+") 														; meaning names in ALL CAPS
 		&& (chk5~="\d{8}"))															; and EncNum present
 	{
-		return																		; All tests valid, return to processing Holter
+		MsgBox, 4128, Valid PDF, % ""
+			. chk1 ", " chk2 "`n"
+			. "MRN " chk3 "`n"
+			. "Acct " chk5 "`n"
+			. "Ordering: " chk6 "`n"
+			. "Study date: " chk7 "`n`n"
+			. "Is all the information correct?`n"
+			. "If NO, reacquire demographics."
+		IfMsgBox, Yes																; All tests valid
+		{
+			return																	; Select YES, return to processing Holter
+		} 
+		else 																		; Select NO, reacquire demographics
+		{
+			MsgBox, 4086, Adjust demographics, % chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5 "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+		}
 	}
 	else 																			; Not valid PDF, get demographics post hoc
 	{
-		Clipboard := chk1 ", " chk2													; can just paste into CIS search bar
 		MsgBox, 4096,, % "Validation failed for:`n   " chk1 ", " chk2 "`n   " chk3 "`n   " chk4 "`n   " chk5 "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
-		ptDem := Object()
-		ptDem["nameL"] := chk1														; Placeholder values for fetchGUI from PDF
-		ptDem["nameF"] := chk2
-		ptDem["mrn"] := chk3
-		ptDem["Loc"] := chk4
-		;ptDem["Account number"] := chk5											; Don't include Acct Num to force click
-		ptDem["Provider"] := trim(RegExReplace(chk6,"i)^Dr(\.)? "))
-		ptDem["EncDate"] := chk7
-		ptDem["Indication"] := chk8
-		
-		fetchQuit:=false
-		gosub fetchGUI
-		gosub fetchDem
-		/*	When fetchDem successfully completes,
-		 *	replace the fields in demog with newly acquired values
-		 */
-		demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
-		demog := RegExReplace(demog,"i)First Name (.*)Middle Initial", "First Name   " ptDem["nameF"] "`nMiddle Initial")
-		demog := RegExReplace(demog,"i)ID Number (.*)Date of Birth", "ID Number   " ptDem["mrn"] "`nDate of Birth")
-		demog := RegExReplace(demog,"i)Date of Birth (.*)Sex", "Date of Birth   " ptDem["DOB"] "`nSex")
-		demog := RegExReplace(demog,"i)Source (.*)Billing Code", "Source   " ptDem["Loc"] "`nBilling Code")
-		demog := RegExReplace(demog,"i)Billing Code (.*)Recorder Format", "Billing Code   " ptDem["Account number"] "`nRecorder Format")
-		demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
-		demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
-		demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
 	}
+	; Either invalid PDF or want to correct values
+	ptDem := Object()																; initialize/clear ptDem array
+	ptDem["nameL"] := chk1															; Placeholder values for fetchGUI from PDF
+	ptDem["nameF"] := chk2
+	ptDem["mrn"] := chk3
+	ptDem["Loc"] := chk4
+	ptDem["Account number"] := chk5													; If want to force click, don't include Acct Num
+	ptDem["Provider"] := trim(RegExReplace(chk6,"i)^Dr(\.)? "))
+	ptDem["EncDate"] := chk7
+	ptDem["Indication"] := chk8
+	
+	fetchQuit:=false
+	gosub fetchGUI
+	gosub fetchDem
+	/*	When fetchDem successfully completes,
+	 *	replace the fields in demog with newly acquired values
+	 */
+	demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
+	demog := RegExReplace(demog,"i)First Name (.*)Middle Initial", "First Name   " ptDem["nameF"] "`nMiddle Initial")
+	demog := RegExReplace(demog,"i)ID Number (.*)Date of Birth", "ID Number   " ptDem["mrn"] "`nDate of Birth")
+	demog := RegExReplace(demog,"i)Date of Birth (.*)Sex", "Date of Birth   " ptDem["DOB"] "`nSex")
+	demog := RegExReplace(demog,"i)Source (.*)Billing Code", "Source   " ptDem["Loc"] "`nBilling Code")
+	demog := RegExReplace(demog,"i)Billing Code (.*)Recorder Format", "Billing Code   " ptDem["Account number"] "`nRecorder Format")
+	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
+	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
+	demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
+	
 	return
 }
 
