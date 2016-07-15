@@ -199,14 +199,14 @@ mouseGrab(x,y) {
 	Process through parseClip to validate
 	Return the value portion of parseClip
 */
-	BlockInput, On
-	MouseMove, %x%, %y%, 0
-	Click 2
-	BlockInput, Off
+	BlockInput, On																		; Prevent extraneous input
+	MouseMove, %x%, %y%, 0																; Goto coordinates
+	Click 2																				; Double-click
+	BlockInput, Off																		; Permit input again
 	sleep 100
-	ClipWait
-	clk := parseClip(clipboard)
-	return {"field":clk.field, "value":clk.value, "date":date}
+	ClipWait																			; sometimes there is delay for clipboard to populate
+	clk := parseClip(clipboard)															; get available values out of clipboard
+	return {"field":clk.field, "value":clk.value, "date":date}							; Redundant? since this is what parseClip() returns
 }
 
 parseClip(clip) {
@@ -653,6 +653,8 @@ CheckProc:
 	chk_Last := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
 	chk_First := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")				; NameF				must be [A-Z]
 	chk_MRN := trim(strX(demog,"ID Number",nn,9,"Date of Birth",1,13,nn)," `r`n")					; MRN
+	chk_DOB := trim(strX(demog,"Date of Birth",nn,13,"Sex",1,3,nn)," `r`n")							; DOB
+	chk_Sex := trim(strX(demog,"Sex",nn,3,"Source",1,7,nn)," `r`n")									; Sex
 	chk_Loc := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
 	chk_Acct := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
 	chk_Prov := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
@@ -693,6 +695,8 @@ CheckProc:
 	ptDem["nameL"] := chk_Last															; Placeholder values for fetchGUI from PDF
 	ptDem["nameF"] := chk_First
 	ptDem["mrn"] := chk_MRN
+	ptDem["DOB"] := chk_DOB
+	ptDem["Sex"] := chk_Sex
 	ptDem["Loc"] := chk_Loc
 	ptDem["Account number"] := chk_Acct													; If want to force click, don't include Acct Num
 	ptDem["Provider"] := trim(RegExReplace(chk_Prov,"i)^Dr\.(\s)?"))
