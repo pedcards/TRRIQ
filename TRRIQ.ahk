@@ -125,8 +125,10 @@ FetchDem:
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
 				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
 				if (clk.field = "Provider") {
-					if (clk.value) {													; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
+					if (clk.value~="[:alpha:]+,.*[:alpha:]") {							; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+					} else {
+						tmpPrv :=
 					}
 					if (ptDem.Provider) {												; Provider already exists
 						MsgBox, 4148
