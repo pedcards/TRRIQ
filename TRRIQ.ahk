@@ -125,7 +125,7 @@ FetchDem:
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
 				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
 				if (clk.field = "Provider") {
-					if (clk.value~="[:alpha:]+,.*[:alpha:]") {							; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
+					if (clk.value~="[:alpha:]+.*,.*[:alpha:]+") {						; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
 					} else {
 						tmpPrv :=
@@ -330,7 +330,10 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	if !(checkCrd(ptDem.Provider).fuzz=0) {										; Provider not recognized
+	MsgBox % checkCrd(ptDem.Provider).fuzz
+	if !(ptDem.Provider) {														; no provider? ask!
+		gosub getMD
+	} else if !(checkCrd(ptDem.Provider).fuzz=0) {								; Provider not recognized
 		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
 			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 		} else {
