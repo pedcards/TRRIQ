@@ -330,7 +330,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 */
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
-	MsgBox % checkCrd(ptDem.Provider).fuzz
+	
 	if !(ptDem.Provider) {														; no provider? ask!
 		gosub getMD
 	} else if !(checkCrd(ptDem.Provider).fuzz=0) {								; Provider not recognized
