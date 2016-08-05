@@ -57,7 +57,7 @@ Loop, Read, %chipDir%outdocs.csv
 		outGrps.Insert(tmpGrp)
 		continue
 	}
-	if !(instr(tmp4,"seattlechildrens.org")) {						; skip non-children's providers
+	if !(tmp4~="i)(seattlechildrens.org)|(washington.edu)") {		; skip non-SCH or non-UW providers
 		continue
 	}																; Otherwise format Crd name to first initial, last name
 	tmpIdx += 1
