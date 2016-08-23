@@ -208,7 +208,7 @@ mouseGrab(x,y) {
 	sleep 100
 	ClipWait																			; sometimes there is delay for clipboard to populate
 	clk := parseClip(clipboard)															; get available values out of clipboard
-	return {"field":clk.field, "value":clk.value, "date":date}							; Redundant? since this is what parseClip() returns
+	return {"field":clk.field, "value":clk.value, "date":clk.date}							; Redundant? since this is what parseClip() returns
 }
 
 parseClip(clip) {
@@ -219,27 +219,27 @@ parseClip(clip) {
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
 		return {"field":val1
 				, "value":val2
-				, "date":dd}
+				, "date":dt}
 	}
 	if (clip~="Outpatient\s\[") {														; Outpatient type
 		return {"field":"Type"
 				, "value":"Outpatient"
-				, "date":dd}
+				, "date":dt}
 	}
 	if (clip~="Inpatient\s\[") {														; Inpatient types
 		return {"field":"Type"
 				, "value":"Inpatient"
-				, "date":dd}
+				, "date":dt}
 	}
 	if (clip~="Day Surg.*\s\[") {														; Day Surg type
 		return {"field":"Type"
 				, "value":"Day Surg"
-				, "date":dd}
+				, "date":dt}
 	}
 	if (clip~="Emergency") {															; Emergency type
 		return {"field":"Type"
 				, "value":"Emergency"
-				, "date":dd}
+				, "date":dt}
 	}
 	return Error																		; Anything else returns Error
 }
