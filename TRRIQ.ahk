@@ -672,7 +672,7 @@ CheckProc:
 		&& !(chk_First~="[a-z]+") 														; meaning names in ALL CAPS
 		&& (chk_Acct~="\d{8}"))															; and EncNum present
 	{
-		MsgBox, 4128, Valid PDF, % ""
+		MsgBox, 4132, Valid PDF, % ""
 			. chk_Last ", " chk_First "`n"
 			. "MRN " chk_MRN "`n"
 			. "Acct " chk_Acct "`n"
