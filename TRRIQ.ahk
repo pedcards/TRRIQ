@@ -507,8 +507,10 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
-	if (InStr(maintxt,"Holter")) {															; Processing loop based on identifying string in maintxt
-		gosub Holter
+	if (instr(maintxt,"Lifewatch") && instr(maintxt,"Holter")) {					; Processing loop based on identifying string in maintxt
+		gosub Holter_LW
+	} else if (instr(maintxt,"eCardio") && instr(maintxt,"H3Plus")) {
+		gosub Holter_Pr
 	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
 		gosub EventRec
 	} else if (RegExMatch(maintxt,"i)zio.*xt.*patch")) {
@@ -607,7 +609,7 @@ epRead:
 return
 }
 
-Holter:
+Holter_LW:
 {
 	monType := "H"
 	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
