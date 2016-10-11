@@ -509,7 +509,7 @@ MainLoop:
 	
 	if (instr(maintxt,"Lifewatch") && instr(maintxt,"Holter")) {					; Processing loop based on identifying string in maintxt
 		gosub Holter_LW
-	} else if (instr(maintxt,"eCardio") && instr(maintxt,"H3Plus")) {
+	} else if (instr(maintxt,"Preventice") && instr(maintxt,"H3Plus")) {
 		gosub Holter_Pr
 	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
 		gosub EventRec
