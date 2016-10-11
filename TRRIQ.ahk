@@ -659,6 +659,66 @@ Holter_LW:
 return
 }
 
+Holter_Pr:
+{
+	monType := "PR"
+	demog := columns(newtxt,"i)Patient\s+Information","i)Scan\s+Criteria",1,"i)Date\s+Processed")
+	sumStat := columns(newtxt,"i)Summary\s+Statistics","i)Rate\s+Statistics",1,"")
+	rateStat := columns(newtxt,"i)Rate\s+Statistics","i)Supraventricular\s+Ectopy",1,"i)Tachycardia/Bradycardia")
+	ectoStat := columns(newtxt,"i)\s+Supraventricular\s+Ectopy","i)ST Deviation",1,"Ventricular Ectopy")
+	
+	;~ MsgBox % ectoStat
+	;~ MsgBox % stregX(ectoStat,"Supraventricular Ectopy",1,0,"Ventricular Ectopy",0,nn)
+	;~ MsgBox % strX(ectoStat,"Ventricular Ectopy",1,nn-23,"",0,0)
+	;~ ExitApp
+	;~ Clipboard := sumStat
+	;~ exitapp
+
+	;~ gosub checkProc												; check validity of PDF, make demographics valid if not
+	;~ if (fetchQuit=true) {
+		;~ return													; fetchGUI was quit, so skip processing
+	;~ }
+	
+	/* Holter PDF is valid. OK to process.
+	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	 */
+	fields[1] := ["Name", "ID\s+#", "Second\s+ID", "Date Of Birth", "Age", "Sex"
+		, "Referring Physician", "Indications", "Medications", "Analyst", "Hookup Tech"
+		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No"]
+	labels[1] := ["Name", "MRN", "VOID_ID", "DOB", "VOID_Age", "Sex"
+		, "Ordering", "Indication", "Meds", "Scanned_by", "Hookup_tech"
+		, "Test_date", "Scan_date", "Scan_num", "Recorder", "Recorder_num"]
+	fieldvals(demog,1,"dem")
+	
+	fields[2] := ["Total QRS", "Recording Duration", "Analyzed Data"]
+	labels[2] := ["Total_beats", "Recording_time", "Analysis_time"]
+	fieldvals(sumStat,2,"sum")
+	
+	fields[3] := ["Min Rate", "Max Rate", "Mean Rate", "Tachycardia/Bradycardia"
+		, "Longest Tachycardia", "Fastest Tachycardia", "Longest Bradycardia", "Slowest Bradycardia"]
+	labels[3] := ["Min", "Max", "Avg", "VOID_tb"
+		, "Longest_tachy", "Fastest", "Longest_brady", "Slowest"]
+	fieldvals(rateStat,3,"rate")
+	
+	fields[4] := ["Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "Total", "Ventricular Ectopy"]
+	labels[4] := ["Beats", "Pairs", "Runs", "Fastest", "Longest", "Total", "VOID_SVE"]
+	fieldvals(stregX(ectoStat,"Supraventricular Ectopy",1,0,"Ventricular Ectopy",0,nn),4,"sve")
+	
+	fields[5] := ["Ventricular Ectopy", "Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "R on T", "Total"]
+	labels[5] := ["VOID_VE", "Beats", "Couplets", "Runs", "Fastest", "Longest", "R on T", "Total"]
+	fieldvals(strX(ectoStat,"Ventricular Ectopy",1,nn-23,"",0,0),5,"ve")
+	
+	tmp := strX(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:",1,13,"",1,0)
+	StringReplace, tmp, tmp, .`n , .%A_Space% , All
+	fileout1 .= """INTERP"""
+	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
+	fileOut1 .= ",""Mon_type"""
+	fileOut2 .= ",""Mortara Holter"""
+	
+	
+return
+}
+
 CheckProc:
 {
 	chk_Last := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
@@ -896,6 +956,7 @@ fieldvals(x,bl,bl2) {
 		cleanSpace(m)
 		cleanColon(m)
 		fldval[lbl] := m
+;		MsgBox,, % bl2 " - " lbl, % m
 		formatField(bl2,lbl,m)
 	}
 }
