@@ -667,12 +667,12 @@ Holter_Pr:
 	rateStat := columns(newtxt,"i)Rate\s+Statistics","i)Supraventricular\s+Ectopy",1,"i)Tachycardia/Bradycardia")
 	ectoStat := columns(newtxt,"i)\s+Supraventricular\s+Ectopy","i)ST Deviation",1,"Ventricular Ectopy")
 	
+	;~ MsgBox % demog
 	;~ MsgBox % ectoStat
 	;~ MsgBox % stregX(ectoStat,"Supraventricular Ectopy",1,0,"Ventricular Ectopy",0,nn)
 	;~ MsgBox % strX(ectoStat,"Ventricular Ectopy",1,nn-23,"",0,0)
+	;~ Clipboard := demog
 	;~ ExitApp
-	;~ Clipboard := sumStat
-	;~ exitapp
 
 	;~ gosub checkProc												; check validity of PDF, make demographics valid if not
 	;~ if (fetchQuit=true) {
@@ -953,6 +953,7 @@ fieldvals(x,bl,bl2) {
 		j := fields[bl][k+1]
 		m := trim(stRegX(x,i,n,1,j,1,n), " `n")
 		lbl := labels[bl][A_index]
+		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
 		cleanSpace(m)
 		cleanColon(m)
 		fldval[lbl] := m
