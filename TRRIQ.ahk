@@ -923,12 +923,9 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	blk2 := rxFix(blk2,"O",1)
 	RegExMatch(x,blk1,blo1)														; Creates blo1 object out of blk1 match in x
 	RegExMatch(x,blk2,blo2)
-;	MsgBox % blo1.len "`n" blo1.value "`n" blk1
+	
 	txt := stRegX(x,blk1,1,(incl) ? blo1.len : 0,blk2,blo2.len)
-	MsgBox % txt
-	;~ StringReplace, col2, col2, %A_space%, [ ]+, All
-	;~ StringReplace, col3, col3, %A_space%, [ ]+, All
-	;~ StringReplace, col4, col4, %A_space%, [ ]+, All
+	;~ MsgBox % txt
 	col2 := RegExReplace(col2,"\s+","\s+")
 	col3 := RegExReplace(col3,"\s+","\s+")
 	col4 := RegExReplace(col4,"\s+","\s+")
@@ -981,7 +978,7 @@ fieldvals(x,bl,bl2) {
 		m := (j) ?	trim(stRegX(x,i,n,1,j,1,n), " `n")
 				:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")
 		lbl := labels[bl][A_index]
-		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
+;		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
 		cleanSpace(m)
 		cleanColon(m)
 		fldval[lbl] := m
