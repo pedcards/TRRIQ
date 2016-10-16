@@ -683,13 +683,15 @@ Holter_Pr:
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
 	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia")
-	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",1,"Ventricular Ectopy")
+	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
+	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
 	
 	;~ MsgBox % demog
 	;~ MsgBox % sumStat
 	;~ MsgBox % rateStat
 	;~ MsgBox % ectoStat
-	;~ Clipboard := sumStat
+	;~ MsgBox % pauseStat
+	;~ Clipboard := pauseStat
 	;~ ExitApp
 
 	;~ gosub checkProc												; check validity of PDF, make demographics valid if not
@@ -700,7 +702,7 @@ Holter_Pr:
 	/* Holter PDF is valid. OK to process.
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
-	fields[1] := ["Name", "ID\s+#", "Second\s+ID", "Date Of Birth", "Age", "Sex"
+	fields[1] := ["Name", "ID #", "Second\s+ID", "Date Of Birth", "Age", "Sex"
 		, "Referring Physician", "Indications", "Medications", "Analyst", "Hookup Tech"
 		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No"]
 	labels[1] := ["Name", "MRN", "VOID_ID", "DOB", "VOID_Age", "Sex"
@@ -718,13 +720,17 @@ Holter_Pr:
 		, "Longest_tachy", "Fastest", "Longest_brady", "Slowest"]
 	fieldvals(rateStat,3,"rate")
 	
-	fields[4] := ["Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "Total", "Ventricular Ectopy"]
-	labels[4] := ["Beats", "Pairs", "Runs", "Fastest", "Longest", "Total", "VOID_SVE"]
+	fields[4] := ["Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "Total","RR Variability"]
+	labels[4] := ["Beats", "Pairs", "Runs", "Fastest", "Longest", "Total","RR_var"]
 	fieldvals(stregX(ectoStat,"Supraventricular Ectopy",1,0,"Ventricular Ectopy",0,nn),4,"sve")
 	
 	fields[5] := ["Ventricular Ectopy", "Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "R on T", "Total"]
 	labels[5] := ["VOID_VE", "Beats", "Couplets", "Runs", "Fastest", "Longest", "R on T", "Total"]
 	fieldvals(strX(ectoStat,"Ventricular Ectopy",1,nn-23,"",0,0),5,"ve")
+	
+	fields[6] := ["Longest RR","\# RR.*3.0 sec"]
+	labels[6] := ["LongRR","Pauses"]
+	fieldvals(pauseStat,6,"sve")
 	
 	tmp := strX(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:",1,13,"",1,0)
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
