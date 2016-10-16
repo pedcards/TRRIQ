@@ -978,7 +978,8 @@ fieldvals(x,bl,bl2) {
 	for k, i in fields[bl]
 	{
 		j := fields[bl][k+1]
-		m := trim(stRegX(x,i,n,1,j,1,n), " `n")
+		m := (j) ?	trim(stRegX(x,i,n,1,j,1,n), " `n")
+				:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")
 		lbl := labels[bl][A_index]
 		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
 		cleanSpace(m)
