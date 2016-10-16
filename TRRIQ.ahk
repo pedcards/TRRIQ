@@ -680,16 +680,16 @@ return
 Holter_Pr:
 {
 	monType := "PR"
-	demog := columns(newtxt,"i)Patient\s+Information","i)Scan\s+Criteria",1,"i)Date\s+Processed")
-	sumStat := columns(newtxt,"i)Summary\s+Statistics","i)Rate\s+Statistics",1,"")
-	rateStat := columns(newtxt,"i)Rate\s+Statistics","i)Supraventricular\s+Ectopy",1,"i)Tachycardia/Bradycardia")
-	ectoStat := columns(newtxt,"i)\s+Supraventricular\s+Ectopy","i)ST Deviation",1,"Ventricular Ectopy")
+	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
+	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
+	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia")
+	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",1,"Ventricular Ectopy")
 	
 	;~ MsgBox % demog
+	;~ MsgBox % sumStat
+	;~ MsgBox % rateStat
 	;~ MsgBox % ectoStat
-	;~ MsgBox % stregX(ectoStat,"Supraventricular Ectopy",1,0,"Ventricular Ectopy",0,nn)
-	;~ MsgBox % strX(ectoStat,"Ventricular Ectopy",1,nn-23,"",0,0)
-	;~ Clipboard := demog
+	;~ Clipboard := sumStat
 	;~ ExitApp
 
 	;~ gosub checkProc												; check validity of PDF, make demographics valid if not
@@ -919,10 +919,19 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	col3	= string demarcates start of COLUMN 3
 	col4	= string demarcates start of COLUMN 4
 */
-	txt := stRegX(x,blk1,1,(incl ? 0 : StrLen(blk1)),blk2,StrLen(blk2))
-	StringReplace, col2, col2, %A_space%, [ ]+, All
-	StringReplace, col3, col3, %A_space%, [ ]+, All
-	StringReplace, col4, col4, %A_space%, [ ]+, All
+	blk1 := rxFix(blk1,"O",1)													; Adds "O)" to blk1
+	blk2 := rxFix(blk2,"O",1)
+	RegExMatch(x,blk1,blo1)														; Creates blo1 object out of blk1 match in x
+	RegExMatch(x,blk2,blo2)
+;	MsgBox % blo1.len "`n" blo1.value "`n" blk1
+	txt := stRegX(x,blk1,1,(incl) ? blo1.len : 0,blk2,blo2.len)
+	MsgBox % txt
+	;~ StringReplace, col2, col2, %A_space%, [ ]+, All
+	;~ StringReplace, col3, col3, %A_space%, [ ]+, All
+	;~ StringReplace, col4, col4, %A_space%, [ ]+, All
+	col2 := RegExReplace(col2,"\s+","\s+")
+	col3 := RegExReplace(col3,"\s+","\s+")
+	col4 := RegExReplace(col4,"\s+","\s+")
 	
 	loop, parse, txt, `n,`r										; find position of columns 2, 3, and 4
 	{
@@ -978,6 +987,21 @@ fieldvals(x,bl,bl2) {
 ;		MsgBox,, % bl2 " - " lbl, % m
 		formatField(bl2,lbl,m)
 	}
+}
+
+/*	rxFix
+	in	= input string, may or may or not include "Oim)" option modifiers
+	req	= required modifiers to output
+	spc	= replace spaces
+*/
+rxFix(hay,req,spc:="")
+{
+	opts:="^[OPimsxADJUXPSC(\`n)(\`r)(\`a)]+\)"
+	out := (hay~=opts) ? req . hay : req ")" hay
+	if (spc) {
+		out := RegExReplace(out,"\s+","\s+")
+	}
+	return out
 }
 
 /* StrX parameters
