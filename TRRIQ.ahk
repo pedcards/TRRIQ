@@ -630,8 +630,11 @@ return
 Holter_LW:
 {
 	monType := "H"
-	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
+	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
+	
+	;~ MsgBox % demog
+	;~ ExitApp
 	
 	;~ if instr(demog,"user field #1") {
 		;~ demog := RegExReplace(demog,"i)user field #\d+")
@@ -646,7 +649,7 @@ Holter_LW:
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
-		, "Source", "Billing Code", "Recorder Format", "Pt\.?\sHome\s*(Phone)?\s*#?", "Hookup Tech", "Pacemaker\s*Y/N.", "Medications"
+		, "Source", "Billing Code", "Recorder Format", "Pt\.? Home\s*(Phone)?\s*#?", "Hookup Tech", "Pacemaker\s*Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
 		, "Test Date", "Analysis Date", "Hookup Time", "Recording Time", "Analysis Time", "Reason for Test", "i)(Group)|(user field)"]
 	labels[1] := ["Name_L", "Name_F", "Name_M", "MRN", "DOB", "Sex"
