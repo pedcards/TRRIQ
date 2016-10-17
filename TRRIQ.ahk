@@ -1118,6 +1118,10 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,"First",strX(txt,",",1,1,"",0))
 			return
 		}
+		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {
+			fieldColAdd(pre,lab,zDigit(tx.value(1)) ":" zDigit(tx.value(2)))
+			return
+		}
 		
 	}
 	
