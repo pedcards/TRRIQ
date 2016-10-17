@@ -1122,6 +1122,11 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab,zDigit(tx.value(1)) ":" zDigit(tx.value(2)))
 			return
 		}
+		if (RegExMatch(txt,"O)^([0-9.]+).*at.*(\d{2}:\d{2}:\d{2})(AM|PM)?$",tx)) {		;	Split timed results "139 at 8:31:47 AM" into two fields
+			fieldColAdd(pre,lab,tx.value(1))
+			fieldColAdd(pre,lab "_time",tx.value(2))
+			return
+		}
 		
 	}
 	
