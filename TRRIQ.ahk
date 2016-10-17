@@ -1111,6 +1111,11 @@ formatField(pre, lab, txt) {
 		}
 	}
 	
+;	Preventice Holter specific fixes
+	if (monType="PR") {
+		
+	}
+	
 ;	ZIO patch specific search fixes
 	if (monType="Z") {
 		if (RegExMatch(txt,"(\d){1,2} days (\d){1,2} hours ",tmp)) {		;	Split recorded/analyzed time in to Days and Hours
