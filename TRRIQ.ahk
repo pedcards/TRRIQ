@@ -1113,6 +1113,11 @@ formatField(pre, lab, txt) {
 	
 ;	Preventice Holter specific fixes
 	if (monType="PR") {
+		if (lab="Name") {
+			fieldColAdd(pre,"Last",strX(txt,"",1,0,",",1,1))
+			fieldColAdd(pre,"First",strX(txt,",",1,1,"",0))
+			return
+		}
 		
 	}
 	
