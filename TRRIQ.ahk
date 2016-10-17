@@ -640,7 +640,7 @@ Holter_LW:
 		;~ demog := RegExReplace(demog,"i)user field #\d+")
 	;~ }
 	
-	gosub checkProc												; check validity of PDF, make demographics valid if not
+	gosub checkProcLW											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
 	}
@@ -746,7 +746,7 @@ Holter_Pr:
 return
 }
 
-CheckProc:
+CheckProcLW:
 {
 	chk_Last := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
 	chk_First := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")				; NameF				must be [A-Z]
