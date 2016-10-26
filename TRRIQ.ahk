@@ -822,15 +822,15 @@ CheckProcLW:
 
 CheckProcPR:
 {
-	chk_Name := trim(strX(demog,"Name",1,4,"Date Recorded",1,13,nn)," `r`n")					; Name
-		chk_Last := trim(strX(chk_Name,"",1,0,",",1,1)," `r`n")									; NameL				must be [A-Z]
+	chk_Name := trim(strX(demog,"Name:",1,5,"ID #:",1,5,nn)," `r`n")					; Name
+		chk_Last := trim(strX(chk_Name,"",1,1,",",1,1)," `r`n")									; NameL				must be [A-Z]
 		chk_First := trim(strX(chk_Name,",",1,1,"",0)," `r`n")									; NameF				must be [A-Z]
-	chk_Date := trim(strX(demog,"Date Recorded",nn,13,"ID #",1,4,nn)," `r`n")					; Study date
-	chk_MRN := trim(strX(demog,"ID #",nn,4,"Second ID",1,9,nn)," `r`n")							; MRN
-	chk_DOB := trim(strX(demog,"Date of Birth",nn,13,"Age",1,3,nn)," `r`n")						; DOB
-	chk_Sex := trim(strX(demog,"Sex",nn,3,"Scan Number",1,11,nn)," `r`n")						; Sex
-	chk_Prov := trim(strX(demog,"Referring Physician",nn,19,"Recorder",1,8,nn)," `r`n")			; Ordering MD
-	chk_Ind := trim(strX(demog,"Indications",nn,11,"Recorder",1,8,nn)," `r`n")					; Indication
+	chk_MRN := trim(strX(demog,"ID #:",nn,5,"Second ID:",1,10,nn)," `r`n")							; MRN
+	chk_DOB := trim(strX(demog,"Date of Birth:",nn,14,"Age:",1,4,nn)," `r`n")						; DOB
+	chk_Sex := trim(strX(demog,"Sex:",nn,4,"Referring Physician:",1,20,nn)," `r`n")						; Sex
+	chk_Prov := trim(strX(demog,"Referring Physician:",nn,20,"Indications:",1,12,nn)," `r`n")			; Ordering MD
+	chk_Ind := trim(strX(demog,"Indications:",nn,12,"Medications:",1,12,nn)," `r`n")					; Indication
+	chk_Date := trim(strX(demog,"Date Recorded:",nn,14,"Date Processed:",1,15,nn)," `r`n")					; Study date
 	;~ chk_Loc := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")					; Location			must be in SiteVals
 	;~ chk_Acct := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
 	;~ chk_Ind := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
