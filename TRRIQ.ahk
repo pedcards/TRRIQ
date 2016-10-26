@@ -705,7 +705,7 @@ Holter_Pr:
 	/* Holter PDF is valid. OK to process.
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
-	fields[1] := ["Name", "ID #", "Second\s+ID", "Date Of Birth", "Age", "Sex"
+	fields[1] := ["Name", "ID #", "Second ID", "Date Of Birth", "Age", "Sex"
 		, "Referring Physician", "Indications", "Medications", "Analyst", "Hookup Tech"
 		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No"]
 	labels[1] := ["Name", "MRN", "VOID_ID", "DOB", "VOID_Age", "Sex"
@@ -882,10 +882,12 @@ CheckProcPR:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
-	 MsgBox % ptDem["nameL"] ", " ptDem["nameF"]
-	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " ptDem["nameL"] ", " ptDem["nameF"] "`n")
-	demog := RegExReplace(demog,"i)ID #: (.*) Second ID:","ID #:  " ptDem["mrn"] "  Second ID:")
-	demog := RegExReplace(demog,"i)Date of Birth: (.*) Age:", "Date of Birth:   " ptDem["DOB"] "  Age:")
+	chk_Name := ptDem["nameL"] ", " ptDem["nameF"] 
+	fldval["name_L"] := ptDem["nameL"]
+	fldval["name_F"] := ptDem["nameF"]
+	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk_Name "   `n")
+	demog := RegExReplace(demog,"i)ID #: (.*) Second ID:","ID #:   " ptDem["mrn"] "                   Second ID:")
+	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
 	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
 	demog := RegExReplace(demog,"i`a)Indications: (.*)\R", "Indications:   " ptDem["Indication"] "`n")	
 	demog := RegExReplace(demog,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
@@ -1187,8 +1189,8 @@ formatField(pre, lab, txt) {
 ;	Preventice Holter specific fixes
 	if (monType="PR") {
 		if (lab="Name") {
-			fieldColAdd(pre,"Last",strX(txt,"",1,0,",",1,1))
-			fieldColAdd(pre,"First",strX(txt,",",1,1,"",0))
+			fieldColAdd(pre,"Name_L",strX(txt,"",1,0,",",1,1))
+			fieldColAdd(pre,"Name_F",strX(txt,",",1,1,"",0))
 			return
 		}
 		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {
