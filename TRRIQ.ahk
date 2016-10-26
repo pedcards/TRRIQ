@@ -835,7 +835,7 @@ CheckProcPR:
 	;~ chk_Acct := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
 	;~ chk_Ind := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
 	
-	Clipboard := chk_Last ", " chk_First														; fill clipboard with name, so can just paste into CIS search bar
+	Clipboard := chk_Last ", " chk_First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk_Last~="[a-z]+")															; Check field values to see if proper demographics
 		&& !(chk_First~="[a-z]+") 														; meaning names in ALL CAPS
 		&& (chk_Acct~="\d{8}"))															; and EncNum present
@@ -882,15 +882,12 @@ CheckProcPR:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
-	demog := RegExReplace(demog,"i)Last Name (.*)First Name","Last Name   " ptDem["nameL"] "`nFirst Name")
-	demog := RegExReplace(demog,"i)First Name (.*)Middle Initial", "First Name   " ptDem["nameF"] "`nMiddle Initial")
-	demog := RegExReplace(demog,"i)ID Number (.*)Date of Birth", "ID Number   " ptDem["mrn"] "`nDate of Birth")
-	demog := RegExReplace(demog,"i)Date of Birth (.*)Sex", "Date of Birth   " ptDem["DOB"] "`nSex")
-	demog := RegExReplace(demog,"i)Source (.*)Billing Code", "Source   " ptDem["Loc"] "`nBilling Code")
-	demog := RegExReplace(demog,"i)Billing Code (.*)Recorder Format", "Billing Code   " ptDem["Account number"] "`nRecorder Format")
-	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
-	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
-	demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
+	demog := RegExReplace(demog,"i)Name: (.*)","Name:   " ptDem["nameL"] ", " ptDem["nameF"] "`n")
+	demog := RegExReplace(demog,"i)ID #: (.*) Second ID:","ID #:  " ptDem["mrn"] "  Second ID:")
+	demog := RegExReplace(demog,"i)Date of Birth: (.*) Age:", "Date of Birth:   " ptDem["DOB"] "  Age:")
+	demog := RegExReplace(demog,"i)Referring Physician: (.*)", "Referring Physician:   " ptDem["Provider"])
+	demog := RegExReplace(demog,"i)Indications: (.*)", "Indications:   " ptDem["Indication"])	
+	demog := RegExReplace(demog,"i)Date Recorded: (.*)", "Date Recorded:   " ptDem["EncDate"])
 	
 	return
 }
