@@ -882,12 +882,13 @@ CheckProcPR:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
-	demog := RegExReplace(demog,"i)Name: (.*)","Name:   " ptDem["nameL"] ", " ptDem["nameF"] "`n")
+	 MsgBox % ptDem["nameL"] ", " ptDem["nameF"]
+	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " ptDem["nameL"] ", " ptDem["nameF"] "`n")
 	demog := RegExReplace(demog,"i)ID #: (.*) Second ID:","ID #:  " ptDem["mrn"] "  Second ID:")
 	demog := RegExReplace(demog,"i)Date of Birth: (.*) Age:", "Date of Birth:   " ptDem["DOB"] "  Age:")
-	demog := RegExReplace(demog,"i)Referring Physician: (.*)", "Referring Physician:   " ptDem["Provider"])
-	demog := RegExReplace(demog,"i)Indications: (.*)", "Indications:   " ptDem["Indication"])	
-	demog := RegExReplace(demog,"i)Date Recorded: (.*)", "Date Recorded:   " ptDem["EncDate"])
+	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
+	demog := RegExReplace(demog,"i`a)Indications: (.*)\R", "Indications:   " ptDem["Indication"] "`n")	
+	demog := RegExReplace(demog,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
 	
 	return
 }
