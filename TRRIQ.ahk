@@ -831,9 +831,6 @@ CheckProcPR:
 	chk_Prov := trim(strX(demog,"Referring Physician:",nn,20,"Indications:",1,12,nn)," `r`n")			; Ordering MD
 	chk_Ind := trim(strX(demog,"Indications:",nn,12,"Medications:",1,12,nn)," `r`n")					; Indication
 	chk_Date := trim(strX(demog,"Date Recorded:",nn,14,"Date Processed:",1,15,nn)," `r`n")					; Study date
-	;~ chk_Loc := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")					; Location			must be in SiteVals
-	;~ chk_Acct := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
-	;~ chk_Ind := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
 	
 	Clipboard := chk_Last ", " chk_First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk_Last~="[a-z]+")															; Check field values to see if proper demographics
@@ -891,6 +888,8 @@ CheckProcPR:
 	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
 	demog := RegExReplace(demog,"i`a)Indications: (.*)\R", "Indications:   " ptDem["Indication"] "`n")	
 	demog := RegExReplace(demog,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
+	demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
+	demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
 	
 	return
 }
