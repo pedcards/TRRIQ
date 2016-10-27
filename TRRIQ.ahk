@@ -74,7 +74,8 @@ siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevu
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
-	phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
+	;~ phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
+	phase := CMsgBox("Which task?","","*&Register Preventice|&Process PDF file(s)","Q","")
 }
 if (instr(phase,"new")) {
 	Loop 
@@ -83,6 +84,16 @@ if (instr(phase,"new")) {
 		gosub fetchGUI								; Draw input GUI
 		gosub fetchDem								; Grab demographics from CIS until accept
 		gosub zybitSet								; Fill in Zybit demographics
+	}
+	ExitApp
+}
+if (instr(phase,"preventice")) {
+	Loop
+	{
+		ptDem := Object()
+		gosub fetchGUI
+		gosub fetchDem
+		gosub webFill
 	}
 	ExitApp
 }
@@ -125,7 +136,7 @@ FetchDem:
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
 				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
 				if (clk.field = "Provider") {
-					if (clk.value~="[:alpha:]+.*,.*[:alpha:]+") {						; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
+					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {						; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
 					} else {
 						tmpPrv :=
@@ -333,7 +344,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	
 	if !(ptDem.Provider) {														; no provider? ask!
 		gosub getMD
-	} else if !(checkCrd(ptDem.Provider).fuzz=0) {								; Provider not recognized
+	} else if (checkCrd(ptDem.Provider).fuzz > 0.10) {							; Provider not recognized
 		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
 			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 		} else {
@@ -435,6 +446,13 @@ indSubmit:
 	return
 }
 
+webFill:
+{
+	MsgBox Fill a form
+	
+	return
+}
+
 zybitSet:
 {
 	Loop
@@ -507,8 +525,10 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
-	if (InStr(maintxt,"Holter")) {															; Processing loop based on identifying string in maintxt
-		gosub Holter
+	if (instr(maintxt,"Lifewatch") && instr(maintxt,"Holter")) {					; Processing loop based on identifying string in maintxt
+		gosub Holter_LW
+	} else if (instr(maintxt,"Preventice") && instr(maintxt,"H3Plus")) {
+		gosub Holter_Pr
 	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
 		gosub EventRec
 	} else if (RegExMatch(maintxt,"i)zio.*xt.*patch")) {
@@ -607,17 +627,20 @@ epRead:
 return
 }
 
-Holter:
+Holter_LW:
 {
 	monType := "H"
-	demog := columns(newtxt,"PATIENT\s*DEMOGRAPHICS","Heart Rate Data",1,"Reading Physician")
+	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
+	
+	;~ MsgBox % demog
+	;~ ExitApp
 	
 	;~ if instr(demog,"user field #1") {
 		;~ demog := RegExReplace(demog,"i)user field #\d+")
 	;~ }
 	
-	gosub checkProc												; check validity of PDF, make demographics valid if not
+	gosub checkProcLW											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
 	}
@@ -626,7 +649,7 @@ Holter:
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
-		, "Source", "Billing Code", "Recorder Format", "Pt\.?\sHome\s*(Phone)?\s*#?", "Hookup Tech", "Pacemaker\s*Y/N.", "Medications"
+		, "Source", "Billing Code", "Recorder Format", "Pt\.? Home\s*(Phone)?\s*#?", "Hookup Tech", "Pacemaker\s*Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
 		, "Test Date", "Analysis Date", "Hookup Time", "Recording Time", "Analysis Time", "Reason for Test", "i)(Group)|(user field)"]
 	labels[1] := ["Name_L", "Name_F", "Name_M", "MRN", "DOB", "Sex"
@@ -657,7 +680,73 @@ Holter:
 return
 }
 
-CheckProc:
+Holter_Pr:
+{
+	monType := "PR"
+	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
+	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
+	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia")
+	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
+	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
+	
+	;~ MsgBox % demog
+	;~ MsgBox % sumStat
+	;~ MsgBox % rateStat
+	;~ MsgBox % ectoStat
+	;~ MsgBox % pauseStat
+	;~ Clipboard := pauseStat
+	;~ ExitApp
+
+	gosub checkProcPR											; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	/* Holter PDF is valid. OK to process.
+	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	 */
+	fields[1] := ["Name", "ID #", "Second ID", "Date Of Birth", "Age", "Sex"
+		, "Referring Physician", "Indications", "Medications", "Analyst", "Hookup Tech"
+		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No"]
+	labels[1] := ["Name", "MRN", "VOID_ID", "DOB", "VOID_Age", "Sex"
+		, "Ordering", "Indication", "Meds", "Scanned_by", "Hookup_tech"
+		, "Test_date", "Scan_date", "Scan_num", "Recorder", "Recorder_num"]
+	fieldvals(demog,1,"dem")
+	
+	fields[2] := ["Total QRS", "Recording Duration", "Analyzed Data"]
+	labels[2] := ["Total_beats", "Recording_time", "Analysis_time"]
+	fieldvals(sumStat,2,"sum")
+	
+	fields[3] := ["Min Rate", "Max Rate", "Mean Rate", "Tachycardia/Bradycardia"
+		, "Longest Tachycardia", "Fastest Tachycardia", "Longest Bradycardia", "Slowest Bradycardia"]
+	labels[3] := ["Min", "Max", "Avg", "VOID_tb"
+		, "Longest_tachy", "Fastest", "Longest_brady", "Slowest"]
+	fieldvals(rateStat,3,"rate")
+	
+	fields[4] := ["Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "Total","RR Variability"]
+	labels[4] := ["Beats", "Pairs", "Runs", "Fastest", "Longest", "Total","RR_var"]
+	fieldvals(stregX(ectoStat,"Supraventricular Ectopy",1,0,"Ventricular Ectopy",0,nn),4,"sve")
+	
+	fields[5] := ["Ventricular Ectopy", "Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "R on T", "Total"]
+	labels[5] := ["VOID_VE", "Beats", "Couplets", "Runs", "Fastest", "Longest", "R on T", "Total"]
+	fieldvals(strX(ectoStat,"Ventricular Ectopy",1,nn-23,"",0,0),5,"ve")
+	
+	fields[6] := ["Longest RR","\# RR.*3.0 sec"]
+	labels[6] := ["LongRR","Pauses"]
+	fieldvals(pauseStat,6,"sve")
+	
+	tmp := strX(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:",1,13,"",1,0)
+	StringReplace, tmp, tmp, .`n , .%A_Space% , All
+	fileout1 .= """INTERP"""
+	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
+	fileOut1 .= ",""Mon_type"""
+	fileOut2 .= ",""Mortara Holter"""
+	
+	
+return
+}
+
+CheckProcLW:
 {
 	chk_Last := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
 	chk_First := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")				; NameF				must be [A-Z]
@@ -727,6 +816,80 @@ CheckProc:
 	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
 	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
 	demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
+	
+	return
+}
+
+CheckProcPR:
+{
+	chk_Name := trim(strX(demog,"Name:",1,5,"ID #:",1,5,nn)," `r`n")					; Name
+		chk_Last := trim(strX(chk_Name,"",1,1,",",1,1)," `r`n")									; NameL				must be [A-Z]
+		chk_First := trim(strX(chk_Name,",",1,1,"",0)," `r`n")									; NameF				must be [A-Z]
+	chk_MRN := trim(strX(demog,"ID #:",nn,5,"Second ID:",1,10,nn)," `r`n")							; MRN
+	chk_DOB := trim(strX(demog,"Date of Birth:",nn,14,"Age:",1,4,nn)," `r`n")						; DOB
+	chk_Sex := trim(strX(demog,"Sex:",nn,4,"Referring Physician:",1,20,nn)," `r`n")						; Sex
+	chk_Prov := trim(strX(demog,"Referring Physician:",nn,20,"Indications:",1,12,nn)," `r`n")			; Ordering MD
+	chk_Ind := trim(strX(demog,"Indications:",nn,12,"Medications:",1,12,nn)," `r`n")					; Indication
+	chk_Date := trim(strX(demog,"Date Recorded:",nn,14,"Date Processed:",1,15,nn)," `r`n")					; Study date
+	
+	Clipboard := chk_Last ", " chk_First												; fill clipboard with name, so can just paste into CIS search bar
+	if (!(chk_Last~="[a-z]+")															; Check field values to see if proper demographics
+		&& !(chk_First~="[a-z]+") 														; meaning names in ALL CAPS
+		&& (chk_Acct~="\d{8}"))															; and EncNum present
+	{
+		MsgBox, 4132, Valid PDF, % ""
+			. chk_Last ", " chk_First "`n"
+			. "MRN " chk_MRN "`n"
+			. "Acct " chk_Acct "`n"
+			. "Ordering: " chk_Prov "`n"
+			. "Study date: " chk_Date "`n`n"
+			. "Is all the information correct?`n"
+			. "If NO, reacquire demographics."
+		IfMsgBox, Yes																; All tests valid
+		{
+			return																	; Select YES, return to processing Holter
+		} 
+		else 																		; Select NO, reacquire demographics
+		{
+			MsgBox, 4096, Adjust demographics, % chk_Last ", " chk_First "`n   " chk_MRN "`n   " chk_Loc "`n   " chk_Acct "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+		}
+	}
+	else 																			; Not valid PDF, get demographics post hoc
+	{
+		MsgBox, 4096,, % "Validation failed for:`n   " chk_Last ", " chk_First "`n   " chk_MRN "`n   " chk_Loc "`n   " chk_Acct "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+	}
+	; Either invalid PDF or want to correct values
+	ptDem := Object()																; initialize/clear ptDem array
+	ptDem["nameL"] := chk_Last															; Placeholder values for fetchGUI from PDF
+	ptDem["nameF"] := chk_First
+	ptDem["mrn"] := chk_MRN
+	ptDem["DOB"] := chk_DOB
+	ptDem["Sex"] := chk_Sex
+	ptDem["Loc"] := chk_Loc
+	ptDem["Account number"] := chk_Acct													; If want to force click, don't include Acct Num
+	ptDem["Provider"] := trim(RegExReplace(chk_Prov,"i)^Dr\.(\s)?"))
+	ptDem["EncDate"] := chk_Date
+	ptDem["Indication"] := chk_Ind
+	
+	fetchQuit:=false
+	gosub fetchGUI
+	gosub fetchDem
+	/*	When fetchDem successfully completes,
+	 *	replace the fields in demog with newly acquired values
+	 */
+	chk_Name := ptDem["nameL"] ", " ptDem["nameF"] 
+	fldval["name_L"] := ptDem["nameL"]
+	fldval["name_F"] := ptDem["nameF"]
+	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk_Name "   `n")
+	demog := RegExReplace(demog,"i)ID #: (.*) Second ID:","ID #:   " ptDem["mrn"] "                   Second ID:")
+	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
+	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
+	demog := RegExReplace(demog,"i`a)Indications: (.*)\R", "Indications:   " ptDem["Indication"] "`n")	
+	demog := RegExReplace(demog,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
+	demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
+	demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
 	
 	return
 }
@@ -839,10 +1002,16 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	col3	= string demarcates start of COLUMN 3
 	col4	= string demarcates start of COLUMN 4
 */
-	txt := stRegX(x,blk1,1,(incl ? 0 : StrLen(blk1)),blk2,StrLen(blk2))
-	StringReplace, col2, col2, %A_space%, [ ]+, All
-	StringReplace, col3, col3, %A_space%, [ ]+, All
-	StringReplace, col4, col4, %A_space%, [ ]+, All
+	blk1 := rxFix(blk1,"O",1)													; Adds "O)" to blk1
+	blk2 := rxFix(blk2,"O",1)
+	RegExMatch(x,blk1,blo1)														; Creates blo1 object out of blk1 match in x
+	RegExMatch(x,blk2,blo2)
+	
+	txt := stRegX(x,blk1,1,(incl) ? blo1.len : 0,blk2,blo2.len)
+	;~ MsgBox % txt
+	col2 := RegExReplace(col2,"\s+","\s+")
+	col3 := RegExReplace(col3,"\s+","\s+")
+	col4 := RegExReplace(col4,"\s+","\s+")
 	
 	loop, parse, txt, `n,`r										; find position of columns 2, 3, and 4
 	{
@@ -889,13 +1058,31 @@ fieldvals(x,bl,bl2) {
 	for k, i in fields[bl]
 	{
 		j := fields[bl][k+1]
-		m := trim(stRegX(x,i,n,1,j,1,n), " `n")
+		m := (j) ?	trim(stRegX(x,i,n,1,j,1,n), " `n")
+				:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")
 		lbl := labels[bl][A_index]
+;		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
 		cleanSpace(m)
 		cleanColon(m)
 		fldval[lbl] := m
+;		MsgBox,, % bl2 " - " lbl, % m
 		formatField(bl2,lbl,m)
 	}
+}
+
+/*	rxFix
+	in	= input string, may or may or not include "Oim)" option modifiers
+	req	= required modifiers to output
+	spc	= replace spaces
+*/
+rxFix(hay,req,spc:="")
+{
+	opts:="^[OPimsxADJUXPSC(\`n)(\`r)(\`a)]+\)"
+	out := (hay~=opts) ? req . hay : req ")" hay
+	if (spc) {
+		out := RegExReplace(out,"\s+","\s+")
+	}
+	return out
 }
 
 /* StrX parameters
@@ -996,6 +1183,25 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lb2,tx2)
 			return
 		}
+	}
+	
+;	Preventice Holter specific fixes
+	if (monType="PR") {
+		if (lab="Name") {
+			fieldColAdd(pre,"Name_L",strX(txt,"",1,0,",",1,1))
+			fieldColAdd(pre,"Name_F",strX(txt,",",1,1,"",0))
+			return
+		}
+		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {
+			fieldColAdd(pre,lab,zDigit(tx.value(1)) ":" zDigit(tx.value(2)))
+			return
+		}
+		if (RegExMatch(txt,"O)^([0-9.]+).*at.*(\d{2}:\d{2}:\d{2})(AM|PM)?$",tx)) {		;	Split timed results "139 at 8:31:47 AM" into two fields
+			fieldColAdd(pre,lab,tx.value(1))
+			fieldColAdd(pre,lab "_time",tx.value(2))
+			return
+		}
+		
 	}
 	
 ;	ZIO patch specific search fixes
