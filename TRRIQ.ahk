@@ -344,7 +344,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	
 	if !(ptDem.Provider) {														; no provider? ask!
 		gosub getMD
-	} else if !(checkCrd(ptDem.Provider).fuzz=0) {								; Provider not recognized
+	} else if (checkCrd(ptDem.Provider).fuzz > 0.10) {							; Provider not recognized
 		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
 			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 		} else {
