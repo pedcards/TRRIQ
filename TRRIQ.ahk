@@ -689,14 +689,6 @@ Holter_Pr:
 	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
 	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
 	
-	;~ MsgBox % demog
-	;~ MsgBox % sumStat
-	;~ MsgBox % rateStat
-	;~ MsgBox % ectoStat
-	;~ MsgBox % pauseStat
-	;~ Clipboard := pauseStat
-	;~ ExitApp
-
 	gosub checkProcPR											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
@@ -896,17 +888,7 @@ CheckProcPR:
 
 Zio:
 {
-	monType:="Z"
-	newTxt:=""
-	Loop, parse, maintxt, `n,`r									; first pass, clean up txt
-	{
-		i:=A_LoopField
-		if !(i)													; skip entirely blank lines
-			continue
-		newTxt .= i . "`n"
-	}
-	FileDelete tempfile.txt
-	FileAppend %newtxt%, tempfile.txt
+	monType:="ZIO"
 	
 	zdat := columns(newtxt,"","Preliminary Findings",,"Enrollment Period")
 	znam := trim(cleanSpace(columns(zdat,"Report for","Date of Birth")))
@@ -964,7 +946,7 @@ Zio:
 return
 }
 
-EventRec:
+Event_LW:
 {
 	fields := ["PATIENT INFORMATION","Name:","ID #:","4800 SAND POINT","DOB:","Sex:","Phone:"
 		,"Monitor Type:","Diag:","Delivery Code:","Enrollment Period:","Date"
