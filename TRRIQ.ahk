@@ -525,14 +525,16 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
-	if (instr(maintxt,"Lifewatch") && instr(maintxt,"Holter")) {					; Processing loop based on identifying string in maintxt
+	if (instr(newtxt,"Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in maintxt
 		gosub Holter_LW
-	} else if (instr(maintxt,"Preventice") && instr(maintxt,"H3Plus")) {
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {
 		gosub Holter_Pr
-	} else if (InStr(maintxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
-		gosub EventRec
-	} else if (RegExMatch(maintxt,"i)zio.*xt.*patch")) {
+	} else if (RegExMatch(newtxt,"i)zio.*xt.*patch")) {
 		gosub Zio
+	} else if (InStr(newtxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
+		gosub Event_LW
+	} else if (RegExMatch(newtxt,"i)Preventice.*End of Service Report")) {
+		gosub Event_BGH
 	} else {
 		MsgBox No match!
 		ExitApp
@@ -971,6 +973,25 @@ Event_LW:
 		blk[i] := m												; associative array with result
 		MsgBox,, % "(" k ")[" strlen(m) "] " i , % blk[i], 
 	}
+Return
+}
+
+Event_BGH:
+{
+	monType := "Body Guardian Heart"
+	name := trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
+	demog := columns(newtxt,"","Event Summary",,"Enrollment Info")
+	enroll := strX(demog,"Enrollment Info",1,0,"",0)
+	diag := trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"Preventice",1)," `n")
+	;enroll := strX(demog,"Diagnosis (",1,0,"",0)
+	;enroll2 := columns(strX(enroll,"Monitor ",1,0,"",0),"",,"")
+	;enroll := columns(enroll . "`n#####","Monitor ","#####",,"Period (")
+	;demog := columns(demog,"\s*Patient:","Diagnosis (",,"Monitor ")
+;	demog2 := columns(demog,"\s+Patient ID","Diagnosis (",,"Gender","Date of Birth","Phone")
+	
+	clipboard := demog
+	MsgBox % demog
+	ExitApp
 Return
 }
 
