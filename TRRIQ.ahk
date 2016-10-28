@@ -522,6 +522,7 @@ MainLoop:
 	labels := Object()
 	blk := Object()
 	blk2 := Object()
+	ptDem := Object()
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
@@ -981,7 +982,7 @@ Event_BGH:
 	monType := "Body Guardian Heart"
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
 	demog := columns(newtxt,"","Event Summary",,"Enrollment Info")
-	enroll := strX(demog,"Enrollment Info",1,0,"",0)
+	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
 	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice)|(Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
 	demog := columns(demog,"\s+Patient ID","#####",,"Gender","Date of Birth","Phone")
@@ -990,7 +991,18 @@ Event_BGH:
 	fields[1] := ["Patient Name", "Patient ID", "Physician", "Gender", "Date of Birth", "Practice", "Diagnosis"]
 	labels[1] := ["Name", "MRN", "Ordering", "Sex", "DOB", "VOID_Practice", "Indication"]
 	fieldvals(demog,1,"dem")
+	fldval["name_L"] := ptDem["nameL"]
 	
+	fields[2] := ["Period \(.*\)","Event Counts"]
+	labels[2] := ["Test_date","VOID_Counts"]
+	fieldvals(enroll,2,"dem")
+	
+	fields[3] := ["Critical","Total","Serious","Manual","Stable","Auto Trigger"]
+	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
+	fieldvals(enroll,3,"counts")
+	
+	;~ MsgBox % enroll
+	;~ ExitApp
 
 Return
 }
@@ -1064,7 +1076,7 @@ fieldvals(x,bl,bl2) {
 		m := (j) ?	trim(stRegX(x,i,n,1,j,1,n), " `n")
 				:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")
 		lbl := labels[bl][A_index]
-		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
+;		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
 		cleanSpace(m)
 		cleanColon(m)
 		fldval[lbl] := m
@@ -1139,7 +1151,7 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 }
 
 formatField(pre, lab, txt) {
-	global monType, Docs
+	global monType, Docs, ptDem
 	if (txt ~= "\d{1,2} hr \d{1,2} min") {
 		StringReplace, txt, txt, %A_Space%hr%A_space% , :
 		StringReplace, txt, txt, %A_Space%min , 
@@ -1205,6 +1217,23 @@ formatField(pre, lab, txt) {
 			return
 		}
 		
+	}
+
+;	Body Guardian Heart specific fixes
+	if (monType="Body Guardian Heart") {
+		if (lab="Name") {
+			ptDem["nameL"] := strX(txt," ",0,1,"",0)
+			ptDem["nameF"] := strX(txt,"",1,0," ",1,1)
+			fieldColAdd(pre,"Name_L",ptDem["nameL"])
+			fieldColAdd(pre,"Name_F",ptDem["nameF"])
+			return
+		}
+		if (lab="Test_date") {
+			RegExMatch(txt,"O)(\d{1,2}/\d{1,2}/\d{4}).* (\d{1,2}/\d{1,2}/\d{4})",dt)
+			fieldColAdd(pre,lab,dt.value(1))
+			fieldColAdd(pre,lab "_end",dt.value(2))
+			return
+		}
 	}
 	
 ;	ZIO patch specific search fixes
