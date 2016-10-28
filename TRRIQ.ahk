@@ -74,8 +74,8 @@ siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevu
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
-	;~ phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
-	phase := CMsgBox("Which task?","","*&Register Preventice|&Process PDF file(s)","Q","")
+	phase := CMsgBox("Which task?","","*&Upload new Holter|&Process PDF","Q","")
+	;~ phase := CMsgBox("Which task?","","*&Register Preventice|&Process PDF file(s)","Q","")
 }
 if (instr(phase,"new")) {
 	Loop 
@@ -87,16 +87,16 @@ if (instr(phase,"new")) {
 	}
 	ExitApp
 }
-if (instr(phase,"preventice")) {
-	Loop
-	{
-		ptDem := Object()
-		gosub fetchGUI
-		gosub fetchDem
-		gosub webFill
-	}
-	ExitApp
-}
+;~ if (instr(phase,"preventice")) {
+	;~ Loop
+	;~ {
+		;~ ptDem := Object()
+		;~ gosub fetchGUI
+		;~ gosub fetchDem
+		;~ gosub webFill
+	;~ }
+	;~ ExitApp
+;~ }
 if (instr(phase,"PDF")) {
 	holterLoops := 0								; Reset counters
 	holtersDone := 
