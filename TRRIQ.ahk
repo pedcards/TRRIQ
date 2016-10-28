@@ -979,19 +979,19 @@ Return
 Event_BGH:
 {
 	monType := "Body Guardian Heart"
-	name := trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
+	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
 	demog := columns(newtxt,"","Event Summary",,"Enrollment Info")
 	enroll := strX(demog,"Enrollment Info",1,0,"",0)
-	diag := trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"Preventice",1)," `n")
-	;enroll := strX(demog,"Diagnosis (",1,0,"",0)
-	;enroll2 := columns(strX(enroll,"Monitor ",1,0,"",0),"",,"")
-	;enroll := columns(enroll . "`n#####","Monitor ","#####",,"Period (")
-	;demog := columns(demog,"\s*Patient:","Diagnosis (",,"Monitor ")
-;	demog2 := columns(demog,"\s+Patient ID","Diagnosis (",,"Gender","Date of Birth","Phone")
+	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice)|(Enrollment Info)",1)," `n")
+	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
+	demog := columns(demog,"\s+Patient ID","#####",,"Gender","Date of Birth","Phone")
+	demog := name "`n" demog "`n" diag "`n"
 	
-	clipboard := demog
-	MsgBox % demog
-	ExitApp
+	fields[1] := ["Patient Name", "Patient ID", "Physician", "Gender", "Date of Birth", "Practice", "Diagnosis"]
+	labels[1] := ["Name", "MRN", "Ordering", "Sex", "DOB", "VOID_Practice", "Indication"]
+	fieldvals(demog,1,"dem")
+	
+
 Return
 }
 
@@ -1064,7 +1064,7 @@ fieldvals(x,bl,bl2) {
 		m := (j) ?	trim(stRegX(x,i,n,1,j,1,n), " `n")
 				:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")
 		lbl := labels[bl][A_index]
-;		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
+		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
 		cleanSpace(m)
 		cleanColon(m)
 		fldval[lbl] := m
