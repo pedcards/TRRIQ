@@ -979,7 +979,7 @@ Return
 
 Event_BGH:
 {
-	monType := "Body Guardian Heart"
+	monType := "BGH"
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
 	demog := columns(newtxt,"","Event Summary",,"Enrollment Info")
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
@@ -987,6 +987,11 @@ Event_BGH:
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
 	demog := columns(demog,"\s+Patient ID","#####",,"Gender","Date of Birth","Phone")
 	demog := name "`n" demog "`n" diag "`n"
+	
+	gosub checkProcBGH											; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
 	
 	fields[1] := ["Patient Name", "Patient ID", "Physician", "Gender", "Date of Birth", "Practice", "Diagnosis"]
 	labels[1] := ["Name", "MRN", "Ordering", "Sex", "DOB", "VOID_Practice", "Indication"]
@@ -1003,8 +1008,84 @@ Event_BGH:
 	
 	;~ MsgBox % enroll
 	;~ ExitApp
+	fileOut1 .= ",""Mon_type"""
+	fileOut2 .= ",""Body Guardian Heart"""
 
 Return
+}
+
+CheckProcBGH:
+{
+	chk_Name := trim(strX(demog,"Name:",1,5,"ID #:",1,5,nn)," `r`n")					; Name
+		chk_Last := trim(strX(chk_Name,"",1,1,",",1,1)," `r`n")									; NameL				must be [A-Z]
+		chk_First := trim(strX(chk_Name,",",1,1,"",0)," `r`n")									; NameF				must be [A-Z]
+	chk_MRN := trim(strX(demog,"ID #:",nn,5,"Second ID:",1,10,nn)," `r`n")							; MRN
+	chk_DOB := trim(strX(demog,"Date of Birth:",nn,14,"Age:",1,4,nn)," `r`n")						; DOB
+	chk_Sex := trim(strX(demog,"Sex:",nn,4,"Referring Physician:",1,20,nn)," `r`n")						; Sex
+	chk_Prov := trim(strX(demog,"Referring Physician:",nn,20,"Indications:",1,12,nn)," `r`n")			; Ordering MD
+	chk_Ind := trim(strX(demog,"Indications:",nn,12,"Medications:",1,12,nn)," `r`n")					; Indication
+	chk_Date := trim(strX(demog,"Date Recorded:",nn,14,"Date Processed:",1,15,nn)," `r`n")					; Study date
+	
+	Clipboard := chk_Last ", " chk_First												; fill clipboard with name, so can just paste into CIS search bar
+	if (!(chk_Last~="[a-z]+")															; Check field values to see if proper demographics
+		&& !(chk_First~="[a-z]+") 														; meaning names in ALL CAPS
+		&& (chk_Acct~="\d{8}"))															; and EncNum present
+	{
+		MsgBox, 4132, Valid PDF, % ""
+			. chk_Last ", " chk_First "`n"
+			. "MRN " chk_MRN "`n"
+			. "Acct " chk_Acct "`n"
+			. "Ordering: " chk_Prov "`n"
+			. "Study date: " chk_Date "`n`n"
+			. "Is all the information correct?`n"
+			. "If NO, reacquire demographics."
+		IfMsgBox, Yes																; All tests valid
+		{
+			return																	; Select YES, return to processing Holter
+		} 
+		else 																		; Select NO, reacquire demographics
+		{
+			MsgBox, 4096, Adjust demographics, % chk_Last ", " chk_First "`n   " chk_MRN "`n   " chk_Loc "`n   " chk_Acct "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+		}
+	}
+	else 																			; Not valid PDF, get demographics post hoc
+	{
+		MsgBox, 4096,, % "Validation failed for:`n   " chk_Last ", " chk_First "`n   " chk_MRN "`n   " chk_Loc "`n   " chk_Acct "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+	}
+	; Either invalid PDF or want to correct values
+	ptDem := Object()																; initialize/clear ptDem array
+	ptDem["nameL"] := chk_Last															; Placeholder values for fetchGUI from PDF
+	ptDem["nameF"] := chk_First
+	ptDem["mrn"] := chk_MRN
+	ptDem["DOB"] := chk_DOB
+	ptDem["Sex"] := chk_Sex
+	ptDem["Loc"] := chk_Loc
+	ptDem["Account number"] := chk_Acct													; If want to force click, don't include Acct Num
+	ptDem["Provider"] := trim(RegExReplace(chk_Prov,"i)^Dr\.(\s)?"))
+	ptDem["EncDate"] := chk_Date
+	ptDem["Indication"] := chk_Ind
+	
+	fetchQuit:=false
+	gosub fetchGUI
+	gosub fetchDem
+	/*	When fetchDem successfully completes,
+	 *	replace the fields in demog with newly acquired values
+	 */
+	chk_Name := ptDem["nameL"] ", " ptDem["nameF"] 
+	fldval["name_L"] := ptDem["nameL"]
+	fldval["name_F"] := ptDem["nameF"]
+	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk_Name "   `n")
+	demog := RegExReplace(demog,"i)ID #: (.*) Second ID:","ID #:   " ptDem["mrn"] "                   Second ID:")
+	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
+	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
+	demog := RegExReplace(demog,"i`a)Indications: (.*)\R", "Indications:   " ptDem["Indication"] "`n")	
+	demog := RegExReplace(demog,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
+	demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
+	demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
+	
+	return
 }
 
 columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
@@ -1220,7 +1301,7 @@ formatField(pre, lab, txt) {
 	}
 
 ;	Body Guardian Heart specific fixes
-	if (monType="Body Guardian Heart") {
+	if (monType="BGH") {
 		if (lab="Name") {
 			ptDem["nameL"] := strX(txt," ",0,1,"",0)
 			ptDem["nameF"] := strX(txt,"",1,0," ",1,1)
