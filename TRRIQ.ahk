@@ -1088,17 +1088,17 @@ CheckProcBGH:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
-	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
-	fldval["name_L"] := ptDem["nameL"]
-	fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk.Name "   `n")
-	demog := RegExReplace(demog,"i)ID #: (.*) Second ID:","ID #:   " ptDem["mrn"] "                   Second ID:")
-	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
-	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
-	demog := RegExReplace(demog,"i`a)Indications: (.*)\R", "Indications:   " ptDem["Indication"] "`n")	
-	demog := RegExReplace(demog,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
-	demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
-	demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
+	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
+		fldval["name_L"] := ptDem["nameL"]
+		fldval["name_F"] := ptDem["nameF"]
+	demog := RegExReplace(demog,"i`a)Patient Name: (.*)\R","Patient Name:   " chk.Name "   `n")
+	demog := RegExReplace(demog,"i`a)Patient ID (.*)Physician","Patient ID   " ptDem["mrn"] "`nPhysician")
+	demog := RegExReplace(demog,"i`a)Physician (.*)Gender", "Physician   " ptDem["Provider"] "`nGender")
+	demog := RegExReplace(demog,"i`a)Gender (.*)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
+	demog := RegExReplace(demog,"i`a)Date of Birth (.*)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
+	enroll := RegExReplace(enroll,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
+	;~ demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
+	;~ demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
 	
 	return
 }
