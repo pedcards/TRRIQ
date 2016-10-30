@@ -523,6 +523,7 @@ MainLoop:
 	blk := Object()
 	blk2 := Object()
 	ptDem := Object()
+	chk := Object()
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
@@ -1031,27 +1032,27 @@ strVal(hay,n1,n2,ByRef N:="") {
 
 CheckProcBGH:
 {
-	chk_Name := strVal(demog,"Patient Name","Patient ID")										; Name
-		chk_First := trim(strX(chk_Name,"",1,1," ",1,1)," `r`n")										; NameL				must be [A-Z]
-		chk_Last := trim(strX(chk_Name," ",0,1,"",0)," `r`n")										; NameF				must be [A-Z]
-	chk_MRN := strVal(demog,"Patient ID","Physician")											; MRN
-	chk_Prov := strVal(demog,"Physician","Gender")												; Ordering MD
-	chk_Sex := strVal(demog,"Gender","Date of Birth")											; Sex
-	chk_DOB := strVal(demog,"Date of Birth","Practice")											; DOB
-	chk_Ind := strVal(demog,"Diagnosis",".*")													; Indication
-	chk_Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
+	chk.Name := strVal(demog,"Patient Name","Patient ID")										; Name
+		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")										; NameL				must be [A-Z]
+		chk.Last := trim(strX(chk.Name," ",0,1,"",0)," `r`n")										; NameF				must be [A-Z]
+	chk.MRN := strVal(demog,"Patient ID","Physician")											; MRN
+	chk.Prov := strVal(demog,"Physician","Gender")												; Ordering MD
+	chk.Sex := strVal(demog,"Gender","Date of Birth")											; Sex
+	chk.DOB := strVal(demog,"Date of Birth","Practice")											; DOB
+	chk.Ind := strVal(demog,"Diagnosis",".*")													; Indication
+	chk.Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
 	
-	Clipboard := chk_Last ", " chk_First												; fill clipboard with name, so can just paste into CIS search bar
-	if (!(chk_Last~="[a-z]+")															; Check field values to see if proper demographics
-		&& !(chk_First~="[a-z]+") 														; meaning names in ALL CAPS
-		&& (chk_Acct~="\d{8}"))															; and EncNum present
+	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
+	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
+		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
+		&& (chk.Acct~="\d{8}"))															; and EncNum present
 	{
 		MsgBox, 4132, Valid PDF, % ""
-			. chk_Last ", " chk_First "`n"
-			. "MRN " chk_MRN "`n"
-			. "Acct " chk_Acct "`n"
-			. "Ordering: " chk_Prov "`n"
-			. "Study date: " chk_Date "`n`n"
+			. chk.Last ", " chk.First "`n"
+			. "MRN " chk.MRN "`n"
+			. "Acct " chk.Acct "`n"
+			. "Ordering: " chk.Prov "`n"
+			. "Study date: " chk.Date "`n`n"
 			. "Is all the information correct?`n"
 			. "If NO, reacquire demographics."
 		IfMsgBox, Yes																; All tests valid
@@ -1060,27 +1061,26 @@ CheckProcBGH:
 		} 
 		else 																		; Select NO, reacquire demographics
 		{
-			MsgBox, 4096, Adjust demographics, % chk_Last ", " chk_First "`n   " chk_MRN "`n   " chk_Loc "`n   " chk_Acct "`n`n"
+			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 		}
 	}
 	else 																			; Not valid PDF, get demographics post hoc
 	{
-		MsgBox, 4096,, % "Validation failed for:`n   " chk_Last ", " chk_First "`n   " chk_MRN "`n   " chk_Loc "`n   " chk_Acct "`n`n"
+		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
 	; Either invalid PDF or want to correct values
-	ptDem := Object()																	; initialize/clear ptDem array
-	ptDem["nameL"] := chk_Last															; Placeholder values for fetchGUI from PDF
-	ptDem["nameF"] := chk_First
-	ptDem["mrn"] := chk_MRN
-	ptDem["DOB"] := chk_DOB
-	ptDem["Sex"] := chk_Sex
-	ptDem["Loc"] := chk_Loc
-	ptDem["Account number"] := chk_Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(chk_Prov,"i)^Dr\.(\s)?"))
-	ptDem["EncDate"] := chk_Date
-	ptDem["Indication"] := chk_Ind
+	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
+	ptDem["nameF"] := chk.First
+	ptDem["mrn"] := chk.MRN
+	ptDem["DOB"] := chk.DOB
+	ptDem["Sex"] := chk.Sex
+	ptDem["Loc"] := chk.Loc
+	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
+	ptDem["Provider"] := trim(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"))
+	ptDem["EncDate"] := chk.Date
+	ptDem["Indication"] := chk.Ind
 	
 	fetchQuit:=false
 	gosub fetchGUI
@@ -1088,10 +1088,10 @@ CheckProcBGH:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
-	chk_Name := ptDem["nameL"] ", " ptDem["nameF"] 
+	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
 	fldval["name_L"] := ptDem["nameL"]
 	fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk_Name "   `n")
+	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk.Name "   `n")
 	demog := RegExReplace(demog,"i)ID #: (.*) Second ID:","ID #:   " ptDem["mrn"] "                   Second ID:")
 	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
 	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
