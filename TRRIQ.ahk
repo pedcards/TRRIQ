@@ -818,15 +818,15 @@ CheckProcLW:
 
 CheckProcPR:
 {
-	chk.Name := trim(strX(demog,"Name:",1,5,"ID #:",1,5,nn)," `r`n")					; Name
+	chk.Name := strVal(demog,"Name:","ID #:")												; Name
 		chk.Last := trim(strX(chk.Name,"",1,1,",",1,1)," `r`n")									; NameL				must be [A-Z]
 		chk.First := trim(strX(chk.Name,",",1,1,"",0)," `r`n")									; NameF				must be [A-Z]
-	chk.MRN := trim(strX(demog,"ID #:",nn,5,"Second ID:",1,10,nn)," `r`n")							; MRN
-	chk.DOB := trim(strX(demog,"Date of Birth:",nn,14,"Age:",1,4,nn)," `r`n")						; DOB
-	chk.Sex := trim(strX(demog,"Sex:",nn,4,"Referring Physician:",1,20,nn)," `r`n")						; Sex
-	chk.Prov := trim(strX(demog,"Referring Physician:",nn,20,"Indications:",1,12,nn)," `r`n")			; Ordering MD
-	chk.Ind := trim(strX(demog,"Indications:",nn,12,"Medications:",1,12,nn)," `r`n")					; Indication
-	chk.Date := trim(strX(demog,"Date Recorded:",nn,14,"Date Processed:",1,15,nn)," `r`n")					; Study date
+	chk.MRN := strVal(demog,"ID #:","Second ID:")											; MRN
+	chk.DOB := strVal(demog,"Date of Birth:","Age:")										; DOB
+	chk.Sex := strVal(demog,"Sex:","Referring Physician:")									; Sex
+	chk.Prov := strVal(demog,"Referring Physician:","Indications:")							; Ordering MD
+	chk.Ind := strVal(demog,"Indications:","Medications:")									; Indication
+	chk.Date := strVal(demog,"Date Recorded:","Date Processed:")							; Study date
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
