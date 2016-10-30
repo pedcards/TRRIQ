@@ -1014,17 +1014,32 @@ Event_BGH:
 Return
 }
 
+strVal(hay,n1,n2,ByRef N:="") {
+/*	hay = search haystack
+	n1	= needle1 begin string
+	n2	= needle2 end string
+	N	= return end position
+*/
+	;~ opt := "Oi" ((span) ? "s" : "") ")"
+	opt := "Oi)"
+	RegExMatch(hay,opt n1 ":?(.*)" n2 ":?",res)
+	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
+	N := res.pos()+res.len()-1
+
+	return trim(res[1]," `n")
+}
+
 CheckProcBGH:
 {
-	chk_Name := trim(strX(demog,"Name:",1,5,"ID #:",1,5,nn)," `r`n")					; Name
-		chk_Last := trim(strX(chk_Name,"",1,1,",",1,1)," `r`n")									; NameL				must be [A-Z]
-		chk_First := trim(strX(chk_Name,",",1,1,"",0)," `r`n")									; NameF				must be [A-Z]
-	chk_MRN := trim(strX(demog,"ID #:",nn,5,"Second ID:",1,10,nn)," `r`n")							; MRN
-	chk_DOB := trim(strX(demog,"Date of Birth:",nn,14,"Age:",1,4,nn)," `r`n")						; DOB
-	chk_Sex := trim(strX(demog,"Sex:",nn,4,"Referring Physician:",1,20,nn)," `r`n")						; Sex
-	chk_Prov := trim(strX(demog,"Referring Physician:",nn,20,"Indications:",1,12,nn)," `r`n")			; Ordering MD
-	chk_Ind := trim(strX(demog,"Indications:",nn,12,"Medications:",1,12,nn)," `r`n")					; Indication
-	chk_Date := trim(strX(demog,"Date Recorded:",nn,14,"Date Processed:",1,15,nn)," `r`n")					; Study date
+	chk_Name := strVal(demog,"Patient Name","Patient ID")										; Name
+		chk_First := trim(strX(chk_Name,"",1,1," ",1,1)," `r`n")										; NameL				must be [A-Z]
+		chk_Last := trim(strX(chk_Name," ",0,1,"",0)," `r`n")										; NameF				must be [A-Z]
+	chk_MRN := strVal(demog,"Patient ID","Physician")											; MRN
+	chk_Prov := strVal(demog,"Physician","Gender")												; Ordering MD
+	chk_Sex := strVal(demog,"Gender","Date of Birth")											; Sex
+	chk_DOB := strVal(demog,"Date of Birth","Practice")											; DOB
+	chk_Ind := strVal(demog,"Diagnosis",".*")													; Indication
+	chk_Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
 	
 	Clipboard := chk_Last ", " chk_First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk_Last~="[a-z]+")															; Check field values to see if proper demographics
@@ -1055,7 +1070,7 @@ CheckProcBGH:
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
 	; Either invalid PDF or want to correct values
-	ptDem := Object()																; initialize/clear ptDem array
+	ptDem := Object()																	; initialize/clear ptDem array
 	ptDem["nameL"] := chk_Last															; Placeholder values for fetchGUI from PDF
 	ptDem["nameF"] := chk_First
 	ptDem["mrn"] := chk_MRN
