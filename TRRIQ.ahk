@@ -1015,7 +1015,7 @@ Event_BGH:
 Return
 }
 
-strVal(hay,n1,n2,ByRef N:="") {
+strVal(hay,n1,n2,BO:=1,ByRef N:="") {
 /*	hay = search haystack
 	n1	= needle1 begin string
 	n2	= needle2 end string
@@ -1023,9 +1023,9 @@ strVal(hay,n1,n2,ByRef N:="") {
 */
 	;~ opt := "Oi" ((span) ? "s" : "") ")"
 	opt := "Oi)"
-	RegExMatch(hay,opt n1 ":?(.*)" n2 ":?",res)
+	RegExMatch(hay,opt n1 ":?(.*)" n2 ":?",res,BO)
 	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
-	N := res.pos()+res.len()-1
+	N := res.pos()+res.len(1)
 
 	return trim(res[1]," `n")
 }
@@ -1033,7 +1033,7 @@ strVal(hay,n1,n2,ByRef N:="") {
 CheckProcBGH:
 {
 	chk.Name := strVal(demog,"Patient Name","Patient ID")										; Name
-		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")										; NameL				must be [A-Z]
+		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")									; NameL				must be [A-Z]
 		chk.Last := trim(strX(chk.Name," ",0,1,"",0)," `r`n")										; NameF				must be [A-Z]
 	chk.MRN := strVal(demog,"Patient ID","Physician")											; MRN
 	chk.Prov := strVal(demog,"Physician","Gender")												; Ordering MD
