@@ -637,12 +637,9 @@ Holter_LW:
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
 	
-	;~ MsgBox % demog
+	;~ MsgBox % holtVals
+	;~ Clipboard := holtVals
 	;~ ExitApp
-	
-	;~ if instr(demog,"user field #1") {
-		;~ demog := RegExReplace(demog,"i)user field #\d+")
-	;~ }
 	
 	gosub checkProcLW											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
