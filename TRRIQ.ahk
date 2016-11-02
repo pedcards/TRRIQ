@@ -741,17 +741,17 @@ return
 
 CheckProcLW:
 {
-	chk.Last := trim(strX(demog,"Last Name",1,9,"First Name",1,10,nn)," `r`n")						; NameL				must be [A-Z]
-	chk.First := trim(strX(demog,"First Name",nn,10,"Middle Initial",1,14,nn)," `r`n")				; NameF				must be [A-Z]
-	chk.MRN := trim(strX(demog,"ID Number",nn,9,"Date of Birth",1,13,nn)," `r`n")					; MRN
-	chk.DOB := trim(strX(demog,"Date of Birth",nn,13,"Sex",1,3,nn)," `r`n")							; DOB
-	chk.Sex := trim(strX(demog,"Sex",nn,3,"Source",1,7,nn)," `r`n")									; Sex
-	chk.Loc := trim(strX(demog,"Source",nn,7,"Billing Code",1,12,nn)," `r`n")						; Location			must be in SiteVals
-	chk.Acct := trim(strX(demog,"Billing Code",nn,13,"Recorder Format",1,15,nn)," `r`n")			; Billing code		must be valid number
-	chk.Prov := trim(strX(demog,"Physician",nn,10,"Scanned By",1,10,nn)," `r`n")					; Ordering MD
-	chk.Date := trim(strX(demog,"Test Date",nn,10,"Analysis Date",1,13,nn)," `r`n")					; Study date
+	chk.Last := strVal(demog,"Last Name","First Name")						; NameL				must be [A-Z]
+	chk.First := strVal(demog,"First Name","Middle Initial")				; NameF				must be [A-Z]
+	chk.MRN := strVal(demog,"ID Number","Date of Birth")					; MRN
+	chk.DOB := strVal(demog,"Date of Birth","Sex")							; DOB
+	chk.Sex := strVal(demog,"Sex","Source")									; Sex
+	chk.Loc := strVal(demog,"Source","Billing Code")						; Location			must be in SiteVals
+	chk.Acct := strVal(demog,"Billing Code","Recorder Format")				; Billing code		must be valid number
+	chk.Prov := strVal(demog,"Physician","Scanned By")						; Ordering MD
+	chk.Date := strVal(demog,"Test Date","Analysis Date")					; Study date
 ;	chk.Ind := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
-	chk.Ind := trim(strX(demog,"Reason for Test",nn,16,"`n",1,1,nn)," `r`n")					; Indication
+	chk.Ind := strVal(demog,"Reason for Test","Group")						; Indication
 	
 	Clipboard := chk.Last ", " chk.First														; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
