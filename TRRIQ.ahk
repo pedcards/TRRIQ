@@ -655,7 +655,7 @@ Holter_LW:
 	fields[1] := ["Last Name", "First Name", "Middle Initial", "ID Number", "Date Of Birth", "Sex"
 		, "Source", "Billing Code", "Recorder Format", "Pt\.? Home\s*(Phone)?\s*#?", "Hookup Tech", "Pacemaker\s*Y/N.", "Medications"
 		, "Physician", "Scanned By", "Reading Physician"
-		, "Test Date", "Analysis Date", "Hookup Time", "Recording Time", "Analysis Time", "Reason for Test", "i)(Group)|(user field)"]
+		, "Test Date", "Analysis Date", "Hookup Time", "Recording Time", "Analysis Time", "Reason for Test", "(Group|user field)"]
 	labels[1] := ["Name_L", "Name_F", "Name_M", "MRN", "DOB", "Sex"
 		, "Site", "Billing", "Device_SN", "VOID1", "Hookup_tech", "VOID2", "Meds"
 		, "Ordering", "Scanned_by", "Reading"
@@ -1015,7 +1015,7 @@ Event_BGH:
 Return
 }
 
-strVal(hay,n1,n2,BO:=1,ByRef N:="") {
+strVal(hay,n1,n2,BO:="",ByRef N:="") {
 /*	hay = search haystack
 	n1	= needle1 begin string
 	n2	= needle2 end string
@@ -1023,7 +1023,7 @@ strVal(hay,n1,n2,BO:=1,ByRef N:="") {
 */
 	;~ opt := "Oi" ((span) ? "s" : "") ")"
 	opt := "Oi)"
-	RegExMatch(hay,opt n1 ":?(.*)" n2 ":?",res,BO)
+	RegExMatch(hay,opt . n1 ":?(.*?)" n2 ":?",res,(BO)?BO:1)
 	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
 	N := res.pos()+res.len(1)
 
