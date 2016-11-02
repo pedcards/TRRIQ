@@ -1024,7 +1024,7 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
 	N := res.pos()+res.len(1)
 
-	return trim(res[1]," `n")
+	return trim(res[1]," :`n")
 }
 
 CheckProcBGH:
