@@ -690,10 +690,13 @@ Holter_Pr:
 	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
 	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
 	
-	gosub checkProcPR											; check validity of PDF, make demographics valid if not
-	if (fetchQuit=true) {
-		return													; fetchGUI was quit, so skip processing
-	}
+	;~ clipboard := ectostat
+	;~ ExitApp
+	
+	;~ gosub checkProcPR											; check validity of PDF, make demographics valid if not
+	;~ if (fetchQuit=true) {
+		;~ return													; fetchGUI was quit, so skip processing
+	;~ }
 	
 	/* Holter PDF is valid. OK to process.
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
@@ -718,7 +721,8 @@ Holter_Pr:
 	
 	fields[4] := ["Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "Total","RR Variability"]
 	labels[4] := ["Beats", "Pairs", "Runs", "Fastest", "Longest", "Total","RR_var"]
-	fieldvals(stregX(ectoStat,"Supraventricular Ectopy",1,0,"Ventricular Ectopy",0,nn),4,"sve")
+	;~ fieldvals(stregX(ectoStat,"Supraventricular Ectopy",1,0,"Ventricular Ectopy",0,nn),4,"sve")
+	fieldvals(strVal(ectoStat,"Supraventricular Ectopy","Ventricular Ectopy",,nn),4,"sve")
 	
 	fields[5] := ["Ventricular Ectopy", "Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "R on T", "Total"]
 	labels[5] := ["VOID_VE", "Beats", "Couplets", "Runs", "Fastest", "Longest", "R on T", "Total"]
