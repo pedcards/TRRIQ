@@ -686,17 +686,17 @@ Holter_Pr:
 	monType := "PR"
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
-	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia")
+	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia") "#####"
 	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
 	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
 	
 	;~ clipboard := ectostat
 	;~ ExitApp
 	
-	;~ gosub checkProcPR											; check validity of PDF, make demographics valid if not
-	;~ if (fetchQuit=true) {
-		;~ return													; fetchGUI was quit, so skip processing
-	;~ }
+	gosub checkProcPR											; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
 	
 	/* Holter PDF is valid. OK to process.
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
@@ -714,9 +714,9 @@ Holter_Pr:
 	fieldvals(sumStat,2,"sum")
 	
 	fields[3] := ["Min Rate", "Max Rate", "Mean Rate", "Tachycardia/Bradycardia"
-		, "Longest Tachycardia", "Fastest Tachycardia", "Longest Bradycardia", "Slowest Bradycardia"]
+		, "Longest Tachycardia", "Fastest Tachycardia", "Longest Bradycardia", "Slowest Bradycardia","#####"]
 	labels[3] := ["Min", "Max", "Avg", "VOID_tb"
-		, "Longest_tachy", "Fastest", "Longest_brady", "Slowest"]
+		, "Longest_tachy", "Fastest", "Longest_brady", "Slowest","VOID_br"]
 	fieldvals(rateStat,3,"rate")
 	
 	fields[4] := ["Singles", "Couplets", "Runs", "Total","RR Variability"]
