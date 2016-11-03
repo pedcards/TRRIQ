@@ -719,26 +719,24 @@ Holter_Pr:
 		, "Longest_tachy", "Fastest", "Longest_brady", "Slowest"]
 	fieldvals(rateStat,3,"rate")
 	
-	fields[4] := ["Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "Total","RR Variability"]
-	labels[4] := ["Beats", "Pairs", "Runs", "Fastest", "Longest", "Total","RR_var"]
-	;~ fieldvals(stregX(ectoStat,"Supraventricular Ectopy",1,0,"Ventricular Ectopy",0,nn),4,"sve")
-	fieldvals(strVal(ectoStat,"Supraventricular Ectopy","Ventricular Ectopy",,nn),4,"sve")
-	
-	fields[5] := ["Ventricular Ectopy", "Singles", "Couplets", "Runs", "Fastest Run", "Longest Run", "R on T", "Total"]
-	labels[5] := ["VOID_VE", "Beats", "Couplets", "Runs", "Fastest", "Longest", "R on T", "Total"]
-	fieldvals(strX(ectoStat,"Ventricular Ectopy",1,nn-23,"",0,0),5,"ve")
-	
+	fields[4] := ["Singles", "Couplets", "Runs", "Total","RR Variability"]
+	labels[4] := ["Beats", "Pairs", "Runs", "Total","RR_var"]
+	fieldvals(strVal(ectoStat,"Supraventricular Ectopy","Ventricular Ectopy"),4,"sve")
+
+	fields[5] := ["Singles", "Couplets", "Runs", "R on T", "Total"]
+	labels[5] := ["Beats", "Couplets", "Runs", "R on T", "Total"]
+	fieldvals(strVal(ectoStat "#####","\bVentricular Ectopy","#####"),5,"ve")
+
 	fields[6] := ["Longest RR","\# RR.*3.0 sec"]
 	labels[6] := ["LongRR","Pauses"]
 	fieldvals(pauseStat,6,"sve")
 	
-	tmp := strX(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:",1,13,"",1,0)
+	tmp := strVal(newtxt,"\bCOMMENT:","REVIEWING PHYSICIAN")
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Mortara Holter"""
-	
 	
 return
 }
