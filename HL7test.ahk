@@ -143,7 +143,9 @@ hl7.NTE :=	["num"				; serial num starting with 1
 			,"02"
 			,"note"]			; comment
 
-hl7.MSH.enc := "sdf"
+;~ MsgBox % hl7.msh.2
+;~ hl7.MSH.enc := "sdf"
+;~ ExitApp
 
 FileRead, txt, samples\hl7test.txt
 
@@ -151,8 +153,18 @@ loop, parse, txt, `n, `r
 {
 	seg := A_LoopField
 	StringSplit, fld, seg, |
-	segName := fld0
-	MsgBox % ObjHasKey(hl7segs, segName)
+	loop, % fld0
+	{
+		n := A_Index
+		if (n=1) 
+			continue
+		m := fld%n%
+		i := hl7[fld1][n-1]
+		j := hl7[fld1][i]
+		MsgBox,, % n "-" hl7[fld1][n-1], % m
+	}
+	segName := fld1
+	MsgBox,, % segname, % ObjHasValue(hl7segs, segName)
 }
 
 
@@ -160,9 +172,6 @@ ExitApp
 
 ObjHasValue(aObj, aValue, rx:="") {
 ; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
-	if (rx="med") {
-		med := true
-	}
     for key, val in aObj
 		if (rx) {
 			if (med) {													; if a med regex, preface with "i)" to make case insensitive search
