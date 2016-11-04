@@ -77,6 +77,10 @@ hl7.GT1 := []
 	Guarantor Date – Begin			GT1.13		Not Supported											N
 	Guarantor Date – End			GT1.14		Not Supported											N
 */
+hl7.DG1 := []
+/*	The Diagnosis (DG1) segment contains patient diagnosis information, and is present on ORM messages if associated with the test. It allows identification of multiple diagnosis segments grouped beneath a single OBR segment.
+	Not used in RESULTS section.
+*/
 hl7.ORC := []
 /*	The Common Order (ORC) segment is used to transmit fields that are common to all orders (all types of service that are requested). The ORC segment is required in the ORM message.
 	Segment Type ID					ORC.00		ORC												3		R
@@ -139,7 +143,7 @@ loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore
 		segNum := fld0																	; number of elements from StringSplit
 		segNam := fld1																	; first array element should be NAME
 	if !IsObject(hl7[segNam]) {
-		MsgBox,,% segName, BAD SEGMENT NAME
+		MsgBox,,% segNam, BAD SEGMENT NAME
 		continue																		; skip if segment name not allowed
 	}
 	loop, % segNum
