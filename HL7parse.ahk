@@ -16,6 +16,7 @@ hl7.MSH := []
 	Version ID						MSH.11		2.3												8		R
 */
 hl7.PID := []
+hl7.PID.map := {2:"MRN",5:"Last Name^First Name^MI",7:"DOB",8:"Sex"}
 /*	The Patient Identifier (PID) segment is used by all application as the primary means of communication patient identification information. This segment contains permanent patient identifying and demographic information that, for the most part, is not likely to change frequently.
 	Segment Type ID					PID.00		PID												3		R
 	Sequence Number					PID.01		Serial Number starting from 1					4		R
@@ -33,6 +34,7 @@ hl7.PID := []
 	SSN –Patient					PID.19		NNNNNNNNN										9		O
 */
 hl7.PV1 := []
+hl7.PV1.map := {7:"Attg code^Attg NameL^Attg NameF^Attg NameMI",8:"Ref code^Ref NameL^Ref NameF^Ref NameMI"}
 /*	The PV1 segment is used to communicate information on a visit-specific basis and is not a required segment for the ORU Message.
 	Segment Type ID					PV1.00		PV1												3		R
 	Sequence Number					PV1.01		Serial Number starting from 1					4		R
@@ -82,6 +84,7 @@ hl7.DG1 := []
 	Not used in RESULTS section.
 */
 hl7.ORC := []
+hl7.ORC.map := {9:"Date",12:"Ref code^Ref NameL^Ref NameF^Ref NameMI"}
 /*	The Common Order (ORC) segment is used to transmit fields that are common to all orders (all types of service that are requested). The ORC segment is required in the ORM message.
 	Segment Type ID					ORC.00		ORC												3		R
 	Order Control					ORC.01		To identify new orders							4		N
@@ -91,6 +94,7 @@ hl7.ORC := []
 	Enterer’s Location				ORC.13		Not Supported											N
 */
 hl7.OBR := []
+hl7.OBR.map := {4:"Test code^Test name",7:"date",25:"status"}
 /*	At least on OBR segment is transmitted for each Order Code associated with any PID segment. This segment is mandatory in ORM messages.
 	Segment Type ID					OBR.00		OBR												3		R
 	Sequence No						OBR.01		Serial Number starting from 1					4		R
@@ -109,6 +113,7 @@ hl7.OBR := []
 	Link to Parent Order			OBR.29		Parent Test Code								20		O
 */
 hl7.OBX := []
+hl7.OBX.map := {2:"Obs type",3:"resCode^resName",5:"resValue",6:"resUnits"}
 /*	This is a required segment. It contains the values corresponding to the results.
 	Sequence Number					OBX.01		Serial Number starting from 1					4		R
 	Type Value						OBX.02		CE–Coded entry NM–Num ST–String TX-Text			2		R
@@ -127,6 +132,7 @@ hl7.OBX := []
 	Producer’s ID					OBX.15		CODE											60		O
 */
 hl7.NTE := []
+hl7.NTE.map := {3:"Comment"}
 /*	The Notes and Comments (NTE) segment contains notes and comments for the lab results and it is an optional segment.
 	Segment Type ID					NTE.00		NTE												3		R
 	Sequence Number					NTE.01		Serial Number starting from 1					4		R
@@ -157,7 +163,10 @@ loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore
 		}
 	}
 	if (segName="PID") {
-		hl7sep("PID",1)
+		hl7sep("PID",2)
+	}
+	if (segName="ORC") {
+		hl7sep("ORC",1)
 	}
 	if (segName="OBX") {
 		hl7sep(segName,1)
@@ -168,25 +177,16 @@ ExitApp
 
 hl7sep(seg,fld) {
 	global hl7
-	so := Object()
-	so.PID := []
-		so.PID.2 := "MRN"
-		so.PID.5 := "nameL^nameF^nameMI"
-		so.PID.7 := "DOB"
-		so.PID.8 := "Sex"
-	
 	str := hl7[seg][fld]
-	spl := so[seg][fld]
-	StringSplit, res, str, `^
+	spl := hl7[seg].map[fld]
+	StringSplit, cmp, str, `^
 	StringSplit, val, spl, `^
 	loop, % val0
 	{
-		MsgBox % val%A_Index% "`n" res%A_Index%
-	}
-	if (seg="OBX00") {
-		if (fld=3) {
-			return {"code":res1,"name":res2}
-		}
+		lab := val%A_Index%
+		res := cmp%A_Index%
+		
+		MsgBox % lab "`n" res
 	}
 }
 
