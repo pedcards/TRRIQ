@@ -141,22 +141,54 @@ loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore
 	seg := A_LoopField																	; read next Segment line
 	StringSplit, fld, seg, |															; split on `|` field separator into fld pseudo-array
 		segNum := fld0																	; number of elements from StringSplit
-		segNam := fld1																	; first array element should be NAME
-	if !IsObject(hl7[segNam]) {
-		MsgBox,,% segNam, BAD SEGMENT NAME
+		segName := fld1																	; first array element should be NAME
+	if !IsObject(hl7[segName]) {
+		MsgBox,,% segName, BAD SEGMENT NAME
 		continue																		; skip if segment name not allowed
 	}
 	loop, % segNum
 	{
-		hl7[segNam][A_Index-1] := fld%A_Index%											; start counting at 0
+		hl7[segName][A_Index-1] := fld%A_Index%											; start counting at 0
 	}
-	if (segNam="OBX") {
-		MsgBox % hl7.OBX.3
+	if (segName="MSH") {
+		if !(hl7.MSH.8="ORU^R01") {
+			MsgBox % hl7.MSH.8 "`nWrong message type"
+			break
+		}
+	}
+	if (segName="PID") {
+		hl7sep("PID",1)
+	}
+	if (segName="OBX") {
+		hl7sep(segName,1)
 	}
 }
 
 ExitApp
 
+hl7sep(seg,fld) {
+	global hl7
+	so := Object()
+	so.PID := []
+		so.PID.2 := "MRN"
+		so.PID.5 := "nameL^nameF^nameMI"
+		so.PID.7 := "DOB"
+		so.PID.8 := "Sex"
+	
+	str := hl7[seg][fld]
+	spl := so[seg][fld]
+	StringSplit, res, str, `^
+	StringSplit, val, spl, `^
+	loop, % val0
+	{
+		MsgBox % val%A_Index% "`n" res%A_Index%
+	}
+	if (seg="OBX00") {
+		if (fld=3) {
+			return {"code":res1,"name":res2}
+		}
+	}
+}
 
 ObjHasValue(aObj, aValue, rx:="") {
 ; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
