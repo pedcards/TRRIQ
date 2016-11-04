@@ -10,7 +10,7 @@ hl7.MSH := []
 	Receiving Facility				MSH.05		Receiving Facility								50		R
 	Message Date & Time				MSH.06		Format: YYYYMMDDHHMMSS							12		R
 	Security						MSH.07		Not Supported											N
-	Message Type					MSH.08		ORM^O01													R
+	Message Type					MSH.08		ORU^R01													R
 	Message Control ID				MSH.09		A number that uniquely identifies the message			R
 	Processing ID					MSH.10		P-Production; T-Test							1		R
 	Version ID						MSH.11		2.3												8		R
@@ -25,25 +25,21 @@ hl7.PID := []
 	Patient Name					PID.05		Last 60^First 60^MI 60							180		R
 	Mother’s Maiden Name			PID.06		Not Supported											N
 	Date of Birth					PID.07		YYYYMMDD										8		R
-	Sex								PID.08		Male Female Unknown										R
-	Patient Alias					PID.09		Not Supported											N
-	Race							PID.10		See Appendix A.2										O
-	Patient Address					PID.11		Addr1 60^Addr2 50^City 25^State 10^Zip 12		161		O
+	Sex								PID.08		M-Male F-Female U-Unknown								R
+	Patient Address					PID.11		Addr1^Addr2^City^State^Zip						106		O
 	County Code						PID.12		Not Supported											N
 	Phone # - Home					PID.13		NNNNNNNNNN										10		O
-	Phone # - Business				PID.14		NNNNNNNNNN										10		O
-	Primary Language				PID.15		Not Supported											N
-	Marital Status					PID.16		See Appendix A.3										O
-	Religion						PID.17		Not Supported											N
+	Patient Account Number			PID.18		Client Patient Account Number					20		O
 	SSN –Patient					PID.19		NNNNNNNNN										9		O
 */
 hl7.PV1 := []
-/*	The PV1 segment is used to communicate information on a visit-specific basis
+/*	The PV1 segment is used to communicate information on a visit-specific basis and is not a required segment for the ORU Message.
 	Segment Type ID					PV1.00		PV1												3		R
 	Sequence Number					PV1.01		Serial Number starting from 1					4		R
+	Assigned Patient Location		PV1.03		Account Number											O
 	Attending Doctor				PV1.07		Provider Code 20^LastName 60^FirstName 60^MI 60	200		O
 	Referring Provider				PV1.08		Provider Code 20^LastName 60^FirstName 60^MI 60	200		O
-	Visit Number					PV1.19		Requisition Number								11		O
+	Visit Number					PV1.19		Customer Specific Accessioning					11		O
 */
 hl7.IN1 := []
 /*	The Insurance (IN1) segment contains insurance policy coverage information necessary to produce properly pro-rated and patient and insurance bills. This segment is applicable only to the outbound order for insurance billing.
@@ -84,10 +80,10 @@ hl7.GT1 := []
 hl7.ORC := []
 /*	The Common Order (ORC) segment is used to transmit fields that are common to all orders (all types of service that are requested). The ORC segment is required in the ORM message.
 	Segment Type ID					ORC.00		ORC												3		R
-	Order Control					ORC.01		To identify new orders							4		R
+	Order Control					ORC.01		To identify new orders							4		N
 	Place Order Number				ORC.02		Requisition Number								11		R
-	Date/Time of Transaction		ORC.09		YYYYMMDDHHMMSS									14		R
-	Ordering Provider				ORC.12		Provider code 20^LastName 60^FirstName 60^MI 60	200		O
+	Date/Time of Transaction		ORC.09		YYYYMMDDHHMMSS									14		O
+	Ordering Provider				ORC.12		Provider code 20^LastName 60^FirstName 60^MI 60	200		R
 	Enterer’s Location				ORC.13		Not Supported											N
 */
 hl7.OBR := []
@@ -97,33 +93,37 @@ hl7.OBR := []
 	Placer Order Number				OBR.02		Requisition Number								25		R
 	Filler Order Number				OBR.03		Not Supported											N
 	Obs Battery Identifier			OBR.04		Code 20^TestName 255							275		R
-	Obs Collection Date/Time #		OBR.07		YYYYMMDDHHMMSS									14		R
+	Obs Collection Date/Time #		OBR.07		YYYYMMDDHHMMSS									26		R
 	Specimen Source					OBR.15		Specimen Source 30^Specimen Description 255		285		O
 	Ordering Provider				OBR.16		Provider Code 20^LastName 60^FirstName 60^MI 60	200		R
-	Alternate Specimen ID			OBR.18		Customer Specific ID							40		O
-	Fasting							OBR.19		0–Non Fasting, 1–Fasting						1		O
-	Priority/Stat					OBR.27		0–Regular, 1–Stat								1		O
-	CC copies to					OBR.28		CC List ~ separated
-												Provider Code 20^LastName 60^FirstName 60^MI 60	200+	O
+	Alternate Specimen ID			OBR.18		Alternate Customer Specific ID					20		O
+	Performing Lab					OBR.23		labName^labAddr1^labAddr2^labAddrCity^			235		O
+												labAddrState^labAddrZip^labPhone^
+												labDirTitle^labDirName
+	Result Status					OBR.25		P–Preliminary F–Final C–Corrected				1		O
+	Courtesy Copies to				OBR.28		Provider Code^LastName ^FirstName				140		O
+	Link to Parent Order			OBR.29		Parent Test Code								20		O
 */
 hl7.OBX := []
-/*	This segment is optional. Ask at Order Entry Questions in the order are typically captured as OBX segments.
-	Segment Type ID					OBX.00		OBX												3		R
+/*	This is a required segment. It contains the values corresponding to the results.
 	Sequence Number					OBX.01		Serial Number starting from 1					4		R
-	Type Value						OBX.02		ST – Standard Text								2		R
-	Observation Identifier			OBX.03		Question code 20^Question 50					70		R
-	Answer							OBX.05		Answer 50^Answer Code (Optional and for Drop down only) 20	70	R
-*/
-hl7.DG1 := []
-/*	The Diagnosis (DG1) segment contains patient diagnosis information, and is present on ORM messages if associated with the test. It allows identification of multiple diagnosis segments grouped beneath a single OBR segment.
-	Segment Type ID					DG1.00		DG1												3		R
-	Sequence Number					DG1.01		Serial Number starting from 1					4		R
-	Diagnosis Coding Method			DG1.02		Not Supported											N
-	Diagnosis Code					DG1.03		Diagnosis Code									60		R
-	Diagnosis Name					DG1.04		Diagnosis description							60		R
+	Type Value						OBX.02		CE–Coded entry NM–Num ST–String TX-Text			2		R
+	Observation Identifier			OBX.03		Result code 20^Result Name 255					275		R
+	Observation Sub-ID				OBX.04		Not Supported											N
+	Observation Value				OBX.05		Observation Value								200		R
+	Units							OBX.06		Units											15		R
+	References Range				OBX.07		Reference Range									40		R
+	Abnormal Flags					OBX.08		L–Low H–High LL–Alert low HH–Alert high			2		R
+	Probability						OBX.09		Not Supported											N
+	Nature of Abnormal Test			OBX.10		Not Supported											N
+	Observation Result Status		OBX.11		P–Prelim F–Final								1		O
+	Date Last Normal				OBX.12		Not Supported											N
+	User Defined Access Checks		OBX.13		Not Supported											N
+	Date/Time of the Observation	OBX.14														26		O
+	Producer’s ID					OBX.15		CODE											60		O
 */
 hl7.NTE := []
-/*	The Notes and Comments (NTE) segment contains notes and comments for ORM messages, and is optional.
+/*	The Notes and Comments (NTE) segment contains notes and comments for the lab results and it is an optional segment.
 	Segment Type ID					NTE.00		NTE												3		R
 	Sequence Number					NTE.01		Serial Number starting from 1					4		R
 	Source and Comment				NTE.02		Not Supported											N
@@ -146,11 +146,13 @@ loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore
 	{
 		hl7[segNam][A_Index-1] := fld%A_Index%											; start counting at 0
 	}
+	if (segNam="OBX") {
+		MsgBox % hl7.OBX.3
+	}
 }
 
-MsgBox % hl7.msh.06
-
 ExitApp
+
 
 ObjHasValue(aObj, aValue, rx:="") {
 ; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
