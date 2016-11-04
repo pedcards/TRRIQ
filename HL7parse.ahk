@@ -1,4 +1,3 @@
-hl7segs := ["MSH","PID","PV1","IN1","GT1","ORC","OBR","DG1","OBX","NTE"]
 hl7 := Object()
 hl7.MSH := []
 /*	The Message Header (MSH) segment defines the intent, source, destination, and some specifics of the syntax of a message.
@@ -131,12 +130,6 @@ hl7.NTE := []
 	Comment							NTE.03		Comment											255		R
 */
 	
-;~ hl7.MSH[2] := "sdf"
-;~ fld := "MSH"
-;~ MsgBox % hl7[fld].2
-;~ ;MsgBox % IsObject(hl7[fld])
-;~ ExitApp
-
 FileRead, txt, samples\hl7test.txt
 
 loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore `r for Unix files
@@ -146,18 +139,16 @@ loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore
 		segNum := fld0																	; number of elements from StringSplit
 		segNam := fld1																	; first array element should be NAME
 	if !IsObject(hl7[segNam]) {
-		MsgBox BAD SEGMENT NAME
+		MsgBox,,% segName, BAD SEGMENT NAME
 		continue																		; skip if segment name not allowed
 	}
 	loop, % segNum
 	{
-		n := A_Index																	; start counting at 0
-		hl7[segNam][n-1] := fld%n%
-		;~ MsgBox,, % n-1, % hl7[segNam][n-1]
+		hl7[segNam][A_Index-1] := fld%A_Index%											; start counting at 0
 	}
 }
 
-MsgBox % hl7.msh.1
+MsgBox % hl7.msh.06
 
 ExitApp
 
