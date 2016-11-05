@@ -162,7 +162,7 @@ loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore
 			break
 		}
 	}
-	if (segName="OBX") {
+	if (segName="OBX") {																; need to process each OBX in turn during loop
 		hl7sep("OBX",3)
 	}
 }
@@ -171,20 +171,21 @@ ExitApp
 
 hl7sep(seg,fld) {
 	global hl7
-	str := hl7[seg][fld]
-	spl := hl7[seg].map[fld]
-	StringSplit, cmp, str, `^
-	StringSplit, val, spl, `^
-	if (seg="OBX" && fld=3) {
-		lab := cmp1
-		res := hl7.OBX.5 " " hl7.OBX.6
+	str := hl7[seg][fld]																; Field string to separate
+	map := hl7[seg].map[fld]															; Equivalent map to separate
+	StringSplit, cmp, str, `^															; Split string into components
+	StringSplit, val, map, `^															; Split map into text values
+	
+	if (seg="OBX" && fld=3) {															; need to special process OBX[3], test result strings
+		lab := cmp1																		; label is actually the component
+		res := hl7.OBX.5 " " hl7.OBX.6													; [5] value and [6] units
 		MsgBox % lab ": " res
 		return
 	}
-	loop, % val0
+	loop, % val0																		; perform as long as map string exists
 	{
-		lab := val%A_Index%
-		res := cmp%A_Index%
+		lab := val%A_Index%																; generate label and value pairs
+		res := cmp%A_Index%																; for each component, single or multiple
 		
 		MsgBox % lab "`n" res
 	}
