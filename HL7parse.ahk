@@ -162,14 +162,8 @@ loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore
 			break
 		}
 	}
-	if (segName="PID") {
-		hl7sep("PID",2)
-	}
-	if (segName="ORC") {
-		hl7sep("ORC",1)
-	}
 	if (segName="OBX") {
-		hl7sep(segName,1)
+		hl7sep("OBX",3)
 	}
 }
 
@@ -181,6 +175,12 @@ hl7sep(seg,fld) {
 	spl := hl7[seg].map[fld]
 	StringSplit, cmp, str, `^
 	StringSplit, val, spl, `^
+	if (seg="OBX" && fld=3) {
+		lab := cmp1
+		res := hl7.OBX.5 " " hl7.OBX.6
+		MsgBox % lab ": " res
+		return
+	}
 	loop, % val0
 	{
 		lab := val%A_Index%
