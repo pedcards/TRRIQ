@@ -105,8 +105,8 @@ if (instr(phase,"PDF")) {
 		fileNam := RegExReplace(A_LoopFileName,"i)\.pdf")				; fileNam is name only without extension, no path
 		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
-		if (substr(fileDt,-5)="000000") {								; skip files with creation TIME midnight (already processed)
-			continue
+		if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0200 (already processed)
+			continue													; should be more resistant to DST. +0100 or -0100 will still be < 4
 		}
 		gosub MainLoop													; process the PDF
 		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
@@ -527,7 +527,7 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
-	if (instr(newtxt,"Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in maintxt
+	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in maintxt
 		gosub Holter_LW
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {
 		gosub Holter_Pr
@@ -556,7 +556,7 @@ MainLoop:
 	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv										; create a new CSV
 	FileCopy, %importFld%%fileNameOut%.csv, .\tempfiles\*.*, 1								; create a copy of CSV in tempfiles
 	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1										; move the PDF to holterDir
-	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD, %holterDir%%filenameOut%.pdf, C	; set the time of PDF in holterDir to 000000 (processed)
+	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000", %holterDir%%filenameOut%.pdf, C	; set the time of PDF in holterDir to 020000 (processed)
 Return
 }
 
