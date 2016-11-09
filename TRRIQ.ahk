@@ -527,7 +527,7 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
-	if (instr(newtxt,"Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in maintxt
+	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in maintxt
 		gosub Holter_LW
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {
 		gosub Holter_Pr
