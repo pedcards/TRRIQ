@@ -527,7 +527,7 @@ MainLoop:
 	fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
-	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in maintxt
+	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
 		gosub Holter_LW
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {
 		gosub Holter_Pr
@@ -555,7 +555,6 @@ MainLoop:
 	FileDelete, %importFld%%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv										; create a new CSV
 	FileCopy, %importFld%%fileNameOut%.csv, .\tempfiles\*.*, 1								; create a copy of CSV in tempfiles
-	FileCopy, tempfile.txt, .\tempfiles\%filenam%.txt,1
 	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1										; move the PDF to holterDir
 	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000", %holterDir%%filenameOut%.pdf, C	; set the time of PDF in holterDir to 020000 (processed)
 Return
@@ -956,7 +955,7 @@ Event_LW:
 		,"Monitor Type:","Diag:","Delivery Code:","Enrollment Period:","Date"
 		,"SYMPTOMS:","ACTIVITY:","FINDINGS:","COMMENTS:","EVENT RECORDER DATA:"]
 	n:=0
-	Loop, parse, maintxt, `n,`r
+	Loop, parse, newtxt, `n,`r
 	{
 		i:=A_LoopField
 		if !(i)													; skip entirely blank lines
