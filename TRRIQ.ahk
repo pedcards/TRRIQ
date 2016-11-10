@@ -141,7 +141,7 @@ FetchDem:
 					} else {
 						tmpPrv :=
 					}
-					if (ptDem.Provider) {												; Provider already exists
+					if ((ptDem.Provider) && (tmpPrv)) {												; Provider already exists
 						MsgBox, 4148
 							, Provider already exists
 							, % "Replace " ptDem.Provider "`n with `n" tmpPrv "?"
@@ -149,8 +149,8 @@ FetchDem:
 						{
 							ptDem.Provider := tmpPrv
 						}
-					} else {															; Otherwise populate ptDem.Provider
-						ptDem.Provider := tmpPrv
+					} else if (tmpPrv) {												; Otherwise populate ptDem.Provider if tmpPrv exists
+						ptDem.Provider := tmpPrv										; but leave ptDem.Provider alone if tmpPrv null
 					}
 					mdX[4] := mouseXpos													; demographics grid[4,1]
 					mdY[1] := mouseYpos
