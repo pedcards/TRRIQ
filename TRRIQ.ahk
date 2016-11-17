@@ -741,19 +741,36 @@ Holter_Pr:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Mortara Holter"""
 	
+	ShortenPDF("i)60\s+sec/line")
+
 return
 }
 
-shortenPDF:
-{
-	RunWait, pdftotext.exe "%fileIn%" tempfull.txt					; convert PDF all pages to txt file
+shortenPDF(find) {
+	global fileIn, winCons
+	sleep 500
+	ConsWin := WinExist("ahk_pid " winCons)								; get window ID
+
+	loop, 100
+	{
+		FileGetSize, fullsize, tempfull.txt
+		IfWinNotExist ahk_id %consWin% 
+		{
+			break
+		}
+		Progress, % A_index,% fullsize,Scanning full size PDF...%winCons%,%consWin%
+		
+		sleep 120
+	}
+	progress,100,fullsize, Shrinking PDF...
 	FileRead, fulltxt, tempfull.txt
-	_60sec := RegExMatch(fulltxt,"i)60\s+sec/line")
-	pgpos := instr(fulltxt,"Page ",,_60sec-strlen(fulltxt))
+	filedelete, tempfull.txt
+	findpos := RegExMatch(fulltxt,find)
+	pgpos := instr(fulltxt,"Page ",,findpos-strlen(fulltxt))
 	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
 	pgpos := pgs.value(1)
-	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%sh.pdf"
-	ExitApp
+	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%sh.pdf",,min
+	progress, off
 return	
 }
 
