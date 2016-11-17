@@ -177,6 +177,7 @@ FetchDem:
 					/*	possible to just divide the window width into 6 columns
 						rather than dividing the space into delta X ?
 					*/
+					Gui, fetch:hide
 					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2]).value						; grab remaining demographic values
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2]).value
 					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]).value,1,1)
@@ -198,6 +199,7 @@ FetchDem:
 					}
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
+					Gui, fetch:show
 				}
 				;~ if !(clk.field~="(Provider|Account Number)") {							; all other values
 					;~ ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
