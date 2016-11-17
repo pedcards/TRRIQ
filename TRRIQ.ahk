@@ -19,6 +19,8 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%
 SetTitleMatchMode, 2
 FileInstall, pdftotext.exe, pdftotext.exe
+FileInstall, pdftk.exe, pdftk.exe
+FileInstall, libiconv2.dll, libiconv2.dll
 
 SplitPath, A_ScriptDir,,fileDir
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
@@ -175,6 +177,7 @@ FetchDem:
 					/*	possible to just divide the window width into 6 columns
 						rather than dividing the space into delta X ?
 					*/
+					Gui, fetch:hide
 					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2]).value						; grab remaining demographic values
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2]).value
 					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]).value,1,1)
@@ -196,6 +199,7 @@ FetchDem:
 					}
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
+					Gui, fetch:show
 				}
 				;~ if !(clk.field~="(Provider|Account Number)") {							; all other values
 					;~ ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
@@ -502,7 +506,7 @@ MainLoop:
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
  */
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt					; convert PDF to txt file
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt					; convert PDF pages 1-2 to txt file
 	newTxt:=""																		; clear the full txt variable
 	FileRead, maintxt, temp.txt														; load into maintxt
 	Loop, parse, maintxt, `n,`r														; clean up maintxt
@@ -556,7 +560,9 @@ MainLoop:
 	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv										; create a new CSV
 	FileCopy, %importFld%%fileNameOut%.csv, .\tempfiles\*.*, 1								; create a copy of CSV in tempfiles
 	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1										; move the PDF to holterDir
+	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
 	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000", %holterDir%%filenameOut%.pdf, C	; set the time of PDF in holterDir to 020000 (processed)
+	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000", %holterDir%%filenameOut%-short.pdf, C
 Return
 }
 
@@ -684,14 +690,13 @@ return
 Holter_Pr:
 {
 	monType := "PR"
+	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
+	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
 	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia") "#####"
 	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
 	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
-	
-	;~ clipboard := ectostat
-	;~ ExitApp
 	
 	gosub checkProcPR											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -738,7 +743,37 @@ Holter_Pr:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Mortara Holter"""
 	
+	ShortenPDF("i)60\s+sec/line")
+
 return
+}
+
+shortenPDF(find) {
+	global fileIn, winCons
+	sleep 500
+	ConsWin := WinExist("ahk_pid " winCons)								; get window ID
+
+	loop, 100
+	{
+		FileGetSize, fullsize, tempfull.txt
+		IfWinNotExist ahk_id %consWin% 
+		{
+			break
+		}
+		Progress, % A_index,% fullsize,Scanning full size PDF...%winCons%,%consWin%
+		
+		sleep 120
+	}
+	progress,100,fullsize, Shrinking PDF...
+	FileRead, fulltxt, tempfull.txt
+	filedelete, tempfull.txt
+	findpos := RegExMatch(fulltxt,find)
+	pgpos := instr(fulltxt,"Page ",,findpos-strlen(fulltxt))
+	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
+	pgpos := pgs.value(1)
+	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%sh.pdf",,min
+	progress, off
+return	
 }
 
 CheckProcLW:
@@ -792,7 +827,7 @@ CheckProcLW:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"))
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
