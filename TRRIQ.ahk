@@ -502,7 +502,7 @@ MainLoop:
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
  */
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt					; convert PDF to txt file
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt					; convert PDF pages 1-2 to txt file
 	newTxt:=""																		; clear the full txt variable
 	FileRead, maintxt, temp.txt														; load into maintxt
 	Loop, parse, maintxt, `n,`r														; clean up maintxt
@@ -684,6 +684,8 @@ return
 Holter_Pr:
 {
 	monType := "PR"
+gosub ShortenPDF
+ExitApp
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
 	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia") "#####"
@@ -739,6 +741,19 @@ Holter_Pr:
 	fileOut2 .= ",""Mortara Holter"""
 	
 return
+}
+
+shortenPDF:
+{
+	RunWait, pdftotext.exe "%fileIn%" tempfull.txt					; convert PDF all pages to txt file
+	FileRead, fulltxt, tempfull.txt
+	_60sec := RegExMatch(fulltxt,"i)60\s+sec/line")
+	pgpos := instr(fulltxt,"Page ",,_60sec-strlen(fulltxt))
+	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
+	pgpos := pgs.value(1)
+	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%sh.pdf"
+	ExitApp
+return	
 }
 
 CheckProcLW:
