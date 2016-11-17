@@ -688,16 +688,13 @@ return
 Holter_Pr:
 {
 	monType := "PR"
-gosub ShortenPDF
-ExitApp
+	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
+	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
 	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia") "#####"
 	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
 	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
-	
-	;~ clipboard := ectostat
-	;~ ExitApp
 	
 	gosub checkProcPR											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
