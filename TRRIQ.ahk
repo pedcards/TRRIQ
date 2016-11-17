@@ -19,6 +19,8 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%
 SetTitleMatchMode, 2
 FileInstall, pdftotext.exe, pdftotext.exe
+FileInstall, pdftk.exe, pdftk.exe
+FileInstall, libiconv2.dll, libiconv2.dll
 
 SplitPath, A_ScriptDir,,fileDir
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
