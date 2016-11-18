@@ -727,13 +727,23 @@ Holter_Pr:
 		, "Longest_tachy", "Fastest", "Longest_brady", "Slowest","VOID_br"]
 	fieldvals(rateStat,3,"rate")
 	
+	SveStat := strVal(ectoStat,"Supraventricular Ectopy","Ventricular Ectopy")
 	fields[4] := ["Singles", "Couplets", "Runs", "Total","RR Variability"]
 	labels[4] := ["Beats", "Pairs", "Runs", "Total","RR_var"]
-	fieldvals(strVal(ectoStat,"Supraventricular Ectopy","Ventricular Ectopy"),4,"sve")
-
+	if (SveStat~="i)Fastest.*Longest") {
+		fields[4].Insert(4,"Fastest Run","Longest Run")
+		labels[4].Insert(4,"Fastest","Longest")
+	}
+	fieldvals(SveStat,4,"sve")
+	
+	VeStat := strVal(ectoStat "#####","\bVentricular Ectopy","#####")
 	fields[5] := ["Singles", "Couplets", "Runs", "R on T", "Total"]
 	labels[5] := ["Beats", "Couplets", "Runs", "R on T", "Total"]
-	fieldvals(strVal(ectoStat "#####","\bVentricular Ectopy","#####"),5,"ve")
+	if (VeStat~="i)Fastest.*Longest") {
+		fields[5].Insert(4,"Fastest Run","Longest Run")
+		labels[5].Insert(4,"Fastest","Longest")
+	}
+	fieldvals(VeStat,5,"ve")
 
 	fields[6] := ["Longest RR","\# RR.*3.0 sec"]
 	labels[6] := ["LongRR","Pauses"]
