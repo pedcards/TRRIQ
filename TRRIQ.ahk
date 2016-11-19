@@ -25,6 +25,9 @@ FileInstall, libiconv2.dll, libiconv2.dll
 SplitPath, A_ScriptDir,,fileDir
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
+	chip := httpComm("full")
+	FileDelete, .\Chipotle\currlist.xml
+	FileAppend, % chip, .\Chipotle\currlist.xml
 	isAdmin := true
 	holterDir := ".\Holter PDFs\"
 	importFld := ".\Import\"
