@@ -1464,6 +1464,21 @@ checkCrd(x) {
 	return {"fuzz":fuzz,"best":best,"group":group}
 }
 
+httpComm(verb) {
+	; consider two parameters?
+	;~ global servFold
+	servfold := "patlist"
+	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr
+		whr.Open("GET"															; set the http verb to GET file "change"
+			, "https://depts.washington.edu/pedcards/change/direct.php?" 
+				. ((servFold="testlist") ? "test=true&" : "") 
+				. "do=" . verb
+			, true)
+		whr.Send()																; SEND the command to the address
+		whr.WaitForResponse()	
+	return whr.ResponseText													; the http response
+}
+
 cleancolon(ByRef txt) {
 	if substr(txt,1,1)=":" {
 		txt:=substr(txt,2)
