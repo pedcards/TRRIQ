@@ -693,6 +693,16 @@ return
 Holter_Pr:
 {
 	monType := "PR"
+	lwfields := ["dem-Name_L", "dem-Name_F", "dem-Name_M", "dem-MRN", "dem-DOB", "dem-Sex", "dem-Site", "dem-Billing", "dem-Device_SN"
+				, "dem-VOID1", "dem-Hookup_tech", "dem-VOID2", "dem-Meds", "dem-Ordering", "dem-Ordering_grp", "dem-Ordering_eml"
+				, "dem-Scanned_by", "dem-Reading", "dem-Test_date", "dem-Scan_date", "dem-Hookup_time", "dem-Recording_time", "dem-Analysis_time"
+				, "dem-Indication", "dem-VOID3", "hrd-Total_beats", "hrd-Min", "hrd-Min_time", "hrd-Avg", "hrd-Max", "hrd-Max_time", "hrd-HRV"
+				, "ve-Total", "ve-Total_per", "ve-Runs", "ve-Beats", "ve-Longest", "ve-Longest_time", "ve-Fastest", "ve-Fastest_time", "ve-Triplets"
+				, "ve-Couplets", "ve-SinglePVC", "ve-InterpPVC", "ve-R_on_T", "ve-SingleVE", "ve-LateVE", "ve-Bigem", "ve-Trigem", "ve-SVE"
+				, "sve-Total", "sve-Total_per", "sve-Runs", "sve-Beats", "sve-Longest", "sve-Longest_time", "sve-Fastest", "sve-Fastest_time"
+				, "sve-Pairs", "sve-Drop", "sve-Late", "sve-LongRR", "sve-LongRR_time", "sve-Single", "sve-Bigem", "sve-Trigem", "sve-AF"
+				, "INTERP", "Mon_type", "EP_read", "EP_date", "MA"]
+	
 	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
 	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
