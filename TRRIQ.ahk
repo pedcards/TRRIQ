@@ -766,9 +766,16 @@ Holter_Pr:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Mortara Holter"""
 	
+	LWify()
 	ShortenPDF("i)60\s+sec/line")
 
 return
+}
+
+LWify() {
+	global fileout1, fileout2
+	
+return	
 }
 
 shortenPDF(find) {
