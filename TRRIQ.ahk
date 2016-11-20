@@ -722,14 +722,14 @@ Holter_Pr:
 	fieldvals(demog,1,"dem")
 	
 	fields[2] := ["Total QRS", "Recording Duration", "Analyzed Data"]
-	labels[2] := ["Total_beats", "Recording_time", "Analysis_time"]
-	fieldvals(sumStat,2,"sum")
+	labels[2] := ["Total_beats", "dem:Recording_time", "dem:Analysis_time"]
+	fieldvals(sumStat,2,"hrd")
 	
 	fields[3] := ["Min Rate", "Max Rate", "Mean Rate", "Tachycardia/Bradycardia"
 		, "Longest Tachycardia", "Fastest Tachycardia", "Longest Bradycardia", "Slowest Bradycardia","#####"]
 	labels[3] := ["Min", "Max", "Avg", "VOID_tb"
 		, "Longest_tachy", "Fastest", "Longest_brady", "Slowest","VOID_br"]
-	fieldvals(rateStat,3,"rate")
+	fieldvals(rateStat,3,"hrd")
 	
 	SveStat := strVal(ectoStat,"Supraventricular Ectopy","Ventricular Ectopy")
 	fields[4] := ["Singles", "Couplets", "Runs", "Total","RR Variability"]
@@ -789,9 +789,27 @@ LWify() {
 	}
 	loop, Parse, fileOut2, CSV
 	{
-		field[A_Index] := A_LoopField
-		MsgBox % field[A_index] "=" A_LoopField
+		field[field[A_Index]] := A_LoopField
 	}
+	for val in field
+	{
+		lwFields[val] := field[val]
+		;~ MsgBox,,% key, % val "`n" field[val] "`n`n"
+			;~ . "LW`n"
+			;~ . lwfields[val]
+	}
+	lwOut1 :=
+	lwOut2 :=
+	for key,fld in lwFields
+	{
+		val := lwFields[fld]
+		;~ MsgBox % "FLD: " fld "`n"
+			;~ . "VAL: " val
+		lwOut1 .= fld ", "
+		lwOut2 .= val ", "
+	}
+	fileOut1 := lwOut1
+	fileOut2 := lwOut2
 return	
 }
 
@@ -1249,16 +1267,20 @@ fieldvals(x,bl,bl2) {
 	
 	for k, i in fields[bl]
 	{
+		pre := bl2
 		j := fields[bl][k+1]
 		m := (j) ?	strVal(x,i,j,n,n)			;trim(stRegX(x,i,n,1,j,1,n), " `n")
 				:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")
 		lbl := labels[bl][A_index]
-;		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
+		if (lbl~="^\w{3}:") {											; has prefix e.g. "dem:"
+			pre := substr(lbl,1,3)
+			lbl := substr(lbl,5)
+		}
 		cleanSpace(m)
 		cleanColon(m)
 		fldval[lbl] := m
-;		MsgBox,, % bl2 " - " lbl, % m
-		formatField(bl2,lbl,m)
+		
+		formatField(pre,lbl,m)
 	}
 }
 
