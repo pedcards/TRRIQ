@@ -753,14 +753,14 @@ Holter_Pr:
 	labels[6] := ["LongRR","Pauses"]
 	fieldvals(pauseStat,6,"sve")
 	
-	tmp := strVal(newtxt,"\bCOMMENT:","REVIEWING PHYSICIAN")
+	LWify()
+	tmp := strVal(newtxt,"COMMENT:","REVIEWING PHYSICIAN")
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Mortara Holter"""
 	
-	LWify()
 	ShortenPDF("i)60\s+sec/line")
 
 return
