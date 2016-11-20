@@ -812,8 +812,8 @@ LWify() {
 	{
 		fld := A_LoopField
 		val := lwFields[fld]
-		lwOut1 .= """" fld """, "
-		lwOut2 .= """" val """, "
+		lwOut1 .= """" fld ""","
+		lwOut2 .= """" val ""","
 	}
 	fileOut1 := lwOut1
 	fileOut2 := lwOut2
