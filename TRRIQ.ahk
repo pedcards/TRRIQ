@@ -705,21 +705,24 @@ Holter_Pr:
 	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
 	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
 	
+	;~ MsgBox % demog
 	gosub checkProcPR											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
 	}
+	MsgBox,,AFTER, % demog
 	
 	/* Holter PDF is valid. OK to process.
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	fields[1] := ["Name", "ID #", "Second ID", "Date Of Birth", "Age", "Sex"
 		, "Referring Physician", "Indications", "Medications", "Analyst", "Hookup Tech"
-		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No"]
+		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No", "Location", "Acct num"]
 	labels[1] := ["Name", "MRN", "VOID_ID", "DOB", "VOID_Age", "Sex"
 		, "Ordering", "Indication", "Meds", "Scanned_by", "Hookup_tech"
-		, "Test_date", "Scan_date", "Scan_num", "Recorder", "Recorder_num"]
+		, "Test_date", "Scan_date", "Scan_num", "Recorder", "Device_SN", "Site", "Billing"]
 	fieldvals(demog,1,"dem")
+	MsgBox % fileOut1 "`n" fileOut2
 	
 	fields[2] := ["Total QRS", "Recording Duration", "Analyzed Data"]
 	labels[2] := ["Total_beats", "dem:Recording_time", "dem:Analysis_time"]
@@ -992,6 +995,8 @@ CheckProcPR:
 	demog := RegExReplace(demog,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
 	demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
 	demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
+	demog .= "   Location:    " ptDem["Loc"] "`n"
+	demog .= "   Acct Num:    " ptDem["Account number"] "`n"
 	
 	return
 }
