@@ -187,6 +187,7 @@ FetchDem:
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
 					ptDem["Type"] := tmp.value
 					ptDem["EncDate"] := tmp.date										; and date
+					ptDem["Hookup time"] := tmp.time
 					
 					if (ptDem.Type="Outpatient") {
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2]).value			; most outpatient locations are short strings, click the right half of cell to grab location name
@@ -226,23 +227,25 @@ mouseGrab(x,y) {
 	sleep 100
 	ClipWait																			; sometimes there is delay for clipboard to populate
 	clk := parseClip(clipboard)															; get available values out of clipboard
-	return {"field":clk.field, "value":clk.value, "date":clk.date}							; Redundant? since this is what parseClip() returns
+	return {"field":clk.field, "value":clk.value, "date":clk.date, "time":clk.time}	; Redundant? since this is what parseClip() returns
 }
 
 parseClip(clip) {
 	global demVals
 	StringSplit, val, clip, :															; break field into val1:val2
-	dt := strX(clip," [",1,2, " ",1,1)													; get date
+	dt := strX(clip," [",1,2, "]",1,1)													; get date
 	dd := parseDate(dt).YYYY . parseDate(dt).MM . parseDate(dt).DD
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
 		return {"field":val1
 				, "value":val2
-				, "date":dt}
+				, "date":dt
+				, "time":parseDate(dt).time}
 	}
 	if (clip~="Outpatient\s\[") {														; Outpatient type
 		return {"field":"Type"
 				, "value":"Outpatient"
-				, "date":dt}
+				, "date":dt
+				, "time":parseDate(dt).time}
 	}
 	if (clip~="Inpatient\s\[") {														; Inpatient types
 		return {"field":"Type"
@@ -705,24 +708,21 @@ Holter_Pr:
 	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
 	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
 	
-	;~ MsgBox % demog
 	gosub checkProcPR											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
 	}
-	MsgBox,,AFTER, % demog
 	
 	/* Holter PDF is valid. OK to process.
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	fields[1] := ["Name", "ID #", "Second ID", "Date Of Birth", "Age", "Sex"
 		, "Referring Physician", "Indications", "Medications", "Analyst", "Hookup Tech"
-		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No", "Location", "Acct num"]
+		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No", "Hookup time", "Location", "Acct num"]
 	labels[1] := ["Name", "MRN", "VOID_ID", "DOB", "VOID_Age", "Sex"
 		, "Ordering", "Indication", "Meds", "Scanned_by", "Hookup_tech"
-		, "Test_date", "Scan_date", "Scan_num", "Recorder", "Device_SN", "Site", "Billing"]
+		, "Test_date", "Scan_date", "Scan_num", "Recorder", "Device_SN", "Hookup_time", "Site", "Billing"]
 	fieldvals(demog,1,"dem")
-	MsgBox % fileOut1 "`n" fileOut2
 	
 	fields[2] := ["Total QRS", "Recording Duration", "Analyzed Data"]
 	labels[2] := ["Total_beats", "dem:Recording_time", "dem:Analysis_time"]
@@ -995,6 +995,7 @@ CheckProcPR:
 	demog := RegExReplace(demog,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
 	demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
 	demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
+	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
 	demog .= "   Location:    " ptDem["Loc"] "`n"
 	demog .= "   Acct Num:    " ptDem["Account number"] "`n"
 	
@@ -1414,8 +1415,8 @@ formatField(pre, lab, txt) {
 ;	Preventice Holter specific fixes
 	if (monType="PR") {
 		if (lab="Name") {
-			fieldColAdd(pre,"Name_L",strX(txt,"",1,0,",",1,1))
-			fieldColAdd(pre,"Name_F",strX(txt,",",1,1,"",0))
+			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
+			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
 			return
 		}
 		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {
@@ -1427,7 +1428,6 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_time",tx.value(2))
 			return
 		}
-		
 	}
 
 ;	Body Guardian Heart specific fixes
