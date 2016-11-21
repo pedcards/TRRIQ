@@ -752,7 +752,7 @@ Holter_Pr:
 	}
 	fieldvals(VeStat,5,"ve")
 
-	fields[6] := ["Longest RR","\# RR.*3.0 sec"]
+	fields[6] := ["Longest RR","\# RR.*\..* sec"]
 	labels[6] := ["LongRR","Pauses"]
 	fieldvals(pauseStat,6,"sve")
 	
