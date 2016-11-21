@@ -25,6 +25,9 @@ FileInstall, libiconv2.dll, libiconv2.dll
 SplitPath, A_ScriptDir,,fileDir
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
+	chip := httpComm("full")
+	FileDelete, .\Chipotle\currlist.xml
+	FileAppend, % chip, .\Chipotle\currlist.xml
 	isAdmin := true
 	holterDir := ".\Holter PDFs\"
 	importFld := ".\Import\"
@@ -184,6 +187,7 @@ FetchDem:
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
 					ptDem["Type"] := tmp.value
 					ptDem["EncDate"] := tmp.date										; and date
+					ptDem["Hookup time"] := tmp.time
 					
 					if (ptDem.Type="Outpatient") {
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2]).value			; most outpatient locations are short strings, click the right half of cell to grab location name
@@ -223,23 +227,25 @@ mouseGrab(x,y) {
 	sleep 100
 	ClipWait																			; sometimes there is delay for clipboard to populate
 	clk := parseClip(clipboard)															; get available values out of clipboard
-	return {"field":clk.field, "value":clk.value, "date":clk.date}							; Redundant? since this is what parseClip() returns
+	return {"field":clk.field, "value":clk.value, "date":clk.date, "time":clk.time}	; Redundant? since this is what parseClip() returns
 }
 
 parseClip(clip) {
 	global demVals
 	StringSplit, val, clip, :															; break field into val1:val2
-	dt := strX(clip," [",1,2, " ",1,1)													; get date
+	dt := strX(clip," [",1,2, "]",1,1)													; get date
 	dd := parseDate(dt).YYYY . parseDate(dt).MM . parseDate(dt).DD
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
 		return {"field":val1
 				, "value":val2
-				, "date":dt}
+				, "date":dt
+				, "time":parseDate(dt).time}
 	}
 	if (clip~="Outpatient\s\[") {														; Outpatient type
 		return {"field":"Type"
 				, "value":"Outpatient"
-				, "date":dt}
+				, "date":dt
+				, "time":parseDate(dt).time}
 	}
 	if (clip~="Inpatient\s\[") {														; Inpatient types
 		return {"field":"Type"
@@ -559,8 +565,11 @@ MainLoop:
 	FileDelete, %importFld%%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv										; create a new CSV
 	FileCopy, %importFld%%fileNameOut%.csv, .\tempfiles\*.*, 1								; create a copy of CSV in tempfiles
+	Sleep 200
 	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1										; move the PDF to holterDir
+	Sleep 200
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
+	sleep 200
 	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000", %holterDir%%filenameOut%.pdf, C	; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000", %holterDir%%filenameOut%-short.pdf, C
 Return
@@ -690,6 +699,7 @@ return
 Holter_Pr:
 {
 	monType := "PR"
+	
 	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
 	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
@@ -708,35 +718,46 @@ Holter_Pr:
 	 */
 	fields[1] := ["Name", "ID #", "Second ID", "Date Of Birth", "Age", "Sex"
 		, "Referring Physician", "Indications", "Medications", "Analyst", "Hookup Tech"
-		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No"]
+		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No", "Hookup time", "Location", "Acct num"]
 	labels[1] := ["Name", "MRN", "VOID_ID", "DOB", "VOID_Age", "Sex"
 		, "Ordering", "Indication", "Meds", "Scanned_by", "Hookup_tech"
-		, "Test_date", "Scan_date", "Scan_num", "Recorder", "Recorder_num"]
+		, "Test_date", "Scan_date", "Scan_num", "Recorder", "Device_SN", "Hookup_time", "Site", "Billing"]
 	fieldvals(demog,1,"dem")
 	
 	fields[2] := ["Total QRS", "Recording Duration", "Analyzed Data"]
-	labels[2] := ["Total_beats", "Recording_time", "Analysis_time"]
-	fieldvals(sumStat,2,"sum")
+	labels[2] := ["Total_beats", "dem:Recording_time", "dem:Analysis_time"]
+	fieldvals(sumStat,2,"hrd")
 	
 	fields[3] := ["Min Rate", "Max Rate", "Mean Rate", "Tachycardia/Bradycardia"
 		, "Longest Tachycardia", "Fastest Tachycardia", "Longest Bradycardia", "Slowest Bradycardia","#####"]
 	labels[3] := ["Min", "Max", "Avg", "VOID_tb"
 		, "Longest_tachy", "Fastest", "Longest_brady", "Slowest","VOID_br"]
-	fieldvals(rateStat,3,"rate")
+	fieldvals(rateStat,3,"hrd")
 	
+	SveStat := strVal(ectoStat,"Supraventricular Ectopy","Ventricular Ectopy")
 	fields[4] := ["Singles", "Couplets", "Runs", "Total","RR Variability"]
 	labels[4] := ["Beats", "Pairs", "Runs", "Total","RR_var"]
-	fieldvals(strVal(ectoStat,"Supraventricular Ectopy","Ventricular Ectopy"),4,"sve")
-
+	if (SveStat~="i)Fastest.*Longest") {
+		fields[4].Insert(4,"Fastest Run","Longest Run")
+		labels[4].Insert(4,"Fastest","Longest")
+	}
+	fieldvals(SveStat,4,"sve")
+	
+	VeStat := strVal(ectoStat "#####","\bVentricular Ectopy","#####")
 	fields[5] := ["Singles", "Couplets", "Runs", "R on T", "Total"]
 	labels[5] := ["Beats", "Couplets", "Runs", "R on T", "Total"]
-	fieldvals(strVal(ectoStat "#####","\bVentricular Ectopy","#####"),5,"ve")
+	if (VeStat~="i)Fastest.*Longest") {
+		fields[5].Insert(4,"Fastest Run","Longest Run")
+		labels[5].Insert(4,"Fastest","Longest")
+	}
+	fieldvals(VeStat,5,"ve")
 
 	fields[6] := ["Longest RR","\# RR.*3.0 sec"]
 	labels[6] := ["LongRR","Pauses"]
 	fieldvals(pauseStat,6,"sve")
 	
-	tmp := strVal(newtxt,"\bCOMMENT:","REVIEWING PHYSICIAN")
+	LWify()
+	tmp := strVal(newtxt,"COMMENT:","REVIEWING PHYSICIAN")
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
@@ -746,6 +767,60 @@ Holter_Pr:
 	ShortenPDF("i)60\s+sec/line")
 
 return
+}
+
+LWify() {
+	global fileout1, fileout2
+	lwfields := {"dem-Name_L":"", "dem-Name_F":"", "dem-Name_M":"", "dem-MRN":"", "dem-DOB":"", "dem-Sex":"NA"
+				, "dem-Site":"", "dem-Billing":"", "dem-Device_SN":"", "dem-VOID1":"", "dem-Hookup_tech":""
+				, "dem-VOID2":"", "dem-Meds":"NA", "dem-Ordering":"", "dem-Ordering_grp":"", "dem-Ordering_eml":""
+				, "dem-Scanned_by":"", "dem-Reading":"", "dem-Test_date":"", "dem-Scan_date":"", "dem-Hookup_time":""
+				, "dem-Recording_time":"", "dem-Analysis_time":"", "dem-Indication":"", "dem-VOID3":""
+				, "hrd-Total_beats":"0", "hrd-Min":"0", "hrd-Min_time":"", "hrd-Avg":"0", "hrd-Max":"0", "hrd-Max_time":"", "hrd-HRV":""
+				, "ve-Total":"0", "ve-Total_per":"0", "ve-Runs":"0", "ve-Beats":"0", "ve-Longest":"0", "ve-Longest_time":""
+				, "ve-Fastest":"0", "ve-Fastest_time":"", "ve-Triplets":"0", "ve-Couplets":"0", "ve-SinglePVC":"0", "ve-InterpPVC":"0"
+				, "ve-R_on_T":"0", "ve-SingleVE":"0", "ve-LateVE":"0", "ve-Bigem":"0", "ve-Trigem":"0", "ve-SVE":"0"
+				, "sve-Total":"0", "sve-Total_per":"0", "sve-Runs":"0", "sve-Beats":"0", "sve-Longest":"0", "sve-Longest_time":""
+				, "sve-Fastest":"0", "sve-Fastest_time":"", "sve-Pairs":"0", "sve-Drop":"0", "sve-Late":"0"
+				, "sve-LongRR":"0", "sve-LongRR_time":"", "sve-Single":"0", "sve-Bigem":"0", "sve-Trigem":"0", "sve-AF":"0"}
+	
+	lwtabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
+		. "dem-Hookup_tech	dem-VOID2	dem-Meds	dem-Ordering	dem-Ordering_grp	dem-Ordering_eml	dem-Scanned_by	"
+		. "dem-Reading	dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
+		. "dem-VOID3	hrd-Total_beats	hrd-Min	hrd-Min_time	hrd-Avg	hrd-Max	hrd-Max_time	hrd-HRV	ve-Total	ve-Total_per	"
+		. "ve-Runs	ve-Beats	ve-Longest	ve-Longest_time	ve-Fastest	ve-Fastest_time	ve-Triplets	ve-Couplets	ve-SinglePVC	"
+		. "ve-InterpPVC	ve-R_on_T	ve-SingleVE	ve-LateVE	ve-Bigem	ve-Trigem	ve-SVE	sve-Total	sve-Total_per	sve-Runs	"
+		. "sve-Beats	sve-Longest	sve-Longest_time	sve-Fastest	sve-Fastest_time	sve-Pairs	sve-Drop	sve-Late	"
+		. "sve-LongRR	sve-LongRR_time	sve-Single	sve-Bigem	sve-Trigem	sve-AF"
+	
+	field := Object()
+	
+	; Parse label lines in CSV
+	loop, Parse, fileOut1, CSV
+	{
+		field.push(A_LoopField)
+	}
+	; Parse values in CSV, match to equivalent labels
+	loop, Parse, fileOut2, CSV
+	{
+		lwFields[field[A_index]] := A_LoopField
+		if !objhaskey(lwFields,field[A_Index]) {
+			MsgBox % field[A_Index]
+		}
+	}
+	; Populate lwFields with equivalent named label values
+	lwOut1 :=
+	lwOut2 :=
+	loop, parse, lwTabs, `t
+	{
+		fld := A_LoopField
+		val := lwFields[fld]
+		lwOut1 .= """" fld ""","
+		lwOut2 .= """" val ""","
+	}
+	fileOut1 := lwOut1
+	fileOut2 := lwOut2
+return	
 }
 
 shortenPDF(find) {
@@ -920,6 +995,9 @@ CheckProcPR:
 	demog := RegExReplace(demog,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
 	demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
 	demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
+	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
+	demog .= "   Location:    " ptDem["Loc"] "`n"
+	demog .= "   Acct Num:    " ptDem["Account number"] "`n"
 	
 	return
 }
@@ -1202,16 +1280,20 @@ fieldvals(x,bl,bl2) {
 	
 	for k, i in fields[bl]
 	{
+		pre := bl2
 		j := fields[bl][k+1]
 		m := (j) ?	strVal(x,i,j,n,n)			;trim(stRegX(x,i,n,1,j,1,n), " `n")
 				:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")
 		lbl := labels[bl][A_index]
-;		MsgBox,, % bl2 " - " lbl, % n "`n'" i "'`n" m "`n'" j "'"
+		if (lbl~="^\w{3}:") {											; has prefix e.g. "dem:"
+			pre := substr(lbl,1,3)
+			lbl := substr(lbl,5)
+		}
 		cleanSpace(m)
 		cleanColon(m)
 		fldval[lbl] := m
-;		MsgBox,, % bl2 " - " lbl, % m
-		formatField(bl2,lbl,m)
+		
+		formatField(pre,lbl,m)
 	}
 }
 
@@ -1333,8 +1415,8 @@ formatField(pre, lab, txt) {
 ;	Preventice Holter specific fixes
 	if (monType="PR") {
 		if (lab="Name") {
-			fieldColAdd(pre,"Name_L",strX(txt,"",1,0,",",1,1))
-			fieldColAdd(pre,"Name_F",strX(txt,",",1,1,"",0))
+			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
+			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
 			return
 		}
 		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {
@@ -1346,7 +1428,6 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_time",tx.value(2))
 			return
 		}
-		
 	}
 
 ;	Body Guardian Heart specific fixes
@@ -1429,6 +1510,21 @@ checkCrd(x) {
 		}
 	}
 	return {"fuzz":fuzz,"best":best,"group":group}
+}
+
+httpComm(verb) {
+	; consider two parameters?
+	;~ global servFold
+	servfold := "patlist"
+	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr
+		whr.Open("GET"															; set the http verb to GET file "change"
+			, "https://depts.washington.edu/pedcards/change/direct.php?" 
+				. ((servFold="testlist") ? "test=true&" : "") 
+				. "do=" . verb
+			, true)
+		whr.Send()																; SEND the command to the address
+		whr.WaitForResponse()	
+	return whr.ResponseText													; the http response
 }
 
 cleancolon(ByRef txt) {
