@@ -23,6 +23,7 @@ FileInstall, pdftk.exe, pdftk.exe
 FileInstall, libiconv2.dll, libiconv2.dll
 
 SplitPath, A_ScriptDir,,fileDir
+user := A_UserName
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
 	chip := httpComm("full")
@@ -32,13 +33,14 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	holterDir := ".\Holter PDFs\"
 	importFld := ".\Import\"
 	chipDir := ".\Chipotle\"
+	eventlog(">>>>> Started in DEVT mode.")
 } else {
 	isAdmin := false
 	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
+	eventlog(">>>>> Started in PROD mode.")
 }
-user := A_UserName
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -86,6 +88,7 @@ if !(phase) {
 	;~ phase := CMsgBox("Which task?","","*&Register Preventice|&Process PDF file(s)","Q","")
 }
 if (instr(phase,"LifeWatch")) {
+	eventlog("Start LifeWatch upload process.")
 	Loop 
 	{
 		ptDem := Object()
@@ -106,6 +109,7 @@ if (instr(phase,"LifeWatch")) {
 	;~ ExitApp
 ;~ }
 if (instr(phase,"PDF")) {
+	eventlog("Start PDF folder scan.")
 	holterLoops := 0								; Reset counters
 	holtersDone := 
 	loop, %holterDir%*.pdf							; Process all PDF files in holterDir
@@ -114,21 +118,27 @@ if (instr(phase,"PDF")) {
 		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
 		if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0200 (already processed)
-			continue													; should be more resistant to DST. +0100 or -0100 will still be < 4
+			eventlog("Skipping file """ fileNam """, already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
+			continue
 		}
+		eventlog("Processing """ fileNam """.")
 		gosub MainLoop													; process the PDF
 		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
+			eventlog("Manual [x] out of fetchDem.")
 			continue
 		}
 		holterLoops++													; increment counter for processed counter
 		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 	}
+	if !(holterLoops) {
+		holtersDone := "No new PDFs!"
+	}
+		
 	MsgBox,, % "Holters processed (" holterLoops ")", % holtersDone
-	ExitApp
 	/* Consider asking if complete. The MA's appear to run one PDF at a time, despite the efficiency loss.
 	*/
 }
-
+eventlog("<<<<< Session end.")
 ExitApp
 
 FetchDem:
@@ -1569,7 +1579,7 @@ eventlog(event) {
 	global user
 	comp := A_ComputerName
 	FormatTime, sessdate, A_Now, yyyy.MM
-	FormatTime, now, A_Now, yyyy.MM.dd.HH:mm:ss
+	FormatTime, now, A_Now, yyyy.MM.dd||HH:mm:ss
 	name := "logs/" . sessdate . ".log"
 	txt := now " [" user "/" comp "] " event "`n"
 	filePrepend(txt,name)
