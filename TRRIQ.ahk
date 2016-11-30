@@ -79,7 +79,10 @@ siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevu
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
-	phase := CMsgBox("Which task?","","*&Upload LifeWatch Holter|&Process PDF","Q","")
+	phase := CMsgBox("Which task?",""
+		, "*&Upload LifeWatch Holter|"
+		. "&Process PDF"
+		,"Q","")
 	;~ phase := CMsgBox("Which task?","","*&Register Preventice|&Process PDF file(s)","Q","")
 }
 if (instr(phase,"LifeWatch")) {
