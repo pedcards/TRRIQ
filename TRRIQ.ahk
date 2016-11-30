@@ -368,11 +368,14 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	
 	if !(ptDem.Provider) {														; no provider? ask!
 		gosub getMD
+		eventlog("New provider field " ptDem.Provider ".")
 	} else if (checkCrd(ptDem.Provider).fuzz > 0.10) {							; Provider not recognized
 		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
 			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
+			eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
 		} else {
 			gosub getMD															; Otherwise, ask for it.
+			eventlog("Provider set to " ptDem.Provider ".")
 		}
 	}
 	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
