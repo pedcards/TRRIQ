@@ -156,8 +156,10 @@ FetchDem:
 				if (clk.field = "Provider") {
 					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {						; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+						eventlog("MouseGrab provider " tmpPrv ".")
 					} else {
 						tmpPrv :=
+						eventlog("MouseGrab provider empty.")
 					}
 					if ((ptDem.Provider) && (tmpPrv)) {												; Provider already exists
 						MsgBox, 4148
@@ -165,6 +167,7 @@ FetchDem:
 							, % "Replace " ptDem.Provider "`n with `n" tmpPrv "?"
 						IfMsgBox, Yes													; Check before replacing
 						{
+							eventlog("Replacing provider """ ptDem.Provider """ with """ tmpPrv """.")
 							ptDem.Provider := tmpPrv
 						}
 					} else if (tmpPrv) {												; Otherwise populate ptDem.Provider if tmpPrv exists
@@ -179,6 +182,7 @@ FetchDem:
 				}																		;(this is why it must be sister or parent VM).
 				if (clk.field = "Account Number") {
 					ptDem["Account Number"] := clk.value
+					eventlog("MouseGrab Account Number.")
 					mdX[1] := mouseXpos													; demographics grid[1,3]
 					mdY[3] := mouseYpos
 					mdAcct := true														; we have got Acct Number
@@ -217,6 +221,7 @@ FetchDem:
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
 					Gui, fetch:show
+					eventlog("MouseGrab other fields. LOC=" ptDem.loc ".")
 				}
 				;~ if !(clk.field~="(Provider|Account Number)") {							; all other values
 					;~ ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
