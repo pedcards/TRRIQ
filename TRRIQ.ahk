@@ -1565,6 +1565,27 @@ ObjHasValue(aObj, aValue, rx:="") {
     return, false, errorlevel := 1
 }
 
+eventlog(event) {
+	global user
+	comp := A_ComputerName
+	FormatTime, sessdate, A_Now, yyyy.MM
+	FormatTime, now, A_Now, yyyy.MM.dd.HH:mm:ss
+	name := "logs/" . sessdate . ".log"
+	txt := now " [" user "/" comp "] " event "`n"
+	filePrepend(txt,name)
+;	FileAppend, % timenow " ["  user "/" comp "] " event "`n", % "logs/" . sessdate . ".log"
+}
+
+FilePrepend( Text, Filename ) { 
+/*	from haichen http://www.autohotkey.com/board/topic/80342-fileprependa-insert-text-at-begin-of-file-ansi-text/?p=510640
+*/
+    file:= FileOpen(Filename, "rw")
+    text .= File.Read()
+    file.pos:=0
+    File.Write(text)
+    File.Close()
+}
+
 parseDate(x) {
 ; Disassembles "2/9/2015" or "2/9/2015 8:31" into Yr=2015 Mo=02 Da=09 Hr=08 Min=31
 	StringSplit, DT, x, %A_Space%
