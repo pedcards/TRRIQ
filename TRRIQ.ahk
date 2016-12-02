@@ -387,6 +387,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			&& (ptDem["Loc"]) && (ptDem["Type"])													; Loc and type is not null
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])								; prov any string, encDate not null
 	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
+		eventlog("Data incomplete.")
 		MsgBox,, % "Data incomplete. Try again", % ""
 			. ((ptDem["nameF"]) ? "" : "First name`n")
 			. ((ptDem["nameL"]) ? "" : "Last name`n")
@@ -422,6 +423,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		gosub indGUI
 		WinWaitClose, Enter indications
 	}
+	eventlog("Indications entered.")
 	return
 }
 
