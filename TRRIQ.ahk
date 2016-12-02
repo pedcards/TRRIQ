@@ -544,6 +544,7 @@ MainLoop:
 	FileDelete tempfile.txt															; remove any leftover tempfile
 	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
 	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt								; move a copy into tempfiles for troubleshooting
+	eventlog("tempfile.txt -> " fileNam ".txt")
 
 	blocks := Object()																; clear all objects
 	fields := Object()
@@ -567,6 +568,7 @@ MainLoop:
 	} else if (RegExMatch(newtxt,"i)Preventice.*End of Service Report")) {
 		gosub Event_BGH
 	} else {
+		eventlog(fileNam " bad file.")
 		MsgBox No match!
 		ExitApp
 	}
@@ -591,6 +593,7 @@ MainLoop:
 	sleep 200
 	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000", %holterDir%%filenameOut%.pdf, C	; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000", %holterDir%%filenameOut%-short.pdf, C
+	eventlog("Move files " filenameOut)
 Return
 }
 
@@ -667,6 +670,7 @@ return
 
 Holter_LW:
 {
+	eventlog("Holter_LW")
 	monType := "H"
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
@@ -717,9 +721,11 @@ return
 
 Holter_Pr:
 {
+	eventlog("Holter_Pr")
 	monType := "PR"
 	
 	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
+	eventlog("Extracting full text.")
 	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
@@ -839,10 +845,12 @@ LWify() {
 	}
 	fileOut1 := lwOut1
 	fileOut2 := lwOut2
+	eventlog("LWify complete.")
 return	
 }
 
 shortenPDF(find) {
+	eventlog("ShortenPDF")
 	global fileIn, winCons
 	sleep 500
 	ConsWin := WinExist("ahk_pid " winCons)								; get window ID
@@ -872,6 +880,7 @@ return
 
 CheckProcLW:
 {
+	eventlog("CheckProcLW")
 	chk.Last := strVal(demog,"Last Name","First Name")						; NameL				must be [A-Z]
 	chk.First := strVal(demog,"First Name","Middle Initial")				; NameF				must be [A-Z]
 	chk.MRN := strVal(demog,"ID Number","Date of Birth")					; MRN
@@ -889,6 +898,7 @@ CheckProcLW:
 		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
 		&& (chk.Acct~="\d{8}"))															; and EncNum present
 	{
+		eventlog("Passed validation.")
 		MsgBox, 4132, Valid PDF, % ""
 			. chk.Last ", " chk.First "`n"
 			. "MRN " chk.MRN "`n"
@@ -909,6 +919,7 @@ CheckProcLW:
 	}
 	else 																			; Not valid PDF, get demographics post hoc
 	{
+		eventlog("Validation failed.")
 		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
@@ -940,6 +951,7 @@ CheckProcLW:
 	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
 	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
 	demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
+	eventlog("demog replaced.")
 	
 	return
 }
@@ -961,6 +973,7 @@ CheckProcPR:
 		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
 		&& (chk.Acct~="\d{8}"))															; and EncNum present
 	{
+		eventlog("Demographics valid.")
 		MsgBox, 4132, Valid PDF, % ""
 			. chk.Last ", " chk.First "`n"
 			. "MRN " chk.MRN "`n"
@@ -981,6 +994,7 @@ CheckProcPR:
 	}
 	else 																			; Not valid PDF, get demographics post hoc
 	{
+		eventlog("Demographics validation failed.")
 		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
@@ -1017,6 +1031,7 @@ CheckProcPR:
 	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
 	demog .= "   Location:    " ptDem["Loc"] "`n"
 	demog .= "   Acct Num:    " ptDem["Account number"] "`n"
+	eventlog("Demog replaced.")
 	
 	return
 }
