@@ -585,9 +585,9 @@ MainLoop:
 	tmpDate := parseDate(fldval["Test_Date"])												; get the study date
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
 	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
-	FileDelete, %importFld%%fileNameOut%.csv												; clear any previous CSV
-	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv										; create a new CSV
-	FileCopy, %importFld%%fileNameOut%.csv, .\tempfiles\*.*, 1								; create a copy of CSV in tempfiles
+	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
+	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV
+	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1								; create a copy of CSV in tempfiles
 	FileMove, %fileIn%, %holterDir%\Archive\%filenameOut%.pdf, 1							; move the PDF to holterDir
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
 	FileSetTime, tmpFlag, %holterDir%\Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
