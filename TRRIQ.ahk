@@ -671,6 +671,10 @@ Holter_LW:
 {
 	eventlog("Holter_LW")
 	monType := "H"
+	
+	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
+	eventlog("Extracting full text.")
+	
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
 	
@@ -715,6 +719,8 @@ Holter_LW:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Philips Holter"""
 	
+	ShortenPDF("FULL DISCLOSURE")
+
 return
 }
 
