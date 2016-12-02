@@ -553,7 +553,7 @@ MainLoop:
 	blk2 := Object()
 	ptDem := Object()
 	chk := Object()
-	fileOut1 := fileOut2 := ""
+	fileOut := fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
 	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
