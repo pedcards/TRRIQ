@@ -936,8 +936,8 @@ CheckProcLW:
 	ptDem["DOB"] := chk.DOB
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
-	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"))
+	ptDem["Account number"] := chk.Acct												; If want to force click, don't include Acct Num
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"),"-MAIN"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
@@ -1012,7 +1012,7 @@ CheckProcPR:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"))
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"),"-MAIN"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
