@@ -23,6 +23,7 @@ FileInstall, pdftk.exe, pdftk.exe
 FileInstall, libiconv2.dll, libiconv2.dll
 
 SplitPath, A_ScriptDir,,fileDir
+user := A_UserName
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
 	chip := httpComm("full")
@@ -32,13 +33,14 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	holterDir := ".\Holter PDFs\"
 	importFld := ".\Import\"
 	chipDir := ".\Chipotle\"
+	eventlog(">>>>> Started in DEVT mode.")
 } else {
 	isAdmin := false
 	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
+	eventlog(">>>>> Started in PROD mode.")
 }
-user := A_UserName
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -79,10 +81,14 @@ siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevu
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
-	phase := CMsgBox("Which task?","","*&Upload LifeWatch Holter|&Process PDF","Q","")
+	phase := CMsgBox("Which task?",""
+		, "*&Upload LifeWatch Holter|"
+		. "&Process PDF"
+		,"Q","")
 	;~ phase := CMsgBox("Which task?","","*&Register Preventice|&Process PDF file(s)","Q","")
 }
 if (instr(phase,"LifeWatch")) {
+	eventlog("Start LifeWatch upload process.")
 	Loop 
 	{
 		ptDem := Object()
@@ -103,6 +109,7 @@ if (instr(phase,"LifeWatch")) {
 	;~ ExitApp
 ;~ }
 if (instr(phase,"PDF")) {
+	eventlog("Start PDF folder scan.")
 	holterLoops := 0								; Reset counters
 	holtersDone := 
 	loop, %holterDir%*.pdf							; Process all PDF files in holterDir
@@ -111,21 +118,24 @@ if (instr(phase,"PDF")) {
 		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
 		if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0200 (already processed)
-			continue													; should be more resistant to DST. +0100 or -0100 will still be < 4
-		}
-		gosub MainLoop													; process the PDF
-		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
+			eventlog("Skipping file """ fileNam """, already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
 			continue
 		}
+		eventlog("Processing """ fileNam """.")
+		gosub MainLoop													; process the PDF
+		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
+			eventlog("Manual [x] out of fetchDem.")
+			continue
+		}
+		FileDelete, %fileIn%
 		holterLoops++													; increment counter for processed counter
 		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 	}
-	MsgBox,, % "Holters processed (" holterLoops ")", % holtersDone
-	ExitApp
+	MsgBox % "Holters processed (" holterLoops ")`n" holtersDone
 	/* Consider asking if complete. The MA's appear to run one PDF at a time, despite the efficiency loss.
 	*/
 }
-
+eventlog("<<<<< Session end.")
 ExitApp
 
 FetchDem:
@@ -143,8 +153,10 @@ FetchDem:
 				if (clk.field = "Provider") {
 					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {						; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
+						eventlog("MouseGrab provider " tmpPrv ".")
 					} else {
 						tmpPrv :=
+						eventlog("MouseGrab provider empty.")
 					}
 					if ((ptDem.Provider) && (tmpPrv)) {												; Provider already exists
 						MsgBox, 4148
@@ -152,6 +164,7 @@ FetchDem:
 							, % "Replace " ptDem.Provider "`n with `n" tmpPrv "?"
 						IfMsgBox, Yes													; Check before replacing
 						{
+							eventlog("Replacing provider """ ptDem.Provider """ with """ tmpPrv """.")
 							ptDem.Provider := tmpPrv
 						}
 					} else if (tmpPrv) {												; Otherwise populate ptDem.Provider if tmpPrv exists
@@ -166,6 +179,7 @@ FetchDem:
 				}																		;(this is why it must be sister or parent VM).
 				if (clk.field = "Account Number") {
 					ptDem["Account Number"] := clk.value
+					eventlog("MouseGrab Account Number.")
 					mdX[1] := mouseXpos													; demographics grid[1,3]
 					mdY[3] := mouseYpos
 					mdAcct := true														; we have got Acct Number
@@ -204,6 +218,7 @@ FetchDem:
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
 					Gui, fetch:show
+					eventlog("MouseGrab other fields. LOC=" ptDem.loc ".")
 				}
 				;~ if !(clk.field~="(Provider|Account Number)") {							; all other values
 					;~ ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
@@ -354,11 +369,14 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	
 	if !(ptDem.Provider) {														; no provider? ask!
 		gosub getMD
+		eventlog("New provider field " ptDem.Provider ".")
 	} else if (checkCrd(ptDem.Provider).fuzz > 0.10) {							; Provider not recognized
 		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
 			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
+			eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
 		} else {
 			gosub getMD															; Otherwise, ask for it.
+			eventlog("Provider set to " ptDem.Provider ".")
 		}
 	}
 	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
@@ -370,6 +388,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			&& (ptDem["Loc"]) && (ptDem["Type"])													; Loc and type is not null
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])								; prov any string, encDate not null
 	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
+		eventlog("Data incomplete.")
 		MsgBox,, % "Data incomplete. Try again", % ""
 			. ((ptDem["nameF"]) ? "" : "First name`n")
 			. ((ptDem["nameL"]) ? "" : "Last name`n")
@@ -405,6 +424,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		gosub indGUI
 		WinWaitClose, Enter indications
 	}
+	eventlog("Indications entered.")
 	return
 }
 
@@ -525,6 +545,7 @@ MainLoop:
 	FileDelete tempfile.txt															; remove any leftover tempfile
 	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
 	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt								; move a copy into tempfiles for troubleshooting
+	eventlog("tempfile.txt -> " fileNam ".txt")
 
 	blocks := Object()																; clear all objects
 	fields := Object()
@@ -534,7 +555,7 @@ MainLoop:
 	blk2 := Object()
 	ptDem := Object()
 	chk := Object()
-	fileOut1 := fileOut2 := ""
+	fileOut := fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
 	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
@@ -548,6 +569,7 @@ MainLoop:
 	} else if (RegExMatch(newtxt,"i)Preventice.*End of Service Report")) {
 		gosub Event_BGH
 	} else {
+		eventlog(fileNam " bad file.")
 		MsgBox No match!
 		ExitApp
 	}
@@ -562,16 +584,15 @@ MainLoop:
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["Test_Date"])												; get the study date
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
+	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
 	FileDelete, %importFld%%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, %importFld%%fileNameOut%.csv										; create a new CSV
 	FileCopy, %importFld%%fileNameOut%.csv, .\tempfiles\*.*, 1								; create a copy of CSV in tempfiles
-	Sleep 200
-	FileMove, %fileIn%, %holterDir%%filenameOut%.pdf, 1										; move the PDF to holterDir
-	Sleep 200
+	FileMove, %fileIn%, %holterDir%\Archive\%filenameOut%.pdf, 1							; move the PDF to holterDir
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
-	sleep 200
-	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000", %holterDir%%filenameOut%.pdf, C	; set the time of PDF in holterDir to 020000 (processed)
-	FileSetTime, tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000", %holterDir%%filenameOut%-short.pdf, C
+	FileSetTime, tmpFlag, %holterDir%\Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
+	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
+	eventlog("Move files " filenameOut)
 Return
 }
 
@@ -648,7 +669,12 @@ return
 
 Holter_LW:
 {
+	eventlog("Holter_LW")
 	monType := "H"
+	
+	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
+	eventlog("Extracting full text.")
+	
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
 	
@@ -693,14 +719,18 @@ Holter_LW:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Philips Holter"""
 	
+	ShortenPDF("FULL DISCLOSURE")
+
 return
 }
 
 Holter_Pr:
 {
+	eventlog("Holter_Pr")
 	monType := "PR"
 	
 	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
+	eventlog("Extracting full text.")
 	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
@@ -820,10 +850,12 @@ LWify() {
 	}
 	fileOut1 := lwOut1
 	fileOut2 := lwOut2
+	eventlog("LWify complete.")
 return	
 }
 
 shortenPDF(find) {
+	eventlog("ShortenPDF")
 	global fileIn, winCons
 	sleep 500
 	ConsWin := WinExist("ahk_pid " winCons)								; get window ID
@@ -853,6 +885,7 @@ return
 
 CheckProcLW:
 {
+	eventlog("CheckProcLW")
 	chk.Last := strVal(demog,"Last Name","First Name")						; NameL				must be [A-Z]
 	chk.First := strVal(demog,"First Name","Middle Initial")				; NameF				must be [A-Z]
 	chk.MRN := strVal(demog,"ID Number","Date of Birth")					; MRN
@@ -870,6 +903,7 @@ CheckProcLW:
 		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
 		&& (chk.Acct~="\d{8}"))															; and EncNum present
 	{
+		eventlog("Passed validation.")
 		MsgBox, 4132, Valid PDF, % ""
 			. chk.Last ", " chk.First "`n"
 			. "MRN " chk.MRN "`n"
@@ -890,6 +924,7 @@ CheckProcLW:
 	}
 	else 																			; Not valid PDF, get demographics post hoc
 	{
+		eventlog("Validation failed.")
 		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
@@ -901,8 +936,8 @@ CheckProcLW:
 	ptDem["DOB"] := chk.DOB
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
-	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"))
+	ptDem["Account number"] := chk.Acct												; If want to force click, don't include Acct Num
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"),"-MAIN"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
@@ -921,6 +956,7 @@ CheckProcLW:
 	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
 	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
 	demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
+	eventlog("demog replaced.")
 	
 	return
 }
@@ -942,6 +978,7 @@ CheckProcPR:
 		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
 		&& (chk.Acct~="\d{8}"))															; and EncNum present
 	{
+		eventlog("Demographics valid.")
 		MsgBox, 4132, Valid PDF, % ""
 			. chk.Last ", " chk.First "`n"
 			. "MRN " chk.MRN "`n"
@@ -962,6 +999,7 @@ CheckProcPR:
 	}
 	else 																			; Not valid PDF, get demographics post hoc
 	{
+		eventlog("Demographics validation failed.")
 		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
@@ -974,7 +1012,7 @@ CheckProcPR:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"))
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"),"-MAIN"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
@@ -998,6 +1036,7 @@ CheckProcPR:
 	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
 	demog .= "   Location:    " ptDem["Loc"] "`n"
 	demog .= "   Acct Num:    " ptDem["Account number"] "`n"
+	eventlog("Demog replaced.")
 	
 	return
 }
@@ -1560,6 +1599,27 @@ ObjHasValue(aObj, aValue, rx:="") {
 			}
 		}
     return, false, errorlevel := 1
+}
+
+eventlog(event) {
+	global user
+	comp := A_ComputerName
+	FormatTime, sessdate, A_Now, yyyy.MM
+	FormatTime, now, A_Now, yyyy.MM.dd||HH:mm:ss
+	name := "logs/" . sessdate . ".log"
+	txt := now " [" user "/" comp "] " event "`n"
+	filePrepend(txt,name)
+;	FileAppend, % timenow " ["  user "/" comp "] " event "`n", % "logs/" . sessdate . ".log"
+}
+
+FilePrepend( Text, Filename ) { 
+/*	from haichen http://www.autohotkey.com/board/topic/80342-fileprependa-insert-text-at-begin-of-file-ansi-text/?p=510640
+*/
+    file:= FileOpen(Filename, "rw")
+    text .= File.Read()
+    file.pos:=0
+    File.Write(text)
+    File.Close()
 }
 
 parseDate(x) {
