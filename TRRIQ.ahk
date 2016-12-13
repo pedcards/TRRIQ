@@ -377,7 +377,6 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		ptDem.Provider := tmpL ", " tmpF
 	}
 	matchProv := checkCrd(ptDem.Provider)
-	MsgBox,,% ptDem.Provider, % matchProv.fuzz "`n" matchProv.best "`n" matchProv.group
 	if !(ptDem.Provider) {														; no provider? ask!
 		gosub getMD
 		eventlog("New provider field " ptDem.Provider ".")
@@ -604,7 +603,7 @@ MainLoop:
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV
 	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1								; create a copy of CSV in tempfiles
-	FileMove, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the PDF to holterDir
+	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the PDF to holterDir
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
