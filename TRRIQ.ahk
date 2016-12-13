@@ -127,6 +127,9 @@ if (instr(phase,"PDF")) {
 			eventlog("Manual [x] out of fetchDem.")
 			continue
 		}
+		if !IsObject(ptDem) {											; bad file, never acquires demographics
+			continue
+		}
 		FileDelete, %fileIn%
 		holterLoops++													; increment counter for processed counter
 		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
@@ -571,7 +574,7 @@ MainLoop:
 	} else {
 		eventlog(fileNam " bad file.")
 		MsgBox No match!
-		ExitApp
+		return
 	}
 	if (fetchQuit=true) {																	; exited demographics fetchGUI
 		return																				; so skip processing this file
