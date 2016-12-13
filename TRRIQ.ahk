@@ -66,7 +66,7 @@ Loop, Read, %chipDir%outdocs.csv
 	}
 	if !(tmp4~="i)(seattlechildrens.org)|(washington.edu)") {		; skip non-SCH or non-UW providers
 		continue
-	}																; Otherwise format Crd name to first initial, last name
+	}
 	tmpIdx += 1
 	StringSplit, tmpPrv, tmp1, %A_Space%`"
 	;tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2					; F. Last
@@ -370,9 +370,12 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
 	
-	tmp := ptDem.Provider
-	StringLower, tmp, tmp, T
-	ptDem.Provider := tmp
+	if !instr(ptDem.Provider,",") {												; somehow string passed in wrong order
+		tmp := trim(ptDem.Provider)
+		tmpF := strX(tmp,"",1,0, " ",1,1)
+		tmpL := strX(tmp," ",1,1, "",1,0)
+		ptDem.Provider := tmpL ", " tmpF
+	}
 	matchProv := checkCrd(ptDem.Provider)
 	MsgBox,,% ptDem.Provider, % matchProv.fuzz "`n" matchProv.best "`n" matchProv.group
 	if !(ptDem.Provider) {														; no provider? ask!
