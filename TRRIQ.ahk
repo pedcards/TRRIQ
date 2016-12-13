@@ -370,10 +370,16 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
 	
+	tmp := ptDem.Provider
+	StringLower, tmp, tmp, T
+	ptDem.Provider := tmp
+	matchProv := checkCrd(ptDem.Provider)
+	MsgBox,,% ptDem.Provider, % matchProv.fuzz "`n" matchProv.best "`n" matchProv.group
 	if !(ptDem.Provider) {														; no provider? ask!
 		gosub getMD
 		eventlog("New provider field " ptDem.Provider ".")
-	} else if (checkCrd(ptDem.Provider).fuzz > 0.10) {							; Provider not recognized
+	} else if (matchProv.fuzz > 0.10) {							; Provider not recognized
+		eventlog(ptDem.Provider " not recognized (" matchProv.fuzz ").")
 		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
 			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 			eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
@@ -381,6 +387,9 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			gosub getMD															; Otherwise, ask for it.
 			eventlog("Provider set to " ptDem.Provider ".")
 		}
+	} else {													; Provider recognized
+		eventlog(ptDem.Provider " matches " matchProv.Best " (" matchProv.fuzz ").")
+		ptDem.Provider := matchProv.Best
 	}
 	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy										; and the properly formatted date 06/15/2016
@@ -558,6 +567,7 @@ MainLoop:
 	blk2 := Object()
 	ptDem := Object()
 	chk := Object()
+	matchProv := Object()
 	fileOut := fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
@@ -1015,7 +1025,7 @@ CheckProcPR:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"),"-MAIN"))
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
