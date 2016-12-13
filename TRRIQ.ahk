@@ -66,7 +66,7 @@ Loop, Read, %chipDir%outdocs.csv
 	}
 	if !(tmp4~="i)(seattlechildrens.org)|(washington.edu)") {		; skip non-SCH or non-UW providers
 		continue
-	}																; Otherwise format Crd name to first initial, last name
+	}
 	tmpIdx += 1
 	StringSplit, tmpPrv, tmp1, %A_Space%`"
 	;tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2					; F. Last
@@ -125,6 +125,9 @@ if (instr(phase,"PDF")) {
 		gosub MainLoop													; process the PDF
 		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
 			eventlog("Manual [x] out of fetchDem.")
+			continue
+		}
+		if !IsObject(ptDem) {											; bad file, never acquires demographics
 			continue
 		}
 		FileDelete, %fileIn%
@@ -367,10 +370,18 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
 	
+	if !instr(ptDem.Provider,",") {												; somehow string passed in wrong order
+		tmp := trim(ptDem.Provider)
+		tmpF := strX(tmp,"",1,0, " ",1,1)
+		tmpL := strX(tmp," ",1,1, "",1,0)
+		ptDem.Provider := tmpL ", " tmpF
+	}
+	matchProv := checkCrd(ptDem.Provider)
 	if !(ptDem.Provider) {														; no provider? ask!
 		gosub getMD
 		eventlog("New provider field " ptDem.Provider ".")
-	} else if (checkCrd(ptDem.Provider).fuzz > 0.10) {							; Provider not recognized
+	} else if (matchProv.fuzz > 0.10) {							; Provider not recognized
+		eventlog(ptDem.Provider " not recognized (" matchProv.fuzz ").")
 		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
 			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 			eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
@@ -378,6 +389,9 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			gosub getMD															; Otherwise, ask for it.
 			eventlog("Provider set to " ptDem.Provider ".")
 		}
+	} else {													; Provider recognized
+		eventlog(ptDem.Provider " matches " matchProv.Best " (" matchProv.fuzz ").")
+		ptDem.Provider := matchProv.Best
 	}
 	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy										; and the properly formatted date 06/15/2016
@@ -555,6 +569,7 @@ MainLoop:
 	blk2 := Object()
 	ptDem := Object()
 	chk := Object()
+	matchProv := Object()
 	fileOut := fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	
@@ -571,7 +586,7 @@ MainLoop:
 	} else {
 		eventlog(fileNam " bad file.")
 		MsgBox No match!
-		ExitApp
+		return
 	}
 	if (fetchQuit=true) {																	; exited demographics fetchGUI
 		return																				; so skip processing this file
@@ -588,7 +603,7 @@ MainLoop:
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV
 	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1								; create a copy of CSV in tempfiles
-	FileMove, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the PDF to holterDir
+	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the PDF to holterDir
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
@@ -1012,7 +1027,7 @@ CheckProcPR:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"),"-MAIN"))
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
