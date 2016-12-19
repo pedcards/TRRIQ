@@ -215,6 +215,9 @@ FetchDem:
 					if (ptDem.Type="Day Surg") {
 						ptDem["Loc"] := "SurgCntr"
 					}
+					if (ptDem.Type="Observation") {
+						ptDem["Loc"] := "Inpatient"
+					}
 					if (ptDem.Type="Emergency") {
 						ptDem["Loc"] := "Emergency"
 					}
@@ -265,7 +268,7 @@ parseClip(clip) {
 				, "date":dt
 				, "time":parseDate(dt).time}
 	}
-	if (clip~="Inpatient\s\[") {														; Inpatient types
+	if (clip~="Inpatient|Observation\s\[") {														; Inpatient types
 		return {"field":"Type"
 				, "value":"Inpatient"
 				, "date":dt}
@@ -370,7 +373,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
 	
-	if !instr(ptDem.Provider,",") {												; somehow string passed in wrong order
+	if (instr(ptDem.Provider," ") && !instr(ptDem.Provider,",")) {				; somehow string passed in wrong order
 		tmp := trim(ptDem.Provider)
 		tmpF := strX(tmp,"",1,0, " ",1,1)
 		tmpL := strX(tmp," ",1,1, "",1,0)
@@ -382,7 +385,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		eventlog("New provider field " ptDem.Provider ".")
 	} else if (matchProv.fuzz > 0.10) {							; Provider not recognized
 		eventlog(ptDem.Provider " not recognized (" matchProv.fuzz ").")
-		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
+		if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {
 			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 			eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
 		} else {
@@ -952,7 +955,7 @@ CheckProcLW:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct												; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"),"-MAIN"))
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
@@ -1027,7 +1030,7 @@ CheckProcPR:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
