@@ -215,6 +215,9 @@ FetchDem:
 					if (ptDem.Type="Day Surg") {
 						ptDem["Loc"] := "SurgCntr"
 					}
+					if (ptDem.Type="Observation") {
+						ptDem["Loc"] := "Inpatient"
+					}
 					if (ptDem.Type="Emergency") {
 						ptDem["Loc"] := "Emergency"
 					}
@@ -265,7 +268,7 @@ parseClip(clip) {
 				, "date":dt
 				, "time":parseDate(dt).time}
 	}
-	if (clip~="Inpatient\s\[") {														; Inpatient types
+	if (clip~="Inpatient|Observation\s\[") {														; Inpatient types
 		return {"field":"Type"
 				, "value":"Inpatient"
 				, "date":dt}
@@ -382,7 +385,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		eventlog("New provider field " ptDem.Provider ".")
 	} else if (matchProv.fuzz > 0.10) {							; Provider not recognized
 		eventlog(ptDem.Provider " not recognized (" matchProv.fuzz ").")
-		if (ptDem.Type~="i)(Inpatient|Emergency|Day Surg)") {
+		if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {
 			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 			eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
 		} else {
