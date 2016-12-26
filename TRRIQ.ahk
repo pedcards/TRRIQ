@@ -172,6 +172,7 @@ FetchDem:
 						}
 					} else if (tmpPrv) {												; Otherwise populate ptDem.Provider if tmpPrv exists
 						ptDem.Provider := tmpPrv										; but leave ptDem.Provider alone if tmpPrv null
+						eventlog("MouseGrab provider empty --> " tmpPrv ".")
 					}
 					mdX[4] := mouseXpos													; demographics grid[4,1]
 					mdY[1] := mouseYpos
@@ -182,7 +183,7 @@ FetchDem:
 				}																		;(this is why it must be sister or parent VM).
 				if (clk.field = "Account Number") {
 					ptDem["Account Number"] := clk.value
-					eventlog("MouseGrab Account Number.")
+					eventlog("MouseGrab Account Number " clk.value ".")
 					mdX[1] := mouseXpos													; demographics grid[1,3]
 					mdY[3] := mouseYpos
 					mdAcct := true														; we have got Acct Number
@@ -201,10 +202,12 @@ FetchDem:
 					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2]).value						; grab remaining demographic values
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2]).value
 					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]).value,1,1)
+					eventlog("MouseGrab other fields. MRN=" ptDem["MRN"] " DOB=" ptDem["DOB"] " Sex=" ptDem["Sex"] ".")
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
 					ptDem["Type"] := tmp.value
 					ptDem["EncDate"] := tmp.date										; and date
 					ptDem["Hookup time"] := tmp.time
+					eventlog("MouseGrab other fields. Type=" ptDem["Type"] " EncDate=" tmp.date " EncTime=" tmp.time ".")
 					
 					if (ptDem.Type="Outpatient") {
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2]).value			; most outpatient locations are short strings, click the right half of cell to grab location name
