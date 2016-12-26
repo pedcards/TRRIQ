@@ -183,7 +183,7 @@ FetchDem:
 				}																		;(this is why it must be sister or parent VM).
 				if (clk.field = "Account Number") {
 					ptDem["Account Number"] := clk.value
-					eventlog("MouseGrab Account Number.")
+					eventlog("MouseGrab Account Number " clk.value ".")
 					mdX[1] := mouseXpos													; demographics grid[1,3]
 					mdY[3] := mouseYpos
 					mdAcct := true														; we have got Acct Number
