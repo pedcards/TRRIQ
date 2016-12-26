@@ -172,6 +172,7 @@ FetchDem:
 						}
 					} else if (tmpPrv) {												; Otherwise populate ptDem.Provider if tmpPrv exists
 						ptDem.Provider := tmpPrv										; but leave ptDem.Provider alone if tmpPrv null
+						eventlog("MouseGrab provider empty --> " tmpPrv ".")
 					}
 					mdX[4] := mouseXpos													; demographics grid[4,1]
 					mdY[1] := mouseYpos
