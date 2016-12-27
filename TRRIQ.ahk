@@ -916,7 +916,6 @@ CheckProcLW:
 	chk.Acct := strVal(demog,"Billing Code","Recorder Format")				; Billing code		must be valid number
 	chk.Prov := strVal(demog,"Physician","Scanned By")						; Ordering MD
 	chk.Date := strVal(demog,"Test Date","Analysis Date")					; Study date
-;	chk.Ind := trim(strX(demog,"Reason for Test",nn,16,"Group",1,5,nn)," `r`n")					; Indication
 	chk.Ind := strVal(demog,"Reason for Test","Group")						; Indication
 	
 	Clipboard := chk.Last ", " chk.First														; fill clipboard with name, so can just paste into CIS search bar
