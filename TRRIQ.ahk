@@ -229,9 +229,6 @@ FetchDem:
 					Gui, fetch:show
 					eventlog("MouseGrab other fields. LOC=" ptDem.loc ".")
 				}
-				;~ if !(clk.field~="(Provider|Account Number)") {							; all other values
-					;~ ptDem[clk.field] := (clk.value) ? clk.value : ptDem[clk.field]		; populate ptDem.field with value; if value=null, keep same]
-				;~ }
 			}
 			gosub fetchGUI							; Update GUI with new info
 		}
