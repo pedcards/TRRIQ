@@ -77,8 +77,8 @@ Loop, Read, %chipDir%outdocs.csv
 
 y := new XML(chipDir "currlist.xml")
 
-siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
-demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
+;~ siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
+demVals := ["MRN","Account Number","DOB","Sex","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
 	phase := CMsgBox("Which task?",""
