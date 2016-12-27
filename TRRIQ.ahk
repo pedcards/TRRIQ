@@ -78,7 +78,7 @@ Loop, Read, %chipDir%outdocs.csv
 y := new XML(chipDir "currlist.xml")
 
 ;~ siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
-demVals := ["MRN","Account Number","DOB","Sex","Provider"]						; valid field names for parseClip()
+demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
 	phase := CMsgBox("Which task?",""
@@ -252,16 +252,19 @@ mouseGrab(x,y) {
 }
 
 parseClip(clip) {
+/*	If clip matches "val1:val2" format, and val1 in demVals[], return field:val
+	If clip contains proper Encounter Type ("Outpatient", "Inpatient", "Observation", etc), return Type, Date, Time
+*/
 	global demVals
+	
 	StringSplit, val, clip, :															; break field into val1:val2
-	dt := strX(clip," [",1,2, "]",1,1)													; get date
-	dd := parseDate(dt).YYYY . parseDate(dt).MM . parseDate(dt).DD
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
 		return {"field":val1
-				, "value":val2
-				, "date":dt
-				, "time":parseDate(dt).time}
+				, "value":val2}
 	}
+	
+	dt := strX(clip," [",1,2, "]",1,1)													; get date
+	dd := parseDate(dt).YYYY . parseDate(dt).MM . parseDate(dt).DD
 	if (clip~="Outpatient\s\[") {														; Outpatient type
 		return {"field":"Type"
 				, "value":"Outpatient"
