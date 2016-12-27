@@ -924,7 +924,6 @@ CheckProcLW:
 		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
 		&& (chk.Acct~="\d{8}"))															; and EncNum present
 	{
-		eventlog("Passed validation.")
 		MsgBox, 4132, Valid PDF, % ""
 			. chk.Last ", " chk.First "`n"
 			. "MRN " chk.MRN "`n"
@@ -935,17 +934,19 @@ CheckProcLW:
 			. "If NO, reacquire demographics."
 		IfMsgBox, Yes																; All tests valid
 		{
+			eventlog("Passed validation. Processing.")
 			return																	; Select YES, return to processing Holter
 		} 
 		else 																		; Select NO, reacquire demographics
 		{
+			eventlog("Demographics valid. Wants to reacquire.")
 			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 		}
 	}
 	else 																			; Not valid PDF, get demographics post hoc
 	{
-		eventlog("Validation failed.")
+		eventlog("Demographics validation failed.")
 		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
@@ -977,13 +978,14 @@ CheckProcLW:
 	demog := RegExReplace(demog,"i)Physician (.*)Scanned By", "Physician   " ptDem["Provider"] "`nScanned By")
 	demog := RegExReplace(demog,"i)Test Date (.*)Analysis Date", "Test Date   " ptDem["EncDate"] "`nAnalysis Date")
 	demog := RegExReplace(demog,"i)Reason for Test(.*)Group", "Reason for Test   " ptDem["Indication"] "`nGroup")	
-	eventlog("demog replaced.")
+	eventlog("Demog replaced.")
 	
 	return
 }
 
 CheckProcPR:
 {
+	eventlog("CheckProcPr")
 	chk.Name := strVal(demog,"Name:","ID #:")												; Name
 		chk.Last := trim(strX(chk.Name,"",1,1,",",1,1)," `r`n")									; NameL				must be [A-Z]
 		chk.First := trim(strX(chk.Name,",",1,1,"",0)," `r`n")									; NameF				must be [A-Z]
@@ -999,7 +1001,6 @@ CheckProcPR:
 		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
 		&& (chk.Acct~="\d{8}"))															; and EncNum present
 	{
-		eventlog("Demographics valid.")
 		MsgBox, 4132, Valid PDF, % ""
 			. chk.Last ", " chk.First "`n"
 			. "MRN " chk.MRN "`n"
@@ -1010,10 +1011,12 @@ CheckProcPR:
 			. "If NO, reacquire demographics."
 		IfMsgBox, Yes																; All tests valid
 		{
+			eventlog("Demographics valid. Processing.")
 			return																	; Select YES, return to processing Holter
 		} 
 		else 																		; Select NO, reacquire demographics
 		{
+			eventlog("Demographics valid. Wants to reacquire.")
 			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 		}
