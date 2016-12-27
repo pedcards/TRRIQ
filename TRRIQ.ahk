@@ -405,7 +405,18 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			&& (ptDem["Loc"]) && (ptDem["Type"])													; Loc and type is not null
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])								; prov any string, encDate not null
 	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
-		eventlog("Data incomplete.")
+		eventlog("Data incomplete."
+			. ((ptDem["nameF"]) ? "" : " nameF")
+			. ((ptDem["nameL"]) ? "" : " nameL")
+			. ((ptDem["mrn"]) ? "" : " MRN")
+			. ((ptDem["Account number"]) ? "" : " EncNum")
+			. ((ptDem["DOB"]) ? "" : " DOB")
+			. ((ptDem["Sex"]) ? "" : " Sex")
+			. ((ptDem["Loc"]) ? "" : " Loc")
+			. ((ptDem["Type"]) ? "" : " Type")
+			. ((ptDem["EncDate"]) ? "" : " EncDate")
+			. ((ptDem["Provider"]) ? "" : " Provider")
+			. ".")
 		MsgBox,, % "Data incomplete. Try again", % ""
 			. ((ptDem["nameF"]) ? "" : "First name`n")
 			. ((ptDem["nameL"]) ? "" : "Last name`n")
