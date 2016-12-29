@@ -261,11 +261,11 @@ parseClip(clip) {
 				, "date":dt
 				, "time":parseDate(dt).time}
 	}
-	if (clip~="Inpatient|Observation\s\[") {														; Inpatient types
+	if (clip~="Inpatient|Observation\s\[") {											; Inpatient types
 		return {"field":"Type"
 				, "value":"Inpatient"
 				, "loc":"Inpatient"
-				, "date":dt}
+				, "date":""}															; can span many days, return blank
 	}
 	if (clip~="Day Surg.*\s\[") {														; Day Surg type
 		return {"field":"Type"
