@@ -205,24 +205,13 @@ FetchDem:
 					eventlog("MouseGrab other fields. MRN=" ptDem["MRN"] " DOB=" ptDem["DOB"] " Sex=" ptDem["Sex"] ".")
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
 					ptDem["Type"] := tmp.value
+					ptDem["Loc"] := tmp.loc
 					ptDem["EncDate"] := tmp.date										; and date
 					ptDem["Hookup time"] := tmp.time
 					eventlog("MouseGrab other fields. Type=" ptDem["Type"] " EncDate=" tmp.date " EncTime=" tmp.time ".")
 					
-					if (ptDem.Type="Outpatient") {
+					if (ptDem["Type"]="Outpatient") {
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2]).value			; most outpatient locations are short strings, click the right half of cell to grab location name
-					}
-					if (ptDem.Type="Inpatient") {										; could be actual inpatient or in SurgCntr
-						ptDem["Loc"] := "Inpatient"										; date is date of admission
-					}
-					if (ptDem.Type="Day Surg") {
-						ptDem["Loc"] := "SurgCntr"
-					}
-					if (ptDem.Type="Observation") {
-						ptDem["Loc"] := "Inpatient"
-					}
-					if (ptDem.Type="Emergency") {
-						ptDem["Loc"] := "Emergency"
 					}
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
@@ -248,7 +237,7 @@ mouseGrab(x,y) {
 	sleep 100
 	ClipWait																			; sometimes there is delay for clipboard to populate
 	clk := parseClip(clipboard)															; get available values out of clipboard
-	return {"field":clk.field, "value":clk.value, "date":clk.date, "time":clk.time}	; Redundant? since this is what parseClip() returns
+	return clk																			; Redundant? since this is what parseClip() returns
 }
 
 parseClip(clip) {
@@ -268,22 +257,26 @@ parseClip(clip) {
 	if (clip~="Outpatient\s\[") {														; Outpatient type
 		return {"field":"Type"
 				, "value":"Outpatient"
+				, "loc":"Outpatient"
 				, "date":dt
 				, "time":parseDate(dt).time}
 	}
 	if (clip~="Inpatient|Observation\s\[") {														; Inpatient types
 		return {"field":"Type"
 				, "value":"Inpatient"
+				, "loc":"Inpatient"
 				, "date":dt}
 	}
 	if (clip~="Day Surg.*\s\[") {														; Day Surg type
 		return {"field":"Type"
 				, "value":"Day Surg"
+				, "loc":"SurgCntr"
 				, "date":dt}
 	}
 	if (clip~="Emergency") {															; Emergency type
 		return {"field":"Type"
 				, "value":"Emergency"
+				, "loc":"Emergency"
 				, "date":dt}
 	}
 	return Error																		; Anything else returns Error
