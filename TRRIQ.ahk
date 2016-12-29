@@ -203,20 +203,24 @@ FetchDem:
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2]).value
 					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]).value,1,1)
 					eventlog("MouseGrab other fields. MRN=" ptDem["MRN"] " DOB=" ptDem["DOB"] " Sex=" ptDem["Sex"] ".")
+					
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
 					ptDem["Type"] := tmp.value
-					ptDem["Loc"] := tmp.loc
-					ptDem["EncDate"] := tmp.date										; and date
-					ptDem["Hookup time"] := tmp.time
-					eventlog("MouseGrab other fields. Type=" ptDem["Type"] " EncDate=" tmp.date " EncTime=" tmp.time ".")
-					
 					if (ptDem["Type"]="Outpatient") {
 						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2]).value			; most outpatient locations are short strings, click the right half of cell to grab location name
+					} else {
+						ptDem["Loc"] := tmp.loc
+					}
+					if !(ptDem["Type"]="Inpatient") {									; get date/time for non-inpt/obs encounters
+						ptDem["EncDate"] := tmp.date
+						ptDem["Hookup time"] := tmp.time
 					}
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
 					Gui, fetch:show
-					eventlog("MouseGrab other fields. LOC=" ptDem.loc ".")
+					eventlog("MouseGrab other fields."
+						. " Type=" ptDem["Type"] " Loc=" ptDem["Loc"]
+						. " EncDate=" ptDem["EncDate"] " EncTime=" ptDem["Hookup time"] ".")
 				}
 			}
 			gosub fetchGUI							; Update GUI with new info
