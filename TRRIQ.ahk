@@ -118,13 +118,12 @@ if (instr(phase,"PDF")) {
 		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
 		if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0200 (already processed)
-			eventlog("Skipping file """ fileNam """, already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
+			eventlog("Skipping file """ fileNam ".pdf"", already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
 			continue
 		}
-		eventlog("Processing """ fileNam """.")
+		eventlog("Processing """ fileNam ".pdf"".")
 		gosub MainLoop													; process the PDF
 		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
-			eventlog("Manual [x] out of fetchDem.")
 			continue
 		}
 		if !IsObject(ptDem) {											; bad file, never acquires demographics
@@ -358,6 +357,7 @@ fetchGuiClose:
 	Gui, fetch:destroy
 	getDem := false																	; break out of fetchDem loop
 	fetchQuit := true
+	eventlog("Manual [x] out of fetchDem.")
 Return
 
 fetchSubmit:
