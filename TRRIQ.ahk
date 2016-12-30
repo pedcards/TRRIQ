@@ -701,15 +701,8 @@ Holter_LW:
 	eventlog("Holter_LW")
 	monType := "H"
 	
-	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
-	eventlog("Extracting full text.")
-	
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
-	
-	;~ MsgBox % holtVals
-	;~ Clipboard := holtVals
-	;~ ExitApp
 	
 	gosub checkProcLW											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -922,6 +915,18 @@ CheckProcLW:
 	chk.Prov := strVal(demog,"Physician","Scanned By")						; Ordering MD
 	chk.Date := strVal(demog,"Test Date","Analysis Date")					; Study date
 	chk.Ind := strVal(demog,"Reason for Test","Group")						; Indication
+	
+	chkDT := parseDate(chk.Date)
+	chkFilename := chk.MRN " " chk.Last " " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
+	if FileExist(holterDir . chkFilename . "-short.pdf") {
+		eventlog(chkFilename "-short.pdf exists, removing " fileIn )
+		FileDelete, %fileIn%
+		fetchQuit := true
+		return
+	}
+	
+	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
+	eventlog("Extracting full text.")
 	
 	Clipboard := chk.Last ", " chk.First														; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
