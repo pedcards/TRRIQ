@@ -211,7 +211,7 @@ FetchDem:
 					} else {
 						ptDem["Loc"] := tmp.loc
 					}
-					if !(ptDem["Type"]="Inpatient") {									; get date/time for non-inpt/obs encounters
+					if !(ptDem["EncDate"]) {											; EncDate will be empty if new upload or null in PDF
 						ptDem["EncDate"] := tmp.date
 						ptDem["Hookup time"] := tmp.time
 					}
