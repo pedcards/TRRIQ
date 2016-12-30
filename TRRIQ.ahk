@@ -118,13 +118,12 @@ if (instr(phase,"PDF")) {
 		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
 		if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0200 (already processed)
-			eventlog("Skipping file """ fileNam """, already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
+			eventlog("Skipping file """ fileNam ".pdf"", already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
 			continue
 		}
-		eventlog("Processing """ fileNam """.")
+		eventlog("Processing """ fileNam ".pdf"".")
 		gosub MainLoop													; process the PDF
 		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
-			eventlog("Manual [x] out of fetchDem.")
 			continue
 		}
 		if !IsObject(ptDem) {											; bad file, never acquires demographics
@@ -211,7 +210,7 @@ FetchDem:
 					} else {
 						ptDem["Loc"] := tmp.loc
 					}
-					if !(ptDem["Type"]="Inpatient") {									; get date/time for non-inpt/obs encounters
+					if !(ptDem["EncDate"]) {											; EncDate will be empty if new upload or null in PDF
 						ptDem["EncDate"] := tmp.date
 						ptDem["Hookup time"] := tmp.time
 					}
@@ -358,6 +357,7 @@ fetchGuiClose:
 	Gui, fetch:destroy
 	getDem := false																	; break out of fetchDem loop
 	fetchQuit := true
+	eventlog("Manual [x] out of fetchDem.")
 Return
 
 fetchSubmit:
@@ -701,15 +701,8 @@ Holter_LW:
 	eventlog("Holter_LW")
 	monType := "H"
 	
-	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
-	eventlog("Extracting full text.")
-	
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
-	
-	;~ MsgBox % holtVals
-	;~ Clipboard := holtVals
-	;~ ExitApp
 	
 	gosub checkProcLW											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -757,9 +750,6 @@ Holter_Pr:
 {
 	eventlog("Holter_Pr")
 	monType := "PR"
-	
-	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
-	eventlog("Extracting full text.")
 	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
@@ -926,6 +916,18 @@ CheckProcLW:
 	chk.Date := strVal(demog,"Test Date","Analysis Date")					; Study date
 	chk.Ind := strVal(demog,"Reason for Test","Group")						; Indication
 	
+	chkDT := parseDate(chk.Date)
+	chkFilename := chk.MRN " " chk.Last " " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
+	if FileExist(holterDir . chkFilename . "-short.pdf") {
+		eventlog(chkFilename "-short.pdf exists, removing " fileIn )
+		FileDelete, %fileIn%
+		fetchQuit := true
+		return
+	}
+	
+	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
+	eventlog("Extracting full text.")
+	
 	Clipboard := chk.Last ", " chk.First														; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
 		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
@@ -1002,6 +1004,18 @@ CheckProcPR:
 	chk.Prov := strVal(demog,"Referring Physician:","Indications:")							; Ordering MD
 	chk.Ind := strVal(demog,"Indications:","Medications:")									; Indication
 	chk.Date := strVal(demog,"Date Recorded:","Date Processed:")							; Study date
+	chkDT := parseDate(chk.Date)
+	
+	chkFilename := chk.MRN " " chk.Last " " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
+	if FileExist(holterDir . chkFilename . "-short.pdf") {
+		eventlog(chkFilename "-short.pdf exists, removing " fileIn )
+		FileDelete, %fileIn%
+		fetchQuit := true
+		return
+	}
+	
+	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
+	eventlog("Extracting full text.")	
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
