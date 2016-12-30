@@ -1002,6 +1002,15 @@ CheckProcPR:
 	chk.Prov := strVal(demog,"Referring Physician:","Indications:")							; Ordering MD
 	chk.Ind := strVal(demog,"Indications:","Medications:")									; Indication
 	chk.Date := strVal(demog,"Date Recorded:","Date Processed:")							; Study date
+	chkDT := parseDate(chk.Date)
+	
+	chkFilename := chk.MRN " " chk.Last " " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
+	if FileExist(holterDir . chkFilename . "-short.pdf") {
+		eventlog(chkFilename "-short.pdf exists, removing " fileIn )
+		FileDelete, %fileIn%
+		fetchQuit := true
+		return
+	}
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
