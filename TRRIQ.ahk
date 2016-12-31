@@ -643,6 +643,7 @@ getMD:
 			ptDem.Provider := tmpCrd.best
 		}
 	}
+	eventlog("Cardiologist " ptDem.Provider " entered.")
 	return
 }	
 
@@ -662,10 +663,9 @@ assignMD:
 		if (inptMD.fuzz=0) {													; on-call Cards that day 
 			ptDem.Loc := "Inpatient"
 			ptDem.Provider := inptMD.best
-		} else {
-			MsgBox No match
+			eventlog("Cardiologist autoselected " ptDem.Provider )
+			return
 		}
-		return
 	}
 	gosub getMD																	; when all else fails, ask
 	ptDem.Loc := "Inpatient"
