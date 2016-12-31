@@ -685,6 +685,7 @@ epRead:
 	if !(ymatch := ymatch.value()) {
 		ymatch := epMon ? epMon : cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
 		epMon := ymatch
+		eventlog("Reading EP assigned to " epMon ".")
 	}
 	
 	if (RegExMatch(fldval["ordering"], "Oi)(Chun)|(Salerno)|(Seslar)", epOrder))  {
