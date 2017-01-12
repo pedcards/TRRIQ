@@ -918,10 +918,10 @@ CheckProcLW:
 	chk.Ind := strVal(demog,"Reason for Test","Group")						; Indication
 	
 	chkDT := parseDate(chk.Date)
-	chkFilename := chk.MRN " " chk.Last " " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
+	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
 	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
-		eventlog(chkFilename ".pdf archive exists, removing " fileIn )
 		FileDelete, %fileIn%
+		eventlog(chk.MRN " PDF archive exists, deleting '" fileIn "'")
 		fetchQuit := true
 		return
 	}
@@ -1005,12 +1005,12 @@ CheckProcPR:
 	chk.Prov := strVal(demog,"Referring Physician:","Indications:")							; Ordering MD
 	chk.Ind := strVal(demog,"Indications:","Medications:")									; Indication
 	chk.Date := strVal(demog,"Date Recorded:","Date Processed:")							; Study date
-	chkDT := parseDate(chk.Date)
 	
-	chkFilename := chk.MRN " " chk.Last " " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
+	chkDT := parseDate(chk.Date)
+	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
 	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
-		eventlog(chkFilename ".pdf archive exists, removing " fileIn )
 		FileDelete, %fileIn%
+		eventlog(chk.MRN " PDF archive exists, deleting '" fileIn "'")
 		fetchQuit := true
 		return
 	}
