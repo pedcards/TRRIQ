@@ -919,8 +919,8 @@ CheckProcLW:
 	
 	chkDT := parseDate(chk.Date)
 	chkFilename := chk.MRN " " chk.Last " " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
-	if FileExist(holterDir . chkFilename . "-short.pdf") {
-		eventlog(chkFilename "-short.pdf exists, removing " fileIn )
+	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
+		eventlog(chkFilename ".pdf archive exists, removing " fileIn )
 		FileDelete, %fileIn%
 		fetchQuit := true
 		return
@@ -1008,8 +1008,8 @@ CheckProcPR:
 	chkDT := parseDate(chk.Date)
 	
 	chkFilename := chk.MRN " " chk.Last " " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
-	if FileExist(holterDir . chkFilename . "-short.pdf") {
-		eventlog(chkFilename "-short.pdf exists, removing " fileIn )
+	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
+		eventlog(chkFilename ".pdf archive exists, removing " fileIn )
 		FileDelete, %fileIn%
 		fetchQuit := true
 		return
