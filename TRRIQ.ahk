@@ -740,7 +740,7 @@ Holter_LW:
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
 	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Philips Holter"""
+	fileOut2 .= ",""Holter"""
 	
 	ShortenPDF("FULL DISCLOSURE")
 
@@ -812,7 +812,7 @@ Holter_Pr:
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
 	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Mortara Holter"""
+	fileOut2 .= ",""Holter"""
 	
 	ShortenPDF("i)60\s+sec/line")
 
