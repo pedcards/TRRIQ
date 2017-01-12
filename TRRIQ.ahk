@@ -740,7 +740,7 @@ Holter_LW:
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
 	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Philips Holter"""
+	fileOut2 .= ",""Holter"""
 	
 	ShortenPDF("FULL DISCLOSURE")
 
@@ -812,7 +812,7 @@ Holter_Pr:
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
 	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Mortara Holter"""
+	fileOut2 .= ",""Holter"""
 	
 	ShortenPDF("i)60\s+sec/line")
 
@@ -918,10 +918,10 @@ CheckProcLW:
 	chk.Ind := strVal(demog,"Reason for Test","Group")						; Indication
 	
 	chkDT := parseDate(chk.Date)
-	chkFilename := chk.MRN " " chk.Last " " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
-	if FileExist(holterDir . chkFilename . "-short.pdf") {
-		eventlog(chkFilename "-short.pdf exists, removing " fileIn )
+	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
+	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
 		FileDelete, %fileIn%
+		eventlog(chk.MRN " PDF archive exists, deleting '" fileIn "'")
 		fetchQuit := true
 		return
 	}
@@ -1005,12 +1005,12 @@ CheckProcPR:
 	chk.Prov := strVal(demog,"Referring Physician:","Indications:")							; Ordering MD
 	chk.Ind := strVal(demog,"Indications:","Medications:")									; Indication
 	chk.Date := strVal(demog,"Date Recorded:","Date Processed:")							; Study date
-	chkDT := parseDate(chk.Date)
 	
-	chkFilename := chk.MRN " " chk.Last " " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
-	if FileExist(holterDir . chkFilename . "-short.pdf") {
-		eventlog(chkFilename "-short.pdf exists, removing " fileIn )
+	chkDT := parseDate(chk.Date)
+	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
+	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
 		FileDelete, %fileIn%
+		eventlog(chk.MRN " PDF archive exists, deleting '" fileIn "'")
 		fetchQuit := true
 		return
 	}
