@@ -1216,10 +1216,8 @@ Event_BGH:
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
 	fieldvals(enroll,3,"counts")
 	
-	;~ MsgBox % enroll
-	;~ ExitApp
 	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Body Guardian Heart"""
+	fileOut2 .= ",""Event"""
 
 Return
 }
