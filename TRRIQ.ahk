@@ -1150,6 +1150,9 @@ return
 
 Event_LW:
 {
+	MsgBox, 16, File type error, Cannot process LifeWatch event recorders.`n`nPlease process this as a paper report.
+	return
+	
 	fields := ["PATIENT INFORMATION","Name:","ID #:","4800 SAND POINT","DOB:","Sex:","Phone:"
 		,"Monitor Type:","Diag:","Delivery Code:","Enrollment Period:","Date"
 		,"SYMPTOMS:","ACTIVITY:","FINDINGS:","COMMENTS:","EVENT RECORDER DATA:"]
