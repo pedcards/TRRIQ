@@ -692,8 +692,9 @@ epRead:
 		ymatch := epOrder.value()
 	}
 	
-	fileOut1 .= ",""EP_read"",""EP_date"",""MA"""
-	fileOut2 .= ",""" ymatch """,""" niceDate(dlDate) """,""" user """"
+	FormatTime, ma_date, A_Now, MM/dd/yyyy
+	fileOut1 .= ",""EP_read"",""EP_date"",""MA"",""MA_date"""
+	fileOut2 .= ",""" ymatch """,""" niceDate(dlDate) """,""" user """,""" ma_date """"
 return
 }
 
@@ -1149,6 +1150,9 @@ return
 
 Event_LW:
 {
+	MsgBox, 16, File type error, Cannot process LifeWatch event recorders.`n`nPlease process this as a paper report.
+	return
+	
 	fields := ["PATIENT INFORMATION","Name:","ID #:","4800 SAND POINT","DOB:","Sex:","Phone:"
 		,"Monitor Type:","Diag:","Delivery Code:","Enrollment Period:","Date"
 		,"SYMPTOMS:","ACTIVITY:","FINDINGS:","COMMENTS:","EVENT RECORDER DATA:"]
@@ -1186,6 +1190,17 @@ Event_BGH:
 	demog := columns(demog,"\s+Patient ID","#####",,"Gender","Date of Birth","Phone")
 	demog := name "`n" demog "`n" diag "`n"
 	
+	demog0 := 
+	Loop, parse, demog, `n,`r
+	{
+		i:=trim(A_LoopField)
+		if !(i)													; skip entirely blank lines
+			continue
+		i = %i%
+		demog0 .= i . "`n"						; strip left from right columns
+	}
+	demog := demog0
+	
 	gosub checkProcBGH											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
@@ -1204,10 +1219,8 @@ Event_BGH:
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
 	fieldvals(enroll,3,"counts")
 	
-	;~ MsgBox % enroll
-	;~ ExitApp
 	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Body Guardian Heart"""
+	fileOut2 .= ",""Event"""
 
 Return
 }
@@ -1275,7 +1288,7 @@ CheckProcBGH:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(chk.Prov,"i)^Dr\.(\s)?"))
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
@@ -1288,12 +1301,12 @@ CheckProcBGH:
 	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
 		fldval["name_L"] := ptDem["nameL"]
 		fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i`a)Patient Name: (.*)\R","Patient Name:   " chk.Name "   `n")
-	demog := RegExReplace(demog,"i`a)Patient ID (.*)Physician","Patient ID   " ptDem["mrn"] "`nPhysician")
-	demog := RegExReplace(demog,"i`a)Physician (.*)Gender", "Physician   " ptDem["Provider"] "`nGender")
-	demog := RegExReplace(demog,"i`a)Gender (.*)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
-	demog := RegExReplace(demog,"i`a)Date of Birth (.*)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
-	enroll := RegExReplace(enroll,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
+	demog := RegExReplace(demog,"i)Patient Name: (.*)Patient ID","Patient Name:   " chk.Name "`nPatient ID")
+	demog := RegExReplace(demog,"i)Patient ID(.*)Physician","Patient ID   " ptDem["mrn"] "`nPhysician")
+	demog := RegExReplace(demog,"i)Physician(.*)Gender", "Physician   " ptDem["Provider"] "`nGender")
+	demog := RegExReplace(demog,"i)Gender(.*)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
+	demog := RegExReplace(demog,"i)Date of Birth(.*)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
+	enroll := RegExReplace(enroll,"i)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
 	;~ demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
 	;~ demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
 	
