@@ -692,8 +692,9 @@ epRead:
 		ymatch := epOrder.value()
 	}
 	
-	fileOut1 .= ",""EP_read"",""EP_date"",""MA"""
-	fileOut2 .= ",""" ymatch """,""" niceDate(dlDate) """,""" user """"
+	FormatTime, ma_date, A_Now, MM/dd/yyyy
+	fileOut1 .= ",""EP_read"",""EP_date"",""MA"",""MA_date"""
+	fileOut2 .= ",""" ymatch """,""" niceDate(dlDate) """,""" user """,""" ma_date """"
 return
 }
 
