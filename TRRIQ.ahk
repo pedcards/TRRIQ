@@ -117,7 +117,7 @@ if (instr(phase,"PDF")) {
 		fileNam := RegExReplace(A_LoopFileName,"i)\.pdf")				; fileNam is name only without extension, no path
 		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
-		if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0200 (already processed)
+		if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0000-0359 (already processed)
 			eventlog("Skipping file """ fileNam ".pdf"", already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
 			continue
 		}
@@ -569,7 +569,7 @@ MainLoop:
 		if !(i)																		; skip entirely blank lines
 			continue					
 		newTxt .= i . "`n"															; only add lines with text in it
-	}					
+	}
 	FileDelete tempfile.txt															; remove any leftover tempfile
 	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
 	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt								; move a copy into tempfiles for troubleshooting
