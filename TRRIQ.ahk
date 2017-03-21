@@ -563,13 +563,7 @@ MainLoop:
 	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt					; convert PDF pages 1-2 to txt file
 	newTxt:=""																		; clear the full txt variable
 	FileRead, maintxt, temp.txt														; load into maintxt
-	Loop, parse, maintxt, `n,`r														; clean up maintxt
-	{					
-		i:=A_LoopField					
-		if !(i)																		; skip entirely blank lines
-			continue					
-		newTxt .= i . "`n"															; only add lines with text in it
-	}
+	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
 	FileDelete tempfile.txt															; remove any leftover tempfile
 	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
 	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt								; move a copy into tempfiles for troubleshooting
@@ -1093,7 +1087,7 @@ Zio:
 	monType:="ZIO"
 	
 	zdat := columns(newtxt,"","Preliminary Findings",,"Enrollment Period")
-	znam := trim(cleanSpace(columns(zdat,"Report for","Date of Birth")))
+	znam := trim(cleanSpace(stregX(zdat,"Report for",1,1,"Date of Birth",1)))
 	fieldColAdd("dem","Name_L",strX(znam, "", 1,1, ",", 1,1))
 	fieldColAdd("dem","Name_F",strX(znam, ",", 1,2, "", 1,1))
 
@@ -1442,7 +1436,7 @@ Return SubStr(H,P:=(((Z:=StrLen(ES))+(X:=StrLen(H))+StrLen(BS)-Z-X)?((T:=InStr(H
 +(0-ET)):(X+P)):(X)))-P) ; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
 }
 
-stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
+stRegX_old(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 /*	modified version: searches from BS to "   "
 	h = Haystack
 	BS = beginning string
@@ -1458,6 +1452,42 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 	pos1 := RegExMatch(h,((ES~=rem)?"Oim"ES:"Oim)"ES),ePat,pos0+bPat.len)
 	N := pos1+((ET)?0:(ePat.len))
 	return substr(h,pos0+((BT)?(bPat.len):0),N-pos0-bPat.len)
+}
+
+stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
+/*	modified version: searches from BS to "   "
+	h = Haystack
+	BS = beginning string
+	BO = beginning offset
+	BT = beginning trim, TRUE or FALSE
+	ES = ending string
+	ET = ending trim, TRUE or FALSE
+	N = variable for next offset
+*/
+	;~ BS .= "(.*?)\s{3}"
+	rem:="^[OPimsxADJUXPSC(\`n)(\`r)(\`a)]+\)"										; All the possible regexmatch options
+	
+	pos0 := RegExMatch(h,((BS~=rem)?"Oim"BS:"Oim)"BS),bPat,((BO)?BO:1))
+	/*	Ensure that BS begins with at least "Oim)" to return [O]utput, case [i]nsensitive, and [m]ultiline searching
+		Return result in "bPat" (beginning pattern) object
+		If (BO), start at position BO, else start at 1
+	*/
+	pos1 := RegExMatch(h,((ES~=rem)?"Oim"ES:"Oim)"ES),ePat,pos0+bPat.len())
+	/*	Ensure that ES begins with at least "Oim)"
+		Resturn result in "ePat" (ending pattern) object
+		Begin search after bPat result (pos0+bPat.len())
+	*/
+	bmod := (BT) ? bPat.len() : 0
+	emod := (ET) ? 0 : ePat.len()
+	N := pos1+emod
+	/*	Final position is start of ePat match + modifier
+		If (ET), add nothing, else add ePat.len()
+	*/
+	return substr(h,pos0+bmod,(pos1+emod)-(pos0+bmod))
+	/*	Start at pos0
+		If (BT), add bPat.len(), else stay at pos0 (will include BS in result)
+		substr length is position of N (either pos1 or include ePat) less starting pos0
+	*/
 }
 
 formatField(pre, lab, txt) {
