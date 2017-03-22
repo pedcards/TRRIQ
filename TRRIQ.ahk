@@ -1090,10 +1090,12 @@ Zio:
 	znam := trim(cleanSpace(stregX(zdat,"Report for",1,1,"Date of Birth",1)))
 	fieldColAdd("dem","Name_L",strX(znam, "", 1,1, ",", 1,1))
 	fieldColAdd("dem","Name_F",strX(znam, ",", 1,2, "", 1,1))
-
-	zdem := columns(zdat,"Date of birth","Ventricular Tachycardia",1,"Patient ID","Gender","Primary Indication")
-	fields[1] := ["Date of Birth","Prescribing Clinician","Patient ID","Managing Location","Gender","Primary Indication"]
-	labels[1] := ["DOB","Ordering","MRN","Site","Sex","Indication"]
+	
+	tmp := stregX(zdat,"\s+Date of Birth",1,0,"(Supra)?ventricular tachycardia \(4",1) ">>>end"
+	zdem := columns(tmp
+		,"Date of birth",">>>end",0,"Patient ID","Gender","Primary Indication")
+	fields[1] := ["Date of Birth","Prescribing Clinician","Patient ID","Managing Location","Gender","Primary Indication",">>>end"]
+	labels[1] := ["DOB","Ordering","MRN","Site","Sex","Indication","end"]
 	fieldvals(zdem,1,"dem")
 	
 	zarr := columns(zdat,"Ventricular Tachycardia (4 beats or more)","iRhythm Technologies, Inc.",1)
