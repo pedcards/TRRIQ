@@ -1084,7 +1084,23 @@ CheckProcPR:
 
 Zio:
 {
-	monType:="ZIO"
+	eventlog("Holter_Zio")
+	monType := "Zio"
+	
+	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
+	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
+	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia") "#####"
+	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
+	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
+	
+	gosub checkProcPR											; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	/* Holter PDF is valid. OK to process.
+	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	 */
 	
 	zdat := columns(newtxt,"","Preliminary Findings",,"Enrollment Period")
 	znam := trim(cleanSpace(stregX(zdat,"Report for",1,1,"Date of Birth",1)))
