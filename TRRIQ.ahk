@@ -1307,6 +1307,43 @@ CheckProcBGH:
 	return
 }
 
+oneCol(txt) {
+/*	Break text block into a single column 
+	based on logical break points in title (first) row
+*/
+	lastpos := 1
+	Loop																		; Iterate each column
+	{
+		Loop, parse, txt, `n,`r													; Read through text block
+		{
+			i := A_LoopField
+			
+			if (A_index=1) {
+				pos := RegExMatch(i	"  "										; Add "  " to end of scan string
+								,"O)(?<=(\s{2}))[^\s]"							; Search "  text" as each column 
+								,col
+								,lastpos+1)										; search position to find next "  "
+				
+				if !(pos) {														; no match beyond, have hit max column
+					max := true
+				}
+			}
+			
+			len := (max) ? strlen(i) : pos-lastpos								; length of string to return (max gets to end of line)
+			
+			str := substr(i,lastpos,len)										; string to return
+			
+			result .= str "`n"													; add to result
+			;~ MsgBox % result
+		}
+		if !(pos) {																; break out if at max column
+			break
+		}
+		lastpos := pos															; set next start point
+	}
+	return result . ">>>end"
+}
+
 columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 /*	Returns string as a single column.
 	x 		= input string
