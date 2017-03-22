@@ -1312,7 +1312,7 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	x 		= input string
 	blk1	= leading string to start block
 	blk2	= ending string to end block
-	incl	= if null, exclude blk1 string; if !null, remove blk1 string
+	incl	= if null, include blk1 string; if !null, remove blk1 string
 	col2	= string demarcates start of COLUMN 2
 	col3	= string demarcates start of COLUMN 3
 	col4	= string demarcates start of COLUMN 4
@@ -1322,7 +1322,7 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	RegExMatch(x,blk1,blo1)														; Creates blo1 object out of blk1 match in x
 	RegExMatch(x,blk2,blo2)
 	
-	txt := stRegX(x,blk1,1,(incl) ? blo1.len : 0,blk2,blo2.len)
+	txt := stRegX(x,blk1,1,((incl) ? 1 : 0),blk2,1)
 	;~ MsgBox % txt
 	col2 := RegExReplace(col2,"\s+","\s+")
 	col3 := RegExReplace(col3,"\s+","\s+")
