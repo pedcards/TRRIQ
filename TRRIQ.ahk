@@ -1159,17 +1159,30 @@ return
 
 CheckProcZio:
 {
-/*	copied from CheckProcBGH
-*/
-	chk.Name := strVal(demog,"Patient Name","Patient ID")										; Name
-		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")									; NameL				must be [A-Z]
-		chk.Last := trim(strX(chk.Name," ",0,1,"",0)," `r`n")										; NameF				must be [A-Z]
-	chk.MRN := strVal(demog,"Patient ID","Physician")											; MRN
-	chk.Prov := strVal(demog,"Physician","Gender")												; Ordering MD
-	chk.Sex := strVal(demog,"Gender","Date of Birth")											; Sex
-	chk.DOB := strVal(demog,"Date of Birth","Practice")											; DOB
-	chk.Ind := strVal(demog,"Diagnosis",".*")													; Indication
-	chk.Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
+	tmp := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
+		chk.Last := trim(strX(tmp, "", 1,1, ",", 1,1))
+		chk.First := trim(strX(tmp, ", ", 1,2, "", 0))
+	chk.DOB := RegExReplace(strVal(demog,"Date of Birth","Prescribing Clinician"),"\s+\(.*(yrs|mos)\)")		; DOB
+	chk.Prov:= strVal(demog,"Prescribing Clinician","Patient ID")												; Ordering MD
+	chk.MRN := strVal(demog,"Patient ID","Managing Location")											; MRN
+	chk.Loc := strVal(demog,"Managing Location","Gender")											; MRN
+	chk.Sex := strVal(demog,"Gender","Primary Indication")											; Sex
+	chk.Ind := RegExReplace(strVal(demog,"Primary Indication",">>>end"),"\(R00.0\)\s+")				; Indication
+	
+	demog := "Name   " chk.Last ", " chk.First "`n" demog
+	
+	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
+		chk.enroll := strVal(tmp,"Enrollment Period","Analysis Time")
+		chk.Date := strVal(chk.enroll,"hours",",")
+		chk.Analysis := strVal(tmp,"Analysis Time","\(after")
+		chk.enroll := stregX(chk.enroll,"",1,0,"   ",1)
+	
+	zcol := stregx(zcol,"\s+(Supra)?ventricular tachycardia \(",1,0,">>>end",1)
+	
+	/*	
+	 *	Return from CheckProc for testing
+	 */
+		Return
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
@@ -1217,17 +1230,14 @@ CheckProcZio:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
-	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
-		fldval["name_L"] := ptDem["nameL"]
-		fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i)Patient Name: (.*)Patient ID","Patient Name:   " chk.Name "`nPatient ID")
-	demog := RegExReplace(demog,"i)Patient ID(.*)Physician","Patient ID   " ptDem["mrn"] "`nPhysician")
-	demog := RegExReplace(demog,"i)Physician(.*)Gender", "Physician   " ptDem["Provider"] "`nGender")
-	demog := RegExReplace(demog,"i)Gender(.*)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
-	demog := RegExReplace(demog,"i)Date of Birth(.*)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
-	enroll := RegExReplace(enroll,"i)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
-	;~ demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
-	;~ demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
+	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
+	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " chk.Name "`nDate of Birth",,1)
+	demog := RegExReplace(demog,"i)Date of Birth(.*)Prescribing Clinician","Date of Birth   " ptDem["DOB"] "`nPrescribing Clinician",,1)
+	demog := RegExReplace(demog,"i)Prescribing Clinician(.*)Patient ID","Prescribing Clinician   " ptDem["Provider"] "`nPatient ID",,1)
+	demog := RegExReplace(demog,"i)Patient ID(.*)Managing Location","Patient ID   " ptDem["MRN"] "`nManaging Location",,1)
+	demog := RegExReplace(demog,"i)Managing Location(.*)Gender","Managing Location   " ptDem["Loc"] "`nGender",,1)
+	demog := RegExReplace(demog,"i)Gender(.*)Primary Indication","Gender   " ptDem["Sex"] "`nPrimary Indication",,1)
+	demog := RegExReplace(demog,"i)Primary Indication(.*)>>>end","Primary Indication   " ptDem["Indication"] "`n>>>end",,1)
 	
 	return
 }
