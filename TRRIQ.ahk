@@ -1099,30 +1099,25 @@ Zio:
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	
-	zdat := columns(newtxt,"","Preliminary Findings",,"Enrollment Period")
-	znam := trim(cleanSpace(stregX(zdat,"Report for",1,1,"Date of Birth",1)))
-	fieldColAdd("dem","Name_L",strX(znam, "", 1,1, ",", 1,1))
-	fieldColAdd("dem","Name_F",strX(znam, ",", 1,2, "", 1,1))
+	znam := strVal(demog,"Name","Date of Birth")
+	fieldColAdd("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
+	fieldColAdd("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
 	
-	tmp := stregX(zdat,"\s+Date of Birth",1,0,"(Supra)?ventricular tachycardia \(4",1) ">>>end"
-	zdem := columns(tmp
-		,"Date of birth",">>>end",0,"Patient ID","Gender","Primary Indication")
 	fields[1] := ["Date of Birth","Prescribing Clinician","Patient ID","Managing Location","Gender","Primary Indication",">>>end"]
 	labels[1] := ["DOB","Ordering","MRN","Site","Sex","Indication","end"]
-	fieldvals(zdem,1,"dem")
+	fieldvals(demog,1,"dem")
 	
-	zarr := columns(zdat,"Ventricular Tachycardia (4 beats or more)","iRhythm Technologies, Inc.",1)
-	fields[2] := ["Ventricular Tachycardia (4 beats or more)","Supraventricular Tachycardia (4 beats or more)"
-		,"Pauses (3 secs or longer)","Atrial Fibrillation","AV Block (2nd"]
-	labels[2] := ["VT","SVT","Pauses","AF","AVBlock"]
-	fieldvals(zarr,2,"arr")
+	tmp := columns(zcol,"\s+(Supra)?Ventricular","Preliminary Findings",0,"Ventricular")
+	fieldColAdd("arr","SVT",scanfields(tmp,"Supraventricular Tachycardia \("))
+	fieldColAdd("arr","VT",scanfields(tmp,"Ventricular Tachycardia \("))
+	fieldColAdd("arr","Pauses",scanfields(tmp,"Pauses \("))
+	fieldColAdd("arr","AVBlock",scanfields(tmp,"AV Block \("))
+	fieldColAdd("arr","AF",scanfields(tmp,"Atrial Fibrillation"))
 	
-	znums := columns(zdat,"Enrollment Period","",1)
+	znums := columns(zcol ">>>end","Enrollment Period",">>>end",1)
 	
-	ztime := columns(znums,"Enrollment Period","Heart Rate",1,"Analysis Time")
-	fields[3] := ["Enrollment Period","Analysis Time"]
-	labels[3] := ["Enrolled","Analyzed"]
-	fieldvals(ztime,3,"time")
+	fieldColAdd("time","Enrolled",chk.enroll)
+	fieldColAdd("time","Analysis",chk.Analysis)
 	
 	zrate := columns(znums,"Heart Rate","Patient Events",1)
 	fields[4] := ["Maximum HR","Minimum HR","Average HR"]
@@ -1725,7 +1720,7 @@ formatField(pre, lab, txt) {
 	}
 	
 ;	ZIO patch specific search fixes
-	if (monType="Z") {
+	if (monType="Zio") {
 		if (RegExMatch(txt,"(\d){1,2} days (\d){1,2} hours ",tmp)) {		;	Split recorded/analyzed time in to Days and Hours
 			fieldColAdd(pre,lab "_D",strX(tmp,"",1,1, " days",1,5))
 			fieldColAdd(pre,lab "_H",strX(tmp," days",1,6, " hours",1,6))
