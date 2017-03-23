@@ -1087,13 +1087,10 @@ Zio:
 	eventlog("Holter_Zio")
 	monType := "Zio"
 	
-	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
-	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
-	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia") "#####"
-	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
-	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
+	zcol := columns(newtxt,"","SIGNATURE",0,"Enrollment Period") ">>>end"
+	demog := onecol(cleanblank(stregX(zcol,"\s+Date of Birth",1,0,"\s+(Supra)?ventricular tachycardia \(4",1)))
 	
-	gosub checkProcPR											; check validity of PDF, make demographics valid if not
+	gosub checkProcZio											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
 	}
