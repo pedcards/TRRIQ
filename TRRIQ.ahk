@@ -1499,6 +1499,18 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	return txt1 . txt2 . txt3 . txt4
 }
 
+scanfields(x,lbl) {
+/*	Scans text for block from lbl to next lbl
+*/
+	i := trim(stregX(x,"[\r\n]+" lbl,1,0,"[\r\n]+\w",1)," `r`n")
+	if instr(i,"Episodes") {
+		i := trim(columns(i ">>>end","",">>>end",1,"Episodes")," `r`n")
+	}
+	i := RegExReplace(i,"i)None found","0")
+	j := cleanblank(substr(i,(i~="[\r\n]+")))
+	return j
+}
+
 fieldvals(x,bl,bl2) {
 /*	Matches field values and results. Gets text between FIELDS[k] to FIELDS[k+1]. Excess whitespace removed. Returns results in array BLK[].
 	x	= input text
