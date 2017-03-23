@@ -1824,6 +1824,17 @@ cleanspace(ByRef txt) {
 	return txt
 }
 
+cleanblank(txt) {
+	Loop, parse, txt, `n,`r                            ; clean up maintxt 
+	{
+		i:=A_LoopField
+		if !(trim(i))                                    ; skip entirely blank lines 
+		  continue
+		newTxt .= i . "`n"                              ; only add lines with text in it 
+	} 
+	return newTxt
+}
+
 ObjHasValue(aObj, aValue, rx:="") {
 ; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
     for key, val in aObj
