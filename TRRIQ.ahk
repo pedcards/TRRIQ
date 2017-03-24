@@ -1120,7 +1120,7 @@ Zio:
 	fieldColAdd("time","Analysis",chk.Analysis)
 	
 	zrate := columns(znums,"Heart Rate","Patient Events",1)
-	fields[4] := ["Maximum HR","Minimum HR","Average HR"]
+	fields[4] := ["Max ","Min ","Avg "]
 	labels[4] := ["Max","Min","Avg"]
 	fieldvals(zrate,4,"rate")
 	
@@ -1134,12 +1134,12 @@ Zio:
 	labels[6] := ["Rare","Occ","Freq"]
 	fieldvals(zectopics,6,"ecto")
 	
-	zsve := columns(znums,"Supraventricular Ectopy (SVE/PACs)","Ventricular Ectopy (VE/PVCs)")
+	zsve := columns(znums,"Supraventricular Ectopy \(SVE/PACs\)","Ventricular Ectopy \(VE/PVCs\)",1)
 	fields[7] := ["Isolated","Couplet","Triplet"]
 	labels[7] := ["Single","Couplets","Triplets"]
 	fieldvals(zsve,7,"sve")
 	
-	zve := columns(znums,"Ventricular Ectopy (VE/PVCs)","")
+	zve := columns(znums ">>>end","Ventricular Ectopy \(VE/PVCs\)",">>>end",1)
 	fields[8] := ["Isolated","Couplet","Triplet","Longest Ventricular Bigeminy Episode","Longest Ventricular Trigeminy Episode"]
 	labels[8] := ["Single","Couplets","Triplets","LongestBigem","LongestTrigem"]
 	fieldvals(zve,8,"ve")
