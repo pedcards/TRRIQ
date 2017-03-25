@@ -589,7 +589,7 @@ MainLoop:
 		gosub Zio
 	} else if (InStr(newtxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
 		gosub Event_LW
-	} else if (RegExMatch(newtxt,"i)Preventice.*End of Service Report")) {
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {
 		gosub Event_BGH
 	} else {
 		eventlog(fileNam " bad file.")
