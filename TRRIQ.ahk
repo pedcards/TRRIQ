@@ -1276,7 +1276,7 @@ Event_BGH:
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
 	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice)|(Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
-	demog := columns(demog,"\s+Patient ID","#####",,"Gender","Date of Birth","Phone")
+	demog := columns(demog,"\s+Patient ID","#####",,"Gender","Date of Birth","Phone")		; columns get stuck in permanent loop
 	demog := name "`n" demog "`n" diag "`n"
 	
 	demog0 := 
