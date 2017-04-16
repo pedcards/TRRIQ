@@ -274,13 +274,13 @@ parseClip(clip) {
 		return {"field":"Type"
 				, "value":"Day Surg"
 				, "loc":"SurgCntr"
-				, "date":dt}
+				, "date":parseDate(dt).date}
 	}
 	if (clip~="Emergency") {															; Emergency type
 		return {"field":"Type"
 				, "value":"Emergency"
 				, "loc":"Emergency"
-				, "date":dt}
+				, "date":parseDate(dt).date}
 	}
 	return Error																		; Anything else returns Error
 }
