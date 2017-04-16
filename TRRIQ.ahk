@@ -33,12 +33,16 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	holterDir := ".\Holter PDFs\"
 	importFld := ".\Import\"
 	chipDir := ".\Chipotle\"
+	OnbaseDir1 := ".\Onbase\"
+	OnbaseDir2 := ".\HCClinic\"
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
 	isAdmin := false
 	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
+	OnbaseDir1 := "\\childrens\apps$\OnbaseFaxFiles\Cardiology\Inbound\"
+	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads"
 	eventlog(">>>>> Started in PROD mode.")
 }
 
@@ -600,6 +604,13 @@ MainLoop:
 		return																				; so skip processing this file
 	}
 	gosub epRead																			; find out which EP is reading today
+	
+	gosub outputfiles																		; generate and save output CSV, rename and move PDFs
+return
+}
+
+outputfiles:
+{
 	/*	Output the results and move files around
 	*/
 	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"											; make sure that there is only one `n 
@@ -607,11 +618,24 @@ MainLoop:
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["Test_Date"])												; get the study date
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
+	filenameHIM := tmpDate.MM tmpDate.DD substr(tmpDate.YYYY,3,2) " " 
+					. format("{:T}",fldval["Name_L"]) substr(fldval["Name_F"],1,1) " "
+					. fldval["MRN"]
 	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
+	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV
 	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1								; create a copy of CSV in tempfiles
-	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the PDF to holterDir
+	
+	if (FileExist(fileIn "sh.pdf")) {
+		fileHIM := fileIn "sh.pdf"
+	} else {
+		fileHIM := fileIn ".pdf"
+	}
+	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM ".pdf", 1
+	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM ".pdf", 1
+	
+	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
