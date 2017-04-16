@@ -212,8 +212,9 @@ FetchDem:
 					}
 					if !(ptDem["EncDate"]) {											; EncDate will be empty if new upload or null in PDF
 						ptDem["EncDate"] := tmp.date
-						ptDem["Hookup time"] := tmp.time
 					}
+					ptDem["Hookup time"] := tmp.time
+					
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
 					Gui, fetch:show
