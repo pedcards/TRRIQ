@@ -257,12 +257,11 @@ parseClip(clip) {
 	}
 	
 	dt := strX(clip," [",1,2, "]",1,1)													; get date
-	dd := parseDate(dt).YYYY . parseDate(dt).MM . parseDate(dt).DD
 	if (clip~="Outpatient\s\[") {														; Outpatient type
 		return {"field":"Type"
 				, "value":"Outpatient"
 				, "loc":"Outpatient"
-				, "date":dt
+				, "date":parseDate(dt).date
 				, "time":parseDate(dt).time}
 	}
 	if (clip~="Inpatient|Observation\s\[") {											; Inpatient types
