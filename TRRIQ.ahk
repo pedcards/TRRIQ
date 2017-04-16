@@ -33,12 +33,16 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	holterDir := ".\Holter PDFs\"
 	importFld := ".\Import\"
 	chipDir := ".\Chipotle\"
+	OnbaseDir1 := ".\Onbase\"
+	OnbaseDir2 := ".\HCClinic\"
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
 	isAdmin := false
 	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
+	OnbaseDir1 := "\\childrens\apps$\OnbaseFaxFiles\Cardiology\Inbound\"
+	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads"
 	eventlog(">>>>> Started in PROD mode.")
 }
 
@@ -117,7 +121,7 @@ if (instr(phase,"PDF")) {
 		fileNam := RegExReplace(A_LoopFileName,"i)\.pdf")				; fileNam is name only without extension, no path
 		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
-		if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0200 (already processed)
+		if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0000-0359 (already processed)
 			eventlog("Skipping file """ fileNam ".pdf"", already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
 			continue
 		}
@@ -212,8 +216,9 @@ FetchDem:
 					}
 					if !(ptDem["EncDate"]) {											; EncDate will be empty if new upload or null in PDF
 						ptDem["EncDate"] := tmp.date
-						ptDem["Hookup time"] := tmp.time
 					}
+					ptDem["Hookup time"] := tmp.time
+					
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
 					Gui, fetch:show
@@ -256,12 +261,11 @@ parseClip(clip) {
 	}
 	
 	dt := strX(clip," [",1,2, "]",1,1)													; get date
-	dd := parseDate(dt).YYYY . parseDate(dt).MM . parseDate(dt).DD
 	if (clip~="Outpatient\s\[") {														; Outpatient type
 		return {"field":"Type"
 				, "value":"Outpatient"
 				, "loc":"Outpatient"
-				, "date":dt
+				, "date":parseDate(dt).date
 				, "time":parseDate(dt).time}
 	}
 	if (clip~="Inpatient|Observation\s\[") {											; Inpatient types
@@ -274,13 +278,13 @@ parseClip(clip) {
 		return {"field":"Type"
 				, "value":"Day Surg"
 				, "loc":"SurgCntr"
-				, "date":dt}
+				, "date":parseDate(dt).date}
 	}
 	if (clip~="Emergency") {															; Emergency type
 		return {"field":"Type"
 				, "value":"Emergency"
 				, "loc":"Emergency"
-				, "date":dt}
+				, "date":parseDate(dt).date}
 	}
 	return Error																		; Anything else returns Error
 }
@@ -563,13 +567,7 @@ MainLoop:
 	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt					; convert PDF pages 1-2 to txt file
 	newTxt:=""																		; clear the full txt variable
 	FileRead, maintxt, temp.txt														; load into maintxt
-	Loop, parse, maintxt, `n,`r														; clean up maintxt
-	{					
-		i:=A_LoopField					
-		if !(i)																		; skip entirely blank lines
-			continue					
-		newTxt .= i . "`n"															; only add lines with text in it
-	}					
+	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
 	FileDelete tempfile.txt															; remove any leftover tempfile
 	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
 	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt								; move a copy into tempfiles for troubleshooting
@@ -595,7 +593,7 @@ MainLoop:
 		gosub Zio
 	} else if (InStr(newtxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
 		gosub Event_LW
-	} else if (RegExMatch(newtxt,"i)Preventice.*End of Service Report")) {
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {
 		gosub Event_BGH
 	} else {
 		eventlog(fileNam " bad file.")
@@ -606,6 +604,13 @@ MainLoop:
 		return																				; so skip processing this file
 	}
 	gosub epRead																			; find out which EP is reading today
+	
+	gosub outputfiles																		; generate and save output CSV, rename and move PDFs
+return
+}
+
+outputfiles:
+{
 	/*	Output the results and move files around
 	*/
 	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"											; make sure that there is only one `n 
@@ -613,11 +618,24 @@ MainLoop:
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["Test_Date"])												; get the study date
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
+	filenameHIM := tmpDate.MM tmpDate.DD substr(tmpDate.YYYY,3,2) " " 
+					. format("{:T}",fldval["Name_L"]) substr(fldval["Name_F"],1,1) " "
+					. fldval["MRN"]
 	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
+	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV
 	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1								; create a copy of CSV in tempfiles
-	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the PDF to holterDir
+	
+	if (FileExist(fileIn "sh.pdf")) {														; shortened filename only if shortenPDF called
+		fileHIM := fileIn "sh.pdf"
+	} else {
+		fileHIM := fileIn
+	}
+	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM ".pdf", 1									; Copy to OnbaseDir
+	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
+	
+	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
@@ -753,7 +771,7 @@ Holter_Pr:
 	eventlog("Holter_Pr")
 	monType := "PR"
 	
-	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
+	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Processed")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
 	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia") "#####"
 	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
@@ -1090,33 +1108,43 @@ CheckProcPR:
 
 Zio:
 {
-	monType:="ZIO"
+	eventlog("Holter_Zio")
+	monType := "Zio"
 	
-	zdat := columns(newtxt,"","Preliminary Findings",,"Enrollment Period")
-	znam := trim(cleanSpace(columns(zdat,"Report for","Date of Birth")))
-	fieldColAdd("dem","Name_L",strX(znam, "", 1,1, ",", 1,1))
-	fieldColAdd("dem","Name_F",strX(znam, ",", 1,2, "", 1,1))
-
-	zdem := columns(zdat,"Date of birth","Ventricular Tachycardia",1,"Patient ID","Gender","Primary Indication")
-	fields[1] := ["Date of Birth","Prescribing Clinician","Patient ID","Managing Location","Gender","Primary Indication"]
-	labels[1] := ["DOB","Ordering","MRN","Site","Sex","Indication"]
-	fieldvals(zdem,1,"dem")
+	zcol := columns(newtxt,"","SIGNATURE",0,"Enrollment Period") ">>>end"
+	demog := onecol(cleanblank(stregX(zcol,"\s+Date of Birth",1,0,"\s+(Supra)?ventricular tachycardia \(4",1)))
 	
-	zarr := columns(zdat,"Ventricular Tachycardia (4 beats or more)","iRhythm Technologies, Inc.",1)
-	fields[2] := ["Ventricular Tachycardia (4 beats or more)","Supraventricular Tachycardia (4 beats or more)"
-		,"Pauses (3 secs or longer)","Atrial Fibrillation","AV Block (2nd"]
-	labels[2] := ["VT","SVT","Pauses","AF","AVBlock"]
-	fieldvals(zarr,2,"arr")
+	gosub checkProcZio											; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
 	
-	znums := columns(zdat,"Enrollment Period","",1)
+	/* Holter PDF is valid. OK to process.
+	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	 */
 	
-	ztime := columns(znums,"Enrollment Period","Heart Rate",1,"Analysis Time")
-	fields[3] := ["Enrollment Period","Analysis Time"]
-	labels[3] := ["Enrolled","Analyzed"]
-	fieldvals(ztime,3,"time")
+	znam := strVal(demog,"Name","Date of Birth")
+	fieldColAdd("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
+	fieldColAdd("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
+	
+	fields[1] := ["Date of Birth","Prescribing Clinician","Patient ID","Managing Location","Gender","Primary Indication",">>>end"]
+	labels[1] := ["DOB","Ordering","MRN","Site","Sex","Indication","end"]
+	fieldvals(demog,1,"dem")
+	
+	tmp := columns(zcol,"\s+(Supra)?Ventricular","Preliminary Findings",0,"Ventricular")
+	fieldColAdd("arr","SVT",scanfields(tmp,"Supraventricular Tachycardia \("))
+	fieldColAdd("arr","VT",scanfields(tmp,"Ventricular Tachycardia \("))
+	fieldColAdd("arr","Pauses",scanfields(tmp,"Pauses \("))
+	fieldColAdd("arr","AVBlock",scanfields(tmp,"AV Block \("))
+	fieldColAdd("arr","AF",scanfields(tmp,"Atrial Fibrillation"))
+	
+	znums := columns(zcol ">>>end","Enrollment Period",">>>end",1)
+	
+	fieldColAdd("time","Enrolled",chk.enroll)
+	fieldColAdd("time","Analysis",chk.Analysis)
 	
 	zrate := columns(znums,"Heart Rate","Patient Events",1)
-	fields[4] := ["Maximum HR","Minimum HR","Average HR"]
+	fields[4] := ["Max ","Min ","Avg "]
 	labels[4] := ["Max","Min","Avg"]
 	fieldvals(zrate,4,"rate")
 	
@@ -1130,12 +1158,12 @@ Zio:
 	labels[6] := ["Rare","Occ","Freq"]
 	fieldvals(zectopics,6,"ecto")
 	
-	zsve := columns(znums,"Supraventricular Ectopy (SVE/PACs)","Ventricular Ectopy (VE/PVCs)")
+	zsve := columns(znums,"Supraventricular Ectopy \(SVE/PACs\)","Ventricular Ectopy \(VE/PVCs\)",1)
 	fields[7] := ["Isolated","Couplet","Triplet"]
 	labels[7] := ["Single","Couplets","Triplets"]
 	fieldvals(zsve,7,"sve")
 	
-	zve := columns(znums,"Ventricular Ectopy (VE/PVCs)","")
+	zve := columns(znums ">>>end","Ventricular Ectopy \(VE/PVCs\)",">>>end",1)
 	fields[8] := ["Isolated","Couplet","Triplet","Longest Ventricular Bigeminy Episode","Longest Ventricular Trigeminy Episode"]
 	labels[8] := ["Single","Couplets","Triplets","LongestBigem","LongestTrigem"]
 	fieldvals(zve,8,"ve")
@@ -1146,6 +1174,91 @@ Zio:
 	fileout2 .= """" . zinterp . """`n"
 
 return
+}
+
+CheckProcZio:
+{
+	tmp := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
+		chk.Last := trim(strX(tmp, "", 1,1, ",", 1,1))
+		chk.First := trim(strX(tmp, ", ", 1,2, "", 0))
+	chk.DOB := RegExReplace(strVal(demog,"Date of Birth","Prescribing Clinician"),"\s+\(.*(yrs|mos)\)")		; DOB
+	chk.Prov:= strVal(demog,"Prescribing Clinician","Patient ID")												; Ordering MD
+	chk.MRN := strVal(demog,"Patient ID","Managing Location")											; MRN
+	chk.Loc := strVal(demog,"Managing Location","Gender")											; MRN
+	chk.Sex := strVal(demog,"Gender","Primary Indication")											; Sex
+	chk.Ind := RegExReplace(strVal(demog,"Primary Indication",">>>end"),"\(R00.0\)\s+")				; Indication
+	
+	demog := "Name   " chk.Last ", " chk.First "`n" demog
+	
+	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
+		chk.enroll := strVal(tmp,"Enrollment Period","Analysis Time")
+		chk.Date := strVal(chk.enroll,"hours",",")
+		chk.Analysis := strVal(tmp,"Analysis Time","\(after")
+		chk.enroll := stregX(chk.enroll,"",1,0,"   ",1)
+	
+	zcol := stregx(zcol,"\s+(Supra)?ventricular tachycardia \(",1,0,">>>end",1)
+	
+	/*	
+	 *	Return from CheckProc for testing
+	 */
+		Return
+	
+	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
+	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
+		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
+		&& (chk.Acct~="\d{8}"))															; and EncNum present
+	{
+		MsgBox, 4132, Valid PDF, % ""
+			. chk.Last ", " chk.First "`n"
+			. "MRN " chk.MRN "`n"
+			. "Acct " chk.Acct "`n"
+			. "Ordering: " chk.Prov "`n"
+			. "Study date: " chk.Date "`n`n"
+			. "Is all the information correct?`n"
+			. "If NO, reacquire demographics."
+		IfMsgBox, Yes																; All tests valid
+		{
+			return																	; Select YES, return to processing Holter
+		} 
+		else 																		; Select NO, reacquire demographics
+		{
+			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+		}
+	}
+	else 																			; Not valid PDF, get demographics post hoc
+	{
+		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+	}
+	; Either invalid PDF or want to correct values
+	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
+	ptDem["nameF"] := chk.First
+	ptDem["mrn"] := chk.MRN
+	ptDem["DOB"] := chk.DOB
+	ptDem["Sex"] := chk.Sex
+	ptDem["Loc"] := chk.Loc
+	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
+	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
+	ptDem["EncDate"] := chk.Date
+	ptDem["Indication"] := chk.Ind
+	
+	fetchQuit:=false
+	gosub fetchGUI
+	gosub fetchDem
+	/*	When fetchDem successfully completes,
+	 *	replace the fields in demog with newly acquired values
+	 */
+	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
+	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " chk.Name "`nDate of Birth",,1)
+	demog := RegExReplace(demog,"i)Date of Birth(.*)Prescribing Clinician","Date of Birth   " ptDem["DOB"] "`nPrescribing Clinician",,1)
+	demog := RegExReplace(demog,"i)Prescribing Clinician(.*)Patient ID","Prescribing Clinician   " ptDem["Provider"] "`nPatient ID",,1)
+	demog := RegExReplace(demog,"i)Patient ID(.*)Managing Location","Patient ID   " ptDem["MRN"] "`nManaging Location",,1)
+	demog := RegExReplace(demog,"i)Managing Location(.*)Gender","Managing Location   " ptDem["Loc"] "`nGender",,1)
+	demog := RegExReplace(demog,"i)Gender(.*)Primary Indication","Gender   " ptDem["Sex"] "`nPrimary Indication",,1)
+	demog := RegExReplace(demog,"i)Primary Indication(.*)>>>end","Primary Indication   " ptDem["Indication"] "`n>>>end",,1)
+	
+	return
 }
 
 Event_LW:
@@ -1187,8 +1300,9 @@ Event_BGH:
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
 	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice)|(Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
-	demog := columns(demog,"\s+Patient ID","#####",,"Gender","Date of Birth","Phone")
-	demog := name "`n" demog "`n" diag "`n"
+	mon := stregX(demog,"Monitor   ",1,0,"#####",1)
+	demog := columns(demog,"\s+Patient ID","Monitor   ",,"Gender","Date of Birth","Phone")		; columns get stuck in permanent loop
+	demog := name "`n" demog "`n" mon "`n" diag "`n"
 	
 	demog0 := 
 	Loop, parse, demog, `n,`r
@@ -1313,12 +1427,49 @@ CheckProcBGH:
 	return
 }
 
+oneCol(txt) {
+/*	Break text block into a single column 
+	based on logical break points in title (first) row
+*/
+	lastpos := 1
+	Loop																		; Iterate each column
+	{
+		Loop, parse, txt, `n,`r													; Read through text block
+		{
+			i := A_LoopField
+			
+			if (A_index=1) {
+				pos := RegExMatch(i	"  "										; Add "  " to end of scan string
+								,"O)(?<=(\s{2}))[^\s]"							; Search "  text" as each column 
+								,col
+								,lastpos+1)										; search position to find next "  "
+				
+				if !(pos) {														; no match beyond, have hit max column
+					max := true
+				}
+			}
+			
+			len := (max) ? strlen(i) : pos-lastpos								; length of string to return (max gets to end of line)
+			
+			str := substr(i,lastpos,len)										; string to return
+			
+			result .= str "`n"													; add to result
+			;~ MsgBox % result
+		}
+		if !(pos) {																; break out if at max column
+			break
+		}
+		lastpos := pos															; set next start point
+	}
+	return result . ">>>end"
+}
+
 columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 /*	Returns string as a single column.
 	x 		= input string
 	blk1	= leading string to start block
 	blk2	= ending string to end block
-	incl	= if null, exclude blk1 string; if !null, remove blk1 string
+	incl	= if null, include blk1 string; if !null, remove blk1 string
 	col2	= string demarcates start of COLUMN 2
 	col3	= string demarcates start of COLUMN 3
 	col4	= string demarcates start of COLUMN 4
@@ -1326,15 +1477,15 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	blk1 := rxFix(blk1,"O",1)													; Adds "O)" to blk1
 	blk2 := rxFix(blk2,"O",1)
 	RegExMatch(x,blk1,blo1)														; Creates blo1 object out of blk1 match in x
-	RegExMatch(x,blk2,blo2)
+	RegExMatch(x,blk2,blo2)														; *** DO I EVEN USE BLO1 ANYMORE? ***
 	
-	txt := stRegX(x,blk1,1,(incl) ? blo1.len : 0,blk2,blo2.len)
+	txt := stRegX(x,blk1,1,((incl) ? 1 : 0),blk2,1)								; Get string between BLK1 and BLK2, with or without INCL bit
 	;~ MsgBox % txt
-	col2 := RegExReplace(col2,"\s+","\s+")
+	col2 := RegExReplace(col2,"\s+","\s+")										; Make col search strings more flexible for whitespace
 	col3 := RegExReplace(col3,"\s+","\s+")
 	col4 := RegExReplace(col4,"\s+","\s+")
 	
-	loop, parse, txt, `n,`r										; find position of columns 2, 3, and 4
+	loop, parse, txt, `n,`r														; find position of columns 2, 3, and 4
 	{
 		i:=A_LoopField
 		if (t:=RegExMatch(i,col2))
@@ -1347,10 +1498,13 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	loop, parse, txt, `n,`r
 	{
 		i:=A_LoopField
-		txt1 .= substr(i,1,pos2-1) . "`n"
-		if (col4) {
-			pos4ck := pos4
-			while !(substr(i,pos4ck-1,1)=" ") {
+		if !(trim(i)) {                        						           ; discard entirely blank lines 
+		  continue
+		}
+		txt1 .= substr(i,1,pos2-1) . "`n"										; TXT1 is from 1 to pos2
+		if (col4) {																; Handle the 4 col condition
+			pos4ck := pos4														; check start of col4
+			while !(substr(i,pos4ck-1,1)=" ") {									
 				pos4ck := pos4ck-1
 			}
 			txt4 .= substr(i,pos4ck) . "`n"
@@ -1358,14 +1512,26 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 			txt2 .= substr(i,pos2,pos3-pos2) . "`n"
 			continue
 		} 
-		if (col3) {
+		if (col3) {																; Handle the 3 col condition
 			txt2 .= substr(i,pos2,pos3-pos2) . "`n"
 			txt3 .= substr(i,pos3) . "`n"
 			continue
 		}
-		txt2 .= substr(i,pos2) . "`n"
+		txt2 .= substr(i,pos2) . "`n"											; Remaining is just pos2 to end
 	}
 	return txt1 . txt2 . txt3 . txt4
+}
+
+scanfields(x,lbl) {
+/*	Scans text for block from lbl to next lbl
+*/
+	i := trim(stregX(x,"[\r\n]+" lbl,1,0,"[\r\n]+\w",1)," `r`n")
+	if instr(i,"Episodes") {
+		i := trim(columns(i ">>>end","",">>>end",1,"Episodes")," `r`n")
+	}
+	i := RegExReplace(i,"i)None found","0")
+	j := cleanblank(substr(i,(i~="[\r\n]+")))
+	return j
 }
 
 fieldvals(x,bl,bl2) {
@@ -1442,7 +1608,7 @@ Return SubStr(H,P:=(((Z:=StrLen(ES))+(X:=StrLen(H))+StrLen(BS)-Z-X)?((T:=InStr(H
 +(0-ET)):(X+P)):(X)))-P) ; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
 }
 
-stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
+stRegX_old(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 /*	modified version: searches from BS to "   "
 	h = Haystack
 	BS = beginning string
@@ -1458,6 +1624,42 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 	pos1 := RegExMatch(h,((ES~=rem)?"Oim"ES:"Oim)"ES),ePat,pos0+bPat.len)
 	N := pos1+((ET)?0:(ePat.len))
 	return substr(h,pos0+((BT)?(bPat.len):0),N-pos0-bPat.len)
+}
+
+stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
+/*	modified version: searches from BS to "   "
+	h = Haystack
+	BS = beginning string
+	BO = beginning offset
+	BT = beginning trim, TRUE or FALSE
+	ES = ending string
+	ET = ending trim, TRUE or FALSE
+	N = variable for next offset
+*/
+	;~ BS .= "(.*?)\s{3}"
+	rem:="^[OPimsxADJUXPSC(\`n)(\`r)(\`a)]+\)"										; All the possible regexmatch options
+	
+	pos0 := RegExMatch(h,((BS~=rem)?"Oim"BS:"Oim)"BS),bPat,((BO)?BO:1))
+	/*	Ensure that BS begins with at least "Oim)" to return [O]utput, case [i]nsensitive, and [m]ultiline searching
+		Return result in "bPat" (beginning pattern) object
+		If (BO), start at position BO, else start at 1
+	*/
+	pos1 := RegExMatch(h,((ES~=rem)?"Oim"ES:"Oim)"ES),ePat,pos0+bPat.len())
+	/*	Ensure that ES begins with at least "Oim)"
+		Resturn result in "ePat" (ending pattern) object
+		Begin search after bPat result (pos0+bPat.len())
+	*/
+	bmod := (BT) ? bPat.len() : 0
+	emod := (ET) ? 0 : ePat.len()
+	N := pos1+emod
+	/*	Final position is start of ePat match + modifier
+		If (ET), add nothing, else add ePat.len()
+	*/
+	return substr(h,pos0+bmod,(pos1+emod)-(pos0+bmod))
+	/*	Start at pos0
+		If (BT), add bPat.len(), else stay at pos0 (will include BS in result)
+		substr length is position of N (either pos1 or include ePat) less starting pos0
+	*/
 }
 
 formatField(pre, lab, txt) {
@@ -1546,7 +1748,7 @@ formatField(pre, lab, txt) {
 	}
 	
 ;	ZIO patch specific search fixes
-	if (monType="Z") {
+	if (monType="Zio") {
 		if (RegExMatch(txt,"(\d){1,2} days (\d){1,2} hours ",tmp)) {		;	Split recorded/analyzed time in to Days and Hours
 			fieldColAdd(pre,lab "_D",strX(tmp,"",1,1, " days",1,5))
 			fieldColAdd(pre,lab "_H",strX(tmp," days",1,6, " hours",1,6))
@@ -1645,6 +1847,17 @@ cleanspace(ByRef txt) {
 	return txt
 }
 
+cleanblank(txt) {
+	Loop, parse, txt, `n,`r                            ; clean up maintxt 
+	{
+		i:=A_LoopField
+		if !(trim(i))                                    ; skip entirely blank lines 
+		  continue
+		newTxt .= i . "`n"                              ; only add lines with text in it 
+	} 
+	return newTxt
+}
+
 ObjHasValue(aObj, aValue, rx:="") {
 ; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
     for key, val in aObj
@@ -1683,10 +1896,29 @@ FilePrepend( Text, Filename ) {
 
 parseDate(x) {
 ; Disassembles "2/9/2015" or "2/9/2015 8:31" into Yr=2015 Mo=02 Da=09 Hr=08 Min=31
+	mo := ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+	if (x~="i)(\d{1,2})[\-\s\.](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[\-\s\.](\d{2,4})") {		; 03 Jan 2016
+		StringSplit, DT, x, %A_Space%-.
+		return {"DD":zDigit(DT1), "MM":zDigit(objHasValue(mo,DT2)), "MMM":DT2, "YYYY":year4dig(DT3)}
+	}
+	if (x~="\d{1,2}_\d{1,2}_\d{2,4}") {											; 03_06_17 or 03_06_2017
+		StringSplit, DT, x, _
+		return {"MM":zDigit(DT1), "DD":zDigit(DT2), "MMM":mo[DT2], "YYYY":year4dig(DT3)}
+	}
+	if (x~="\d{4}-\d{2}-\d{2}") {												; 2017-02-11
+		StringSplit, DT, x, -
+		return {"YYYY":DT1, "MM":DT2, "DD":DT3}
+	}
+	if (x~="i)^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2}, \d{4}") {			; Mar 9, 2015 (8:33 am)?
+		StringSplit, DT, x, %A_Space%
+		StringSplit, DHM, DT4, :
+		return {"MM":zDigit(objHasValue(mo,DT1)),"DD":zDigit(trim(DT2,",")),"YYYY":DT3
+			,	hr:zDigit((DT5~="i)p")?(DHM1+12):DHM1),min:DHM2}
+	}
 	StringSplit, DT, x, %A_Space%
 	StringSplit, DY, DT1, /
 	StringSplit, DHM, DT2, :
-	return {"MM":zDigit(DY1), "DD":zDigit(DY2), "YYYY":DY3, "hr":zDigit(DHM1), "min":zDigit(DHM2), "Date":DT1, "Time":DT2}
+	return {"MM":zDigit(DY1), "DD":zDigit(DY2), "YYYY":year4dig(DY3), "hr":zDigit(DHM1), "min":zDigit(DHM2), "Date":DT1, "Time":DT2}
 }
 
 niceDate(x) {
@@ -1694,6 +1926,16 @@ niceDate(x) {
 		return error
 	FormatTime, x, %x%, MM/dd/yyyy
 	return x
+}
+
+year4dig(x) {
+	if (StrLen(x)=4) {
+		return x
+	}
+	if (StrLen(x)=2) {
+		return (x<50)?("20" x):("19" x)
+	}
+	return error
 }
 
 zDigit(x) {
