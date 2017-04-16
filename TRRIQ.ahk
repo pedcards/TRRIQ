@@ -747,7 +747,7 @@ Holter_Pr:
 	eventlog("Holter_Pr")
 	monType := "PR"
 	
-	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Recorded")
+	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Processed")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
 	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia") "#####"
 	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
