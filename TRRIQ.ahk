@@ -627,13 +627,13 @@ outputfiles:
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV
 	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1								; create a copy of CSV in tempfiles
 	
-	if (FileExist(fileIn "sh.pdf")) {
+	if (FileExist(fileIn "sh.pdf")) {														; shortened filename only if shortenPDF called
 		fileHIM := fileIn "sh.pdf"
 	} else {
-		fileHIM := fileIn ".pdf"
+		fileHIM := fileIn
 	}
-	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM ".pdf", 1
-	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM ".pdf", 1
+	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM ".pdf", 1									; Copy to OnbaseDir
+	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
 	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
@@ -1303,7 +1303,6 @@ Event_BGH:
 	mon := stregX(demog,"Monitor   ",1,0,"#####",1)
 	demog := columns(demog,"\s+Patient ID","Monitor   ",,"Gender","Date of Birth","Phone")		; columns get stuck in permanent loop
 	demog := name "`n" demog "`n" mon "`n" diag "`n"
-	MsgBox here
 	
 	demog0 := 
 	Loop, parse, demog, `n,`r
