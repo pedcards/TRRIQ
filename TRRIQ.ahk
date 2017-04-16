@@ -1300,8 +1300,10 @@ Event_BGH:
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
 	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice)|(Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
-	demog := columns(demog,"\s+Patient ID","#####",,"Gender","Date of Birth","Phone")		; columns get stuck in permanent loop
-	demog := name "`n" demog "`n" diag "`n"
+	mon := stregX(demog,"Monitor   ",1,0,"#####",1)
+	demog := columns(demog,"\s+Patient ID","Monitor   ",,"Gender","Date of Birth","Phone")		; columns get stuck in permanent loop
+	demog := name "`n" demog "`n" mon "`n" diag "`n"
+	MsgBox here
 	
 	demog0 := 
 	Loop, parse, demog, `n,`r
@@ -1476,15 +1478,15 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	blk1 := rxFix(blk1,"O",1)													; Adds "O)" to blk1
 	blk2 := rxFix(blk2,"O",1)
 	RegExMatch(x,blk1,blo1)														; Creates blo1 object out of blk1 match in x
-	RegExMatch(x,blk2,blo2)
+	RegExMatch(x,blk2,blo2)														; *** DO I EVEN USE BLO1 ANYMORE? ***
 	
-	txt := stRegX(x,blk1,1,((incl) ? 1 : 0),blk2,1)
+	txt := stRegX(x,blk1,1,((incl) ? 1 : 0),blk2,1)								; Get string between BLK1 and BLK2, with or without INCL bit
 	;~ MsgBox % txt
-	col2 := RegExReplace(col2,"\s+","\s+")
+	col2 := RegExReplace(col2,"\s+","\s+")										; Make col search strings more flexible for whitespace
 	col3 := RegExReplace(col3,"\s+","\s+")
 	col4 := RegExReplace(col4,"\s+","\s+")
 	
-	loop, parse, txt, `n,`r										; find position of columns 2, 3, and 4
+	loop, parse, txt, `n,`r														; find position of columns 2, 3, and 4
 	{
 		i:=A_LoopField
 		if (t:=RegExMatch(i,col2))
@@ -1497,10 +1499,13 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 	loop, parse, txt, `n,`r
 	{
 		i:=A_LoopField
-		txt1 .= substr(i,1,pos2-1) . "`n"
-		if (col4) {
-			pos4ck := pos4
-			while !(substr(i,pos4ck-1,1)=" ") {
+		if !(trim(i)) {                        						           ; discard entirely blank lines 
+		  continue
+		}
+		txt1 .= substr(i,1,pos2-1) . "`n"										; TXT1 is from 1 to pos2
+		if (col4) {																; Handle the 4 col condition
+			pos4ck := pos4														; check start of col4
+			while !(substr(i,pos4ck-1,1)=" ") {									
 				pos4ck := pos4ck-1
 			}
 			txt4 .= substr(i,pos4ck) . "`n"
@@ -1508,12 +1513,12 @@ columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 			txt2 .= substr(i,pos2,pos3-pos2) . "`n"
 			continue
 		} 
-		if (col3) {
+		if (col3) {																; Handle the 3 col condition
 			txt2 .= substr(i,pos2,pos3-pos2) . "`n"
 			txt3 .= substr(i,pos3) . "`n"
 			continue
 		}
-		txt2 .= substr(i,pos2) . "`n"
+		txt2 .= substr(i,pos2) . "`n"											; Remaining is just pos2 to end
 	}
 	return txt1 . txt2 . txt3 . txt4
 }
