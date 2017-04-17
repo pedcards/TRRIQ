@@ -1132,7 +1132,12 @@ Zio:
 	fieldvals(demog,1,"dem")
 	
 	tmp := columns(zcol,"\s+(Supra)?Ventricular","Preliminary Findings",0,"Ventricular")
-	fieldColAdd("arr","SVT",scanfields(tmp,"Supraventricular Tachycardia \("))
+	tmp := RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1")
+	;columns(stregX(tmp,"Supraventricular Tachycardia \(",1,0,"#####",0),"Supraventricular Tachycardia","#####",0,"Episodes")
+	;~ i := columns(stregX(tmp,"[\r\n]Ventricular Tachycardia \(",1,0,"#####",0),"[\r\n]Ventricular Tachycardia","#####",0,"Episodes")
+	i := stregX(tmp,"(?<!a)Ventricular Tachycardia \(",1,0,"#####",0)
+	
+	fieldColAdd("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
 	fieldColAdd("arr","VT",scanfields(tmp,"Ventricular Tachycardia \("))
 	fieldColAdd("arr","Pauses",scanfields(tmp,"Pauses \("))
 	fieldColAdd("arr","AVBlock",scanfields(tmp,"AV Block \("))
@@ -1174,6 +1179,16 @@ Zio:
 	fileout2 .= """" . zinterp . """`n"
 
 return
+}
+
+ZioArrField(txt,fld) {
+	i := stregX(txt,fld,1,0,"#####",0)
+	if instr(i,"Episodes") {
+		i := columns(i,fld,"#####",0,"Episodes")
+	}
+	i := cleanblank(i)
+	
+	return i
 }
 
 CheckProcZio:
