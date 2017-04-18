@@ -620,7 +620,7 @@ outputfiles:
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
 	filenameHIM := tmpDate.MM tmpDate.DD substr(tmpDate.YYYY,3,2) " " 
 					. format("{:T}",fldval["Name_L"]) substr(fldval["Name_F"],1,1) " "
-					. fldval["MRN"]
+					. fldval["MRN"] ".pdf"
 	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
@@ -632,8 +632,8 @@ outputfiles:
 	} else {
 		fileHIM := fileIn
 	}
-	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM ".pdf", 1									; Copy to OnbaseDir
-	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
+	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM , 1										; Copy to OnbaseDir
+	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM , 1										; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
 	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
@@ -1135,13 +1135,13 @@ Zio:
 	tmp := RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1")
 	;columns(stregX(tmp,"Supraventricular Tachycardia \(",1,0,"#####",0),"Supraventricular Tachycardia","#####",0,"Episodes")
 	;~ i := columns(stregX(tmp,"[\r\n]Ventricular Tachycardia \(",1,0,"#####",0),"[\r\n]Ventricular Tachycardia","#####",0,"Episodes")
-	i := stregX(tmp,"(?<!a)Ventricular Tachycardia \(",1,0,"#####",0)
+	;~ i := stregX(tmp,"(?<=(#..))Ventricular Tachycardia \(",1,0,"#####",0)
 	
 	fieldColAdd("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
-	fieldColAdd("arr","VT",scanfields(tmp,"Ventricular Tachycardia \("))
-	fieldColAdd("arr","Pauses",scanfields(tmp,"Pauses \("))
-	fieldColAdd("arr","AVBlock",scanfields(tmp,"AV Block \("))
-	fieldColAdd("arr","AF",scanfields(tmp,"Atrial Fibrillation"))
+	fieldColAdd("arr","VT",ZioArrField(tmp,"(?<=(#..))Ventricular Tachycardia \("))
+	fieldColAdd("arr","Pauses",ZioArrField(tmp,"Pauses \("))
+	fieldColAdd("arr","AVBlock",ZioArrField(tmp,"AV Block \("))
+	fieldColAdd("arr","AF",ZioArrField(tmp,"Atrial Fibrillation"))
 	
 	znums := columns(zcol ">>>end","Enrollment Period",">>>end",1)
 	
@@ -1186,6 +1186,7 @@ ZioArrField(txt,fld) {
 	if instr(i,"Episodes") {
 		i := columns(i,fld,"#####",0,"Episodes")
 	}
+	i := RegExReplace(i,fld "(.*)?[\r\n]+")
 	i := cleanblank(i)
 	
 	return i
