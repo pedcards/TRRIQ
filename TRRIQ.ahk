@@ -1119,10 +1119,6 @@ Zio:
 		return													; fetchGUI was quit, so skip processing
 	}
 	
-	/* Holter PDF is valid. OK to process.
-	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
-	 */
-	
 	znam := strVal(demog,"Name","Date of Birth")
 	fieldColAdd("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
 	fieldColAdd("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
@@ -1133,9 +1129,6 @@ Zio:
 	
 	tmp := columns(zcol,"\s+(Supra)?Ventricular","Preliminary Findings",0,"Ventricular")
 	tmp := RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1")
-	;columns(stregX(tmp,"Supraventricular Tachycardia \(",1,0,"#####",0),"Supraventricular Tachycardia","#####",0,"Episodes")
-	;~ i := columns(stregX(tmp,"[\r\n]Ventricular Tachycardia \(",1,0,"#####",0),"[\r\n]Ventricular Tachycardia","#####",0,"Episodes")
-	;~ i := stregX(tmp,"(?<=(#..))Ventricular Tachycardia \(",1,0,"#####",0)
 	
 	fieldColAdd("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
 	fieldColAdd("arr","VT",ZioArrField(tmp,"(?<!Supra)Ventricular Tachycardia \("))
