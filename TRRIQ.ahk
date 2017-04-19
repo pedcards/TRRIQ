@@ -1192,7 +1192,7 @@ ZioArrField(txt,fld) {
 		}
 		newStr .= i "`n"   							                           ; only add lines with text in it 
 	} 
-	return cleanspace(trim(newStr))
+	return trim(cleanspace(newStr))
 }
 
 CheckProcZio:
