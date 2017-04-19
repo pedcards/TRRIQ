@@ -42,7 +42,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
 	OnbaseDir1 := "\\childrens\apps$\OnbaseFaxFiles\Cardiology\Inbound\"
-	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads"
+	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads\"
 	eventlog(">>>>> Started in PROD mode.")
 }
 
