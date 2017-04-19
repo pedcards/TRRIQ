@@ -1138,7 +1138,7 @@ Zio:
 	;~ i := stregX(tmp,"(?<=(#..))Ventricular Tachycardia \(",1,0,"#####",0)
 	
 	fieldColAdd("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
-	fieldColAdd("arr","VT",ZioArrField(tmp,"(?<=(#..))Ventricular Tachycardia \("))
+	fieldColAdd("arr","VT",ZioArrField(tmp,"(?<!Supra)Ventricular Tachycardia \("))
 	fieldColAdd("arr","Pauses",ZioArrField(tmp,"Pauses \("))
 	fieldColAdd("arr","AVBlock",ZioArrField(tmp,"AV Block \("))
 	fieldColAdd("arr","AF",ZioArrField(tmp,"Atrial Fibrillation"))
@@ -1182,14 +1182,22 @@ return
 }
 
 ZioArrField(txt,fld) {
-	i := stregX(txt,fld,1,0,"#####",0)
-	if instr(i,"Episodes") {
-		i := columns(i,fld,"#####",0,"Episodes")
+	str := stregX(txt,fld,1,0,"#####",1)
+	if instr(str,"Episodes") {
+		str := strX(columns(str,fld,"#####",0,"Episodes"),"Episodes",1,0,"",0)
 	}
-	i := RegExReplace(i,fld "(.*)?[\r\n]+")
-	i := cleanblank(i)
-	
-	return i
+	Loop, parse, str, `n,`r
+	{
+		i:=A_LoopField
+		if (i~=fld) {															; skip header line
+			continue
+		}
+		if !(trim(i)) {                                    						; skip entirely blank lines 
+			continue
+		}
+		newStr .= i "`n"   							                           ; only add lines with text in it 
+	} 
+	return cleanspace(trim(newStr))
 }
 
 CheckProcZio:
