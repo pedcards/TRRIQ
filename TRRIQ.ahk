@@ -1127,6 +1127,8 @@ Zio:
 	labels[1] := ["DOB","Ordering","MRN","Site","Sex","Indication","end"]
 	fieldvals(demog,1,"dem")
 	
+	fieldColAdd("dem","Test_date",chk.DateOrig)
+	
 	tmp := columns(zcol,"\s+(Supra)?Ventricular","Preliminary Findings",0,"Ventricular")
 	tmp := RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1")
 	
@@ -1209,7 +1211,7 @@ CheckProcZio:
 	
 	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
 		chk.enroll := strVal(tmp,"Enrollment Period","Analysis Time")
-		chk.Date := strVal(chk.enroll,"hours",",")
+		chk.DateOrig := strVal(chk.enroll,"hours",",")
 		chk.Analysis := strVal(tmp,"Analysis Time","\(after")
 		chk.enroll := stregX(chk.enroll,"",1,0,"   ",1)
 	
@@ -1218,7 +1220,7 @@ CheckProcZio:
 	/*	
 	 *	Return from CheckProc for testing
 	 */
-		Return
+		;~ Return
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
@@ -1257,7 +1259,7 @@ CheckProcZio:
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
 	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
-	ptDem["EncDate"] := chk.Date
+	ptDem["EncDate"] := chk.DateOrig
 	ptDem["Indication"] := chk.Ind
 	
 	fetchQuit:=false
@@ -1266,6 +1268,9 @@ CheckProcZio:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
+	fldval["Test_date"] := chk.DateOrig
+	fldval["name_L"] := ptDem["nameL"]
+	fldval["name_F"] := ptDem["nameF"]
 	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
 	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " chk.Name "`nDate of Birth",,1)
 	demog := RegExReplace(demog,"i)Date of Birth(.*)Prescribing Clinician","Date of Birth   " ptDem["DOB"] "`nPrescribing Clinician",,1)
