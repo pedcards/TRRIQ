@@ -42,7 +42,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
 	OnbaseDir1 := "\\childrens\apps$\OnbaseFaxFiles\Cardiology\Inbound\"
-	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads"
+	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads\"
 	eventlog(">>>>> Started in PROD mode.")
 }
 
@@ -620,7 +620,7 @@ outputfiles:
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
 	filenameHIM := tmpDate.MM tmpDate.DD substr(tmpDate.YYYY,3,2) " " 
 					. format("{:T}",fldval["Name_L"]) substr(fldval["Name_F"],1,1) " "
-					. fldval["MRN"]
+					. fldval["MRN"] ".pdf"
 	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
@@ -632,8 +632,8 @@ outputfiles:
 	} else {
 		fileHIM := fileIn
 	}
-	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM ".pdf", 1									; Copy to OnbaseDir
-	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
+	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM , 1										; Copy to OnbaseDir
+	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM , 1										; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
 	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
@@ -1119,10 +1119,6 @@ Zio:
 		return													; fetchGUI was quit, so skip processing
 	}
 	
-	/* Holter PDF is valid. OK to process.
-	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
-	 */
-	
 	znam := strVal(demog,"Name","Date of Birth")
 	fieldColAdd("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
 	fieldColAdd("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
@@ -1131,12 +1127,16 @@ Zio:
 	labels[1] := ["DOB","Ordering","MRN","Site","Sex","Indication","end"]
 	fieldvals(demog,1,"dem")
 	
+	fieldColAdd("dem","Test_date",chk.DateOrig)
+	
 	tmp := columns(zcol,"\s+(Supra)?Ventricular","Preliminary Findings",0,"Ventricular")
-	fieldColAdd("arr","SVT",scanfields(tmp,"Supraventricular Tachycardia \("))
-	fieldColAdd("arr","VT",scanfields(tmp,"Ventricular Tachycardia \("))
-	fieldColAdd("arr","Pauses",scanfields(tmp,"Pauses \("))
-	fieldColAdd("arr","AVBlock",scanfields(tmp,"AV Block \("))
-	fieldColAdd("arr","AF",scanfields(tmp,"Atrial Fibrillation"))
+	tmp := RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1")
+	
+	fieldColAdd("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
+	fieldColAdd("arr","VT",ZioArrField(tmp,"(?<!Supra)Ventricular Tachycardia \("))
+	fieldColAdd("arr","Pauses",ZioArrField(tmp,"Pauses \("))
+	fieldColAdd("arr","AVBlock",ZioArrField(tmp,"AV Block \("))
+	fieldColAdd("arr","AF",ZioArrField(tmp,"Atrial Fibrillation"))
 	
 	znums := columns(zcol ">>>end","Enrollment Period",">>>end",1)
 	
@@ -1176,6 +1176,25 @@ Zio:
 return
 }
 
+ZioArrField(txt,fld) {
+	str := stregX(txt,fld,1,0,"#####",1)
+	if instr(str,"Episodes") {
+		str := strX(columns(str,fld,"#####",0,"Episodes"),"Episodes",1,0,"",0)
+	}
+	Loop, parse, str, `n,`r
+	{
+		i:=A_LoopField
+		if (i~=fld) {															; skip header line
+			continue
+		}
+		if !(trim(i)) {                                    						; skip entirely blank lines 
+			continue
+		}
+		newStr .= i "`n"   							                           ; only add lines with text in it 
+	} 
+	return cleanspace(trim(newStr))
+}
+
 CheckProcZio:
 {
 	tmp := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
@@ -1192,7 +1211,7 @@ CheckProcZio:
 	
 	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
 		chk.enroll := strVal(tmp,"Enrollment Period","Analysis Time")
-		chk.Date := strVal(chk.enroll,"hours",",")
+		chk.DateOrig := strVal(chk.enroll,"hours",",")
 		chk.Analysis := strVal(tmp,"Analysis Time","\(after")
 		chk.enroll := stregX(chk.enroll,"",1,0,"   ",1)
 	
@@ -1201,7 +1220,7 @@ CheckProcZio:
 	/*	
 	 *	Return from CheckProc for testing
 	 */
-		Return
+		;~ Return
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
@@ -1240,7 +1259,7 @@ CheckProcZio:
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
 	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
-	ptDem["EncDate"] := chk.Date
+	ptDem["EncDate"] := chk.DateOrig
 	ptDem["Indication"] := chk.Ind
 	
 	fetchQuit:=false
@@ -1249,6 +1268,9 @@ CheckProcZio:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
+	fldval["Test_date"] := chk.DateOrig
+	fldval["name_L"] := ptDem["nameL"]
+	fldval["name_F"] := ptDem["nameF"]
 	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
 	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " chk.Name "`nDate of Birth",,1)
 	demog := RegExReplace(demog,"i)Date of Birth(.*)Prescribing Clinician","Date of Birth   " ptDem["DOB"] "`nPrescribing Clinician",,1)
