@@ -1117,7 +1117,9 @@ Zio:
 	dbCSV := false
 	
 	zcol := columns(newtxt,"","SIGNATURE",0,"Enrollment Period") ">>>end"
-	demog := onecol(cleanblank(stregX(zcol,"\s+Date of Birth",1,0,"\s+(Supra)?ventricular tachycardia \(4",1)))
+	demo1 := onecol(cleanblank(stregX(zcol,"\s+Date of Birth",1,0,"Prescribing Clinician",1)))
+	demo2 := onecol(cleanblank(stregX(zcol,"\s+Prescribing Clinician",1,0,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)",1)))
+	demog := RegExReplace(demo1 "`n" demo2,">>>end") ">>>end"
 	
 	gosub checkProcZio											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -1128,14 +1130,14 @@ Zio:
 	fieldColAdd("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
 	fieldColAdd("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
 	
-	fields[1] := ["Date of Birth","Prescribing Clinician","Patient ID","Managing Location","Gender","Primary Indication",">>>end"]
-	labels[1] := ["DOB","Ordering","MRN","Site","Sex","Indication","end"]
+	fields[1] := ["Date of Birth","Patient ID","Gender","Primary Indication","Prescribing Clinician","Managing Location",">>>end"]
+	labels[1] := ["DOB","MRN","Sex","Indication","Ordering","Site","end"]
 	fieldvals(demog,1,"dem")
 	
 	fieldColAdd("dem","Test_date",chk.DateOrig)
 	
-	tmp := columns(zcol,"\s+(Supra)?Ventricular","Preliminary Findings",0,"Ventricular")
-	tmp := RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1")
+	tmp := columns(zcol,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)","Preliminary Findings",0,"Ventricular")
+	tmp := "#####`n" RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1") "`n#####`n"
 	
 	fieldColAdd("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
 	fieldColAdd("arr","VT",ZioArrField(tmp,"(?<!Supra)Ventricular Tachycardia \("))
@@ -1207,12 +1209,12 @@ CheckProcZio:
 	tmp := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
 		chk.Last := trim(strX(tmp, "", 1,1, ",", 1,1))
 		chk.First := trim(strX(tmp, ", ", 1,2, "", 0))
-	chk.DOB := RegExReplace(strVal(demog,"Date of Birth","Prescribing Clinician"),"\s+\(.*(yrs|mos)\)")		; DOB
-	chk.Prov:= strVal(demog,"Prescribing Clinician","Patient ID")												; Ordering MD
-	chk.MRN := strVal(demog,"Patient ID","Managing Location")											; MRN
-	chk.Loc := strVal(demog,"Managing Location","Gender")											; MRN
+	chk.DOB := RegExReplace(strVal(demog,"Date of Birth","Patient ID"),"\s+\(.*(yrs|mos)\)")		; DOB
+	chk.MRN := strVal(demog,"Patient ID","Gender")											; MRN
 	chk.Sex := strVal(demog,"Gender","Primary Indication")											; Sex
-	chk.Ind := RegExReplace(strVal(demog,"Primary Indication",">>>end"),"\(R00.0\)\s+")				; Indication
+	chk.Ind := RegExReplace(strVal(demog,"Primary Indication","Prescribing Clinician"),"\(R00.0\)\s+")				; Indication
+	chk.Prov:= strVal(demog,"Prescribing Clinician","(Referring Clinician|Managing Location)")												; Ordering MD
+	chk.Loc := strVal(demog,"Managing Location",">>>end")											; MRN
 	
 	demog := "Name   " chk.Last ", " chk.First "`n" demog
 	
@@ -1280,13 +1282,14 @@ CheckProcZio:
 	fldval["name_F"] := ptDem["nameF"]
 	fldval["MRN"] := ptDem["MRN"]
 	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
+	
 	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " chk.Name "`nDate of Birth",,1)
-	demog := RegExReplace(demog,"i)Date of Birth(.*)Prescribing Clinician","Date of Birth   " ptDem["DOB"] "`nPrescribing Clinician",,1)
-	demog := RegExReplace(demog,"i)Prescribing Clinician(.*)Patient ID","Prescribing Clinician   " ptDem["Provider"] "`nPatient ID",,1)
-	demog := RegExReplace(demog,"i)Patient ID(.*)Managing Location","Patient ID   " ptDem["MRN"] "`nManaging Location",,1)
-	demog := RegExReplace(demog,"i)Managing Location(.*)Gender","Managing Location   " ptDem["Loc"] "`nGender",,1)
+	demog := RegExReplace(demog,"i)Date of Birth(.*)Patient ID","Date of Birth   " ptDem["DOB"] "`nPatient ID",,1)
+	demog := RegExReplace(demog,"i)Patient ID(.*)Gender","Patient ID   " ptDem["MRN"] "`nGender",,1)
 	demog := RegExReplace(demog,"i)Gender(.*)Primary Indication","Gender   " ptDem["Sex"] "`nPrimary Indication",,1)
-	demog := RegExReplace(demog,"i)Primary Indication(.*)>>>end","Primary Indication   " ptDem["Indication"] "`n>>>end",,1)
+	demog := RegExReplace(demog,"i)Primary Indication(.*)Prescribing Clinician","Primary Indication   " ptDem["Indication"] "`nPrescribing Clinician",,1)
+	demog := RegExReplace(demog,"i)Prescribing Clinician(.*)(Referring Clinician|Managing Location)","Prescribing Clinician   " ptDem["Provider"] "`nManaging Location",,1)
+	demog := RegExReplace(demog,"i)Managing Location(.*)>>>end","Managing Location   " ptDem["loc"] "`n>>>end",,1)
 	
 	return
 }
