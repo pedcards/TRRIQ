@@ -624,9 +624,11 @@ outputfiles:
 	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
-	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV
-	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1								; create a copy of CSV in tempfiles
-	
+	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
+	if (dbCSV) {
+		FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1							; copy CSV from tempfiles to importFld
+	}
+
 	if (FileExist(fileIn "sh.pdf")) {														; shortened filename only if shortenPDF called
 		fileHIM := fileIn "sh.pdf"
 	} else {
@@ -635,7 +637,7 @@ outputfiles:
 	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM , 1										; Copy to OnbaseDir
 	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM , 1										; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
-	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir
+	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir Archive
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
@@ -720,6 +722,7 @@ Holter_LW:
 {
 	eventlog("Holter_LW")
 	monType := "H"
+	dbCSV := true
 	
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
@@ -770,6 +773,7 @@ Holter_Pr:
 {
 	eventlog("Holter_Pr")
 	monType := "PR"
+	dbCSV := true
 	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Processed")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
@@ -1110,6 +1114,7 @@ Zio:
 {
 	eventlog("Holter_Zio")
 	monType := "Zio"
+	dbCSV := false
 	
 	zcol := columns(newtxt,"","SIGNATURE",0,"Enrollment Period") ">>>end"
 	demog := onecol(cleanblank(stregX(zcol,"\s+Date of Birth",1,0,"\s+(Supra)?ventricular tachycardia \(4",1)))
@@ -1288,6 +1293,10 @@ CheckProcZio:
 
 Event_LW:
 {
+	eventlog("Event_LW")
+	monType := "LW"
+	dbCSV := false
+	
 	MsgBox, 16, File type error, Cannot process LifeWatch event recorders.`n`nPlease process this as a paper report.
 	return
 	
@@ -1319,7 +1328,10 @@ Return
 
 Event_BGH:
 {
+	eventlog("Event_BGH")
 	monType := "BGH"
+	dbCSV := false
+	
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
 	demog := columns(newtxt,"","Event Summary",,"Enrollment Info")
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
