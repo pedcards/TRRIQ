@@ -1172,6 +1172,8 @@ Zio:
 	zinterp := trim(StrX(zinterp,"",1,0,"Final Interpretation",1,20))
 	fileout1 .= """INTERP""`n"
 	fileout2 .= """" . zinterp . """`n"
+	fileOut1 .= ",""Mon_type"""
+	fileOut2 .= ",""Holter"""
 
 return
 }
