@@ -1255,7 +1255,7 @@ CheckProcZio:
 	; Either invalid PDF or want to correct values
 	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
 	ptDem["nameF"] := chk.First
-	ptDem["mrn"] := chk.MRN
+	ptDem["MRN"] := chk.MRN
 	ptDem["DOB"] := chk.DOB
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
@@ -1273,6 +1273,7 @@ CheckProcZio:
 	fldval["Test_date"] := chk.DateOrig
 	fldval["name_L"] := ptDem["nameL"]
 	fldval["name_F"] := ptDem["nameF"]
+	fldval["MRN"] := ptDem["MRN"]
 	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
 	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " chk.Name "`nDate of Birth",,1)
 	demog := RegExReplace(demog,"i)Date of Birth(.*)Prescribing Clinician","Date of Birth   " ptDem["DOB"] "`nPrescribing Clinician",,1)
