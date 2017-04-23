@@ -104,10 +104,6 @@ if (instr(phase,"LifeWatch")) {
 }
 
 if (instr(phase,"PDF")) {
-	
-	gosub mainloop
-	ExitApp
-	
 	eventlog("Start PDF folder scan.")
 	holterLoops := 0								; Reset counters
 	holtersDone := 
@@ -558,7 +554,7 @@ MainLoop:
  *	concatenates the CSV strings of header (fileOut1) and values (fileOut2)
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
- *
+ */
 	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt					; convert PDF pages 1-2 to txt file
 	newTxt:=""																		; clear the full txt variable
 	FileRead, maintxt, temp.txt														; load into maintxt
@@ -567,8 +563,7 @@ MainLoop:
 	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
 	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt								; move a copy into tempfiles for troubleshooting
 	eventlog("tempfile.txt -> " fileNam ".txt")
- */
-FileRead, newtxt, tempfile.txt
+	
 	blocks := Object()																; clear all objects
 	fields := Object()
 	fldval := {}
