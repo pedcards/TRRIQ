@@ -1301,7 +1301,7 @@ Event_LW:
 	tmp := RegExReplace(tmp,"DOCTOR\s+INFORMATION","DOCTOR INFORMATION")
 	tmp := RegExReplace(tmp,"PATIENT\s+INFORMATION","PATIENT INFORMATION")
 	ptDem["Provider"] := trim(strX(cleanblank(stregX(tmp,"DOCTOR INFORMATION",1,1,"Phone",1)),"",1,0,"`n",1,1))
-	demog := stregX(tmp ">>>end","PATIENT INFORMATION",1,1,">>>end",1)
+	demog := stregX(tmp ">>>end","PATIENT INFORMATION",1,1,">>>end",0)
 	;~ demog := 
 	
 	gosub checkProcLWE											; check validity of PDF, make demographics valid if not
@@ -1313,8 +1313,10 @@ Event_LW:
 	labels[1] := ["Name","MRN","DOB","Sex","Phone","Model","Indication","Enrollment","Transmissions"]
 	fieldvals(demog,1,"dem")
 	
-	clipboard := tmp
-	ExitApp
+	fileOut1 .= ",""Mon_type"""
+	fileOut2 .= ",""Event"""
+	
+	Return
 }
 
 Event_LW_old:
@@ -1354,15 +1356,16 @@ Return
 
 CheckProcLWE:
 {
-	chk.Name := strVal(demog,"Name","ID")										; Name
-		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")									; NameL				must be [A-Z]
-		chk.Last := trim(strX(chk.Name," ",0,1,"",0)," `r`n")										; NameF				must be [A-Z]
-	chk.DOB := strVal(demog,"ID","DOB")											; DOB
+	chk.Name := strVal(demog,"Name","ID")											; Name
+		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")						; NameL				must be [A-Z]
+		chk.Last := trim(strX(chk.Name," ",0,1,"",0)," `r`n")							; NameF				must be [A-Z]
+	chk.MRN := strVal(demog,"ID","DOB")												; ID
+	chk.DOB := strVal(demog,"DOB",",|Sex")											; DOB
 	chk.Sex := strVal(demog,"Sex","Phone")											; Sex
-	chk.MRN := strVal(demog,"Patient ID","Physician")											; MRN
-	chk.Mon := strVal(demog,"Monitor Type","Diag")												; Monitor type
-	chk.Ind := strVal(demog,"Diag","Enrollment Period")											; Indication
-	chk.Date := strVal(enroll,"Enrollment Period",".*")									; Study date
+	chk.Phn := strVal(demog,"Phone","Monitor Type")									; Phone
+	chk.Mon := strVal(demog,"Monitor Type","Diag")									; Monitor type
+	chk.Ind := strVal(demog,"Diag","Enrollment Period")								; Indication
+	chk.Date := strVal(demog,"Enrollment Period","Total Transmissions")							; Study dates
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
@@ -1398,9 +1401,10 @@ CheckProcLWE:
 	ptDem["mrn"] := chk.MRN
 	ptDem["DOB"] := chk.DOB
 	ptDem["Sex"] := chk.Sex
+	ptDem["Phone"] := chk.Phn
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
+	;~ ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
@@ -1413,12 +1417,12 @@ CheckProcLWE:
 	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
 		fldval["name_L"] := ptDem["nameL"]
 		fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i)Patient Name: (.*)Patient ID","Patient Name:   " chk.Name "`nPatient ID")
-	demog := RegExReplace(demog,"i)Patient ID(.*)Physician","Patient ID   " ptDem["mrn"] "`nPhysician")
-	demog := RegExReplace(demog,"i)Physician(.*)Gender", "Physician   " ptDem["Provider"] "`nGender")
-	demog := RegExReplace(demog,"i)Gender(.*)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
-	demog := RegExReplace(demog,"i)Date of Birth(.*)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
-	enroll := RegExReplace(enroll,"i)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
+	demog := RegExReplace(demog,"i)Name:(.*)ID:","Patient Name:   " chk.Name "`nID:")
+	demog := RegExReplace(demog,"i)ID:(.*)DOB:","ID:   " ptDem["MRN"] "`nDOB:")
+	demog := RegExReplace(demog,"i)DOB:(.*)Sex:", "DOB:   " ptDem["DOB"] "`nSex:")
+	demog := RegExReplace(demog,"i)Sex:(.*)Phone:", "Sex:   " ptDem["Sex"] "`nPhone:")
+	demog := RegExReplace(demog,"i)Phone:(.*)Monitor Type:", "Phone:   " ptDem["Phone"] "`nMonitor Type:")	
+	demog := RegExReplace(demog,"i)Monitor Type:(.*)\R", "Monitor Type:   " ptDem["Mon"] "`n")
 	;~ demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
 	;~ demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
 	
