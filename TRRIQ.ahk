@@ -587,7 +587,7 @@ FileRead, newtxt, tempfile.txt
 		gosub Holter_Pr
 	} else if (RegExMatch(newtxt,"i)zio.*xt.*patch")) {
 		gosub Zio
-	} else if (InStr(newtxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
+	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {
 		gosub Event_LW
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {
 		gosub Event_BGH
