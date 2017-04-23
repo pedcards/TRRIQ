@@ -102,16 +102,7 @@ if (instr(phase,"LifeWatch")) {
 	}
 	ExitApp
 }
-;~ if (instr(phase,"preventice")) {
-	;~ Loop
-	;~ {
-		;~ ptDem := Object()
-		;~ gosub fetchGUI
-		;~ gosub fetchDem
-		;~ gosub webFill
-	;~ }
-	;~ ExitApp
-;~ }
+
 if (instr(phase,"PDF")) {
 	eventlog("Start PDF folder scan.")
 	holterLoops := 0								; Reset counters
@@ -572,7 +563,7 @@ MainLoop:
 	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
 	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt								; move a copy into tempfiles for troubleshooting
 	eventlog("tempfile.txt -> " fileNam ".txt")
-
+	
 	blocks := Object()																; clear all objects
 	fields := Object()
 	fldval := {}
@@ -591,7 +582,7 @@ MainLoop:
 		gosub Holter_Pr
 	} else if (RegExMatch(newtxt,"i)zio.*xt.*patch")) {
 		gosub Zio
-	} else if (InStr(newtxt,"TRANSTELEPHONIC ARRHYTHMIA")) {
+	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {
 		gosub Event_LW
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {
 		gosub Event_BGH
@@ -1300,6 +1291,36 @@ Event_LW:
 	monType := "LW"
 	dbCSV := false
 	
+	tmp := stregX(newtxt,"PATIENT ACTIVITY REPORT",1,1,"DATE/TIME",1) ">>>end"
+	tmp := columns(tmp,"",">>>end",0,"DOB:")
+	tmp := RegExReplace(tmp,"DOCTOR\s+INFORMATION","DOCTOR INFORMATION")
+	tmp := RegExReplace(tmp,"PATIENT\s+INFORMATION","PATIENT INFORMATION")
+	ptDem["Provider"] := trim(strX(cleanblank(stregX(tmp,"DOCTOR INFORMATION",1,1,"Phone",1)),"",1,0,"`n",1,1))
+	demog := stregX(tmp ">>>end","PATIENT INFORMATION",1,1,">>>end",0)
+	;~ demog := 
+	
+	gosub checkProcLWE											; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	fields[1] := ["Name","ID","DOB","Sex","Phone","Monitor Type","Diag","Enrollment Period","Total Transmissions"]
+	labels[1] := ["Name","MRN","DOB","Sex","Phone","Model","Indication","Enrollment","Transmissions"]
+	fieldvals(demog,1,"dem")
+	fieldColAdd("dem","EncNum",ptDem["Account Number"])
+	
+	fileOut1 .= ",""Mon_type"""
+	fileOut2 .= ",""Event"""
+	
+	Return
+}
+
+Event_LW_old:
+{
+	eventlog("Event_LW")
+	monType := "LW"
+	dbCSV := false
+	
 	MsgBox, 16, File type error, Cannot process LifeWatch event recorders.`n`nPlease process this as a paper report.
 	return
 	
@@ -1327,6 +1348,85 @@ Event_LW:
 		MsgBox,, % "(" k ")[" strlen(m) "] " i , % blk[i], 
 	}
 Return
+}
+
+CheckProcLWE:
+{
+	chk.Name := strVal(demog,"Name","ID")											; Name
+		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")						; NameL				must be [A-Z]
+		chk.Last := trim(strX(chk.Name," ",0,1,"",0)," `r`n")							; NameF				must be [A-Z]
+	chk.MRN := strVal(demog,"ID","DOB")												; ID
+	chk.DOB := strVal(demog,"DOB",",|Sex")											; DOB
+	chk.Sex := strVal(demog,"Sex","Phone")											; Sex
+	chk.Phn := strVal(demog,"Phone","Monitor Type")									; Phone
+	chk.Mon := strVal(demog,"Monitor Type","Diag")									; Monitor type
+	chk.Ind := strVal(demog,"Diag","Enrollment Period")								; Indication
+	chk.Date := strVal(demog,"Enrollment Period","Total Transmissions")							; Study dates
+	
+	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
+	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
+		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
+		&& (chk.Acct~="\d{8}"))															; and EncNum present
+	{
+		MsgBox, 4132, Valid PDF, % ""
+			. chk.Last ", " chk.First "`n"
+			. "MRN " chk.MRN "`n"
+			. "Acct " chk.Acct "`n"
+			. "Ordering: " chk.Prov "`n"
+			. "Study date: " chk.Date "`n`n"
+			. "Is all the information correct?`n"
+			. "If NO, reacquire demographics."
+		IfMsgBox, Yes																; All tests valid
+		{
+			return																	; Select YES, return to processing Holter
+		} 
+		else 																		; Select NO, reacquire demographics
+		{
+			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+		}
+	}
+	else 																			; Not valid PDF, get demographics post hoc
+	{
+		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+	}
+	; Either invalid PDF or want to correct values
+	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
+	ptDem["nameF"] := chk.First
+	ptDem["mrn"] := chk.MRN
+	ptDem["DOB"] := chk.DOB
+	ptDem["Sex"] := chk.Sex
+	ptDem["Phone"] := chk.Phn
+	ptDem["Mon"] := chk.Mon
+	ptDem["Loc"] := chk.Loc
+	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
+	;~ ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
+	ptDem["EncDate"] := chk.Date
+	fldval["Test_Date"] := chk.Date
+	ptDem["Indication"] := chk.Ind
+	
+	fetchQuit:=false
+	gosub fetchGUI
+	gosub fetchDem
+	/*	When fetchDem successfully completes,
+	 *	replace the fields in demog with newly acquired values
+	 */
+	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
+		fldval["name_L"] := ptDem["nameL"]
+		fldval["name_F"] := ptDem["nameF"]
+	demog := RegExReplace(demog,"i)Name:(.*)ID:","Name:   " chk.Name "`nID:")
+	demog := RegExReplace(demog,"i)ID:(.*)DOB:","ID:   " ptDem["MRN"] "`nDOB:")
+	demog := RegExReplace(demog,"i)DOB:(.*)Sex:", "DOB:   " ptDem["DOB"] "`nSex:")
+	demog := RegExReplace(demog,"i)Sex:(.*)Phone:", "Sex:   " ptDem["Sex"] "`nPhone:")
+	demog := RegExReplace(demog,"i)Phone:(.*)Monitor Type:", "Phone:   " ptDem["Phone"] "`nMonitor Type:")
+	demog := RegExReplace(demog,"i)Monitor Type:(.*)Diag:", "Monitor Type:   " ptDem["Mon"] "`nDiag:")
+	demog := RegExReplace(demog,"i)Diag:(.*)Enrollment Period:", "Diag:   " ptDem["Indication"] "`nEnrollment Period:")
+	demog := RegExReplace(demog,"i)Enrollment Period:(.*)Total Transmissions:", "Enrollment Period:   " ptDem["EncDate"] "`nTotal Transmissions:")
+	;~ demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
+	;~ demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
+	
+	return
 }
 
 Event_BGH:
