@@ -1296,6 +1296,33 @@ Event_LW:
 	monType := "LW"
 	dbCSV := false
 	
+	tmp := stregX(newtxt,"PATIENT ACTIVITY REPORT",1,1,"DATE/TIME",1) ">>>end"
+	tmp := columns(tmp,"",">>>end",0,"DOB:")
+	tmp := RegExReplace(tmp,"DOCTOR\s+INFORMATION","DOCTOR INFORMATION")
+	tmp := RegExReplace(tmp,"PATIENT\s+INFORMATION","PATIENT INFORMATION")
+	ptDem["Provider"] := trim(strX(cleanblank(stregX(tmp,"DOCTOR INFORMATION",1,1,"Phone",1)),"",1,0,"`n",1,1))
+	demog := stregX(tmp ">>>end","PATIENT INFORMATION",1,1,">>>end",1)
+	;~ demog := 
+	
+	gosub checkProcLWE											; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	fields[1] := ["Name","ID","DOB","Sex","Phone","Monitor Type","Diag","Enrollment Period","Total Transmissions"]
+	labels[1] := ["Name","MRN","DOB","Sex","Phone","Model","Indication","Enrollment","Transmissions"]
+	fieldvals(demog,1,"dem")
+	
+	clipboard := tmp
+	ExitApp
+}
+
+Event_LW_old:
+{
+	eventlog("Event_LW")
+	monType := "LW"
+	dbCSV := false
+	
 	MsgBox, 16, File type error, Cannot process LifeWatch event recorders.`n`nPlease process this as a paper report.
 	return
 	
