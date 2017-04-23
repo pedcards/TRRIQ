@@ -1312,6 +1312,7 @@ Event_LW:
 	fields[1] := ["Name","ID","DOB","Sex","Phone","Monitor Type","Diag","Enrollment Period","Total Transmissions"]
 	labels[1] := ["Name","MRN","DOB","Sex","Phone","Model","Indication","Enrollment","Transmissions"]
 	fieldvals(demog,1,"dem")
+	fieldColAdd("dem","EncNum",ptDem["Account Number"])
 	
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Event"""
@@ -1402,10 +1403,12 @@ CheckProcLWE:
 	ptDem["DOB"] := chk.DOB
 	ptDem["Sex"] := chk.Sex
 	ptDem["Phone"] := chk.Phn
+	ptDem["Mon"] := chk.Mon
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
 	;~ ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
 	ptDem["EncDate"] := chk.Date
+	fldval["Test_Date"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
 	fetchQuit:=false
@@ -1417,12 +1420,14 @@ CheckProcLWE:
 	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
 		fldval["name_L"] := ptDem["nameL"]
 		fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i)Name:(.*)ID:","Patient Name:   " chk.Name "`nID:")
+	demog := RegExReplace(demog,"i)Name:(.*)ID:","Name:   " chk.Name "`nID:")
 	demog := RegExReplace(demog,"i)ID:(.*)DOB:","ID:   " ptDem["MRN"] "`nDOB:")
 	demog := RegExReplace(demog,"i)DOB:(.*)Sex:", "DOB:   " ptDem["DOB"] "`nSex:")
 	demog := RegExReplace(demog,"i)Sex:(.*)Phone:", "Sex:   " ptDem["Sex"] "`nPhone:")
-	demog := RegExReplace(demog,"i)Phone:(.*)Monitor Type:", "Phone:   " ptDem["Phone"] "`nMonitor Type:")	
-	demog := RegExReplace(demog,"i)Monitor Type:(.*)\R", "Monitor Type:   " ptDem["Mon"] "`n")
+	demog := RegExReplace(demog,"i)Phone:(.*)Monitor Type:", "Phone:   " ptDem["Phone"] "`nMonitor Type:")
+	demog := RegExReplace(demog,"i)Monitor Type:(.*)Diag:", "Monitor Type:   " ptDem["Mon"] "`nDiag:")
+	demog := RegExReplace(demog,"i)Diag:(.*)Enrollment Period:", "Diag:   " ptDem["Indication"] "`nEnrollment Period:")
+	demog := RegExReplace(demog,"i)Enrollment Period:(.*)Total Transmissions:", "Enrollment Period:   " ptDem["EncDate"] "`nTotal Transmissions:")
 	;~ demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
 	;~ demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
 	
