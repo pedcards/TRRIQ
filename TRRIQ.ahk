@@ -102,16 +102,6 @@ if (instr(phase,"LifeWatch")) {
 	}
 	ExitApp
 }
-;~ if (instr(phase,"preventice")) {
-	;~ Loop
-	;~ {
-		;~ ptDem := Object()
-		;~ gosub fetchGUI
-		;~ gosub fetchDem
-		;~ gosub webFill
-	;~ }
-	;~ ExitApp
-;~ }
 if (instr(phase,"PDF")) {
 	eventlog("Start PDF folder scan.")
 	holterLoops := 0								; Reset counters
