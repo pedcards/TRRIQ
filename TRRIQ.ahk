@@ -580,6 +580,8 @@ MainLoop:
 		gosub Holter_LW
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {
 		gosub Holter_Pr
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) {
+		gosub Holter_Pr2
 	} else if (RegExMatch(newtxt,"i)zio.*xt.*patch")) {
 		gosub Zio
 	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {
