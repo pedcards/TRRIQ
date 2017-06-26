@@ -1703,6 +1703,22 @@ fieldvals(x,bl,bl2) {
 	}
 }
 
+fldfill(var,val) {
+/*	Nondestructively fill fields
+	If val is empty, return
+	Otherwise populate with new value
+*/
+	global fldval
+	
+	if (val=="") {																; val is null
+		return																	; do nothing
+	}
+	
+	fldval[var] := trim(val," `t`r`n")											; set var as val
+	
+return
+}
+
 rxFix(hay,req,spc:="") {
 /*	rxFix
 	in	= input string, may or may or not include "Oim)" option modifiers
