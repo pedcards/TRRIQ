@@ -1703,6 +1703,48 @@ fieldvals(x,bl,bl2) {
 	}
 }
 
+scanParams(txt,blk,pre:="par",rx:="") {
+	global fields, labels, fldval
+	colstr = (?<=(\s{2}))(\>\s*)?[^\s].*?(?=(\s{2}))
+	Loop, parse, txt, `n,`r
+	{
+		i := trim(A_LoopField) "  "
+		set := trim(strX(i,"",1,0,"  ",1,2)," :")								; Get leftmost column to first "  "
+		val := objHasValue(fields[blk],set,rx)
+		if !(val) {
+			continue
+		}
+		lbl := labels[blk,val]
+		if (lbl~="^\w{3}:") {											; has prefix e.g. "dem:"
+			pre0 := substr(lbl,1,3)
+			lbl := substr(lbl,5)
+		} else {
+			pre0 := pre
+			lbl := lbl
+		}
+		
+		RegExMatch(i															; Add "  " to end of scan string
+				,"O)" colstr													; Search "  text  " as each column 
+				,col1)															; return result in var "col1"
+		RegExMatch(i
+				,"O)" colstr
+				,col2
+				,col1.pos()+1)
+		
+		res := col1.value()
+		if (col2.value()~="^(\>\s*)(?=[^\s])") {
+			res := RegExReplace(col2.value(),"^(\>\s*)(?=[^\s])") " (changed from " col1.value() ")"
+		}
+		if (col2.value()~="(Monitor.*)|(\d{2}J.*)") {
+			res .= ", Rx " cleanSpace(col2.value())
+		}
+			
+		;~ MsgBox % pre "-" labels[blk,val] ": " res
+		fldfill(pre0 "-" lbl, res)
+	}
+	return
+}
+
 fldfill(var,val) {
 /*	Nondestructively fill fields
 	If val is empty, return
