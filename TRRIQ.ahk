@@ -951,6 +951,7 @@ Holter_Pr2:
 		,"\s+Summary Statistics","\s+RR Variability",0
 		,"VENTRICULAR ECTOPY","SUPRAVENTRICULAR ECTOPY"),": ",":   ")
 	
+	rateStat := stregX(sumStat,"ALL BEATS",1,0,"VENTRICULAR ECTOPY",1)
 	fields[1] := ["Total QRS", "Recording Duration", "Analyzed Duration"
 		, "Minimum HR","Maximum HR","Average HR"
 		, "Longest Tachycardia","Fastest Tachycardia","Longest Bradycardia","Slowest Bradycardia"
