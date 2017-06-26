@@ -1860,6 +1860,7 @@ fieldvals(x,bl,bl2) {
 		cleanSpace(m)
 		cleanColon(m)
 		fldval[pre "-" lbl] := m
+		fldval[lbl] := m
 		
 		formatField(pre,lbl,m)
 	}
