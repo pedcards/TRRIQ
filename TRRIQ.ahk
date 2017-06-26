@@ -1703,13 +1703,12 @@ fieldvals(x,bl,bl2) {
 	}
 }
 
+rxFix(hay,req,spc:="") {
 /*	rxFix
 	in	= input string, may or may or not include "Oim)" option modifiers
 	req	= required modifiers to output
 	spc	= replace spaces
 */
-rxFix(hay,req,spc:="")
-{
 	opts:="^[OPimsxADJUXPSC(\`n)(\`r)(\`a)]+\)"
 	out := (hay~=opts) ? req . hay : req ")" hay
 	if (spc) {
@@ -2003,8 +2002,8 @@ cleanblank(txt) {
 ObjHasValue(aObj, aValue, rx:="") {
 ; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
     for key, val in aObj
-		if (rx="RX") {
-			if (aValue ~= val) {
+		if (rx) {
+			if RegExMatch(aValue,val) {
 				return, key, Errorlevel := 0
 			}
 		} else {
