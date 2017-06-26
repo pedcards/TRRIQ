@@ -928,9 +928,9 @@ Holter_Pr2:
 	demog := stregX(newtxt,"Name:",1,0,"Conclusions:",1)
 	
 	gosub checkProcPR2											; check validity of PDF, make demographics valid if not
-	;~ if (fetchQuit=true) {
-		;~ return													; fetchGUI was quit, so skip processing
-	;~ }
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
 	
 	/* Holter PDF is valid. OK to process.
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
@@ -1244,8 +1244,6 @@ CheckProcPr2:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
-	ptDem["nameL"] := "DOE"
-	ptDem["nameF"] := "JOHN"
 	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
 	fldval["name_L"] := ptDem["nameL"]
 	fldval["name_F"] := ptDem["nameF"]
