@@ -1904,6 +1904,8 @@ scanParams(txt,blk,pre:="par",rx:="") {
 			
 		;~ MsgBox % pre "-" labels[blk,val] ": " res
 		fldfill(pre0 "-" lbl, res)
+		
+		formatfield(pre0,lbl,res)
 	}
 	return
 }
