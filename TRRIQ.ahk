@@ -921,7 +921,7 @@ return
 
 Holter_Pr2:
 {
-	eventlog("Holter_Pr")
+	eventlog("Holter_Pr2")
 	monType := "PR"
 	dbCSV := true
 	
@@ -2090,7 +2090,6 @@ formatField(pre, lab, txt) {
 		if (txt ~= "^([0-9.]+( BPM( Avg)?)?).+at.+(\d{1,2}:\d{2}:\d{2}).*(AM|PM)?$") {		;	Split timed results "139 at 8:31:47 AM" into two fields
 			tx1 := trim(stregX(txt,"",1,0," at ",1))
 			tx2 := trim(stregX(txt "<<<"," at ",1,1,"<<<",1))
-			;~ MsgBox % tx1 "`n" tx2
 			fieldColAdd(pre,lab,tx1)
 			fieldColAdd(pre,lab "_time",tx2)
 			return
