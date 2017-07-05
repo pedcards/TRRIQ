@@ -1142,7 +1142,7 @@ CheckProcPR:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
+	ptDem["Provider"] := trim(cleanspace(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)")))
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
