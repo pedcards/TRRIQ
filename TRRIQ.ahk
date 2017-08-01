@@ -578,15 +578,15 @@ MainLoop:
 	
 	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
 		gosub Holter_LW
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {					; Original Preventice Holter
 		gosub Holter_Pr
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) {
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) {					; New Preventice Holter 2017
 		gosub Holter_Pr2
 	} else if (RegExMatch(newtxt,"i)zio.*xt.*patch")) {
 		gosub Zio
-	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {
+	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {		; Lifewatch event
 		gosub Event_LW
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
 		gosub Event_BGH
 	} else {
 		eventlog(fileNam " bad file.")
@@ -1600,7 +1600,7 @@ Event_BGH:
 	dbCSV := false
 	
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
-	demog := columns(newtxt,"","Event Summary",,"Enrollment Info")
+	demog := columns(newtxt,"","Summarized Findings",,"Enrollment Info")
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
 	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice)|(Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
@@ -1641,21 +1641,6 @@ Event_BGH:
 	fileOut2 .= ",""Event"""
 
 Return
-}
-
-strVal(hay,n1,n2,BO:="",ByRef N:="") {
-/*	hay = search haystack
-	n1	= needle1 begin string
-	n2	= needle2 end string
-	N	= return end position
-*/
-	;~ opt := "Oi" ((span) ? "s" : "") ")"
-	opt := "Oi)"
-	RegExMatch(hay,opt . n1 ":?(.*?)" n2 ":?",res,(BO)?BO:1)
-	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
-	N := res.pos()+res.len(1)
-
-	return trim(res[1]," :`n")
 }
 
 CheckProcBGH:
@@ -1719,14 +1704,13 @@ CheckProcBGH:
 	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
 		fldval["name_L"] := ptDem["nameL"]
 		fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i)Patient Name: (.*)Patient ID","Patient Name:   " chk.Name "`nPatient ID")
-	demog := RegExReplace(demog,"i)Patient ID(.*)Physician","Patient ID   " ptDem["mrn"] "`nPhysician")
-	demog := RegExReplace(demog,"i)Physician(.*)Gender", "Physician   " ptDem["Provider"] "`nGender")
-	demog := RegExReplace(demog,"i)Gender(.*)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
-	demog := RegExReplace(demog,"i)Date of Birth(.*)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
-	enroll := RegExReplace(enroll,"i)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
-	;~ demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
-	;~ demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
+	demog := RegExReplace(demog,"i)Patient Name: (.*?)Patient ID","Patient Name:   " chk.Name "`nPatient ID")
+	demog := RegExReplace(demog,"i)Patient ID(.*?)Physician","Patient ID   " ptDem["mrn"] "`nPhysician")
+	demog := RegExReplace(demog,"i)Physician(.*?)Gender", "Physician   " ptDem["Provider"] "`nGender")
+	demog := RegExReplace(demog,"i)Gender(.*?)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
+	demog := RegExReplace(demog,"i)Date of Birth(.*?)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
+	enroll := RegExReplace(enroll,"i)Date Recorded: (.*?)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
+	eventlog("Demog replaced.")
 	
 	return
 }
@@ -1864,6 +1848,21 @@ fieldvals(x,bl,bl2) {
 		
 		formatField(pre,lbl,m)
 	}
+}
+
+strVal(hay,n1,n2,BO:="",ByRef N:="") {
+/*	hay = search haystack
+	n1	= needle1 begin string
+	n2	= needle2 end string
+	N	= return end position
+*/
+	;~ opt := "Oi" ((span) ? "s" : "") ")"
+	opt := "Oi)"
+	RegExMatch(hay,opt . n1 ":?(.*?)" n2 ":?",res,(BO)?BO:1)
+	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
+	N := res.pos()+res.len(1)
+
+	return trim(res[1]," :`n")
 }
 
 scanParams(txt,blk,pre:="par",rx:="") {
