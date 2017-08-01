@@ -1704,27 +1704,13 @@ CheckProcBGH:
 	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
 		fldval["name_L"] := ptDem["nameL"]
 		fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i)Patient Name: (.*)\RPatient ID","Patient Name:   " chk.Name "`nPatient ID")
-	demog := RegExReplace(demog,"i)Patient ID (.*)\RPhysician","Patient ID   " ptDem["mrn"] "`nPhysician")
-	demog := RegExReplace(demog,"i)Physician (.*)\RGender", "Physician   " ptDem["Provider"] "`nGender")
-	demog := RegExReplace(demog,"i)Gender (.*)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
-	demog := RegExReplace(demog,"i)Date of Birth (.*)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
-	enroll := RegExReplace(enroll,"i)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
-	;~ demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
-	;~ demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
-	
-	;~ demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk.Name "   `n")
-	;~ demog := RegExReplace(demog,"i)ID: (.*) Secondary ID:","ID:   " ptDem["mrn"] "                   Secondary ID:")
-	;~ demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
-	;~ demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
-	;~ demog := RegExReplace(demog,"i`a)Indications: (.*) Medications:", "Indications:   " ptDem["Indication"] "   Medications:")	
-	;~ demog := RegExReplace(demog,"i`a)Recording Start Date/Time: (.*)\R", "Recording Start Date/Time:   " ptDem["EncDate"] "`n")
-	;~ demog := RegExReplace(demog,"i`a)Analyst: (.*) Recorder Number","Analyst:   $1   Recorder Number")
-	;~ demog := RegExReplace(demog,"i`a)Technician: (.*) Recording Duration","Hookup Tech:   $1   Recording Duration")
-	;~ demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
-	;~ demog .= "   Location:    " ptDem["Loc"] "`n"
-	;~ demog .= "   Acct Num:    " ptDem["Account number"] "`n"
-	;~ eventlog("Demog replaced.")
+	demog := RegExReplace(demog,"i)Patient Name: (.*?)Patient ID","Patient Name:   " chk.Name "`nPatient ID")
+	demog := RegExReplace(demog,"i)Patient ID(.*?)Physician","Patient ID   " ptDem["mrn"] "`nPhysician")
+	demog := RegExReplace(demog,"i)Physician(.*?)Gender", "Physician   " ptDem["Provider"] "`nGender")
+	demog := RegExReplace(demog,"i)Gender(.*?)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
+	demog := RegExReplace(demog,"i)Date of Birth(.*?)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
+	enroll := RegExReplace(enroll,"i)Date Recorded: (.*?)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
+	eventlog("Demog replaced.")
 	
 	return
 }
