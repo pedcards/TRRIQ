@@ -1600,7 +1600,7 @@ Event_BGH:
 	dbCSV := false
 	
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
-	demog := columns(newtxt,"","Event Summary",,"Enrollment Info")
+	demog := columns(newtxt,"","Summarized Findings",,"Enrollment Info")
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
 	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice)|(Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
