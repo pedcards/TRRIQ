@@ -1643,21 +1643,6 @@ Event_BGH:
 Return
 }
 
-strVal(hay,n1,n2,BO:="",ByRef N:="") {
-/*	hay = search haystack
-	n1	= needle1 begin string
-	n2	= needle2 end string
-	N	= return end position
-*/
-	;~ opt := "Oi" ((span) ? "s" : "") ")"
-	opt := "Oi)"
-	RegExMatch(hay,opt . n1 ":?(.*?)" n2 ":?",res,(BO)?BO:1)
-	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
-	N := res.pos()+res.len(1)
-
-	return trim(res[1]," :`n")
-}
-
 CheckProcBGH:
 {
 	chk.Name := strVal(demog,"Patient Name","Patient ID")										; Name
@@ -1864,6 +1849,21 @@ fieldvals(x,bl,bl2) {
 		
 		formatField(pre,lbl,m)
 	}
+}
+
+strVal(hay,n1,n2,BO:="",ByRef N:="") {
+/*	hay = search haystack
+	n1	= needle1 begin string
+	n2	= needle2 end string
+	N	= return end position
+*/
+	;~ opt := "Oi" ((span) ? "s" : "") ")"
+	opt := "Oi)"
+	RegExMatch(hay,opt . n1 ":?(.*?)" n2 ":?",res,(BO)?BO:1)
+	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
+	N := res.pos()+res.len(1)
+
+	return trim(res[1]," :`n")
 }
 
 scanParams(txt,blk,pre:="par",rx:="") {
