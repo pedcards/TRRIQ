@@ -578,15 +578,15 @@ MainLoop:
 	
 	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
 		gosub Holter_LW
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {					; Original Preventice Holter
 		gosub Holter_Pr
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) {
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) {					; New Preventice Holter 2017
 		gosub Holter_Pr2
 	} else if (RegExMatch(newtxt,"i)zio.*xt.*patch")) {
 		gosub Zio
-	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {
+	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {		; Lifewatch event
 		gosub Event_LW
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
 		gosub Event_BGH
 	} else {
 		eventlog(fileNam " bad file.")
