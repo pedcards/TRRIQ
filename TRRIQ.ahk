@@ -942,7 +942,7 @@ Holter_Pr2:
 		, "Indications","Medications"
 		, "Hookup time","Location","Acct Num"]
 	labels[1] := ["Name","null","Test_date","null"
-		, "MRN","null","null","DOB","VOID_Age","Sex","null"
+		, "null","MRN","null","DOB","VOID_Age","Sex","null"
 		, "Scan_date","Ordering","null"
 		, "Hookup_tech","VOID_Duration","null","Scanned_by","Recorder","null"
 		, "Indication","VOID_meds"
