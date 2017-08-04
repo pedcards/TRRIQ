@@ -1177,7 +1177,7 @@ CheckProcPr2:
 	chk.Name := strVal(demog,"Name","\R")												; Name
 		chk.Last := trim(strX(chk.Name,"",1,1,",",1,1)," `r`n")								; NameL				must be [A-Z]
 		chk.First := trim(strX(chk.Name,",",1,1,"",0)," `r`n")								; NameF				must be [A-Z]
-	chk.MRN := strVal(demog,"ID","Secondary ID")										; MRN
+	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
 	chk.DOB := strVal(demog,"Date of Birth","Age")										; DOB
 	chk.Sex := strVal(demog,"Gender","\R")											; Sex
 	chk.Prov := cleanspace(strVal(demog,"Referring Physician","\R"))					; Ordering MD
