@@ -982,7 +982,7 @@ Holter_Pr2:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
-	;~ ShortenPDF("i)60\s+sec/line")
+	ShortenPDF("i)60\s+s(ec)?/line")
 
 return
 }
