@@ -942,7 +942,7 @@ Holter_Pr2:
 		, "Indications","Medications"
 		, "Hookup time","Location","Acct Num"]
 	labels[1] := ["Name","null","Test_date","null"
-		, "MRN","null","null","DOB","VOID_Age","Sex","null"
+		, "null","MRN","null","DOB","VOID_Age","Sex","null"
 		, "Scan_date","Ordering","null"
 		, "Hookup_tech","VOID_Duration","null","Scanned_by","Recorder","null"
 		, "Indication","VOID_meds"
@@ -982,7 +982,7 @@ Holter_Pr2:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
-	;~ ShortenPDF("i)60\s+sec/line")
+	ShortenPDF("i)60\s+s(ec)?/line")
 
 return
 }
@@ -1177,7 +1177,7 @@ CheckProcPr2:
 	chk.Name := strVal(demog,"Name","\R")												; Name
 		chk.Last := trim(strX(chk.Name,"",1,1,",",1,1)," `r`n")								; NameL				must be [A-Z]
 		chk.First := trim(strX(chk.Name,",",1,1,"",0)," `r`n")								; NameF				must be [A-Z]
-	chk.MRN := strVal(demog,"ID","Secondary ID")										; MRN
+	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
 	chk.DOB := strVal(demog,"Date of Birth","Age")										; DOB
 	chk.Sex := strVal(demog,"Gender","\R")											; Sex
 	chk.Prov := cleanspace(strVal(demog,"Referring Physician","\R"))					; Ordering MD
