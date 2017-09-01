@@ -2093,6 +2093,10 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_time",tx2)
 			return
 		}
+		if (txt = "--- at ---") {
+			fieldColAdd(pre,lab,"")
+			return
+		}
 	}
 
 ;	Body Guardian Heart specific fixes
