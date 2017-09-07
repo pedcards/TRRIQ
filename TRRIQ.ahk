@@ -116,7 +116,8 @@ if (instr(phase,"PDF")) {
 			eventlog("Skipping file """ fileNam ".pdf"", already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
 			continue
 		}
-		eventlog("Processing """ fileNam ".pdf"".")
+		FileGetSize, fileInSize, %fileIn%
+		eventlog("Processing """ fileNam ".pdf"" (" fileInSize ").")
 		gosub MainLoop													; process the PDF
 		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
 			continue
@@ -915,6 +916,9 @@ shortenPDF(find) {
 	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
 	pgpos := pgs.value(1)
 	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%sh.pdf",,min
+	FileGetSize, sizeIn, %fileIn%
+	FileGetSize, sizeOut, %fileIn%sh.pdf
+	eventlog("IN: " sizeIn ", OUT: " sizeOut)
 	progress, off
 return	
 }
