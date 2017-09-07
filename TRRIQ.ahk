@@ -1377,7 +1377,7 @@ CheckProcZio:
 		chk.enroll := strVal(tmp,"Enrollment Period","Analysis Time")
 		chk.DateOrig := strVal(chk.enroll,"hours",",")
 		chk.Analysis := strVal(tmp,"Analysis Time","\(after")
-		chk.enroll := stregX(chk.enroll,"",1,0,"   ",1)
+		chk.enroll := stregX(chk.enroll,"",1,0,"\s{3}",1)
 	
 	zcol := stregx(zcol,"\s+(Supra)?ventricular tachycardia \(",1,0,">>>end",1)
 	
@@ -1604,7 +1604,7 @@ Event_BGH:
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
 	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice)|(Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
-	mon := stregX(demog,"Monitor   ",1,0,"#####",1)
+	mon := stregX(demog,"Monitor\s{3}",1,0,"#####",1)
 	demog := columns(demog,"\s+Patient ID","Monitor   ",,"Gender","Date of Birth","Phone")		; columns get stuck in permanent loop
 	demog := name "`n" demog "`n" mon "`n" diag "`n"
 	
