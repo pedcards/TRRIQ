@@ -2000,6 +2000,8 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 	N = variable for next offset
 */
 	;~ BS .= "(.*?)\s{3}"
+	BS := RegExReplace(BS,"\s+","\s+")
+	ES := RegExReplace(ES,"\s+","\s+")
 	rem:="^[OPimsxADJUXPSC(\`n)(\`r)(\`a)]+\)"										; All the possible regexmatch options
 	
 	pos0 := RegExMatch(h,((BS~=rem)?"Oim"BS:"Oim)"BS),bPat,((BO)?BO:1))
