@@ -583,7 +583,7 @@ MainLoop:
 		gosub Holter_Pr
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) {					; New Preventice Holter 2017
 		gosub Holter_Pr2
-	} else if (RegExMatch(newtxt,"i)zio.*xt.*patch")) {
+	} else if (instr(newtxt,"zio xt")) {
 		gosub Zio
 	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {		; Lifewatch event
 		gosub Event_LW
