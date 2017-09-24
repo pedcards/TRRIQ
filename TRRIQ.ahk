@@ -1336,8 +1336,8 @@ Zio:
 	
 	zinterp := cleanspace(columns(newtxt,"Preliminary Findings","SIGNATURE",,"Final Interpretation"))
 	zinterp := trim(StrX(zinterp,"",1,0,"Final Interpretation",1,20))
-	fileout1 .= """INTERP""`n"
-	fileout2 .= """" . zinterp . """`n"
+	fileout1 .= """INTERP"""
+	fileout2 .= """" . zinterp . """"
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 
