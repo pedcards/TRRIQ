@@ -1347,7 +1347,9 @@ return
 ZioArrField(txt,fld) {
 	str := stregX(txt,fld,1,0,"#####",1)
 	if instr(str,"Episodes") {
-		str := strX(columns(str,fld,"#####",0,"Episodes"),"Episodes",1,0,"",0)
+		;~ str := strX(columns(str,fld,"#####",0,"Episodes"),"Episodes",1,0,"",0)
+		str := columns(str,fld,"#####",0,"Episodes")
+		str := RegExReplace(str,"i)None found")
 	}
 	Loop, parse, str, `n,`r
 	{
@@ -1360,6 +1362,9 @@ ZioArrField(txt,fld) {
 		}
 		newStr .= i "`n"   							                           ; only add lines with text in it 
 	} 
+	if (newStr="") {
+		newStr := "None found`n"
+	}
 	return trim(cleanspace(newStr))
 }
 
