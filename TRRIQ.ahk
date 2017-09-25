@@ -1275,6 +1275,15 @@ Zio:
 	monType := "Zio"
 	dbCSV := false
 	
+	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" temp.txt, , hide				; reconvert entire Zio PDF 
+	newTxt:=""																		; clear the full txt variable
+	FileRead, maintxt, temp.txt														; load into maintxt
+	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
+	FileDelete tempfile.txt															; remove any leftover tempfile
+	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
+	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt, 1								; overwrite copy in tempfiles
+	eventlog("Zio PDF rescanned -> " fileNam ".txt")
+	
 	zcol := columns(newtxt,"","SIGNATURE",0,"Enrollment Period") ">>>end"
 	demo1 := onecol(cleanblank(stregX(zcol,"\s+Date of Birth",1,0,"Prescribing Clinician",1)))
 	demo2 := onecol(cleanblank(stregX(zcol,"\s+Prescribing Clinician",1,0,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)",1)))
