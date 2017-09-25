@@ -1316,8 +1316,8 @@ Zio:
 	
 	znums := columns(zcol ">>>end","Enrollment Period",">>>end",1)
 	
-	formatField("time","Enrolled",chk.enroll)
-	formatField("time","Analysis",chk.Analysis)
+	formatField("dem","Recording_time",chk.enroll)
+	formatField("dem","Analysis_time",chk.Analysis)
 	
 	zrate := columns(znums,"Heart Rate","Patient Events",1)
 	fields[4] := ["Max ","Min ","Avg "]
