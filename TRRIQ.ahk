@@ -1308,11 +1308,11 @@ Zio:
 	tmp := columns(zcol,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)","Preliminary Findings",0,"Ventricular")
 	tmp := "#####`n" RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1") "`n#####`n"
 	
-	formatField("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
-	formatField("arr","VT",ZioArrField(tmp,"(?<!Supra)Ventricular Tachycardia \("))
-	formatField("arr","Pauses",ZioArrField(tmp,"Pauses \("))
-	formatField("arr","AVBlock",ZioArrField(tmp,"AV Block \("))
-	formatField("arr","AF",ZioArrField(tmp,"Atrial Fibrillation"))
+	;~ formatField("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
+	;~ formatField("arr","VT",ZioArrField(tmp,"(?<!Supra)Ventricular Tachycardia \("))
+	;~ formatField("arr","Pauses",ZioArrField(tmp,"Pauses \("))
+	;~ formatField("arr","AVBlock",ZioArrField(tmp,"AV Block \("))
+	;~ formatField("arr","AF",ZioArrField(tmp,"Atrial Fibrillation"))
 	
 	znums := columns(zcol ">>>end","Enrollment Period",">>>end",1)
 	
