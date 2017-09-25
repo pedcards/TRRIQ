@@ -2089,7 +2089,7 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 }
 
 formatField(pre, lab, txt) {
-	global monType, Docs, ptDem
+	global monType, Docs, ptDem, fldval
 	if (txt ~= "\d{1,2} hr \d{1,2} min") {
 		StringReplace, txt, txt, %A_Space%hr%A_space% , :
 		StringReplace, txt, txt, %A_Space%min , 
@@ -2197,8 +2197,8 @@ formatField(pre, lab, txt) {
 		if (RegExMatch(txt,"i)[a-z]+\s+[\>\<\.0-9%]+\s+\d",tmp)) {			;	Split "RARE <1.0% 2457" into result "2457" and text quant "RARE <1.0%"
 			tx1 := substr(txt,1,StrLen(tmp)-2)
 			tx2 := substr(txt,strlen(tmp))
+			fldval[pre "-" lab] := tx2
 			fieldColAdd(pre,lab,tx2)
-			fieldColAdd(pre,lab "_amt",tx1)
 			return
 		}
 		if (txt ~= "3rd.*\)") {												;	fix AV block field
