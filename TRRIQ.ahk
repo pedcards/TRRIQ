@@ -1386,6 +1386,7 @@ Zio:
 	labels[8] := ["Longest_time","Longest","null","null","null","null"]
 	fieldvals(zve_longest,8,"ve")
 	
+	LWify()
 	zinterp := cleanspace(columns(newtxt,"Preliminary Findings","SIGNATURE",,"Final Interpretation"))
 	zinterp := trim(StrX(zinterp,"",1,0,"Final Interpretation",1,20))
 	fileout1 .= """INTERP"""
