@@ -1279,6 +1279,7 @@ Zio:
 	newTxt:=""																		; clear the full txt variable
 	FileRead, maintxt, temp.txt														; load into maintxt
 	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
+	StringReplace, newtxt, newtxt, % chr(12), >>>page>>>`r`n, All
 	FileDelete tempfile.txt															; remove any leftover tempfile
 	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
 	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt, 1								; overwrite copy in tempfiles
