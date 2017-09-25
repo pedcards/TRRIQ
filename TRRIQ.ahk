@@ -1339,10 +1339,36 @@ Zio:
 	labels[7] := ["Single","Couplets","Triplets"]
 	fieldvals(zsve,7,"sve")
 	
+	zsve := stregX(newtxt,"Episode Heart Rates.* SVT",1,0,">>>page>>>",1)
+	zsve := stregX(zsve,"^(.*)SVT with",1,0,"^(.*)Patient:",1) ">>>>>"
+	zsve_fastest := stregX(zsve,"^(.*)Fastest Heart Rate",1,0,"^(.*)Fastest Avg",1) ">>>>>"
+	zsve_fastest := columns(zsve_fastest,"",">>>>>",,"# Beats","Duration","Average")
+	fields[7] := ["Fastest Heart Rate","# Beats","Duration"]
+	labels[7] := ["Fastest_time","Fastest_num","null"]
+	fieldvals(zsve_fastest,7,"sve")
+	zsve_longest := stregX(zsve,"^(.*)Longest SVT",1,0,">>>>>",0)
+	zsve_longest := columns(zsve_longest,"",">>>>>",,"# Beats","Duration","Average")
+	fields[7] := ["Longest SVT Episode","# Beats","Duration"]
+	labels[7] := ["Longest_time","Longest_num","null"]
+	fieldvals(zsve_longest,7,"sve")
+	
 	zve := columns(znums ">>>end","Ventricular Ectopy \(VE/PVCs\)",">>>end",1)
 	fields[8] := ["Isolated","Couplet","Triplet","Longest Ventricular Bigeminy Episode","Longest Ventricular Trigeminy Episode"]
 	labels[8] := ["Single","Couplets","Triplets","LongestBigem","LongestTrigem"]
 	fieldvals(zve,8,"ve")
+	
+	zve := stregX(newtxt,"Episode Heart Rates.* VT",1,0,">>>page>>>",1)
+	zve := stregX(zve,"^(.*)VT with",1,0,"^(.*)Patient:",1) ">>>>>"
+	zve_fastest := stregX(zve,"^(.*)Fastest Heart Rate",1,0,"^(.*)Fastest Avg",1) ">>>>>"
+	zve_fastest := columns(zve_fastest,"",">>>>>",,"# Beats","Duration","Average")
+	fields[8] := ["Fastest Heart Rate","# Beats","Duration"]
+	labels[8] := ["Fastest_time","Fastest_num","null"]
+	fieldvals(zve_fastest,8,"ve")
+	zve_longest := stregX(zve,"^(.*)Longest VT",1,0,">>>>>",0)
+	zve_longest := columns(zve_longest,"",">>>>>",,"# Beats","Duration","Average")
+	fields[8] := ["Longest VT Episode","# Beats","Duration"]
+	labels[8] := ["Longest_time","Longest_num","null"]
+	fieldvals(zve_longest,8,"ve")
 	
 	zinterp := cleanspace(columns(newtxt,"Preliminary Findings","SIGNATURE",,"Final Interpretation"))
 	zinterp := trim(StrX(zinterp,"",1,0,"Final Interpretation",1,20))
