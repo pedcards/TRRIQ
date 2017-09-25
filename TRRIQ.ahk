@@ -1336,9 +1336,13 @@ Zio:
 	
 	zsve := columns(znums,"Supraventricular Ectopy \(SVE/PACs\)","Ventricular Ectopy \(VE/PVCs\)",1)
 	fields[7] := ["Isolated","Couplet","Triplet"]
-	labels[7] := ["Single","Couplets","Triplets"]
+	labels[7] := ["Single","Pairs","Triplets"]
 	fieldvals(zsve,7,"sve")
-	
+	zsve_tot := (fldval["sve-Single"] ? fldval["sve-Single"] : 0) 
+				+ 2*(fldval["sve-Pairs"] ? fldval["sve-Pairs"] : 0) 
+				+ 3*(fldval["sve-Triplets"] ? fldval["sve-Triplets"] : 0)
+	formatField("sve","Total",zsve_tot)
+
 	zsve := stregX(newtxt,"Episode Heart Rates.* SVT",1,0,">>>page>>>",1)
 	zsve := stregX(zsve,"^(.*)SVT with",1,0,"^(.*)Patient:",1) ">>>>>"
 	zsve_fastest := stregX(zsve,"^(.*)Fastest Heart Rate",1,0,"^(.*)Fastest Avg",1) ">>>>>"
@@ -1354,8 +1358,12 @@ Zio:
 	
 	zve := columns(znums ">>>end","Ventricular Ectopy \(VE/PVCs\)",">>>end",1)
 	fields[8] := ["Isolated","Couplet","Triplet","Longest Ventricular Bigeminy Episode","Longest Ventricular Trigeminy Episode"]
-	labels[8] := ["Single","Couplets","Triplets","LongestBigem","LongestTrigem"]
+	labels[8] := ["SinglePVC","Couplets","Triplets","LongestBigem","LongestTrigem"]
 	fieldvals(zve,8,"ve")
+	zve_tot := (fldval["ve-SinglePVC"] ? fldval["ve-SinglePVC"] : 0) 
+				+ 2*(fldval["ve-Couplets"] ? fldval["ve-Couplets"] : 0) 
+				+ 3*(fldval["ve-Triplets"] ? fldval["ve-Triplets"] : 0)
+	formatField("ve","Total",zve_tot)
 	
 	zve := stregX(newtxt,"Episode Heart Rates.* VT",1,0,">>>page>>>",1)
 	zve := stregX(zve,"^(.*)VT with",1,0,"^(.*)Patient:",1) ">>>>>"
