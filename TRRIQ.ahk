@@ -1295,28 +1295,28 @@ Zio:
 	}
 	
 	znam := strVal(demog,"Name","Date of Birth")
-	fieldColAdd("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
-	fieldColAdd("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
+	formatField("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
+	formatField("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
 	
 	fields[1] := ["Date of Birth","Patient ID","Gender","Primary Indication","Prescribing Clinician","Managing Location",">>>end"]
 	labels[1] := ["DOB","MRN","Sex","Indication","Ordering","Site","end"]
 	fieldvals(demog,1,"dem")
 	
-	fieldColAdd("dem","Test_date",chk.DateOrig)
+	formatField("dem","Test_date",chk.DateOrig)
 	
 	tmp := columns(zcol,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)","Preliminary Findings",0,"Ventricular")
 	tmp := "#####`n" RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1") "`n#####`n"
 	
-	fieldColAdd("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
-	fieldColAdd("arr","VT",ZioArrField(tmp,"(?<!Supra)Ventricular Tachycardia \("))
-	fieldColAdd("arr","Pauses",ZioArrField(tmp,"Pauses \("))
-	fieldColAdd("arr","AVBlock",ZioArrField(tmp,"AV Block \("))
-	fieldColAdd("arr","AF",ZioArrField(tmp,"Atrial Fibrillation"))
+	formatField("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
+	formatField("arr","VT",ZioArrField(tmp,"(?<!Supra)Ventricular Tachycardia \("))
+	formatField("arr","Pauses",ZioArrField(tmp,"Pauses \("))
+	formatField("arr","AVBlock",ZioArrField(tmp,"AV Block \("))
+	formatField("arr","AF",ZioArrField(tmp,"Atrial Fibrillation"))
 	
 	znums := columns(zcol ">>>end","Enrollment Period",">>>end",1)
 	
-	fieldColAdd("time","Enrolled",chk.enroll)
-	fieldColAdd("time","Analysis",chk.Analysis)
+	formatField("time","Enrolled",chk.enroll)
+	formatField("time","Analysis",chk.Analysis)
 	
 	zrate := columns(znums,"Heart Rate","Patient Events",1)
 	fields[4] := ["Max ","Min ","Avg "]
