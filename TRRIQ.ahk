@@ -1320,9 +1320,9 @@ Zio:
 	formatField("dem","Analysis_time",chk.Analysis)
 	
 	zrate := columns(znums,"Heart Rate","Patient Events",1)
-	fields[4] := ["Max ","Min ","Avg "]
-	labels[4] := ["Max","Min","Avg"]
-	fieldvals(zrate,4,"rate")
+	fields[4] := ["Max","Min","Avg","\R"]
+	labels[4] := ["Max","Min","Avg","null"]
+	fieldvals(zrate,4,"hrd")
 	
 	zevent := columns(znums,"Number of Triggered Events:","Ectopics",1)
 	fields[5] := ["Number of Triggered Events:","Findings within � 45 sec of Triggers:","Number of Diary Entries:","Findings within � 45 sec of Entries:"]
