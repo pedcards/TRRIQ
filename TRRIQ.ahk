@@ -2202,6 +2202,13 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab,tx2)
 			return
 		}
+		if (txt ~= "^[0-9.]+\s+\d{1,2}:\d{2}") {						;	Split timed results "139  8:31AM" into two fields
+			tx1 := trim(stregX(txt,"",1,0,"\d{1,2}:\d{2}",1,n))
+			tx2 := trim(stregX(txt "<<<","\d{1,2}:\d{2}",1,0,"<<<",1))
+			fieldColAdd(pre,lab,tx1)
+			fieldColAdd(pre,lab "_time",tx2)
+			return
+		}
 		if (txt ~= "3rd.*\)") {												;	fix AV block field
 			txt := substr(txt, InStr(txt, ")")+2)
 		}
