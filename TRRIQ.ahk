@@ -1446,7 +1446,7 @@ CheckProcZio:
 	/*	
 	 *	Return from CheckProc for testing
 	 */
-		Return
+		;~ Return
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
