@@ -622,9 +622,9 @@ outputfiles:
 	if (dbCSV) {
 		FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1							; copy CSV from tempfiles to importFld
 	}
-
-	if (FileExist(fileIn "sh.pdf")) {														; shortened filename only if shortenPDF called
-		fileHIM := fileIn "sh.pdf"
+	
+	if (FileExist(fileIn "sh.pdf")) {														; filename for OnbaseDir
+		fileHIM := fileIn "sh.pdf"															; prefer shortened if it exists
 	} else {
 		fileHIM := fileIn
 	}
@@ -1393,6 +1393,8 @@ Zio:
 	fileout2 .= """" . zinterp . """"
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
+	
+	FileCopy, %fileIn%, %fileIn%sh.pdf
 
 return
 }
