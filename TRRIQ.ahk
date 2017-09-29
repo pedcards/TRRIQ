@@ -117,7 +117,7 @@ if (instr(phase,"PDF")) {
 			continue
 		}
 		FileGetSize, fileInSize, %fileIn%
-		eventlog("Processing """ fileNam ".pdf"" (" fileInSize ").")
+		eventlog("Processing """ fileNam ".pdf"" (" thousandsSep(fileInSize) ").")
 		gosub MainLoop													; process the PDF
 		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
 			continue
@@ -918,7 +918,7 @@ shortenPDF(find) {
 	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%sh.pdf",,min
 	FileGetSize, sizeIn, %fileIn%
 	FileGetSize, sizeOut, %fileIn%sh.pdf
-	eventlog("IN: " sizeIn ", OUT: " sizeOut)
+	eventlog("IN: " thousandsSep(sizeIn) ", OUT: " thousandsSep(sizeOut))
 	progress, off
 return	
 }
@@ -2381,6 +2381,11 @@ year4dig(x) {
 zDigit(x) {
 ; Add leading zero to a number
 	return SubStr("0" . x, -1)
+}
+
+ThousandsSep(x, s=",") {
+; from https://autohotkey.com/board/topic/50019-add-thousands-separator/
+	return RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
 }
 
 #Include CMsgBox.ahk
