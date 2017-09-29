@@ -919,6 +919,9 @@ shortenPDF(find) {
 	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
 	pgpos := pgs.value(1)
 	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%sh.pdf",,min
+	if !FileExist(fileIn "sh.pdf") {
+		FileCopy, %fileIn%, %fileIn%sh.pdf
+	}
 	FileGetSize, sizeIn, %fileIn%
 	FileGetSize, sizeOut, %fileIn%sh.pdf
 	eventlog("IN: " thousandsSep(sizeIn) ", OUT: " thousandsSep(sizeOut))
@@ -1202,15 +1205,7 @@ CheckProcPr2:
 	}
 	
 	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
-		eventlog("File size error '" fileIn "'")										; Full disclosure are usually ~ 9-19 Meg
-		MsgBox,
-			,Wrong Version
-			, % "File '" fileIn "'`n"
-			. "for patient '" chk.Name "'`n"
-			. "is wrong report version.`n`n"
-			. "Be sure to download the Full Disclosure report from eCardio site."
-		fetchQuit := true
-		return
+		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
 	}
 	
 	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons							; convert PDF all pages to txt file
