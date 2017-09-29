@@ -576,6 +576,7 @@ MainLoop:
 	matchProv := Object()
 	fileOut := fileOut1 := fileOut2 := ""
 	summBl := summ := ""
+	fullDisc := ""
 	
 	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
 		gosub Holter_LW
@@ -716,6 +717,7 @@ Holter_LW:
 {
 	eventlog("Holter_LW")
 	monType := "H"
+	fullDisc := "FULL DISCLOSURE"
 	dbCSV := true
 	
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
@@ -758,7 +760,7 @@ Holter_LW:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
-	ShortenPDF("FULL DISCLOSURE")
+	ShortenPDF(fullDisc)
 
 return
 }
@@ -767,6 +769,7 @@ Holter_Pr:
 {
 	eventlog("Holter_Pr")
 	monType := "PR"
+	fullDisc := "i)60\s+sec/line"
 	dbCSV := true
 	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Processed")
@@ -831,7 +834,7 @@ Holter_Pr:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
-	ShortenPDF("i)60\s+sec/line")
+	ShortenPDF(fullDisc)
 
 return
 }
@@ -927,6 +930,7 @@ Holter_Pr2:
 {
 	eventlog("Holter_Pr2")
 	monType := "PR"
+	fullDisc := "i)60\s+s(ec)?/line"
 	dbCSV := true
 	
 	demog := stregX(newtxt,"Name:",1,0,"Conclusions:",1)
@@ -986,7 +990,7 @@ Holter_Pr2:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
-	ShortenPDF("i)60\s+s(ec)?/line")
+	ShortenPDF(fullDisc)
 
 return
 }
