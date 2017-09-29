@@ -1187,10 +1187,10 @@ CheckProcPr2:
 		chk.First := trim(strX(chk.Name,",",1,1,"",0)," `r`n")								; NameF				must be [A-Z]
 	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
 	chk.DOB := strVal(demog,"Date of Birth","Age")										; DOB
-	chk.Sex := strVal(demog,"Gender","\R")											; Sex
+	chk.Sex := strVal(demog,"Gender","\R")												; Sex
 	chk.Prov := cleanspace(strVal(demog,"Referring Physician","\R"))					; Ordering MD
 	chk.Ind := strVal(demog,"Indications","Medications")								; Indication
-	chk.Date := strVal(demog,"Recording Start Date/Time","\R")						; Study date
+	chk.Date := strVal(demog,"Recording Start Date/Time","\R")							; Study date
 	
 	chkDT := parseDate(chk.Date)
 	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
@@ -1201,7 +1201,7 @@ CheckProcPr2:
 		return
 	}
 	
-	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
+	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons							; convert PDF all pages to txt file
 	eventlog("Extracting full text.")	
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
