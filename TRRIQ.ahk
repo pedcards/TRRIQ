@@ -1201,8 +1201,20 @@ CheckProcPr2:
 		return
 	}
 	
+	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
+		eventlog("File size error '" fileIn "'")										; Full disclosure are usually ~ 9-19 Meg
+		MsgBox,
+			,Wrong Version
+			, % "File '" fileIn "'`n"
+			. "for patient '" chk.Name "'`n"
+			. "is wrong report version.`n`n"
+			. "Be sure to download the Full Disclosure report from eCardio site."
+		fetchQuit := true
+		return
+	}
+	
 	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons							; convert PDF all pages to txt file
-	eventlog("Extracting full text.")	
+	eventlog("Extracting full text.")
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
