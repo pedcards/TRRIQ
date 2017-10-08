@@ -1315,6 +1315,7 @@ Zio:
 	fieldvals(demog,1,"dem")
 	
 	formatField("dem","Test_date",chk.DateOrig)
+	formatField("dem","Billing",chk.Acct)
 	
 	;~ tmp := columns(zcol,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)","Preliminary Findings",0,"Ventricular")
 	;~ tmp := "#####`n" RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1") "`n#####`n"
