@@ -636,7 +636,7 @@ outputfiles:
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
-	eventlog("Move files " filenameOut)
+	eventlog("Move files '" fileIn "' -> '" filenameOut)
 Return
 }
 
