@@ -125,7 +125,7 @@ if (instr(phase,"PDF")) {
 		if !IsObject(ptDem) {											; bad file, never acquires demographics
 			continue
 		}
-		FileDelete, %fileIn%
+		;~ FileDelete, %fileIn%
 		holterLoops++													; increment counter for processed counter
 		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 	}
@@ -632,7 +632,7 @@ outputfiles:
 	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM , 1										; Copy to OnbaseDir
 	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM , 1										; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
-	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir Archive
+	FileMove, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir Archive
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
