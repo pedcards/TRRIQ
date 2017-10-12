@@ -1284,7 +1284,7 @@ Zio:
 {
 	eventlog("Holter_Zio")
 	monType := "Zio"
-	dbCSV := false
+	dbCSV := true
 	
 	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" temp.txt, , hide				; reconvert entire Zio PDF 
 	newTxt:=""																		; clear the full txt variable
