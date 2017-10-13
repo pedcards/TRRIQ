@@ -641,17 +641,17 @@ outputfiles:
 			. """" chk.MRN """" ","															; extracted MRN
 			. """" chk.Prov """" ","														; extracted provider
 			. """" chk.Date """" ","														; extracted encounter date
-			. """" chk.Acct """" ","														; extracted EncNum
 			. """" fldval["Name_L"] ", " fldval["Name_F"] """" ","							; CIS name
 			. """" fldval["MRN"] """" ","													; CIS MRN
 			. """" fldval["dem-Ordering"] """" ","											; CIS provider
-			. """" fldval["Test_date"] """" ","												; CIS encounter date
+			. """" fldval["dem-Test_date"] """" ","											; CIS encounter date
+			. """" fldval["dem-Test_end"] """" ","											; extracted Test end
 			. """" fldval["dem-Billing"] """" ","											; CIS EncNum
 			. """" fldval["dem-Site"] """" ","												; CIS location
+			. """" fldval["dem-Indication"] """" ","										; Indication
 			. """" monType """" ","															; Monitor type
-			. """" fileIn """" ","															; Original filename
-			. """" filenameOut """" ","														; Archived filename
-			. """" fileHIM """" 															; OnBase filename
+			. """" strX(fileIn,"\",0,1,"",0) """" ","										; Original filename
+			. """" filenameOut """"															; Archived filename
 			. "`n"
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
 	
