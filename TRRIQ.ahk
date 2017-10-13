@@ -1785,7 +1785,7 @@ CheckProcBGH:
 			. "MRN " chk.MRN "`n"
 			. "Acct " chk.Acct "`n"
 			. "Ordering: " chk.Prov "`n"
-			. "Study date: " chk.Date "`n`n"
+			. "Study date: " chk.DateStart "`n`n"
 			. "Is all the information correct?`n"
 			. "If NO, reacquire demographics."
 		IfMsgBox, Yes																; All tests valid
