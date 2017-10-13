@@ -1458,9 +1458,9 @@ ZioArrField(txt,fld) {
 
 CheckProcZio:
 {
-	tmp := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
-		chk.Last := trim(strX(tmp, "", 1,1, ",", 1,1))
-		chk.First := trim(strX(tmp, ", ", 1,2, "", 0))
+	chk.Name := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
+		chk.Last := trim(strX(chk.Name, "", 1,1, ",", 1,1))
+		chk.First := trim(strX(chk.Name, ", ", 1,2, "", 0))
 	chk.DOB := RegExReplace(strVal(demog,"Date of Birth","Patient ID"),"\s+\(.*(yrs|mos)\)")		; DOB
 	chk.MRN := strVal(demog,"Patient ID","Gender")											; MRN
 	chk.Sex := strVal(demog,"Gender","Primary Indication")											; Sex
@@ -1472,7 +1472,7 @@ CheckProcZio:
 	
 	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
 		chk.enroll := strVal(tmp,"Enrollment Period","Analysis Time")
-		chk.DateOrig := strVal(chk.enroll,"hours",",")
+		chk.Date := strVal(chk.enroll,"hours",",")
 		chk.Analysis := strVal(tmp,"Analysis Time","\(after")
 		chk.enroll := stregX(chk.enroll,"",1,0,"\s{3}",1)
 	
@@ -1520,7 +1520,7 @@ CheckProcZio:
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
 	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
-	ptDem["EncDate"] := chk.DateOrig
+	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
 	fetchQuit:=false
@@ -1529,13 +1529,13 @@ CheckProcZio:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
-	fldval["Test_date"] := chk.DateOrig
+	fldval["Test_date"] := ptDem["EncDate"]
 	fldval["name_L"] := ptDem["nameL"]
 	fldval["name_F"] := ptDem["nameF"]
 	fldval["MRN"] := ptDem["MRN"]
-	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
+	fldval["Acct"] := ptDem["Account Number"]
 	
-	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " chk.Name "`nDate of Birth",,1)
+	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " ptDem["nameL"] ", " ptDem["nameF"] "`nDate of Birth",,1)
 	demog := RegExReplace(demog,"i)Date of Birth(.*)Patient ID","Date of Birth   " ptDem["DOB"] "`nPatient ID",,1)
 	demog := RegExReplace(demog,"i)Patient ID(.*)Gender","Patient ID   " ptDem["MRN"] "`nGender",,1)
 	demog := RegExReplace(demog,"i)Gender(.*)Primary Indication","Gender   " ptDem["Sex"] "`nPrimary Indication",,1)
