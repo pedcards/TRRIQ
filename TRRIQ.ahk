@@ -649,7 +649,7 @@ outputfiles:
 			. """" fldval["MRN"] """" ","													; CIS MRN
 			. """" fldval["dem-Ordering"] """" ","											; CIS provider
 			. """" fldval["Test_date"] """" ","												; CIS encounter date
-			. """" fldval["Acct"] """" ","													; CIS EncNum
+			. """" fldval["dem-Billing"] """" ","											; CIS EncNum
 			. """" fldval["dem-Site"] """" ","												; CIS location
 			. """" monType """" ","															; Monitor type
 			. """" fileIn """" ","															; Original filename
@@ -1534,6 +1534,7 @@ CheckProcZio:
 	fldval["name_F"] := ptDem["nameF"]
 	fldval["MRN"] := ptDem["MRN"]
 	fldval["Acct"] := ptDem["Account Number"]
+	fldval["dem-Billing"] := fldval["Acct"]
 	
 	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " ptDem["nameL"] ", " ptDem["nameF"] "`nDate of Birth",,1)
 	demog := RegExReplace(demog,"i)Date of Birth(.*)Patient ID","Date of Birth   " ptDem["DOB"] "`nPatient ID",,1)
