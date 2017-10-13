@@ -117,7 +117,7 @@ if (instr(phase,"PDF")) {
 			continue
 		}
 		FileGetSize, fileInSize, %fileIn%
-		eventlog("Processing """ fileNam ".pdf"" (" fileInSize ").")
+		eventlog("Processing """ fileNam ".pdf"" (" thousandsSep(fileInSize) ").")
 		gosub MainLoop													; process the PDF
 		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
 			continue
@@ -125,7 +125,7 @@ if (instr(phase,"PDF")) {
 		if !IsObject(ptDem) {											; bad file, never acquires demographics
 			continue
 		}
-		FileDelete, %fileIn%
+		;~ FileDelete, %fileIn%
 		holterLoops++													; increment counter for processed counter
 		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 	}
@@ -133,6 +133,7 @@ if (instr(phase,"PDF")) {
 	/* Consider asking if complete. The MA's appear to run one PDF at a time, despite the efficiency loss.
 	*/
 }
+FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
 eventlog("<<<<< Session end.")
 ExitApp
 
@@ -389,7 +390,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			eventlog("Provider set to " ptDem.Provider ".")
 		}
 	} else {													; Provider recognized
-		eventlog(ptDem.Provider " matches " matchProv.Best " (" matchProv.fuzz ").")
+		eventlog(ptDem.Provider " matches " matchProv.Best " (" (1-matchProv.fuzz)*100 ").")
 		ptDem.Provider := matchProv.Best
 	}
 	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
@@ -576,6 +577,7 @@ MainLoop:
 	matchProv := Object()
 	fileOut := fileOut1 := fileOut2 := ""
 	summBl := summ := ""
+	fullDisc := ""
 	
 	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
 		gosub Holter_LW
@@ -583,7 +585,7 @@ MainLoop:
 		gosub Holter_Pr
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) {					; New Preventice Holter 2017
 		gosub Holter_Pr2
-	} else if (RegExMatch(newtxt,"i)zio.*xt.*patch")) {
+	} else if (instr(newtxt,"zio xt")) {
 		gosub Zio
 	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {		; Lifewatch event
 		gosub Event_LW
@@ -612,9 +614,6 @@ outputfiles:
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["Test_Date"])												; get the study date
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
-	filenameHIM := tmpDate.MM tmpDate.DD substr(tmpDate.YYYY,3,2) " " 
-					. format("{:T}",fldval["Name_L"]) substr(fldval["Name_F"],1,1) " "
-					. fldval["MRN"] ".pdf"
 	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
@@ -622,20 +621,42 @@ outputfiles:
 	if (dbCSV) {
 		FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1							; copy CSV from tempfiles to importFld
 	}
-
-	if (FileExist(fileIn "sh.pdf")) {														; shortened filename only if shortenPDF called
-		fileHIM := fileIn "sh.pdf"
+	
+	if (FileExist(fileIn "sh.pdf")) {														; filename for OnbaseDir
+		fileHIM := fileIn "sh.pdf"															; prefer shortened if it exists
 	} else {
 		fileHIM := fileIn
 	}
-	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM , 1										; Copy to OnbaseDir
-	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM , 1										; Copy to HCClinic folder *** DO WE NEED THIS? ***
+	FileCopy, % fileHIM, % OnbaseDir1 filenameOut ".pdf", 1									; Copy to OnbaseDir
+	FileCopy, % fileHIM, % OnbaseDir2 filenameOut ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
-	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir Archive
-	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
+	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; Copy the original PDF to holterDir Archive
+	FileCopy, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; Copy the shortened PDF, if it exists
+	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
+	FileDelete, %fileIn%sh.pdf																;	was never completing filemove
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
-	eventlog("Move files " filenameOut)
+	eventlog("Move files '" fileIn "' -> '" filenameOut)
+	
+	fileWQ := ma_date "," user "," 
+			. """" chk.Name """" ","														; extracted name
+			. """" chk.MRN """" ","															; extracted MRN
+			. """" chk.Prov """" ","														; extracted provider
+			. """" chk.Date """" ","														; extracted encounter date
+			. """" fldval["Name_L"] ", " fldval["Name_F"] """" ","							; CIS name
+			. """" fldval["MRN"] """" ","													; CIS MRN
+			. """" fldval["dem-Ordering"] """" ","											; CIS provider
+			. """" fldval["dem-Test_date"] """" ","											; CIS encounter date
+			. """" fldval["dem-Test_end"] """" ","											; extracted Test end
+			. """" fldval["dem-Billing"] """" ","											; CIS EncNum
+			. """" fldval["dem-Site"] """" ","												; CIS location
+			. """" fldval["dem-Indication"] """" ","										; Indication
+			. """" monType """" ","															; Monitor type
+			. """" strX(fileIn,"\",0,1,"",0) """" ","										; Original filename
+			. """" filenameOut """"															; Archived filename
+			. "`n"
+	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
+	
 Return
 }
 
@@ -716,6 +737,7 @@ Holter_LW:
 {
 	eventlog("Holter_LW")
 	monType := "H"
+	fullDisc := "FULL DISCLOSURE"
 	dbCSV := true
 	
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
@@ -758,7 +780,7 @@ Holter_LW:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
-	ShortenPDF("FULL DISCLOSURE")
+	ShortenPDF(fullDisc)
 
 return
 }
@@ -767,6 +789,7 @@ Holter_Pr:
 {
 	eventlog("Holter_Pr")
 	monType := "PR"
+	fullDisc := "i)60\s+sec/line"
 	dbCSV := true
 	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Processed")
@@ -831,7 +854,7 @@ Holter_Pr:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
-	ShortenPDF("i)60\s+sec/line")
+	ShortenPDF(fullDisc)
 
 return
 }
@@ -916,9 +939,12 @@ shortenPDF(find) {
 	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
 	pgpos := pgs.value(1)
 	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%sh.pdf",,min
+	if !FileExist(fileIn "sh.pdf") {
+		FileCopy, %fileIn%, %fileIn%sh.pdf
+	}
 	FileGetSize, sizeIn, %fileIn%
 	FileGetSize, sizeOut, %fileIn%sh.pdf
-	eventlog("IN: " sizeIn ", OUT: " sizeOut)
+	eventlog("IN: " thousandsSep(sizeIn) ", OUT: " thousandsSep(sizeOut))
 	progress, off
 return	
 }
@@ -927,6 +953,7 @@ Holter_Pr2:
 {
 	eventlog("Holter_Pr2")
 	monType := "PR"
+	fullDisc := "i)60\s+s(ec)?/line"
 	dbCSV := true
 	
 	demog := stregX(newtxt,"Name:",1,0,"Conclusions:",1)
@@ -986,7 +1013,7 @@ Holter_Pr2:
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
-	ShortenPDF("i)60\s+s(ec)?/line")
+	ShortenPDF(fullDisc)
 
 return
 }
@@ -1183,10 +1210,10 @@ CheckProcPr2:
 		chk.First := trim(strX(chk.Name,",",1,1,"",0)," `r`n")								; NameF				must be [A-Z]
 	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
 	chk.DOB := strVal(demog,"Date of Birth","Age")										; DOB
-	chk.Sex := strVal(demog,"Gender","\R")											; Sex
+	chk.Sex := strVal(demog,"Gender","\R")												; Sex
 	chk.Prov := cleanspace(strVal(demog,"Referring Physician","\R"))					; Ordering MD
 	chk.Ind := strVal(demog,"Indications","Medications")								; Indication
-	chk.Date := strVal(demog,"Recording Start Date/Time","\R")						; Study date
+	chk.Date := strVal(demog,"Recording Start Date/Time","\R")							; Study date
 	
 	chkDT := parseDate(chk.Date)
 	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
@@ -1197,8 +1224,12 @@ CheckProcPr2:
 		return
 	}
 	
-	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
-	eventlog("Extracting full text.")	
+	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
+		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
+	}
+	
+	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons							; convert PDF all pages to txt file
+	eventlog("Extracting full text.")
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
@@ -1247,6 +1278,18 @@ CheckProcPr2:
 	fetchQuit:=false
 	gosub fetchGUI
 	gosub fetchDem
+	
+	if (tmp:=fuzzysearch(chk.Last " " chk.First, ptDem["nameL"] " " ptDem["nameF"]) > 0.15) {
+		MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
+			, % "Name does not match!`n`n"
+			.	"	Parsed:	" chk.Last ", " chk.First "`n"
+			.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
+			.	"Skipping this file."
+			
+		eventlog("Name error. Parsed """ chk.Last ", " chk.First """ Grabbed """ ptDem["nameL"] ", " ptDem["nameF"] """.")
+		fetchQuit:=true
+		return
+	}
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
@@ -1258,7 +1301,7 @@ CheckProcPr2:
 	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
 	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
 	demog := RegExReplace(demog,"i`a)Indications: (.*) Medications:", "Indications:   " ptDem["Indication"] "   Medications:")	
-	demog := RegExReplace(demog,"i`a)Recording Start Date/Time: (.*)\R", "Recording Start Date/Time:   " ptDem["EncDate"] "`n")
+	demog := RegExReplace(demog,"i`a)Recording Start Date/Time: (.*)\R", "Recording Start Date/Time:   " chk.Date "`n")
 	demog := RegExReplace(demog,"i`a)Analyst: (.*) Recorder Number","Analyst:   $1   Recorder Number")
 	demog := RegExReplace(demog,"i`a)Technician: (.*) Recording Duration","Hookup Tech:   $1   Recording Duration")
 	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
@@ -1273,7 +1316,17 @@ Zio:
 {
 	eventlog("Holter_Zio")
 	monType := "Zio"
-	dbCSV := false
+	dbCSV := true
+	
+	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" temp.txt, , hide				; reconvert entire Zio PDF 
+	newTxt:=""																		; clear the full txt variable
+	FileRead, maintxt, temp.txt														; load into maintxt
+	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
+	StringReplace, newtxt, newtxt, % chr(12), >>>page>>>`r`n, All
+	FileDelete tempfile.txt															; remove any leftover tempfile
+	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
+	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt, 1								; overwrite copy in tempfiles
+	eventlog("Zio PDF rescanned -> " fileNam ".txt")
 	
 	zcol := columns(newtxt,"","SIGNATURE",0,"Enrollment Period") ">>>end"
 	demo1 := onecol(cleanblank(stregX(zcol,"\s+Date of Birth",1,0,"Prescribing Clinician",1)))
@@ -1286,33 +1339,25 @@ Zio:
 	}
 	
 	znam := strVal(demog,"Name","Date of Birth")
-	fieldColAdd("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
-	fieldColAdd("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
+	formatField("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
+	formatField("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
 	
 	fields[1] := ["Date of Birth","Patient ID","Gender","Primary Indication","Prescribing Clinician","Managing Location",">>>end"]
 	labels[1] := ["DOB","MRN","Sex","Indication","Ordering","Site","end"]
 	fieldvals(demog,1,"dem")
 	
-	fieldColAdd("dem","Test_date",chk.DateOrig)
-	
-	tmp := columns(zcol,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)","Preliminary Findings",0,"Ventricular")
-	tmp := "#####`n" RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1") "`n#####`n"
-	
-	fieldColAdd("arr","SVT",ZioArrField(tmp,"Supraventricular Tachycardia \("))
-	fieldColAdd("arr","VT",ZioArrField(tmp,"(?<!Supra)Ventricular Tachycardia \("))
-	fieldColAdd("arr","Pauses",ZioArrField(tmp,"Pauses \("))
-	fieldColAdd("arr","AVBlock",ZioArrField(tmp,"AV Block \("))
-	fieldColAdd("arr","AF",ZioArrField(tmp,"Atrial Fibrillation"))
+	formatField("dem","Test_date",fldval["Test_date"])
+	formatField("dem","Billing",fldval["Acct"])
 	
 	znums := columns(zcol ">>>end","Enrollment Period",">>>end",1)
 	
-	fieldColAdd("time","Enrolled",chk.enroll)
-	fieldColAdd("time","Analysis",chk.Analysis)
+	formatField("dem","Recording_time",chk.enroll)
+	formatField("dem","Analysis_time",chk.Analysis)
 	
 	zrate := columns(znums,"Heart Rate","Patient Events",1)
-	fields[4] := ["Max ","Min ","Avg "]
-	labels[4] := ["Max","Min","Avg"]
-	fieldvals(zrate,4,"rate")
+	fields[4] := ["Max","Min","Avg","\R"]
+	labels[4] := ["Max","Min","Avg","null"]
+	fieldvals(zrate,4,"hrd")
 	
 	zevent := columns(znums,"Number of Triggered Events:","Ectopics",1)
 	fields[5] := ["Number of Triggered Events:","Findings within � 45 sec of Triggers:","Number of Diary Entries:","Findings within � 45 sec of Entries:"]
@@ -1326,20 +1371,65 @@ Zio:
 	
 	zsve := columns(znums,"Supraventricular Ectopy \(SVE/PACs\)","Ventricular Ectopy \(VE/PVCs\)",1)
 	fields[7] := ["Isolated","Couplet","Triplet"]
-	labels[7] := ["Single","Couplets","Triplets"]
+	labels[7] := ["Single","Pairs","Triplets"]
 	fieldvals(zsve,7,"sve")
+	zsve_tot := (fldval["sve-Single"] ? fldval["sve-Single"] : 0) 
+				+ 2*(fldval["sve-Pairs"] ? fldval["sve-Pairs"] : 0) 
+				+ 3*(fldval["sve-Triplets"] ? fldval["sve-Triplets"] : 0)
+	formatField("sve","Total",zsve_tot)
+
+	zsve := stregX(newtxt,"Episode Heart Rates.* SVT",1,0,">>>page>>>",1)
+	zsve := stregX(zsve,"^(.*)SVT with",1,0,"^(.*)Patient:",1) ">>>>>"
+	zsve_fastest := stregX(zsve,"^(.*)Fastest Heart Rate",1,0,"^(.*)Fastest Avg",1) ">>>>>"
+	zsve_tmp := columns(zsve_fastest,"",">>>>>",,"Average") ">>>>>"
+	zsve_fastest := columns(zsve_tmp,"","Average",,"# Beats","Duration")
+					. columns(zsve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
+	fields[7] := ["Fastest Heart Rate","# Beats","Duration","Average","Range","Pt Triggered"]
+	labels[7] := ["Fastest_time","Beats","null","null","Fastest","null"]
+	fieldvals(zsve_fastest,7,"sve")
+	zsve_longest := stregX(zsve,"^(.*)Longest SVT",1,0,">>>>>",0)
+	zsve_tmp := columns(zsve_longest,"",">>>>>",,"Average") ">>>>>"
+	zsve_longest := columns(zsve_tmp,"","Average",,"# Beats","Duration")
+					. columns(zsve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
+	fields[7] := ["Longest SVT Episode","# Beats","Duration","Average","Range","Pt Triggered"]
+	labels[7] := ["Longest_time","Longest","null","null","null","null"]
+	fieldvals(zsve_longest,7,"sve")
 	
 	zve := columns(znums ">>>end","Ventricular Ectopy \(VE/PVCs\)",">>>end",1)
 	fields[8] := ["Isolated","Couplet","Triplet","Longest Ventricular Bigeminy Episode","Longest Ventricular Trigeminy Episode"]
-	labels[8] := ["Single","Couplets","Triplets","LongestBigem","LongestTrigem"]
+	labels[8] := ["SinglePVC","Couplets","Triplets","LongestBigem","LongestTrigem"]
 	fieldvals(zve,8,"ve")
+	zve_tot := (fldval["ve-SinglePVC"] ? fldval["ve-SinglePVC"] : 0) 
+				+ 2*(fldval["ve-Couplets"] ? fldval["ve-Couplets"] : 0) 
+				+ 3*(fldval["ve-Triplets"] ? fldval["ve-Triplets"] : 0)
+	formatField("ve","Total",zve_tot)
 	
+	zve := stregX(newtxt,"Episode Heart Rates.* VT",1,0,">>>page>>>",1)
+	zve := stregX(zve,"^(.*)VT with",1,0,"^(.*)Patient:",1) ">>>>>"
+	zve_fastest := stregX(zve,"^(.*)Fastest Heart Rate",1,0,"^(.*)Fastest Avg",1) ">>>>>"
+	zve_tmp := columns(zve_fastest,"",">>>>>",,"Average") ">>>>>"
+	zve_fastest := columns(zve_tmp,"","Average",,"# Beats","Duration")
+					. columns(zve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
+	fields[8] := ["Fastest Heart Rate","# Beats","Duration","Average","Range","Pt Triggered"]
+	labels[8] := ["Fastest_time","Beats","null","null","Fastest","null"]
+	fieldvals(zve_fastest,8,"ve")
+	zve_longest := stregX(zve,"^(.*)Longest VT",1,0,">>>>>",0)
+	zve_tmp := columns(zve_longest,"",">>>>>",,"Average") ">>>>>"
+	zve_longest := columns(zve_tmp,"","Average",,"# Beats","Duration")
+					. columns(zve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
+	fields[8] := ["Longest VT Episode","# Beats","Duration","Average","Range","Pt Triggered"]
+	labels[8] := ["Longest_time","Longest","null","null","null","null"]
+	fieldvals(zve_longest,8,"ve")
+	
+	LWify()
 	zinterp := cleanspace(columns(newtxt,"Preliminary Findings","SIGNATURE",,"Final Interpretation"))
 	zinterp := trim(StrX(zinterp,"",1,0,"Final Interpretation",1,20))
-	fileout1 .= """INTERP""`n"
-	fileout2 .= """" . zinterp . """`n"
+	fileout1 .= """INTERP"""
+	fileout2 .= """" . zinterp . """"
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
+	
+	FileCopy, %fileIn%, %fileIn%sh.pdf
 
 return
 }
@@ -1347,7 +1437,9 @@ return
 ZioArrField(txt,fld) {
 	str := stregX(txt,fld,1,0,"#####",1)
 	if instr(str,"Episodes") {
-		str := strX(columns(str,fld,"#####",0,"Episodes"),"Episodes",1,0,"",0)
+		;~ str := strX(columns(str,fld,"#####",0,"Episodes"),"Episodes",1,0,"",0)
+		str := columns(str,fld,"#####",0,"Episodes")
+		str := RegExReplace(str,"i)None found")
 	}
 	Loop, parse, str, `n,`r
 	{
@@ -1360,14 +1452,17 @@ ZioArrField(txt,fld) {
 		}
 		newStr .= i "`n"   							                           ; only add lines with text in it 
 	} 
+	if (newStr="") {
+		newStr := "None found`n"
+	}
 	return trim(cleanspace(newStr))
 }
 
 CheckProcZio:
 {
-	tmp := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
-		chk.Last := trim(strX(tmp, "", 1,1, ",", 1,1))
-		chk.First := trim(strX(tmp, ", ", 1,2, "", 0))
+	chk.Name := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
+		chk.Last := trim(strX(chk.Name, "", 1,1, ",", 1,1))
+		chk.First := trim(strX(chk.Name, ", ", 1,2, "", 0))
 	chk.DOB := RegExReplace(strVal(demog,"Date of Birth","Patient ID"),"\s+\(.*(yrs|mos)\)")		; DOB
 	chk.MRN := strVal(demog,"Patient ID","Gender")											; MRN
 	chk.Sex := strVal(demog,"Gender","Primary Indication")											; Sex
@@ -1379,7 +1474,9 @@ CheckProcZio:
 	
 	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
 		chk.enroll := strVal(tmp,"Enrollment Period","Analysis Time")
-		chk.DateOrig := strVal(chk.enroll,"hours",",")
+		chk.DateStart := strVal(chk.enroll,"hours",",")
+		chk.DateEnd := strVal(chk.enroll,"to\s",",")
+		chk.Date := chk.DateStart
 		chk.Analysis := strVal(tmp,"Analysis Time","\(after")
 		chk.enroll := stregX(chk.enroll,"",1,0,"\s{3}",1)
 	
@@ -1400,7 +1497,7 @@ CheckProcZio:
 			. "MRN " chk.MRN "`n"
 			. "Acct " chk.Acct "`n"
 			. "Ordering: " chk.Prov "`n"
-			. "Study date: " chk.Date "`n`n"
+			. "Study date: " chk.DateStart "`n`n"
 			. "Is all the information correct?`n"
 			. "If NO, reacquire demographics."
 		IfMsgBox, Yes																; All tests valid
@@ -1427,22 +1524,38 @@ CheckProcZio:
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
 	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
-	ptDem["EncDate"] := chk.DateOrig
+	ptDem["EncDate"] := chk.DateStart
 	ptDem["Indication"] := chk.Ind
 	
 	fetchQuit:=false
 	gosub fetchGUI
 	gosub fetchDem
+	
+	if (tmp:=fuzzysearch(chk.Last " " chk.First, ptDem["nameL"] " " ptDem["nameF"]) > 0.15) {
+		MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
+			, % "Name does not match!`n`n"
+			.	"	Parsed:	" chk.Last ", " chk.First "`n"
+			.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
+			.	"Skipping this file."
+			
+		eventlog("Name error. Parsed """ chk.Last ", " chk.First """ Grabbed """ ptDem["nameL"] ", " ptDem["nameF"] """.")
+		fetchQuit:=true
+		return
+	}
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
-	fldval["Test_date"] := chk.DateOrig
+	fldval["Test_date"] := chk.DateStart
+	fldval["Test_end"] := chk.DateEnd
 	fldval["name_L"] := ptDem["nameL"]
 	fldval["name_F"] := ptDem["nameF"]
 	fldval["MRN"] := ptDem["MRN"]
-	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
+	fldval["Acct"] := ptDem["Account Number"]
+	fldval["dem-Billing"] := fldval["Acct"]
+	fldval["dem-Test_date"] := chk.DateStart
+	fldval["dem-Test_end"] := chk.DateEnd
 	
-	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " chk.Name "`nDate of Birth",,1)
+	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " ptDem["nameL"] ", " ptDem["nameF"] "`nDate of Birth",,1)
 	demog := RegExReplace(demog,"i)Date of Birth(.*)Patient ID","Date of Birth   " ptDem["DOB"] "`nPatient ID",,1)
 	demog := RegExReplace(demog,"i)Patient ID(.*)Gender","Patient ID   " ptDem["MRN"] "`nGender",,1)
 	demog := RegExReplace(demog,"i)Gender(.*)Primary Indication","Gender   " ptDem["Sex"] "`nPrimary Indication",,1)
@@ -1633,9 +1746,10 @@ Event_BGH:
 	fieldvals(demog,1,"dem")
 	fldval["name_L"] := ptDem["nameL"]
 	
-	fields[2] := ["Period \(.*\)","Event Counts"]
-	labels[2] := ["Test_date","VOID_Counts"]
+	fields[2] := ["Date Recorded","Date Ended","\R"]
+	labels[2] := ["Test_date","Test_end","VOID"]
 	fieldvals(enroll,2,"dem")
+	fieldColAdd("dem","EncNum",ptDem["Account Number"])
 	
 	fields[3] := ["Critical","Total","Serious","Manual","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
@@ -1658,6 +1772,8 @@ CheckProcBGH:
 	chk.DOB := strVal(demog,"Date of Birth","Practice")											; DOB
 	chk.Ind := strVal(demog,"Diagnosis",".*")													; Indication
 	chk.Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
+		chk.DateEnd := trim(strX(chk.Date," - ",0,3,"",0)," `r`n")
+		chk.DateStart := trim(strX(chk.Date,"",1,1," ",1,1)," `r`n")
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
@@ -1669,7 +1785,7 @@ CheckProcBGH:
 			. "MRN " chk.MRN "`n"
 			. "Acct " chk.Acct "`n"
 			. "Ordering: " chk.Prov "`n"
-			. "Study date: " chk.Date "`n`n"
+			. "Study date: " chk.DateStart "`n`n"
 			. "Is all the information correct?`n"
 			. "If NO, reacquire demographics."
 		IfMsgBox, Yes																; All tests valid
@@ -1696,15 +1812,30 @@ CheckProcBGH:
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
 	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
-	ptDem["EncDate"] := chk.Date
+	ptDem["EncDate"] := chk.DateStart
+	ptDem["EndDate"] := chk.DateEnd
 	ptDem["Indication"] := chk.Ind
 	
 	fetchQuit:=false
 	gosub fetchGUI
 	gosub fetchDem
+	
+	if (tmp:=fuzzysearch(chk.Last " " chk.First, ptDem["nameL"] " " ptDem["nameF"]) > 0.15) {
+		MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
+			, % "Name does not match!`n`n"
+			.	"	Parsed:	" chk.Last ", " chk.First "`n"
+			.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
+			.	"Skipping this file."
+			
+		eventlog("Name error. Parsed """ chk.Last ", " chk.First """ Grabbed """ ptDem["nameL"] ", " ptDem["nameF"] """.")
+		fetchQuit:=true
+		return
+	}
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
+	fldval["dem-Site"] := ptDem["Loc"]
+	fldval["dem-Billing"] := ptDem["Account Number"]
 	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
 		fldval["name_L"] := ptDem["nameL"]
 		fldval["name_F"] := ptDem["nameF"]
@@ -1713,7 +1844,7 @@ CheckProcBGH:
 	demog := RegExReplace(demog,"i)Physician(.*?)Gender", "Physician   " ptDem["Provider"] "`nGender")
 	demog := RegExReplace(demog,"i)Gender(.*?)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
 	demog := RegExReplace(demog,"i)Date of Birth(.*?)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
-	enroll := RegExReplace(enroll,"i)Date Recorded: (.*?)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
+	enroll := RegExReplace(enroll,"i)Period(.*?)\R", "$1`nDate Recorded:   " chk.DateStart "`nDate Ended:   " chk.DateEnd "`n") 
 	eventlog("Demog replaced.")
 	
 	return
@@ -2032,7 +2163,7 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 }
 
 formatField(pre, lab, txt) {
-	global monType, Docs, ptDem
+	global monType, Docs, ptDem, fldval
 	if (txt ~= "\d{1,2} hr \d{1,2} min") {
 		StringReplace, txt, txt, %A_Space%hr%A_space% , :
 		StringReplace, txt, txt, %A_Space%min , 
@@ -2114,12 +2245,6 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,"Name_F",ptDem["nameF"])
 			return
 		}
-		if (lab="Test_date") {
-			RegExMatch(txt,"O)(\d{1,2}/\d{1,2}/\d{4}).* (\d{1,2}/\d{1,2}/\d{4})",dt)
-			fieldColAdd(pre,lab,dt.value(1))
-			fieldColAdd(pre,lab "_end",dt.value(2))
-			return
-		}
 	}
 	
 ;	ZIO patch specific search fixes
@@ -2140,8 +2265,15 @@ formatField(pre, lab, txt) {
 		if (RegExMatch(txt,"i)[a-z]+\s+[\>\<\.0-9%]+\s+\d",tmp)) {			;	Split "RARE <1.0% 2457" into result "2457" and text quant "RARE <1.0%"
 			tx1 := substr(txt,1,StrLen(tmp)-2)
 			tx2 := substr(txt,strlen(tmp))
+			fldval[pre "-" lab] := tx2
 			fieldColAdd(pre,lab,tx2)
-			fieldColAdd(pre,lab "_amt",tx1)
+			return
+		}
+		if (txt ~= "^[0-9.]+\s+\d{1,2}:\d{2}") {						;	Split timed results "139  8:31AM" into two fields
+			tx1 := trim(stregX(txt,"",1,0,"\d{1,2}:\d{2}",1,n))
+			tx2 := trim(stregX(txt "<<<","\d{1,2}:\d{2}",1,0,"<<<",1))
+			fieldColAdd(pre,lab,tx1)
+			fieldColAdd(pre,lab "_time",tx2)
 			return
 		}
 		if (txt ~= "3rd.*\)") {												;	fix AV block field
@@ -2316,6 +2448,11 @@ year4dig(x) {
 zDigit(x) {
 ; Add leading zero to a number
 	return SubStr("0" . x, -1)
+}
+
+ThousandsSep(x, s=",") {
+; from https://autohotkey.com/board/topic/50019-add-thousands-separator/
+	return RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
 }
 
 #Include CMsgBox.ahk
