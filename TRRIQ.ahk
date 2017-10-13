@@ -390,7 +390,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			eventlog("Provider set to " ptDem.Provider ".")
 		}
 	} else {													; Provider recognized
-		eventlog(ptDem.Provider " matches " matchProv.Best " (" matchProv.fuzz ").")
+		eventlog(ptDem.Provider " matches " matchProv.Best " (" (1-matchProv.fuzz)*100 ").")
 		ptDem.Provider := matchProv.Best
 	}
 	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
