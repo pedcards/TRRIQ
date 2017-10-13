@@ -2201,12 +2201,6 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,"Name_F",ptDem["nameF"])
 			return
 		}
-		if (lab="Test_date") {
-			RegExMatch(txt,"O)(\d{1,2}/\d{1,2}/\d{4}).* (\d{1,2}/\d{1,2}/\d{4})",dt)
-			fieldColAdd(pre,lab,dt.value(1))
-			fieldColAdd(pre,lab "_end",dt.value(2))
-			return
-		}
 	}
 	
 ;	ZIO patch specific search fixes
