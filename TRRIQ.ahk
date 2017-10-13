@@ -133,7 +133,7 @@ if (instr(phase,"PDF")) {
 	/* Consider asking if complete. The MA's appear to run one PDF at a time, despite the efficiency loss.
 	*/
 }
-FileCopy, .\logs\fileWQ, %chipDir%fileWQ-copy.csv
+FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
 eventlog("<<<<< Session end.")
 ExitApp
 
