@@ -1796,6 +1796,8 @@ CheckProcBGH:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
+	fldval["dem-Site"] := ptDem["Loc"]
+	fldval["dem-Billing"] := ptDem["Account Number"]
 	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
 		fldval["name_L"] := ptDem["nameL"]
 		fldval["name_F"] := ptDem["nameF"]
