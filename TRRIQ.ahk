@@ -1460,7 +1460,9 @@ CheckProcZio:
 	
 	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
 		chk.enroll := strVal(tmp,"Enrollment Period","Analysis Time")
-		chk.Date := strVal(chk.enroll,"hours",",")
+		chk.DateStart := strVal(chk.enroll,"hours",",")
+		chk.DateEnd := strVal(chk.enroll,"to\s",",")
+		chk.Date := chk.DateStart
 		chk.Analysis := strVal(tmp,"Analysis Time","\(after")
 		chk.enroll := stregX(chk.enroll,"",1,0,"\s{3}",1)
 	
@@ -1481,7 +1483,7 @@ CheckProcZio:
 			. "MRN " chk.MRN "`n"
 			. "Acct " chk.Acct "`n"
 			. "Ordering: " chk.Prov "`n"
-			. "Study date: " chk.Date "`n`n"
+			. "Study date: " chk.DateStart "`n`n"
 			. "Is all the information correct?`n"
 			. "If NO, reacquire demographics."
 		IfMsgBox, Yes																; All tests valid
@@ -1508,7 +1510,7 @@ CheckProcZio:
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
 	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
-	ptDem["EncDate"] := chk.Date
+	ptDem["EncDate"] := chk.DateStart
 	ptDem["Indication"] := chk.Ind
 	
 	fetchQuit:=false
@@ -1517,12 +1519,15 @@ CheckProcZio:
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
-	fldval["Test_date"] := ptDem["EncDate"]
+	fldval["Test_date"] := chk.DateStart
+	fldval["Test_end"] := chk.DateEnd
 	fldval["name_L"] := ptDem["nameL"]
 	fldval["name_F"] := ptDem["nameF"]
 	fldval["MRN"] := ptDem["MRN"]
 	fldval["Acct"] := ptDem["Account Number"]
 	fldval["dem-Billing"] := fldval["Acct"]
+	fldval["dem-Test_date"] := chk.DateStart
+	fldval["dem-Test_end"] := chk.DateEnd
 	
 	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " ptDem["nameL"] ", " ptDem["nameF"] "`nDate of Birth",,1)
 	demog := RegExReplace(demog,"i)Date of Birth(.*)Patient ID","Date of Birth   " ptDem["DOB"] "`nPatient ID",,1)
