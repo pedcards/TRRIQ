@@ -630,8 +630,10 @@ outputfiles:
 	FileCopy, % fileHIM, % OnbaseDir1 filenameOut ".pdf", 1									; Copy to OnbaseDir
 	FileCopy, % fileHIM, % OnbaseDir2 filenameOut ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
-	FileMove, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir Archive
-	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
+	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; Copy the original PDF to holterDir Archive
+	FileCopy, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; Copy the shortened PDF, if it exists
+	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
+	FileDelete, %fileIn%sh.pdf																;	was never completing filemove
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
