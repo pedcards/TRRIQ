@@ -1720,9 +1720,10 @@ Event_BGH:
 	fieldvals(demog,1,"dem")
 	fldval["name_L"] := ptDem["nameL"]
 	
-	fields[2] := ["Period \(.*\)","Event Counts"]
-	labels[2] := ["Test_date","VOID_Counts"]
+	fields[2] := ["Date Recorded","Date Ended","\R"]
+	labels[2] := ["Test_date","Test_end","VOID"]
 	fieldvals(enroll,2,"dem")
+	fieldColAdd("dem","EncNum",ptDem["Account Number"])
 	
 	fields[3] := ["Critical","Total","Serious","Manual","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
@@ -1745,6 +1746,8 @@ CheckProcBGH:
 	chk.DOB := strVal(demog,"Date of Birth","Practice")											; DOB
 	chk.Ind := strVal(demog,"Diagnosis",".*")													; Indication
 	chk.Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
+		chk.DateEnd := trim(strX(chk.Date," - ",0,3,"",0)," `r`n")
+		chk.DateStart := trim(strX(chk.Date,"",1,1," ",1,1)," `r`n")
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
@@ -1783,7 +1786,8 @@ CheckProcBGH:
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
 	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
-	ptDem["EncDate"] := chk.Date
+	ptDem["EncDate"] := chk.DateStart
+	ptDem["EndDate"] := chk.DateEnd
 	ptDem["Indication"] := chk.Ind
 	
 	fetchQuit:=false
@@ -1800,7 +1804,7 @@ CheckProcBGH:
 	demog := RegExReplace(demog,"i)Physician(.*?)Gender", "Physician   " ptDem["Provider"] "`nGender")
 	demog := RegExReplace(demog,"i)Gender(.*?)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
 	demog := RegExReplace(demog,"i)Date of Birth(.*?)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
-	enroll := RegExReplace(enroll,"i)Date Recorded: (.*?)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
+	enroll := RegExReplace(enroll,"i)Period(.*?)\R", "$1`nDate Recorded:   " chk.DateStart "`nDate Ended:   " chk.DateEnd "`n") 
 	eventlog("Demog replaced.")
 	
 	return
