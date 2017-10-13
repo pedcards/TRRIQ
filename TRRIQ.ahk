@@ -1335,8 +1335,8 @@ Zio:
 	labels[1] := ["DOB","MRN","Sex","Indication","Ordering","Site","end"]
 	fieldvals(demog,1,"dem")
 	
-	formatField("dem","Test_date",chk.DateOrig)
-	formatField("dem","Billing",chk.Acct)
+	formatField("dem","Test_date",fldval["Test_date"])
+	formatField("dem","Billing",fldval["Acct"])
 	
 	;~ tmp := columns(zcol,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)","Preliminary Findings",0,"Ventricular")
 	;~ tmp := "#####`n" RegExReplace(tmp,"[\r\n]+(\w)","`n#####`n$1") "`n#####`n"
