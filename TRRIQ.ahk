@@ -1301,7 +1301,7 @@ CheckProcPr2:
 	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
 	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
 	demog := RegExReplace(demog,"i`a)Indications: (.*) Medications:", "Indications:   " ptDem["Indication"] "   Medications:")	
-	demog := RegExReplace(demog,"i`a)Recording Start Date/Time: (.*)\R", "Recording Start Date/Time:   " ptDem["EncDate"] "`n")
+	demog := RegExReplace(demog,"i`a)Recording Start Date/Time: (.*)\R", "Recording Start Date/Time:   " chk.Date "`n")
 	demog := RegExReplace(demog,"i`a)Analyst: (.*) Recorder Number","Analyst:   $1   Recorder Number")
 	demog := RegExReplace(demog,"i`a)Technician: (.*) Recording Duration","Hookup Tech:   $1   Recording Duration")
 	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
