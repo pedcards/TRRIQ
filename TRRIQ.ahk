@@ -1530,6 +1530,18 @@ CheckProcZio:
 	fetchQuit:=false
 	gosub fetchGUI
 	gosub fetchDem
+	
+	if (tmp:=fuzzysearch(chk.Last " " chk.First, ptDem["nameL"] " " ptDem["nameF"]) > 0.15) {
+		MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
+			, % "Name does not match!`n`n"
+			.	"	Parsed:	" chk.Last ", " chk.First "`n"
+			.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
+			.	"Skipping this file."
+			
+		eventlog("Name error. Parsed """ chk.Last ", " chk.First """ Grabbed """ ptDem["nameL"] ", " ptDem["nameF"] """.")
+		fetchQuit:=true
+		return
+	}
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
