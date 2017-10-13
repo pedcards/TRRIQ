@@ -640,21 +640,21 @@ outputfiles:
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
 	fileWQ := ma_date "," user "," 
-			. chk.Name ","																	; extracted name
-			. chk.MRN ","																	; extracted MRN
-			. chk.Prov ","																	; extracted provider
-			. chk.Date ","																	; extracted encounter date
-			. chk.Acct ","																	; extracted EncNum
-			. fldval["dem-Name"] ","														; CIS name
-			. fldval["dem-MRN"] ","															; CIS MRN
-			. fldval["dem-Ordering"] ","													; CIS provider
-			. fldval["dem-Test_date"] ","													; CIS encounter date
-			. fldval["dem-Billing"] ","														; CIS EncNum
-			. fldval["dem-Site"] ","														; CIS location
-			. monType ","																	; Monitor type
-			. fileIn ","																	; Original filename
-			. filenameOut ","																; Archived filename
-			. fileHIM																		; OnBase filename
+			. """" chk.Name """" ","														; extracted name
+			. """" chk.MRN """" ","															; extracted MRN
+			. """" chk.Prov """" ","														; extracted provider
+			. """" chk.Date """" ","														; extracted encounter date
+			. """" chk.Acct """" ","														; extracted EncNum
+			. """" fldval["Name_L"] ", " fldval["Name_F"] """" ","							; CIS name
+			. """" fldval["MRN"] """" ","													; CIS MRN
+			. """" fldval["dem-Ordering"] """" ","											; CIS provider
+			. """" fldval["Test_date"] """" ","												; CIS encounter date
+			. """" fldval["Acct"] """" ","													; CIS EncNum
+			. """" fldval["dem-Site"] """" ","												; CIS location
+			. """" monType """" ","															; Monitor type
+			. """" fileIn """" ","															; Original filename
+			. """" filenameOut """" ","														; Archived filename
+			. """" fileHIM """" 															; OnBase filename
 			. "`n"
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
 	
