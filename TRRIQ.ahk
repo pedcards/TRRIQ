@@ -614,9 +614,6 @@ outputfiles:
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["Test_Date"])												; get the study date
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
-	filenameHIM := tmpDate.MM tmpDate.DD substr(tmpDate.YYYY,3,2) " " 
-					. format("{:T}",fldval["Name_L"]) substr(fldval["Name_F"],1,1) " "
-					. fldval["MRN"] ".pdf"
 	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
@@ -630,8 +627,8 @@ outputfiles:
 	} else {
 		fileHIM := fileIn
 	}
-	FileCopy, % fileHIM, % OnbaseDir1 filenameHIM , 1										; Copy to OnbaseDir
-	FileCopy, % fileHIM, % OnbaseDir2 filenameHIM , 1										; Copy to HCClinic folder *** DO WE NEED THIS? ***
+	FileCopy, % fileHIM, % OnbaseDir1 filenameOut ".pdf", 1									; Copy to OnbaseDir
+	FileCopy, % fileHIM, % OnbaseDir2 filenameOut ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
 	FileMove, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; move the original PDF to holterDir Archive
 	FileMove, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; move the shortened PDF, if it exists
