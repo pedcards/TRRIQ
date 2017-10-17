@@ -1474,7 +1474,7 @@ CheckProcZio:
 	
 	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
 		chk.enroll := strVal(tmp,"Enrollment Period","Analysis Time")
-		chk.DateStart := strVal(chk.enroll,"hours",",")
+		chk.DateStart := strVal(chk.enroll,"hour(s)?",",")
 		chk.DateEnd := strVal(chk.enroll,"to\s",",")
 		chk.Date := chk.DateStart
 		chk.Analysis := strVal(tmp,"Analysis Time","\(after")
