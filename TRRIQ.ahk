@@ -997,12 +997,12 @@ Holter_Pr2:
 	
 	rateStat := stregX(sumStat,"VENTRICULAR ECTOPY",1,0,"PACED|SUPRAVENTRICULAR ECTOPY",1)
 	fields[2] := ["Ventricular Beats","Singlets","Couplets","Runs","Fastest Run","Longest Run","R on T Beats"]
-	labels[2] := ["Total","Beats","Couplets","Runs","Fastest","Longest","R on T"]
+	labels[2] := ["Total","SingleVE","Couplets","Runs","Fastest","Longest","R on T"]
 	scanParams(rateStat,2,"ve",1)
 	
 	rateStat := stregX(sumStat "<<<","SUPRAVENTRICULAR ECTOPY",1,0,"<<<|OTHER RHYTHM EPISODES",1)
 	fields[3] := ["Supraventricular Beats","Singlets","Pairs","Runs","Fastest Run","Longest Run"]
-	labels[3] := ["Total","Beats","Pairs","Runs","Fastest","Longest"]
+	labels[3] := ["Total","Single","Pairs","Runs","Fastest","Longest"]
 	scanParams(rateStat,3,"sve",1)
 	
 	LWify()
