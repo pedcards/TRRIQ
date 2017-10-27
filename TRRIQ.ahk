@@ -639,21 +639,14 @@ outputfiles:
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
 	fileWQ := ma_date "," user "," 															; date processed and MA user
-	;		. """" chk.Name """" ","														; extracted name
-	;		. """" chk.MRN """" ","															; extracted MRN
 			. """" chk.Prov """" ","														; extracted provider
-	;		. """" chk.Date """" ","														; extracted encounter date
 			. """" fldval["Name_L"] ", " fldval["Name_F"] """" ","							; CIS name
 			. """" fldval["MRN"] """" ","													; CIS MRN
-	;		. """" fldval["dem-Ordering"] """" ","											; CIS provider
 			. """" fldval["dem-Test_date"] """" ","											; extracted Test date (or CIS encounter date if none)
 			. """" fldval["dem-Test_end"] """" ","											; extracted Test end
-	;		. """" fldval["dem-Billing"] """" ","											; CIS EncNum
 			. """" fldval["dem-Site"] """" ","												; CIS location
 			. """" fldval["dem-Indication"] """" ","										; Indication
 			. """" monType """" ; ","														; Monitor type
-	;		. """" strX(fileIn,"\",0,1,"",0) """" ","										; Original filename
-	;		. """" filenameOut """"															; Archived filename
 			. "`n"
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
 	
