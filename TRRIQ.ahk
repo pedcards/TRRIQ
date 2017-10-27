@@ -2212,6 +2212,9 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
 			return
 		}
+		if (lab="Test_date") {
+			txt := strX(txt,"",1,0," ",1,1)
+		}
 		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {
 			fieldColAdd(pre,lab,zDigit(tx.value(1)) ":" zDigit(tx.value(2)))
 			return
