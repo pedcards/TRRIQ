@@ -1272,7 +1272,8 @@ CheckProcPr2:
 	gosub fetchGUI
 	gosub fetchDem
 	
-	if (tmp:=fuzzysearch(chk.Last " " chk.First, ptDem["nameL"] " " ptDem["nameF"]) > 0.15) {
+	tmp:=fuzzysearch(format("{:U}",chk.Last ", " chk.First), format("{:U}",ptDem["nameL"] ", " ptDem["nameF"]))
+	if (tmp > 0.15) {
 		MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
 			, % "Name does not match!`n`n"
 			.	"	Parsed:	" chk.Last ", " chk.First "`n"
