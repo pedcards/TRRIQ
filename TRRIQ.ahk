@@ -732,7 +732,7 @@ Holter_LW:
 	eventlog("Holter_LW")
 	monType := "H"
 	fullDisc := "FULL DISCLOSURE"
-	dbCSV := true
+;	dbCSV := true
 	
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
@@ -784,7 +784,7 @@ Holter_Pr:
 	eventlog("Holter_Pr")
 	monType := "PR"
 	fullDisc := "i)60\s+sec/line"
-	dbCSV := true
+;	dbCSV := true
 	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Processed")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
@@ -948,7 +948,7 @@ Holter_Pr2:
 	eventlog("Holter_Pr2")
 	monType := "PR"
 	fullDisc := "i)60\s+s(ec)?/line"
-	dbCSV := true
+;	dbCSV := true
 	
 	demog := stregX(newtxt,"Name:",1,0,"Conclusions:",1)
 	
@@ -1311,7 +1311,7 @@ Zio:
 {
 	eventlog("Holter_Zio")
 	monType := "Zio"
-	dbCSV := true
+;	dbCSV := true
 	
 	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" temp.txt, , hide				; reconvert entire Zio PDF 
 	newTxt:=""																		; clear the full txt variable
@@ -1565,7 +1565,7 @@ Event_LW:
 {
 	eventlog("Event_LW")
 	monType := "LW"
-	dbCSV := false
+;	dbCSV := false
 	
 	tmp := stregX(newtxt,"PATIENT ACTIVITY REPORT",1,1,"DATE/TIME",1) ">>>end"
 	tmp := columns(tmp,"",">>>end",0,"DOB:")
@@ -1595,7 +1595,7 @@ Event_LW_old:
 {
 	eventlog("Event_LW")
 	monType := "LW"
-	dbCSV := false
+;	dbCSV := false
 	
 	MsgBox, 16, File type error, Cannot process LifeWatch event recorders.`n`nPlease process this as a paper report.
 	return
@@ -1709,7 +1709,7 @@ Event_BGH:
 {
 	eventlog("Event_BGH")
 	monType := "BGH"
-	dbCSV := false
+;	dbCSV := false
 	
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
 	demog := columns(newtxt,"","Summarized Findings",,"Enrollment Info")
