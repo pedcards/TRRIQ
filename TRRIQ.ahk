@@ -129,7 +129,7 @@ if (instr(phase,"PDF")) {
 		holterLoops++													; increment counter for processed counter
 		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 	}
-	MsgBox % "Holters processed (" holterLoops ")`n" holtersDone
+	MsgBox % "Monitors processed (" holterLoops ")`n" holtersDone
 	/* Consider asking if complete. The MA's appear to run one PDF at a time, despite the efficiency loss.
 	*/
 }
