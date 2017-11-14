@@ -1752,7 +1752,9 @@ Event_BGH:
 	
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Event"""
-
+	
+	FileCopy, %fileIn%, %fileIn%sh.pdf
+	
 Return
 }
 
