@@ -620,7 +620,8 @@ outputfiles:
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	if (dbCSV) {
-		FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1							; copy CSV from tempfiles to importFld
+		impSub := (monType~"BGH") ? "Event\" : ""
+		FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%%impSub%*.*, 1					; copy CSV from tempfiles to importFld
 	}
 	
 	if (FileExist(fileIn "sh.pdf")) {														; filename for OnbaseDir
