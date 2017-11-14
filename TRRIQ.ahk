@@ -578,6 +578,7 @@ MainLoop:
 	fileOut := fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	fullDisc := ""
+	monType := ""
 	
 	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
 		gosub Holter_LW
