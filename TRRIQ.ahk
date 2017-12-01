@@ -1055,31 +1055,31 @@ CheckProcPr2:
 	eventlog("Extracting full text.")
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
-		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
-		&& (chk.Acct~="\d{8}"))															; and EncNum present
-	{
-		MsgBox, 4132, Valid PDF, % ""
-			. chk.Last ", " chk.First "`n"
-			. "MRN " chk.MRN "`n"
-			. "Acct " chk.Acct "`n"
-			. "Ordering: " chk.Prov "`n"
-			. "Study date: " chk.Date "`n`n"
-			. "Is all the information correct?`n"
-			. "If NO, reacquire demographics."
-		IfMsgBox, Yes																; All tests valid
-		{
-			eventlog("Demographics valid. Processing.")
-			return																	; Select YES, return to processing Holter
-		} 
-		else 																		; Select NO, reacquire demographics
-		{
-			eventlog("Demographics valid. Wants to reacquire.")
-			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
-		}
-	}
-	else 																			; Not valid PDF, get demographics post hoc
+	;~ if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
+		;~ && !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
+		;~ && (chk.Acct~="\d{8}"))															; and EncNum present
+	;~ {
+		;~ MsgBox, 4132, Valid PDF, % ""
+			;~ . chk.Last ", " chk.First "`n"
+			;~ . "MRN " chk.MRN "`n"
+			;~ . "Acct " chk.Acct "`n"
+			;~ . "Ordering: " chk.Prov "`n"
+			;~ . "Study date: " chk.Date "`n`n"
+			;~ . "Is all the information correct?`n"
+			;~ . "If NO, reacquire demographics."
+		;~ IfMsgBox, Yes																; All tests valid
+		;~ {
+			;~ eventlog("Demographics valid. Processing.")
+			;~ return																	; Select YES, return to processing Holter
+		;~ } 
+		;~ else 																		; Select NO, reacquire demographics
+		;~ {
+			;~ eventlog("Demographics valid. Wants to reacquire.")
+			;~ MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+			;~ . "Paste clipboard into CIS search to select patient and encounter"
+		;~ }
+	;~ }
+	;~ else 																			; Not valid PDF, get demographics post hoc
 	{
 		eventlog("Demographics validation failed.")
 		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
