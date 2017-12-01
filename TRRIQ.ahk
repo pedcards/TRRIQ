@@ -68,7 +68,7 @@ Loop, Read, %chipDir%outdocs.csv
 		outGrps.Insert(tmpGrp)
 		continue
 	}
-	if !(tmp4~="i)(seattlechildrens.org)|(washington.edu)") {		; skip non-SCH or non-UW providers
+	if !(tmp4~="i)(seattlechildrens.org|washington.edu)") {		; skip non-SCH or non-UW providers
 		continue
 	}
 	tmpIdx += 1
@@ -129,7 +129,7 @@ if (instr(phase,"PDF")) {
 		holterLoops++													; increment counter for processed counter
 		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 	}
-	MsgBox % "Holters processed (" holterLoops ")`n" holtersDone
+	MsgBox % "Monitors processed (" holterLoops ")`n" holtersDone
 	/* Consider asking if complete. The MA's appear to run one PDF at a time, despite the efficiency loss.
 	*/
 }
@@ -578,6 +578,7 @@ MainLoop:
 	fileOut := fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	fullDisc := ""
+	monType := ""
 	
 	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
 		gosub Holter_LW
@@ -618,9 +619,9 @@ outputfiles:
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
-	if (dbCSV) {
-		FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%*.*, 1							; copy CSV from tempfiles to importFld
-	}
+	
+	impSub := (monType~="BGH") ? "Event\" : "Holter\"										; Import subfolder Event or Holter
+	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%%impSub%*.*, 1						; copy CSV from tempfiles to importFld\impSub
 	
 	if (FileExist(fileIn "sh.pdf")) {														; filename for OnbaseDir
 		fileHIM := fileIn "sh.pdf"															; prefer shortened if it exists
@@ -638,22 +639,15 @@ outputfiles:
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
-	fileWQ := ma_date "," user "," 
-			. """" chk.Name """" ","														; extracted name
-			. """" chk.MRN """" ","															; extracted MRN
+	fileWQ := ma_date "," user "," 															; date processed and MA user
 			. """" chk.Prov """" ","														; extracted provider
-			. """" chk.Date """" ","														; extracted encounter date
 			. """" fldval["Name_L"] ", " fldval["Name_F"] """" ","							; CIS name
 			. """" fldval["MRN"] """" ","													; CIS MRN
-			. """" fldval["dem-Ordering"] """" ","											; CIS provider
-			. """" fldval["dem-Test_date"] """" ","											; CIS encounter date
+			. """" fldval["dem-Test_date"] """" ","											; extracted Test date (or CIS encounter date if none)
 			. """" fldval["dem-Test_end"] """" ","											; extracted Test end
-			. """" fldval["dem-Billing"] """" ","											; CIS EncNum
 			. """" fldval["dem-Site"] """" ","												; CIS location
 			. """" fldval["dem-Indication"] """" ","										; Indication
-			. """" monType """" ","															; Monitor type
-			. """" strX(fileIn,"\",0,1,"",0) """" ","										; Original filename
-			. """" filenameOut """"															; Archived filename
+			. """" monType """" ; ","														; Monitor type
 			. "`n"
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
 	
@@ -716,14 +710,14 @@ epRead:
 	}
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
 	
-	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun)|(Salerno)|(Seslar)", ymatch)
+	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun|Salerno|Seslar)", ymatch)
 	if !(ymatch := ymatch.value()) {
 		ymatch := epMon ? epMon : cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
 		epMon := ymatch
 		eventlog("Reading EP assigned to " epMon ".")
 	}
 	
-	if (RegExMatch(fldval["ordering"], "Oi)(Chun)|(Salerno)|(Seslar)", epOrder))  {
+	if (RegExMatch(fldval["ordering"], "Oi)(Chun|Salerno|Seslar)", epOrder))  {
 		ymatch := epOrder.value()
 	}
 	
@@ -738,7 +732,7 @@ Holter_LW:
 	eventlog("Holter_LW")
 	monType := "H"
 	fullDisc := "FULL DISCLOSURE"
-	dbCSV := true
+;	dbCSV := true
 	
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
@@ -790,7 +784,7 @@ Holter_Pr:
 	eventlog("Holter_Pr")
 	monType := "PR"
 	fullDisc := "i)60\s+sec/line"
-	dbCSV := true
+;	dbCSV := true
 	
 	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Processed")
 	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
@@ -954,7 +948,7 @@ Holter_Pr2:
 	eventlog("Holter_Pr2")
 	monType := "PR"
 	fullDisc := "i)60\s+s(ec)?/line"
-	dbCSV := true
+;	dbCSV := true
 	
 	demog := stregX(newtxt,"Name:",1,0,"Conclusions:",1)
 	
@@ -1279,7 +1273,8 @@ CheckProcPr2:
 	gosub fetchGUI
 	gosub fetchDem
 	
-	if (tmp:=fuzzysearch(chk.Last " " chk.First, ptDem["nameL"] " " ptDem["nameF"]) > 0.15) {
+	tmp:=fuzzysearch(format("{:U}",chk.Last ", " chk.First), format("{:U}",ptDem["nameL"] ", " ptDem["nameF"]))
+	if (tmp > 0.15) {
 		MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
 			, % "Name does not match!`n`n"
 			.	"	Parsed:	" chk.Last ", " chk.First "`n"
@@ -1316,7 +1311,7 @@ Zio:
 {
 	eventlog("Holter_Zio")
 	monType := "Zio"
-	dbCSV := true
+;	dbCSV := true
 	
 	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" temp.txt, , hide				; reconvert entire Zio PDF 
 	newTxt:=""																		; clear the full txt variable
@@ -1570,7 +1565,7 @@ Event_LW:
 {
 	eventlog("Event_LW")
 	monType := "LW"
-	dbCSV := false
+;	dbCSV := false
 	
 	tmp := stregX(newtxt,"PATIENT ACTIVITY REPORT",1,1,"DATE/TIME",1) ">>>end"
 	tmp := columns(tmp,"",">>>end",0,"DOB:")
@@ -1600,7 +1595,7 @@ Event_LW_old:
 {
 	eventlog("Event_LW")
 	monType := "LW"
-	dbCSV := false
+;	dbCSV := false
 	
 	MsgBox, 16, File type error, Cannot process LifeWatch event recorders.`n`nPlease process this as a paper report.
 	return
@@ -1714,12 +1709,12 @@ Event_BGH:
 {
 	eventlog("Event_BGH")
 	monType := "BGH"
-	dbCSV := false
+;	dbCSV := false
 	
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
-	demog := columns(newtxt,"","Summarized Findings",,"Enrollment Info")
+	demog := columns(newtxt,"","(Summarized Findings|Event Summary)",,"Enrollment Info")
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
-	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice)|(Enrollment Info)",1)," `n")
+	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice|Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
 	mon := stregX(demog,"Monitor\s{3}",1,0,"#####",1)
 	demog := columns(demog,"\s+Patient ID","Monitor   ",,"Gender","Date of Birth","Phone")		; columns get stuck in permanent loop
@@ -1751,13 +1746,15 @@ Event_BGH:
 	fieldvals(enroll,2,"dem")
 	fieldColAdd("dem","EncNum",ptDem["Account Number"])
 	
-	fields[3] := ["Critical","Total","Serious","Manual","Stable","Auto Trigger"]
+	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
 	fieldvals(enroll,3,"counts")
 	
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Event"""
-
+	
+	FileCopy, %fileIn%, %fileIn%sh.pdf
+	
 Return
 }
 
@@ -1770,7 +1767,7 @@ CheckProcBGH:
 	chk.Prov := strVal(demog,"Physician","Gender")												; Ordering MD
 	chk.Sex := strVal(demog,"Gender","Date of Birth")											; Sex
 	chk.DOB := strVal(demog,"Date of Birth","Practice")											; DOB
-	chk.Ind := strVal(demog,"Diagnosis",".*")													; Indication
+	chk.Ind := strVal(demog,"Diagnosis","\R")													; Indication
 	chk.Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
 		chk.DateEnd := trim(strX(chk.Date," - ",0,3,"",0)," `r`n")
 		chk.DateStart := trim(strX(chk.Date,"",1,1," ",1,1)," `r`n")
@@ -1890,8 +1887,8 @@ oneCol(txt) {
 columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 /*	Returns string as a single column.
 	x 		= input string
-	blk1	= leading string to start block
-	blk2	= ending string to end block
+	blk1	= leading regex string to start block
+	blk2	= ending regex string to end block
 	incl	= if null, include blk1 string; if !null, remove blk1 string
 	col2	= string demarcates start of COLUMN 2
 	col3	= string demarcates start of COLUMN 3
@@ -1993,11 +1990,11 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 */
 	;~ opt := "Oi" ((span) ? "s" : "") ")"
 	opt := "Oi)"
-	RegExMatch(hay,opt . n1 ":?(.*?)" n2 ":?",res,(BO)?BO:1)
+	RegExMatch(hay,opt . n1 . ":?(?P<res>.*?)" . n2, str, (BO)?BO:1)
 	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
-	N := res.pos()+res.len(1)
+	N := str.pos("res")+str.len("res")
 
-	return trim(res[1]," :`n")
+	return trim(str.value("res")," :`n")
 }
 
 scanParams(txt,blk,pre:="par",rx:="") {
@@ -2032,7 +2029,7 @@ scanParams(txt,blk,pre:="par",rx:="") {
 		if (col2.value()~="^(\>\s*)(?=[^\s])") {
 			res := RegExReplace(col2.value(),"^(\>\s*)(?=[^\s])") " (changed from " col1.value() ")"
 		}
-		if (col2.value()~="(Monitor.*)|(\d{2}J.*)") {
+		if (col2.value()~="(Monitor.*|\d{2}J.*)") {
 			res .= ", Rx " cleanSpace(col2.value())
 		}
 			
@@ -2218,6 +2215,9 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
 			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
 			return
+		}
+		if (lab="Test_date") {
+			txt := strX(txt,"",1,0," ",1,1)
 		}
 		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {
 			fieldColAdd(pre,lab,zDigit(tx.value(1)) ":" zDigit(tx.value(2)))
