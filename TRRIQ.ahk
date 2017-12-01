@@ -81,27 +81,24 @@ Loop, Read, %chipDir%outdocs.csv
 
 y := new XML(chipDir "currlist.xml")
 
-;~ siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
-	phase := CMsgBox("Which task?",""
-		, "*&Upload LifeWatch Holter|"
-		. "&Process PDF"
+	phase := CMsgBox("Which task?","Click here to start"
+		, "&Process PDF folder"
 		,"Q","")
-	;~ phase := CMsgBox("Which task?","","*&Register Preventice|&Process PDF file(s)","Q","")
 }
-if (instr(phase,"LifeWatch")) {
-	eventlog("Start LifeWatch upload process.")
-	Loop 
-	{
-		ptDem := Object()
-		gosub fetchGUI								; Draw input GUI
-		gosub fetchDem								; Grab demographics from CIS until accept
-		gosub zybitSet								; Fill in Zybit demographics
-	}
-	ExitApp
-}
+;~ if (instr(phase,"LifeWatch")) {
+	;~ eventlog("Start LifeWatch upload process.")
+	;~ Loop 
+	;~ {
+		;~ ptDem := Object()
+		;~ gosub fetchGUI								; Draw input GUI
+		;~ gosub fetchDem								; Grab demographics from CIS until accept
+		;~ gosub zybitSet								; Fill in Zybit demographics
+	;~ }
+	;~ ExitApp
+;~ }
 
 if (instr(phase,"PDF")) {
 	eventlog("Start PDF folder scan.")
