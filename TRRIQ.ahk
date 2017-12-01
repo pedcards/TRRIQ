@@ -1990,11 +1990,11 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 */
 	;~ opt := "Oi" ((span) ? "s" : "") ")"
 	opt := "Oi)"
-	RegExMatch(hay,opt . n1 ":?(.*?)" n2 ":?",res,(BO)?BO:1)
+	RegExMatch(hay,opt . n1 . ":?(?P<res>.*?)" . n2, str, (BO)?BO:1)
 	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
-	N := res.pos()+res.len(1)
+	N := str.pos("res")+str.len("res")
 
-	return trim(res[1]," :`n")
+	return trim(str.value("res")," :`n")
 }
 
 scanParams(txt,blk,pre:="par",rx:="") {
