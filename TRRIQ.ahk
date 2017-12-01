@@ -1767,7 +1767,7 @@ CheckProcBGH:
 	chk.Prov := strVal(demog,"Physician","Gender")												; Ordering MD
 	chk.Sex := strVal(demog,"Gender","Date of Birth")											; Sex
 	chk.DOB := strVal(demog,"Date of Birth","Practice")											; DOB
-	chk.Ind := strVal(demog,"Diagnosis",".*")													; Indication
+	chk.Ind := strVal(demog,"Diagnosis","\R")													; Indication
 	chk.Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
 		chk.DateEnd := trim(strX(chk.Date," - ",0,3,"",0)," `r`n")
 		chk.DateStart := trim(strX(chk.Date,"",1,1," ",1,1)," `r`n")
