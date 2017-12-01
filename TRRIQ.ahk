@@ -1746,7 +1746,7 @@ Event_BGH:
 	fieldvals(enroll,2,"dem")
 	fieldColAdd("dem","EncNum",ptDem["Account Number"])
 	
-	fields[3] := ["Critical","Total","Serious","Manual","Stable","Auto Trigger"]
+	fields[3] := ["Critical","Total","Serious","(Manual)|(Pt Trigger)","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
 	fieldvals(enroll,3,"counts")
 	
