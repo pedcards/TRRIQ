@@ -1887,8 +1887,8 @@ oneCol(txt) {
 columns(x,blk1,blk2,incl:="",col2:="",col3:="",col4:="") {
 /*	Returns string as a single column.
 	x 		= input string
-	blk1	= leading string to start block
-	blk2	= ending string to end block
+	blk1	= leading regex string to start block
+	blk2	= ending regex string to end block
 	incl	= if null, include blk1 string; if !null, remove blk1 string
 	col2	= string demarcates start of COLUMN 2
 	col3	= string demarcates start of COLUMN 3
