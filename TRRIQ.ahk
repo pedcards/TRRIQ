@@ -68,7 +68,7 @@ Loop, Read, %chipDir%outdocs.csv
 		outGrps.Insert(tmpGrp)
 		continue
 	}
-	if !(tmp4~="i)(seattlechildrens.org)|(washington.edu)") {		; skip non-SCH or non-UW providers
+	if !(tmp4~="i)(seattlechildrens.org|washington.edu)") {		; skip non-SCH or non-UW providers
 		continue
 	}
 	tmpIdx += 1
@@ -710,14 +710,14 @@ epRead:
 	}
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
 	
-	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun)|(Salerno)|(Seslar)", ymatch)
+	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun|Salerno|Seslar)", ymatch)
 	if !(ymatch := ymatch.value()) {
 		ymatch := epMon ? epMon : cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
 		epMon := ymatch
 		eventlog("Reading EP assigned to " epMon ".")
 	}
 	
-	if (RegExMatch(fldval["ordering"], "Oi)(Chun)|(Salerno)|(Seslar)", epOrder))  {
+	if (RegExMatch(fldval["ordering"], "Oi)(Chun|Salerno|Seslar)", epOrder))  {
 		ymatch := epOrder.value()
 	}
 	
@@ -1712,9 +1712,9 @@ Event_BGH:
 ;	dbCSV := false
 	
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
-	demog := columns(newtxt,"","(Summarized Findings)|(Event Summary)",,"Enrollment Info")
+	demog := columns(newtxt,"","(Summarized Findings|Event Summary)",,"Enrollment Info")
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
-	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice)|(Enrollment Info)",1)," `n")
+	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice|Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
 	mon := stregX(demog,"Monitor\s{3}",1,0,"#####",1)
 	demog := columns(demog,"\s+Patient ID","Monitor   ",,"Gender","Date of Birth","Phone")		; columns get stuck in permanent loop
@@ -1746,7 +1746,7 @@ Event_BGH:
 	fieldvals(enroll,2,"dem")
 	fieldColAdd("dem","EncNum",ptDem["Account Number"])
 	
-	fields[3] := ["Critical","Total","Serious","(Manual)|(Pt Trigger)","Stable","Auto Trigger"]
+	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
 	fieldvals(enroll,3,"counts")
 	
@@ -2029,7 +2029,7 @@ scanParams(txt,blk,pre:="par",rx:="") {
 		if (col2.value()~="^(\>\s*)(?=[^\s])") {
 			res := RegExReplace(col2.value(),"^(\>\s*)(?=[^\s])") " (changed from " col1.value() ")"
 		}
-		if (col2.value()~="(Monitor.*)|(\d{2}J.*)") {
+		if (col2.value()~="(Monitor.*|\d{2}J.*)") {
 			res .= ", Rx " cleanSpace(col2.value())
 		}
 			
