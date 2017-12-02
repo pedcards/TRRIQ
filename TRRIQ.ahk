@@ -81,27 +81,24 @@ Loop, Read, %chipDir%outdocs.csv
 
 y := new XML(chipDir "currlist.xml")
 
-;~ siteVals := {"CRD":"Seattle","EKG":"EKG lab","ECO":"ECHO lab","CRDBCSC":"Bellevue","CRDEVT":"Everett","CRDTAC":"Tacoma","CRDTRI":"Tri Cities","CRDWEN":"Wenatchee","CRDYAK":"Yakima"}
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
 if !(phase) {
-	phase := CMsgBox("Which task?",""
-		, "*&Upload LifeWatch Holter|"
-		. "&Process PDF"
+	phase := CMsgBox("Which task?","Click here to start"
+		, "&Process PDF folder"
 		,"Q","")
-	;~ phase := CMsgBox("Which task?","","*&Register Preventice|&Process PDF file(s)","Q","")
 }
-if (instr(phase,"LifeWatch")) {
-	eventlog("Start LifeWatch upload process.")
-	Loop 
-	{
-		ptDem := Object()
-		gosub fetchGUI								; Draw input GUI
-		gosub fetchDem								; Grab demographics from CIS until accept
-		gosub zybitSet								; Fill in Zybit demographics
-	}
-	ExitApp
-}
+;~ if (instr(phase,"LifeWatch")) {
+	;~ eventlog("Start LifeWatch upload process.")
+	;~ Loop 
+	;~ {
+		;~ ptDem := Object()
+		;~ gosub fetchGUI								; Draw input GUI
+		;~ gosub fetchDem								; Grab demographics from CIS until accept
+		;~ gosub zybitSet								; Fill in Zybit demographics
+	;~ }
+	;~ ExitApp
+;~ }
 
 if (instr(phase,"PDF")) {
 	eventlog("Start PDF folder scan.")
@@ -582,8 +579,8 @@ MainLoop:
 	
 	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
 		gosub Holter_LW
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {					; Original Preventice Holter
-		gosub Holter_Pr
+	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {					; Original Preventice Holter
+		;~ gosub Holter_Pr
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) {					; New Preventice Holter 2017
 		gosub Holter_Pr2
 	} else if (instr(newtxt,"zio xt")) {
@@ -768,80 +765,6 @@ Holter_LW:
 	fieldvals(strX(holtVals,"Supraventricular Ectopy",nn-23,0,"Atrial Fibrillation",1,0,nn),4,"sve")
 	
 	tmp := strX(RegExReplace(newtxt,"i)technician.*comments?:","TECH COMMENT:"),"TECH COMMENT:",1,13,"",1,0)
-	StringReplace, tmp, tmp, .`n , .%A_Space% , All
-	fileout1 .= """INTERP"""
-	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
-	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Holter"""
-	
-	ShortenPDF(fullDisc)
-
-return
-}
-
-Holter_Pr:
-{
-	eventlog("Holter_Pr")
-	monType := "PR"
-	fullDisc := "i)60\s+sec/line"
-;	dbCSV := true
-	
-	demog := columns(newtxt,"Patient Information","Scan Criteria",1,"Date Processed")
-	sumStat := columns(newtxt,"Summary Statistics","Rate Statistics",1,"Recording Duration","Analyzed Data")
-	rateStat := columns(newtxt,"Rate Statistics","Supraventricular Ectopy",,"Tachycardia/Bradycardia") "#####"
-	ectoStat := columns(newtxt,"Supraventricular Ectopy","ST Deviation",,"Ventricular Ectopy")
-	pauseStat := columns(newtxt,"Pauses","Comment",,"\# RRs")
-	
-	gosub checkProcPR											; check validity of PDF, make demographics valid if not
-	if (fetchQuit=true) {
-		return													; fetchGUI was quit, so skip processing
-	}
-	
-	/* Holter PDF is valid. OK to process.
-	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
-	 */
-	fields[1] := ["Name", "ID #", "Second ID", "Date Of Birth", "Age", "Sex"
-		, "Referring Physician", "Indications", "Medications", "Analyst", "Hookup Tech"
-		, "Date Recorded", "Date Processed", "Scan Number", "Recorder", "Recorder No", "Hookup time", "Location", "Acct num"]
-	labels[1] := ["Name", "MRN", "VOID_ID", "DOB", "VOID_Age", "Sex"
-		, "Ordering", "Indication", "Meds", "Scanned_by", "Hookup_tech"
-		, "Test_date", "Scan_date", "Scan_num", "Recorder", "Device_SN", "Hookup_time", "Site", "Billing"]
-	fieldvals(demog,1,"dem")
-	
-	fields[2] := ["Total QRS", "Recording Duration", "Analyzed Data"]
-	labels[2] := ["Total_beats", "dem:Recording_time", "dem:Analysis_time"]
-	fieldvals(sumStat,2,"hrd")
-	
-	fields[3] := ["Min Rate", "Max Rate", "Mean Rate", "Tachycardia/Bradycardia"
-		, "Longest Tachycardia", "Fastest Tachycardia", "Longest Bradycardia", "Slowest Bradycardia","#####"]
-	labels[3] := ["Min", "Max", "Avg", "VOID_tb"
-		, "Longest_tachy", "Fastest", "Longest_brady", "Slowest","VOID_br"]
-	fieldvals(rateStat,3,"hrd")
-	
-	SveStat := strVal(ectoStat,"Supraventricular Ectopy","Ventricular Ectopy")
-	fields[4] := ["Singles", "Couplets", "Runs", "Total","RR Variability"]
-	labels[4] := ["Beats", "Pairs", "Runs", "Total","RR_var"]
-	if (SveStat~="i)Fastest.*Longest") {
-		fields[4].Insert(4,"Fastest Run","Longest Run")
-		labels[4].Insert(4,"Fastest","Longest")
-	}
-	fieldvals(SveStat,4,"sve")
-	
-	VeStat := strVal(ectoStat "#####","\bVentricular Ectopy","#####")
-	fields[5] := ["Singles", "Couplets", "Runs", "R on T", "Total"]
-	labels[5] := ["Beats", "Couplets", "Runs", "R on T", "Total"]
-	if (VeStat~="i)Fastest.*Longest") {
-		fields[5].Insert(4,"Fastest Run","Longest Run")
-		labels[5].Insert(4,"Fastest","Longest")
-	}
-	fieldvals(VeStat,5,"ve")
-
-	fields[6] := ["Longest RR","\# RR.*\..* sec"]
-	labels[6] := ["LongRR","Pauses"]
-	fieldvals(pauseStat,6,"sve")
-	
-	LWify()
-	tmp := strVal(newtxt,"COMMENT:","REVIEWING PHYSICIAN")
 	StringReplace, tmp, tmp, .`n , .%A_Space% , All
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
@@ -1102,100 +1025,6 @@ CheckProcLW:
 	return
 }
 
-CheckProcPR:
-{
-	eventlog("CheckProcPr")
-	chk.Name := strVal(demog,"Name:","ID #:")												; Name
-		chk.Last := trim(strX(chk.Name,"",1,1,",",1,1)," `r`n")									; NameL				must be [A-Z]
-		chk.First := trim(strX(chk.Name,",",1,1,"",0)," `r`n")									; NameF				must be [A-Z]
-	chk.MRN := strVal(demog,"ID #:","Second ID:")											; MRN
-	chk.DOB := strVal(demog,"Date of Birth:","Age:")										; DOB
-	chk.Sex := strVal(demog,"Sex:","Referring Physician:")									; Sex
-	chk.Prov := strVal(demog,"Referring Physician:","Indications:")							; Ordering MD
-	chk.Ind := strVal(demog,"Indications:","Medications:")									; Indication
-	chk.Date := strVal(demog,"Date Recorded:","Date Processed:")							; Study date
-	
-	chkDT := parseDate(chk.Date)
-	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
-	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
-		FileDelete, %fileIn%
-		eventlog(chk.MRN " PDF archive exists, deleting '" fileIn "'")
-		fetchQuit := true
-		return
-	}
-	
-	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons						; convert PDF all pages to txt file
-	eventlog("Extracting full text.")	
-	
-	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
-		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
-		&& (chk.Acct~="\d{8}"))															; and EncNum present
-	{
-		MsgBox, 4132, Valid PDF, % ""
-			. chk.Last ", " chk.First "`n"
-			. "MRN " chk.MRN "`n"
-			. "Acct " chk.Acct "`n"
-			. "Ordering: " chk.Prov "`n"
-			. "Study date: " chk.Date "`n`n"
-			. "Is all the information correct?`n"
-			. "If NO, reacquire demographics."
-		IfMsgBox, Yes																; All tests valid
-		{
-			eventlog("Demographics valid. Processing.")
-			return																	; Select YES, return to processing Holter
-		} 
-		else 																		; Select NO, reacquire demographics
-		{
-			eventlog("Demographics valid. Wants to reacquire.")
-			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
-		}
-	}
-	else 																			; Not valid PDF, get demographics post hoc
-	{
-		eventlog("Demographics validation failed.")
-		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
-	}
-	; Either invalid PDF or want to correct values
-	ptDem := Object()																; initialize/clear ptDem array
-	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
-	ptDem["nameF"] := chk.First
-	ptDem["mrn"] := chk.MRN
-	ptDem["DOB"] := chk.DOB
-	ptDem["Sex"] := chk.Sex
-	ptDem["Loc"] := chk.Loc
-	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(cleanspace(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)")))
-	ptDem["EncDate"] := chk.Date
-	ptDem["Indication"] := chk.Ind
-	
-	fetchQuit:=false
-	gosub fetchGUI
-	gosub fetchDem
-	/*	When fetchDem successfully completes,
-	 *	replace the fields in demog with newly acquired values
-	 */
-	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
-	fldval["name_L"] := ptDem["nameL"]
-	fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk.Name "   `n")
-	demog := RegExReplace(demog,"i)ID #: (.*) Second ID:","ID #:   " ptDem["mrn"] "                   Second ID:")
-	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
-	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
-	demog := RegExReplace(demog,"i`a)Indications: (.*)\R", "Indications:   " ptDem["Indication"] "`n")	
-	demog := RegExReplace(demog,"i`a)Date Recorded: (.*)\R", "Date Recorded:   " ptDem["EncDate"] "`n")
-	demog := RegExReplace(demog,"i`a)Analyst: (.*) Hookup Tech:","Analyst:   $1 Hookup Tech:")
-	demog := RegExReplace(demog,"i`a)Hookup Tech: (.*)\R","Hookup Tech:   $1   `n")
-	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
-	demog .= "   Location:    " ptDem["Loc"] "`n"
-	demog .= "   Acct Num:    " ptDem["Account number"] "`n"
-	eventlog("Demog replaced.")
-	
-	return
-}
-
 CheckProcPr2:
 {
 	eventlog("CheckProcPr")
@@ -1226,38 +1055,38 @@ CheckProcPr2:
 	eventlog("Extracting full text.")
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
-		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
-		&& (chk.Acct~="\d{8}"))															; and EncNum present
+	;~ if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
+		;~ && !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
+		;~ && (chk.Acct~="\d{8}"))															; and EncNum present
+	;~ {
+		;~ MsgBox, 4132, Valid PDF, % ""
+			;~ . chk.Last ", " chk.First "`n"
+			;~ . "MRN " chk.MRN "`n"
+			;~ . "Acct " chk.Acct "`n"
+			;~ . "Ordering: " chk.Prov "`n"
+			;~ . "Study date: " chk.Date "`n`n"
+			;~ . "Is all the information correct?`n"
+			;~ . "If NO, reacquire demographics."
+		;~ IfMsgBox, Yes																; All tests valid
+		;~ {
+			;~ eventlog("Demographics valid. Processing.")
+			;~ return																	; Select YES, return to processing Holter
+		;~ } 
+		;~ else 																		; Select NO, reacquire demographics
+		;~ {
+			;~ eventlog("Demographics valid. Wants to reacquire.")
+			;~ MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+			;~ . "Paste clipboard into CIS search to select patient and encounter"
+		;~ }
+	;~ }
+	;~ else 																			; Not valid PDF, get demographics post hoc
 	{
-		MsgBox, 4132, Valid PDF, % ""
-			. chk.Last ", " chk.First "`n"
-			. "MRN " chk.MRN "`n"
-			. "Acct " chk.Acct "`n"
-			. "Ordering: " chk.Prov "`n"
-			. "Study date: " chk.Date "`n`n"
-			. "Is all the information correct?`n"
-			. "If NO, reacquire demographics."
-		IfMsgBox, Yes																; All tests valid
-		{
-			eventlog("Demographics valid. Processing.")
-			return																	; Select YES, return to processing Holter
-		} 
-		else 																		; Select NO, reacquire demographics
-		{
-			eventlog("Demographics valid. Wants to reacquire.")
-			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
-		}
-	}
-	else 																			; Not valid PDF, get demographics post hoc
-	{
-		eventlog("Demographics validation failed.")
-		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
+		MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
 	; Either invalid PDF or want to correct values
-	ptDem := Object()																; initialize/clear ptDem array
+	ptDem := Object()																	; initialize/clear ptDem array
 	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
 	ptDem["nameF"] := chk.First
 	ptDem["mrn"] := chk.MRN
@@ -1292,7 +1121,7 @@ CheckProcPr2:
 	fldval["name_L"] := ptDem["nameL"]
 	fldval["name_F"] := ptDem["nameF"]
 	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk.Name "   `n")
-	demog := RegExReplace(demog,"i)ID: (.*) Secondary ID:","ID:   " ptDem["mrn"] "                   Secondary ID:")
+	demog := RegExReplace(demog,"i)Secondary ID: (.*) Admission ID:","Secondary ID:   " ptDem["mrn"] "                   Admission ID:")
 	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
 	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
 	demog := RegExReplace(demog,"i`a)Indications: (.*) Medications:", "Indications:   " ptDem["Indication"] "   Medications:")	
@@ -1483,31 +1312,32 @@ CheckProcZio:
 		;~ Return
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
-		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
-		&& (chk.Acct~="\d{8}"))															; and EncNum present
+	;~ if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
+		;~ && !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
+		;~ && (chk.Acct~="\d{8}"))															; and EncNum present
+	;~ {
+		;~ MsgBox, 4132, Valid PDF, % ""
+			;~ . chk.Last ", " chk.First "`n"
+			;~ . "MRN " chk.MRN "`n"
+			;~ . "Acct " chk.Acct "`n"
+			;~ . "Ordering: " chk.Prov "`n"
+			;~ . "Study date: " chk.DateStart "`n`n"
+			;~ . "Is all the information correct?`n"
+			;~ . "If NO, reacquire demographics."
+		;~ IfMsgBox, Yes																; All tests valid
+		;~ {
+			;~ return																	; Select YES, return to processing Holter
+		;~ } 
+		;~ else 																		; Select NO, reacquire demographics
+		;~ {
+			;~ MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+			;~ . "Paste clipboard into CIS search to select patient and encounter"
+		;~ }
+	;~ }
+	;~ else 																			; Not valid PDF, get demographics post hoc
 	{
-		MsgBox, 4132, Valid PDF, % ""
-			. chk.Last ", " chk.First "`n"
-			. "MRN " chk.MRN "`n"
-			. "Acct " chk.Acct "`n"
-			. "Ordering: " chk.Prov "`n"
-			. "Study date: " chk.DateStart "`n`n"
-			. "Is all the information correct?`n"
-			. "If NO, reacquire demographics."
-		IfMsgBox, Yes																; All tests valid
-		{
-			return																	; Select YES, return to processing Holter
-		} 
-		else 																		; Select NO, reacquire demographics
-		{
-			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
-		}
-	}
-	else 																			; Not valid PDF, get demographics post hoc
-	{
-		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
+		MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
 	; Either invalid PDF or want to correct values
@@ -1773,31 +1603,32 @@ CheckProcBGH:
 		chk.DateStart := trim(strX(chk.Date,"",1,1," ",1,1)," `r`n")
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
-		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
-		&& (chk.Acct~="\d{8}"))															; and EncNum present
+	;~ if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
+		;~ && !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
+		;~ && (chk.Acct~="\d{8}"))															; and EncNum present
+	;~ {
+		;~ MsgBox, 4132, Valid PDF, % ""
+			;~ . chk.Last ", " chk.First "`n"
+			;~ . "MRN " chk.MRN "`n"
+			;~ . "Acct " chk.Acct "`n"
+			;~ . "Ordering: " chk.Prov "`n"
+			;~ . "Study date: " chk.DateStart "`n`n"
+			;~ . "Is all the information correct?`n"
+			;~ . "If NO, reacquire demographics."
+		;~ IfMsgBox, Yes																; All tests valid
+		;~ {
+			;~ return																	; Select YES, return to processing Holter
+		;~ } 
+		;~ else 																		; Select NO, reacquire demographics
+		;~ {
+			;~ MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+			;~ . "Paste clipboard into CIS search to select patient and encounter"
+		;~ }
+	;~ }
+	;~ else 																			; Not valid PDF, get demographics post hoc
 	{
-		MsgBox, 4132, Valid PDF, % ""
-			. chk.Last ", " chk.First "`n"
-			. "MRN " chk.MRN "`n"
-			. "Acct " chk.Acct "`n"
-			. "Ordering: " chk.Prov "`n"
-			. "Study date: " chk.DateStart "`n`n"
-			. "Is all the information correct?`n"
-			. "If NO, reacquire demographics."
-		IfMsgBox, Yes																; All tests valid
-		{
-			return																	; Select YES, return to processing Holter
-		} 
-		else 																		; Select NO, reacquire demographics
-		{
-			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
-		}
-	}
-	else 																			; Not valid PDF, get demographics post hoc
-	{
-		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
+		MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
 	; Either invalid PDF or want to correct values
