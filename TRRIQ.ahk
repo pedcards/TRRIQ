@@ -1312,29 +1312,29 @@ CheckProcZio:
 		;~ Return
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
-		&& !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
-		&& (chk.Acct~="\d{8}"))															; and EncNum present
-	{
-		MsgBox, 4132, Valid PDF, % ""
-			. chk.Last ", " chk.First "`n"
-			. "MRN " chk.MRN "`n"
-			. "Acct " chk.Acct "`n"
-			. "Ordering: " chk.Prov "`n"
-			. "Study date: " chk.DateStart "`n`n"
-			. "Is all the information correct?`n"
-			. "If NO, reacquire demographics."
-		IfMsgBox, Yes																; All tests valid
-		{
-			return																	; Select YES, return to processing Holter
-		} 
-		else 																		; Select NO, reacquire demographics
-		{
-			MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
-		}
-	}
-	else 																			; Not valid PDF, get demographics post hoc
+	;~ if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
+		;~ && !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
+		;~ && (chk.Acct~="\d{8}"))															; and EncNum present
+	;~ {
+		;~ MsgBox, 4132, Valid PDF, % ""
+			;~ . chk.Last ", " chk.First "`n"
+			;~ . "MRN " chk.MRN "`n"
+			;~ . "Acct " chk.Acct "`n"
+			;~ . "Ordering: " chk.Prov "`n"
+			;~ . "Study date: " chk.DateStart "`n`n"
+			;~ . "Is all the information correct?`n"
+			;~ . "If NO, reacquire demographics."
+		;~ IfMsgBox, Yes																; All tests valid
+		;~ {
+			;~ return																	; Select YES, return to processing Holter
+		;~ } 
+		;~ else 																		; Select NO, reacquire demographics
+		;~ {
+			;~ MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+			;~ . "Paste clipboard into CIS search to select patient and encounter"
+		;~ }
+	;~ }
+	;~ else 																			; Not valid PDF, get demographics post hoc
 	{
 		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
 		MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
