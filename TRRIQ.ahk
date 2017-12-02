@@ -1081,12 +1081,12 @@ CheckProcPr2:
 	;~ }
 	;~ else 																			; Not valid PDF, get demographics post hoc
 	{
-		eventlog("Demographics validation failed.")
+		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
 		MsgBox, 4096,, % "Validation failed for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 	}
 	; Either invalid PDF or want to correct values
-	ptDem := Object()																; initialize/clear ptDem array
+	ptDem := Object()																	; initialize/clear ptDem array
 	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
 	ptDem["nameF"] := chk.First
 	ptDem["mrn"] := chk.MRN
