@@ -1574,7 +1574,7 @@ Event_BGH:
 	fields[2] := ["Date Recorded","Date Ended","\R"]
 	labels[2] := ["Test_date","Test_end","VOID"]
 	fieldvals(enroll,2,"dem")
-	fieldColAdd("dem","EncNum",ptDem["Account Number"])
+	fieldColAdd("dem","Billing",ptDem["Account Number"])
 	
 	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
