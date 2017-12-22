@@ -577,18 +577,18 @@ MainLoop:
 	fullDisc := ""
 	monType := ""
 	
-	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
-		gosub Holter_LW
+	if (instr(newtxt,"zio xt")) {															; Processing loop based on identifying string in newtxt
+		gosub Zio
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) 	{					; New Preventice Holter 2017
+		gosub Holter_Pr2
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {		; Body Guardian Heart CEM
+		gosub Event_BGH
+	;~ } else if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {				; Obsolete LW Holters
+		;~ gosub Holter_LW
+	;~ } else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {		; Lifewatch event
+		;~ gosub Event_LW
 	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {					; Original Preventice Holter
 		;~ gosub Holter_Pr
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) {					; New Preventice Holter 2017
-		gosub Holter_Pr2
-	} else if (instr(newtxt,"zio xt")) {
-		gosub Zio
-	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {		; Lifewatch event
-		gosub Event_LW
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
-		gosub Event_BGH
 	} else {
 		eventlog(fileNam " bad file.")
 		MsgBox No match!
