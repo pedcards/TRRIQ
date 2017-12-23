@@ -911,6 +911,7 @@ Holter_Pr2:
 		, "Longest_tachy","Fastest","Longest_brady","Slowest"
 		, "sve:LongRR","sve:Pauses"]
 	scanParams(rateStat,1,"hrd",1)
+	fldVal["dem-Test_end"] := RegExReplace(fldVal["dem-Recording_time"],"(\d{1,2}) hr (\d{1,2}) min","$1:$2")	; Places value for fileWQ, without affecting fileOut
 	
 	rateStat := stregX(sumStat,"VENTRICULAR ECTOPY",1,0,"PACED|SUPRAVENTRICULAR ECTOPY",1)
 	fields[2] := ["Ventricular Beats","Singlets","Couplets","Runs","Fastest Run","Longest Run","R on T Beats"]
