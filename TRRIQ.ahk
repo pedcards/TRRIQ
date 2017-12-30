@@ -2043,15 +2043,15 @@ formatField(pre, lab, txt) {
 	
 ;	Preventice Holter specific fixes
 	if (monType="PR") {
-		if (lab="Name") {
+		if (lab="Name") {																; Break name into Last and First
 			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
 			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
 			return
 		}
-		if (lab="Test_date") {
+		if (lab="Test_date") {															; Only take Test_date to first " "
 			txt := strX(txt,"",1,0," ",1,1)
 		}
-		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {
+		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {				; Convert "x hr, yy mins" to "0x:yy"
 			fieldColAdd(pre,lab,zDigit(tx.value(1)) ":" zDigit(tx.value(2)))
 			return
 		}
