@@ -2059,7 +2059,7 @@ formatField(pre, lab, txt) {
 			tmp := strX(txt,"",1,0,":",1,1)
 			if (tmp > 36) {																; Greater than "36 hr" recording,
 				tmp := zDigit(tmp-24)													; subtract 24 hrs
-				txt := RegExReplace(txt,"(\d{2}):",tmp ":")
+				txt := RegExReplace(txt,"\d{2}:",tmp ":")
 			}
 		}
 		if (txt ~= "^([0-9.]+( BPM( Avg)?)?).+at.+(\d{1,2}:\d{2}:\d{2}).*(AM|PM)?$") {		;	Split timed results "139 at 8:31:47 AM" into two fields
