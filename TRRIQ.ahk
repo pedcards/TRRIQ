@@ -1033,7 +1033,7 @@ CheckProcPr2:
 	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
 	chk.DOB := strVal(demog,"Date of Birth","Age")										; DOB
 	chk.Sex := strVal(demog,"Gender","\R")												; Sex
-	chk.Prov := cleanspace(strVal(demog,"(Ordering|Referring) Phys(ician)?","\R"))					; Ordering MD
+	chk.Prov := cleanspace(strVal(demog,"(Ordering|Referring) Phys(ician)?","\R"))		; Ordering MD
 	chk.Ind := strVal(demog,"Indications","Medications")								; Indication
 	chk.Date := strVal(demog,"Recording Start Date/Time","\R")							; Study date
 	
@@ -2134,7 +2134,7 @@ checkCrd(x) {
 	returns array[match score, best match, best match group]
 */
 	global Docs
-	fuzz := 0.1
+	fuzz := 1																			; Initially, fuzz is 100%
 	for rowidx,row in Docs
 	{
 		if (substr(rowIdx,-3)=".eml")
@@ -2142,7 +2142,7 @@ checkCrd(x) {
 		for colidx,item in row
 		{
 			res := fuzzysearch(x,item)
-			if (res<fuzz) {
+			if (res<fuzz) {																; less fuzzy, new best match
 				fuzz := res
 				best:=item
 				group:=rowidx
