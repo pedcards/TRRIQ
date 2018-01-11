@@ -871,7 +871,7 @@ Holter_Pr2:
 	monType := "PR"
 	fullDisc := "i)60\s+s(ec)?/line"
 	
-	demog := stregX(newtxt,"Name:",1,0,"Conclusions:",1)
+	demog := stregX(newtxt,"Name:",1,0,"Conclusions",1)
 	
 	gosub checkProcPR2											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -883,7 +883,7 @@ Holter_Pr2:
 	 */
 	fields[1] := ["Name","\R","Recording Start Date/Time","\R"
 		, "ID","Secondary ID","Admission ID","Date Of Birth","Age","Gender","\R"
-		, "Date Processed","Referring Physician","\R"
+		, "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
 		, "Technician|Hookup Tech","Recording Duration","\R","Analyst","Recorder Number","\R"
 		, "Indications","Medications"
 		, "Hookup time","Location","Acct Num"]
@@ -1033,7 +1033,7 @@ CheckProcPr2:
 	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
 	chk.DOB := strVal(demog,"Date of Birth","Age")										; DOB
 	chk.Sex := strVal(demog,"Gender","\R")												; Sex
-	chk.Prov := cleanspace(strVal(demog,"Referring Physician","\R"))					; Ordering MD
+	chk.Prov := cleanspace(strVal(demog,"(Ordering|Referring) Phys(ician)?","\R"))					; Ordering MD
 	chk.Ind := strVal(demog,"Indications","Medications")								; Indication
 	chk.Date := strVal(demog,"Recording Start Date/Time","\R")							; Study date
 	
