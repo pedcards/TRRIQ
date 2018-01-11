@@ -577,18 +577,18 @@ MainLoop:
 	fullDisc := ""
 	monType := ""
 	
-	if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {					; Processing loop based on identifying string in newtxt
-		gosub Holter_LW
+	if (instr(newtxt,"zio xt")) {															; Processing loop based on identifying string in newtxt
+		gosub Zio
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) 	{					; New Preventice Holter 2017
+		gosub Holter_Pr2
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {		; Body Guardian Heart CEM
+		gosub Event_BGH
+	;~ } else if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {				; Obsolete LW Holters
+		;~ gosub Holter_LW
+	;~ } else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {		; Lifewatch event
+		;~ gosub Event_LW
 	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {					; Original Preventice Holter
 		;~ gosub Holter_Pr
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) {					; New Preventice Holter 2017
-		gosub Holter_Pr2
-	} else if (instr(newtxt,"zio xt")) {
-		gosub Zio
-	} else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {		; Lifewatch event
-		gosub Event_LW
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
-		gosub Event_BGH
 	} else {
 		eventlog(fileNam " bad file.")
 		MsgBox No match!
@@ -729,7 +729,6 @@ Holter_LW:
 	eventlog("Holter_LW")
 	monType := "H"
 	fullDisc := "FULL DISCLOSURE"
-;	dbCSV := true
 	
 	demog := columns(newtxt,"PATIENT DEMOGRAPHICS","Heart Rate Data",,"Reading Physician")
 	holtVals := columns(newtxt,"Medications","INTERPRETATION",,"Total VE Beats")
@@ -871,9 +870,8 @@ Holter_Pr2:
 	eventlog("Holter_Pr2")
 	monType := "PR"
 	fullDisc := "i)60\s+s(ec)?/line"
-;	dbCSV := true
 	
-	demog := stregX(newtxt,"Name:",1,0,"Conclusions:",1)
+	demog := stregX(newtxt,"Name:",1,0,"Conclusions",1)
 	
 	gosub checkProcPR2											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -885,7 +883,7 @@ Holter_Pr2:
 	 */
 	fields[1] := ["Name","\R","Recording Start Date/Time","\R"
 		, "ID","Secondary ID","Admission ID","Date Of Birth","Age","Gender","\R"
-		, "Date Processed","Referring Physician","\R"
+		, "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
 		, "Technician|Hookup Tech","Recording Duration","\R","Analyst","Recorder Number","\R"
 		, "Indications","Medications"
 		, "Hookup time","Location","Acct Num"]
@@ -911,6 +909,7 @@ Holter_Pr2:
 		, "Longest_tachy","Fastest","Longest_brady","Slowest"
 		, "sve:LongRR","sve:Pauses"]
 	scanParams(rateStat,1,"hrd",1)
+	fldVal["dem-Test_end"] := RegExReplace(fldVal["dem-Recording_time"],"(\d{1,2}) hr (\d{1,2}) min","$1:$2")	; Places value for fileWQ, without affecting fileOut
 	
 	rateStat := stregX(sumStat,"VENTRICULAR ECTOPY",1,0,"PACED|SUPRAVENTRICULAR ECTOPY",1)
 	fields[2] := ["Ventricular Beats","Singlets","Couplets","Runs","Fastest Run","Longest Run","R on T Beats"]
@@ -1034,7 +1033,7 @@ CheckProcPr2:
 	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
 	chk.DOB := strVal(demog,"Date of Birth","Age")										; DOB
 	chk.Sex := strVal(demog,"Gender","\R")												; Sex
-	chk.Prov := cleanspace(strVal(demog,"Referring Physician","\R"))					; Ordering MD
+	chk.Prov := cleanspace(strVal(demog,"(Ordering|Referring) Phys(ician)?","\R"))					; Ordering MD
 	chk.Ind := strVal(demog,"Indications","Medications")								; Indication
 	chk.Date := strVal(demog,"Recording Start Date/Time","\R")							; Study date
 	
@@ -1140,7 +1139,6 @@ Zio:
 {
 	eventlog("Holter_Zio")
 	monType := "Zio"
-;	dbCSV := true
 	
 	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" temp.txt, , hide				; reconvert entire Zio PDF 
 	newTxt:=""																		; clear the full txt variable
@@ -1395,7 +1393,6 @@ Event_LW:
 {
 	eventlog("Event_LW")
 	monType := "LW"
-;	dbCSV := false
 	
 	tmp := stregX(newtxt,"PATIENT ACTIVITY REPORT",1,1,"DATE/TIME",1) ">>>end"
 	tmp := columns(tmp,"",">>>end",0,"DOB:")
@@ -1425,7 +1422,6 @@ Event_LW_old:
 {
 	eventlog("Event_LW")
 	monType := "LW"
-;	dbCSV := false
 	
 	MsgBox, 16, File type error, Cannot process LifeWatch event recorders.`n`nPlease process this as a paper report.
 	return
@@ -1539,7 +1535,6 @@ Event_BGH:
 {
 	eventlog("Event_BGH")
 	monType := "BGH"
-;	dbCSV := false
 	
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
 	demog := columns(newtxt,"","(Summarized Findings|Event Summary)",,"Enrollment Info")
@@ -1574,7 +1569,7 @@ Event_BGH:
 	fields[2] := ["Date Recorded","Date Ended","\R"]
 	labels[2] := ["Test_date","Test_end","VOID"]
 	fieldvals(enroll,2,"dem")
-	fieldColAdd("dem","EncNum",ptDem["Account Number"])
+	fieldColAdd("dem","Billing",ptDem["Account Number"])
 	
 	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
@@ -2042,17 +2037,24 @@ formatField(pre, lab, txt) {
 	
 ;	Preventice Holter specific fixes
 	if (monType="PR") {
-		if (lab="Name") {
+		if (lab="Name") {																; Break name into Last and First
 			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
 			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
 			return
 		}
-		if (lab="Test_date") {
+		if (lab="Test_date") {															; Only take Test_date to first " "
 			txt := strX(txt,"",1,0," ",1,1)
 		}
-		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {
+		if (RegExMatch(txt,"O)^(\d{1,2})\s+hr,\s+(\d{1,2})\s+min",tx)) {				; Convert "x hr, yy mins" to "0x:yy"
 			fieldColAdd(pre,lab,zDigit(tx.value(1)) ":" zDigit(tx.value(2)))
 			return
+		}
+		if (lab ~= "(Analysis|Recording)_time") {
+			tmp := strX(txt,"",1,0,":",1,1)
+			if (tmp > 36) {																; Greater than "36 hr" recording,
+				tmp := zDigit(tmp-24)													; subtract 24 hrs
+				txt := RegExReplace(txt,"\d{2}:",tmp ":")
+			}
 		}
 		if (txt ~= "^([0-9.]+( BPM( Avg)?)?).+at.+(\d{1,2}:\d{2}:\d{2}).*(AM|PM)?$") {		;	Split timed results "139 at 8:31:47 AM" into two fields
 			tx1 := trim(stregX(txt,"",1,0," at ",1))
