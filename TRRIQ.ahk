@@ -1996,10 +1996,13 @@ formatField(pre, lab, txt) {
 	txt := trim(txt)
 	
 	if (lab~="Referring|Ordering") {
-		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))
+		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))				;	Get Crd, Grp, and Eml via checkCrd() <== shouldn't this already be determined?
 		fieldColAdd(pre,lab,tmpCrd.best)
 		fieldColAdd(pre,lab "_grp",tmpCrd.group)
 		fieldColAdd(pre,lab "_eml",Docs[tmpCrd.Group ".eml",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)])
+		if (tmpCrd="") {
+			eventlog("*** Blank Crd value ***")
+		}
 		return
 	}
 	
@@ -2135,7 +2138,7 @@ checkCrd(x) {
 */
 	global Docs
 	fuzz := 1																			; Initially, fuzz is 100%
-	if (x="") {																	; fuzzysearch fails if x = ""
+	if (x="") {																			; fuzzysearch fails if x = ""
 		return 
 	}
 	for rowidx,row in Docs
@@ -2144,7 +2147,7 @@ checkCrd(x) {
 			continue
 		for colidx,item in row
 		{
-			if (item="") {														; empty field will break fuzzysearch
+			if (item="") {																; empty field will break fuzzysearch
 				continue
 			}
 			res := fuzzysearch(x,item)
