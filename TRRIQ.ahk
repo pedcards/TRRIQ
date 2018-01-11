@@ -1995,7 +1995,7 @@ formatField(pre, lab, txt) {
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
 	txt := trim(txt)
 	
-	if (lab="Ordering") {
+	if (lab~="Referring|Ordering") {
 		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))
 		fieldColAdd(pre,lab,tmpCrd.best)
 		fieldColAdd(pre,lab "_grp",tmpCrd.group)
@@ -2049,7 +2049,7 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab,zDigit(tx.value(1)) ":" zDigit(tx.value(2)))
 			return
 		}
-		if (lab ~= "(Analysis|Recording)_time") {
+		if (lab ~= "(Analysis|Recording)_time") {										; Adjust Analysis_time and Recording_time if misreported as 48:00 Holter
 			tmp := strX(txt,"",1,0,":",1,1)
 			if (tmp > 36) {																; Greater than "36 hr" recording,
 				tmp := zDigit(tmp-24)													; subtract 24 hrs
@@ -2135,12 +2135,18 @@ checkCrd(x) {
 */
 	global Docs
 	fuzz := 1																			; Initially, fuzz is 100%
+	if (x="") {																	; fuzzysearch fails if x = ""
+		return 
+	}
 	for rowidx,row in Docs
 	{
 		if (substr(rowIdx,-3)=".eml")
 			continue
 		for colidx,item in row
 		{
+			if (item="") {														; empty field will break fuzzysearch
+				continue
+			}
 			res := fuzzysearch(x,item)
 			if (res<fuzz) {																; less fuzzy, new best match
 				fuzz := res
