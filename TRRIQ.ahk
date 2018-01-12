@@ -926,10 +926,10 @@ Holter_Pr2:
 	scanParams(rateStat,3,"sve",1)
 	
 	LWify()
-	tmp := strVal(newtxt,"Conclusions","Reviewing Physician",1)
-	StringReplace, tmp, tmp, `r, `n, ALL
+	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
+	StringReplace, tmpstr, tmpstr, `r, `n, ALL
 	fileout1 .= """INTERP"""
-	fileout2 .= """" trim(cleanspace(tmp)," `n") """"
+	fileout2 .= """" trim(cleanspace(tmpstr)," `n") """"
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
