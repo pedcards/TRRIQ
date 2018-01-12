@@ -886,7 +886,7 @@ Holter_Pr2:
 		, "Date Of Birth","Age","Gender","\R"
 		, "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
 		, "Technician|Hookup Tech","Recording Duration","\R"
-		, "Analyst","Recorder Number","\R"
+		, "Analyst","Recorder (No|Number)","\R"
 		, "Indications","Medications","\R"
 		, "Hookup time","Location","Acct Num"]
 	labels[1] := ["Name","null","Test_date","null"
