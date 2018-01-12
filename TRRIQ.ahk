@@ -1936,24 +1936,6 @@ Return SubStr(H,P:=(((Z:=StrLen(ES))+(X:=StrLen(H))+StrLen(BS)-Z-X)?((T:=InStr(H
 +(0-ET)):(X+P)):(X)))-P) ; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
 }
 
-stRegX_old(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
-/*	modified version: searches from BS to "   "
-	h = Haystack
-	BS = beginning string
-	BO = beginning offset
-	BT = beginning trim, TRUE or FALSE
-	ES = ending string
-	ET = ending trim, TRUE or FALSE
-	N = variable for next offset
-*/
-	BS .= "(.*?)\s{3}"
-	rem:="[OPimsxADJUXPSC(\`n)(\`r)(\`a)]+\)"
-	pos0 := RegExMatch(h,((BS~=rem)?"Oim"BS:"Oim)"BS),bPat,((BO<1)?1:BO))
-	pos1 := RegExMatch(h,((ES~=rem)?"Oim"ES:"Oim)"ES),ePat,pos0+bPat.len)
-	N := pos1+((ET)?0:(ePat.len))
-	return substr(h,pos0+((BT)?(bPat.len):0),N-pos0-bPat.len)
-}
-
 stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 /*	modified version: searches from BS to "   "
 	h = Haystack
