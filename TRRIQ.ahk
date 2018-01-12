@@ -926,8 +926,9 @@ Holter_Pr2:
 	scanParams(rateStat,3,"sve",1)
 	
 	LWify()
-	tmp := strVal(newtxt,"COMMENT:","REVIEWING PHYSICIAN")
-	StringReplace, tmp, tmp, .`n , .%A_Space% , All
+	;~ tmp := strVal(newtxt,"Conclusions","Reviewing Physician",1)
+	tmp := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
+	StringReplace, tmp, tmp, `r, `n, ALL
 	fileout1 .= """INTERP"""
 	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
 	fileOut1 .= ",""Mon_type"""
