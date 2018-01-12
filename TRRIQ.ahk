@@ -1787,21 +1787,22 @@ scanfields(x,lbl) {
 fieldvals(x,bl,bl2) {
 /*	Matches field values and results. Gets text between FIELDS[k] to FIELDS[k+1]. Excess whitespace removed. Returns results in array BLK[].
 	x	= input text
-	bl	= which FIELD number to use
+	bl	= which FIELD block to use
 	bl2	= label prefix
 */
 	global fields, labels, fldval
 	
-	for k, i in fields[bl]
+	for k, i in fields[bl]																; Step through each val "i" from fields[bl,k]
 	{
 		pre := bl2
-		j := fields[bl][k+1]
-		m := (j) ?	strVal(x,i,j,n,n)			;trim(stRegX(x,i,n,1,j,1,n), " `n")
-				:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")
+		j := fields[bl][k+1]															; Next field [k+1]
+		m := (j) 
+			?	strVal(x,i,j,n,n)														; ...is not null ==> returns value between
+			:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")								; ...is null ==> returns from field[k] to end
 		lbl := labels[bl][A_index]
-		if (lbl~="^\w{3}:") {											; has prefix e.g. "dem:"
-			pre := substr(lbl,1,3)
-			lbl := substr(lbl,5)
+		if (lbl~="^\w{3}:") {															; has prefix e.g. "dem:name2"
+			pre := substr(lbl,1,3)														; change pre for this loop, e.g. "dem"
+			lbl := substr(lbl,5)														; change lbl for this loop, e.g. "name2"
 		}
 		cleanSpace(m)
 		cleanColon(m)
