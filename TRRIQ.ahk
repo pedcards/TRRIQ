@@ -1819,11 +1819,13 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 	n2	= needle2 end string
 	N	= return end position
 */
-	;~ opt := "Oi" ((span) ? "s" : "") ")"
 	opt := "Oi)"
 	RegExMatch(hay,opt . n1 . ":?(?P<res>.*?)" . n2, str, (BO)?BO:1)
-	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
 	N := str.pos("res")+str.len("res")
+	
+	if (str.pos("res")=="") {															; RexExMatch fail on n1 or n2 (i.e. bad field needles)
+		eventlog("*** strVal fail: ''" n1 "' ... '" n2 "'")								; Note the bad fields
+	}
 
 	return trim(str.value("res")," :`n")
 }
