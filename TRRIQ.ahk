@@ -1975,8 +1975,7 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 	ET = ending trim, TRUE or FALSE
 	N = variable for next offset
 */
-	;~ BS .= "(.*?)\s{3}"
-	BS := RegExReplace(BS,"\s+","\s+")
+	BS := RegExReplace(BS,"\s+","\s+")												; Replace each \s with \s+ so no affected by variable spaces
 	ES := RegExReplace(ES,"\s+","\s+")
 	rem:="^[OPimsxADJUXPSC(\`n)(\`r)(\`a)]+\)"										; All the possible regexmatch options
 	
