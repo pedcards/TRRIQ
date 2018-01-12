@@ -1196,13 +1196,10 @@ Zio:
 	labels[5] := ["Diary","Diary_Findings"]
 	fieldvals(zev_D,5,"event")
 
-	fields[6] := ["Rare:","Occasional:","Frequent:"]
-	labels[6] := ["Rare","Occ","Freq"]
-	fieldvals(zectopics,6,"ecto")
-	
-	zsve := columns(znums,"Supraventricular Ectopy \(SVE/PACs\)","Ventricular Ectopy \(VE/PVCs\)",1)
-	fields[7] := ["Isolated","Couplet","Triplet"]
-	labels[7] := ["Single","Pairs","Triplets"]
+	zectopics := columns(znums ">>>end","Ectopics",">>>end",0) ">>>end"
+	zsve := columns(zectopics,"Supraventricular Ectopy \(SVE/PACs\)","Ventricular Ectopy \(VE/PVCs\)",1)
+	fields[7] := ["Isolated","Couplet","Triplet","\R"]
+	labels[7] := ["Single","Pairs","Triplets","null"]
 	fieldvals(zsve,7,"sve")
 	zsve_tot := (fldval["sve-Single"] ? fldval["sve-Single"] : 0) 
 				+ 2*(fldval["sve-Pairs"] ? fldval["sve-Pairs"] : 0) 
