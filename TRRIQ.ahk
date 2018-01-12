@@ -1813,7 +1813,7 @@ fieldvals(x,bl,bl2) {
 	}
 }
 
-strVal_old(hay,n1,n2,BO:="",ByRef N:="") {
+strVal(hay,n1,n2,BO:="",ByRef N:="") {
 /*	hay = search haystack
 	n1	= needle1 begin string
 	n2	= needle2 end string
@@ -1828,17 +1828,6 @@ strVal_old(hay,n1,n2,BO:="",ByRef N:="") {
 	}
 
 	return trim(str.value("res")," :`n")
-}
-
-strVal(hay,n1,n2,BO:="",ByRef N:="") {
-/*	hay = search haystack
-	n1	= needle1 begin string
-	n2	= needle2 end string
-	N	= return end position
-*/
-	opt := "Oi)"
-	str := stregX(hay,n1 ":?",n,1,n2,1)
-	return trim(str," :`n")
 }
 
 scanParams(txt,blk,pre:="par",rx:="") {
