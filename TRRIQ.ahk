@@ -882,16 +882,20 @@ Holter_Pr2:
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	fields[1] := ["Name","\R","Recording Start Date/Time","\R"
-		, "ID","Secondary ID","Admission ID","Date Of Birth","Age","Gender","\R"
+		, "ID","Secondary ID","Admission ID","\R"
+		, "Date Of Birth","Age","Gender","\R"
 		, "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
-		, "Technician|Hookup Tech","Recording Duration","\R","Analyst","Recorder Number","\R"
-		, "Indications","Medications"
+		, "Technician|Hookup Tech","Recording Duration","\R"
+		, "Analyst","Recorder Number","\R"
+		, "Indications","Medications","\R"
 		, "Hookup time","Location","Acct Num"]
 	labels[1] := ["Name","null","Test_date","null"
-		, "null","MRN","null","DOB","VOID_Age","Sex","null"
+		, "null","MRN","null","null"
+		, "DOB","VOID_Age","Sex","null"
 		, "Scan_date","Ordering","null"
-		, "Hookup_tech","VOID_Duration","null","Scanned_by","Recorder","null"
-		, "Indication","VOID_meds"
+		, "Hookup_tech","VOID_Duration","null"
+		, "Scanned_by","Recorder","null"
+		, "Indication","VOID_meds","null"
 		, "Hookup_time","Site","Billing"]
 	fieldvals(demog,1,"dem")
 	
