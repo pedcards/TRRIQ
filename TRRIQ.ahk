@@ -894,7 +894,7 @@ Holter_Pr2:
 		, "DOB","VOID_Age","Sex","null"
 		, "Scan_date","Ordering","null"
 		, "Hookup_tech","VOID_Duration","null"
-		, "Scanned_by","Recorder","null"
+		, "Scanned_by","Device_SN","null"
 		, "Indication","VOID_meds","null"
 		, "Hookup_time","Site","Billing"]
 	fieldvals(demog,1,"dem")
