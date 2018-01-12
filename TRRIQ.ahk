@@ -882,16 +882,20 @@ Holter_Pr2:
 	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	fields[1] := ["Name","\R","Recording Start Date/Time","\R"
-		, "ID","Secondary ID","Admission ID","Date Of Birth","Age","Gender","\R"
+		, "ID","Secondary ID","Admission ID","\R"
+		, "Date Of Birth","Age","Gender","\R"
 		, "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
-		, "Technician|Hookup Tech","Recording Duration","\R","Analyst","Recorder Number","\R"
-		, "Indications","Medications"
+		, "Technician|Hookup Tech","Recording Duration","\R"
+		, "Analyst","Recorder (No|Number)","\R"
+		, "Indications","Medications","\R"
 		, "Hookup time","Location","Acct Num"]
 	labels[1] := ["Name","null","Test_date","null"
-		, "null","MRN","null","DOB","VOID_Age","Sex","null"
+		, "null","MRN","null","null"
+		, "DOB","VOID_Age","Sex","null"
 		, "Scan_date","Ordering","null"
-		, "Hookup_tech","VOID_Duration","null","Scanned_by","Recorder","null"
-		, "Indication","VOID_meds"
+		, "Hookup_tech","VOID_Duration","null"
+		, "Scanned_by","Device_SN","null"
+		, "Indication","VOID_meds","null"
 		, "Hookup_time","Site","Billing"]
 	fieldvals(demog,1,"dem")
 	
@@ -922,10 +926,10 @@ Holter_Pr2:
 	scanParams(rateStat,3,"sve",1)
 	
 	LWify()
-	tmp := strVal(newtxt,"COMMENT:","REVIEWING PHYSICIAN")
-	StringReplace, tmp, tmp, .`n , .%A_Space% , All
+	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
+	StringReplace, tmpstr, tmpstr, `r, `n, ALL
 	fileout1 .= """INTERP"""
-	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
+	fileout2 .= """" trim(cleanspace(tmpstr)," `n") """"
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
@@ -1033,7 +1037,7 @@ CheckProcPr2:
 	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
 	chk.DOB := strVal(demog,"Date of Birth","Age")										; DOB
 	chk.Sex := strVal(demog,"Gender","\R")												; Sex
-	chk.Prov := cleanspace(strVal(demog,"(Ordering|Referring) Phys(ician)?","\R"))					; Ordering MD
+	chk.Prov := cleanspace(strVal(demog,"(Ordering|Referring) Phys(ician)?","\R"))		; Ordering MD
 	chk.Ind := strVal(demog,"Indications","Medications")								; Indication
 	chk.Date := strVal(demog,"Recording Start Date/Time","\R")							; Study date
 	
@@ -1122,7 +1126,7 @@ CheckProcPr2:
 	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk.Name "   `n")
 	demog := RegExReplace(demog,"i)Secondary ID: (.*) Admission ID:","Secondary ID:   " ptDem["mrn"] "                   Admission ID:")
 	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
-	demog := RegExReplace(demog,"i`a)Referring Physician: (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
+	demog := RegExReplace(demog,"i`a)(Ordering|Referring) Phys(ician)?:? (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
 	demog := RegExReplace(demog,"i`a)Indications: (.*) Medications:", "Indications:   " ptDem["Indication"] "   Medications:")	
 	demog := RegExReplace(demog,"i`a)Recording Start Date/Time: (.*)\R", "Recording Start Date/Time:   " chk.Date "`n")
 	demog := RegExReplace(demog,"i`a)Analyst: (.*) Recorder Number","Analyst:   $1   Recorder Number")
@@ -1783,21 +1787,22 @@ scanfields(x,lbl) {
 fieldvals(x,bl,bl2) {
 /*	Matches field values and results. Gets text between FIELDS[k] to FIELDS[k+1]. Excess whitespace removed. Returns results in array BLK[].
 	x	= input text
-	bl	= which FIELD number to use
+	bl	= which FIELD block to use
 	bl2	= label prefix
 */
 	global fields, labels, fldval
 	
-	for k, i in fields[bl]
+	for k, i in fields[bl]																; Step through each val "i" from fields[bl,k]
 	{
 		pre := bl2
-		j := fields[bl][k+1]
-		m := (j) ?	strVal(x,i,j,n,n)			;trim(stRegX(x,i,n,1,j,1,n), " `n")
-				:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")
+		j := fields[bl][k+1]															; Next field [k+1]
+		m := (j) 
+			?	strVal(x,i,j,n,n)														; ...is not null ==> returns value between
+			:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")								; ...is null ==> returns from field[k] to end
 		lbl := labels[bl][A_index]
-		if (lbl~="^\w{3}:") {											; has prefix e.g. "dem:"
-			pre := substr(lbl,1,3)
-			lbl := substr(lbl,5)
+		if (lbl~="^\w{3}:") {															; has prefix e.g. "dem:name2"
+			pre := substr(lbl,1,3)														; change pre for this loop, e.g. "dem"
+			lbl := substr(lbl,5)														; change lbl for this loop, e.g. "name2"
 		}
 		cleanSpace(m)
 		cleanColon(m)
@@ -1814,11 +1819,13 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 	n2	= needle2 end string
 	N	= return end position
 */
-	;~ opt := "Oi" ((span) ? "s" : "") ")"
 	opt := "Oi)"
 	RegExMatch(hay,opt . n1 . ":?(?P<res>.*?)" . n2, str, (BO)?BO:1)
-	;~ MsgBox % trim(res[1]," `n") "`nPOS = " res.pos(1) "`nLEN = " res.len(1) "`n" res.value() "`n" res.len()
 	N := str.pos("res")+str.len("res")
+	
+	if (str.pos("res")=="") {															; RexExMatch fail on n1 or n2 (i.e. bad field needles)
+		eventlog("*** strVal fail: ''" n1 "' ... '" n2 "'")								; Note the bad fields
+	}
 
 	return trim(str.value("res")," :`n")
 }
@@ -1929,24 +1936,6 @@ Return SubStr(H,P:=(((Z:=StrLen(ES))+(X:=StrLen(H))+StrLen(BS)-Z-X)?((T:=InStr(H
 +(0-ET)):(X+P)):(X)))-P) ; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
 }
 
-stRegX_old(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
-/*	modified version: searches from BS to "   "
-	h = Haystack
-	BS = beginning string
-	BO = beginning offset
-	BT = beginning trim, TRUE or FALSE
-	ES = ending string
-	ET = ending trim, TRUE or FALSE
-	N = variable for next offset
-*/
-	BS .= "(.*?)\s{3}"
-	rem:="[OPimsxADJUXPSC(\`n)(\`r)(\`a)]+\)"
-	pos0 := RegExMatch(h,((BS~=rem)?"Oim"BS:"Oim)"BS),bPat,((BO<1)?1:BO))
-	pos1 := RegExMatch(h,((ES~=rem)?"Oim"ES:"Oim)"ES),ePat,pos0+bPat.len)
-	N := pos1+((ET)?0:(ePat.len))
-	return substr(h,pos0+((BT)?(bPat.len):0),N-pos0-bPat.len)
-}
-
 stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 /*	modified version: searches from BS to "   "
 	h = Haystack
@@ -1957,8 +1946,7 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 	ET = ending trim, TRUE or FALSE
 	N = variable for next offset
 */
-	;~ BS .= "(.*?)\s{3}"
-	BS := RegExReplace(BS,"\s+","\s+")
+	BS := RegExReplace(BS,"\s+","\s+")												; Replace each \s with \s+ so no affected by variable spaces
 	ES := RegExReplace(ES,"\s+","\s+")
 	rem:="^[OPimsxADJUXPSC(\`n)(\`r)(\`a)]+\)"										; All the possible regexmatch options
 	
@@ -1972,6 +1960,10 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 		Resturn result in "ePat" (ending pattern) object
 		Begin search after bPat result (pos0+bPat.len())
 	*/
+	if (!IsObject(bPat) or !IsObject(ePat)) {
+		return error
+	}
+	
 	bmod := (BT) ? bPat.len() : 0
 	emod := (ET) ? 0 : ePat.len()
 	N := pos1+emod
@@ -1995,11 +1987,14 @@ formatField(pre, lab, txt) {
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
 	txt := trim(txt)
 	
-	if (lab="Ordering") {
-		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))
+	if (lab~="Referring|Ordering") {
+		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))				;	Get Crd, Grp, and Eml via checkCrd() <== shouldn't this already be determined?
 		fieldColAdd(pre,lab,tmpCrd.best)
 		fieldColAdd(pre,lab "_grp",tmpCrd.group)
 		fieldColAdd(pre,lab "_eml",Docs[tmpCrd.Group ".eml",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)])
+		if (tmpCrd="") {
+			eventlog("*** Blank Crd value ***")
+		}
 		return
 	}
 	
@@ -2049,7 +2044,7 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab,zDigit(tx.value(1)) ":" zDigit(tx.value(2)))
 			return
 		}
-		if (lab ~= "(Analysis|Recording)_time") {
+		if (lab ~= "(Analysis|Recording)_time") {										; Adjust Analysis_time and Recording_time if misreported as 48:00 Holter
 			tmp := strX(txt,"",1,0,":",1,1)
 			if (tmp > 36) {																; Greater than "36 hr" recording,
 				tmp := zDigit(tmp-24)													; subtract 24 hrs
@@ -2134,15 +2129,21 @@ checkCrd(x) {
 	returns array[match score, best match, best match group]
 */
 	global Docs
-	fuzz := 0.1
+	fuzz := 1																			; Initially, fuzz is 100%
+	if (x="") {																			; fuzzysearch fails if x = ""
+		return 
+	}
 	for rowidx,row in Docs
 	{
 		if (substr(rowIdx,-3)=".eml")
 			continue
 		for colidx,item in row
 		{
+			if (item="") {																; empty field will break fuzzysearch
+				continue
+			}
 			res := fuzzysearch(x,item)
-			if (res<fuzz) {
+			if (res<fuzz) {																; less fuzzy, new best match
 				fuzz := res
 				best:=item
 				group:=rowidx
