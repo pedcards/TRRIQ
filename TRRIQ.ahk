@@ -1185,12 +1185,17 @@ Zio:
 	labels[3] := ["Max","Min","Avg","null"]
 	fieldvals(zrate,3,"hrd")
 	
-	zevent := columns(znums,"Number of Triggered Events:","Ectopics",1)
-	fields[5] := ["Number of Triggered Events:","Findings within � 45 sec of Triggers:","Number of Diary Entries:","Findings within � 45 sec of Entries:"]
-	labels[5] := ["Triggers","Trigger_Findings","Diary","Diary_Findings"]
-	fieldvals(zevent,5,"event")
+	zevent := columns(znums,"Patient Events","Ectopics",1) ">>>end"
+	zev_T := columns(zevent,"Triggered","(Diary|>>>end)",1,"Findings")
+	fields[4] := ["Events","Findings within(.*)Triggers"]
+	labels[4] := ["Triggers","Trigger_Findings"]
+	fieldvals(zev_T,4,"event")
 	
-	zectopics := columns(znums,"Ectopics","Supraventricular Ectopy",1)
+	zev_D := columns(zevent,"Diary","(Triggered|>>>end)",1,"Findings")
+	fields[5] := ["Entries","Findings within(.*)Entries"]
+	labels[5] := ["Diary","Diary_Findings"]
+	fieldvals(zev_D,5,"event")
+
 	fields[6] := ["Rare:","Occasional:","Frequent:"]
 	labels[6] := ["Rare","Occ","Freq"]
 	fieldvals(zectopics,6,"ecto")
