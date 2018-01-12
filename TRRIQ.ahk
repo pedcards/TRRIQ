@@ -926,11 +926,10 @@ Holter_Pr2:
 	scanParams(rateStat,3,"sve",1)
 	
 	LWify()
-	;~ tmp := strVal(newtxt,"Conclusions","Reviewing Physician",1)
-	tmp := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
+	tmp := strVal(newtxt,"Conclusions","Reviewing Physician",1)
 	StringReplace, tmp, tmp, `r, `n, ALL
 	fileout1 .= """INTERP"""
-	fileout2 .= """" cleanspace(trim(tmp," `n")) """"
+	fileout2 .= """" trim(cleanspace(tmp)," `n") """"
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Holter"""
 	
@@ -1814,7 +1813,7 @@ fieldvals(x,bl,bl2) {
 	}
 }
 
-strVal(hay,n1,n2,BO:="",ByRef N:="") {
+strVal_old(hay,n1,n2,BO:="",ByRef N:="") {
 /*	hay = search haystack
 	n1	= needle1 begin string
 	n2	= needle2 end string
@@ -1829,6 +1828,17 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 	}
 
 	return trim(str.value("res")," :`n")
+}
+
+strVal(hay,n1,n2,BO:="",ByRef N:="") {
+/*	hay = search haystack
+	n1	= needle1 begin string
+	n2	= needle2 end string
+	N	= return end position
+*/
+	opt := "Oi)"
+	str := stregX(hay,n1 ":?",n,1,n2,1)
+	return trim(str," :`n")
 }
 
 scanParams(txt,blk,pre:="par",rx:="") {
