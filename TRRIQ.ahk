@@ -1990,6 +1990,10 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 		Resturn result in "ePat" (ending pattern) object
 		Begin search after bPat result (pos0+bPat.len())
 	*/
+	if (!IsObject(bPat) or !IsObject(ePat)) {
+		return error
+	}
+	
 	bmod := (BT) ? bPat.len() : 0
 	emod := (ET) ? 0 : ePat.len()
 	N := pos1+emod
