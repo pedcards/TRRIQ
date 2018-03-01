@@ -1159,7 +1159,7 @@ Zio:
 	demo2 := onecol(cleanblank(stregX(zcol,"\s+Prescribing Clinician",1,0,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)",1)))
 	demog := RegExReplace(demo1 "`n" demo2,">>>end") ">>>end"
 	
-	gosub checkProcZio											; check validity of PDF, make demographics valid if not
+	;~ gosub checkProcZio											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
 	}
@@ -1181,47 +1181,50 @@ Zio:
 	formatField("dem","Analysis_time",chk.Analysis)
 	
 	zrate := columns(znums,"Heart Rate","Patient Events",1)
-	fields[4] := ["Max","Min","Avg","\R"]
-	labels[4] := ["Max","Min","Avg","null"]
-	fieldvals(zrate,4,"hrd")
+	fields[3] := ["Max","Min","Avg","\R"]
+	labels[3] := ["Max","Min","Avg","null"]
+	fieldvals(zrate,3,"hrd")
 	
-	zevent := columns(znums,"Number of Triggered Events:","Ectopics",1)
-	fields[5] := ["Number of Triggered Events:","Findings within � 45 sec of Triggers:","Number of Diary Entries:","Findings within � 45 sec of Entries:"]
-	labels[5] := ["Triggers","Trigger_Findings","Diary","Diary_Findings"]
-	fieldvals(zevent,5,"event")
+	zevent := columns(znums,"Patient Events","Ectopics",1) ">>>end"
+	zev_T := columns(zevent,"Triggered","(Diary|>>>end)",1,"Findings")
+	fields[4] := ["Events","Findings within(.*)Triggers"]
+	labels[4] := ["Triggers","Trigger_Findings"]
+	fieldvals(zev_T,4,"event")
 	
-	zectopics := columns(znums,"Ectopics","Supraventricular Ectopy",1)
-	fields[6] := ["Rare:","Occasional:","Frequent:"]
-	labels[6] := ["Rare","Occ","Freq"]
-	fieldvals(zectopics,6,"ecto")
-	
-	zsve := columns(znums,"Supraventricular Ectopy \(SVE/PACs\)","Ventricular Ectopy \(VE/PVCs\)",1)
-	fields[7] := ["Isolated","Couplet","Triplet"]
-	labels[7] := ["Single","Pairs","Triplets"]
+	zev_D := columns(zevent,"Diary","(Triggered|>>>end)",1,"Findings")
+	fields[5] := ["Entries","Findings within(.*)Entries"]
+	labels[5] := ["Diary","Diary_Findings"]
+	fieldvals(zev_D,5,"event")
+
+	zectopics := columns(znums ">>>end","Ectopics",">>>end",0) ">>>end"
+	zsve := columns(zectopics,"Supraventricular Ectopy \(SVE/PACs\)","Ventricular Ectopy \(VE/PVCs\)",1)
+	fields[7] := ["Isolated","Couplet","Triplet","\R"]
+	labels[7] := ["Single","Pairs","Triplets","null"]
 	fieldvals(zsve,7,"sve")
 	zsve_tot := (fldval["sve-Single"] ? fldval["sve-Single"] : 0) 
 				+ 2*(fldval["sve-Pairs"] ? fldval["sve-Pairs"] : 0) 
 				+ 3*(fldval["sve-Triplets"] ? fldval["sve-Triplets"] : 0)
 	formatField("sve","Total",zsve_tot)
 
-	zsve := stregX(newtxt,"Episode Heart Rates.* SVT",1,0,">>>page>>>",1)
-	zsve := stregX(zsve,"^(.*)SVT with",1,0,"^(.*)Patient:",1) ">>>>>"
-	zsve_fastest := stregX(zsve,"^(.*)Fastest Heart Rate",1,0,"^(.*)Fastest Avg",1) ">>>>>"
-	zsve_tmp := columns(zsve_fastest,"",">>>>>",,"Average") ">>>>>"
-	zsve_fastest := columns(zsve_tmp,"","Average",,"# Beats","Duration")
-					. columns(zsve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
-	fields[7] := ["Fastest Heart Rate","# Beats","Duration","Average","Range","Pt Triggered"]
-	labels[7] := ["Fastest_time","Beats","null","null","Fastest","null"]
-	fieldvals(zsve_fastest,7,"sve")
-	zsve_longest := stregX(zsve,"^(.*)Longest SVT",1,0,">>>>>",0)
-	zsve_tmp := columns(zsve_longest,"",">>>>>",,"Average") ">>>>>"
-	zsve_longest := columns(zsve_tmp,"","Average",,"# Beats","Duration")
-					. columns(zsve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
-	fields[7] := ["Longest SVT Episode","# Beats","Duration","Average","Range","Pt Triggered"]
-	labels[7] := ["Longest_time","Longest","null","null","null","null"]
-	fieldvals(zsve_longest,7,"sve")
+	if (zsve := stregX(newtxt,"Episode Heart Rates.* SVT",1,0,">>>page>>>",1)) {
+		zsve := stregX(zsve,"^(.*)SVT with",1,0,"^(.*)Patient:",1) ">>>>>"
+		zsve_fastest := stregX(zsve,"^(.*)Fastest Heart Rate",1,0,"^(.*)Fastest Avg",1) ">>>>>"
+		zsve_tmp := columns(zsve_fastest,"",">>>>>",,"Average") ">>>>>"
+		zsve_fastest := columns(zsve_tmp,"","Average",,"# Beats","Duration")
+						. columns(zsve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
+		fields[7] := ["Fastest Heart Rate","# Beats","Duration","Average","Range","Pt Triggered"]
+		labels[7] := ["Fastest_time","Beats","null","null","Fastest","null"]
+		fieldvals(zsve_fastest,7,"sve")
+		zsve_longest := stregX(zsve,"^(.*)Longest SVT",1,0,">>>>>",0)
+		zsve_tmp := columns(zsve_longest,"",">>>>>",,"Average") ">>>>>"
+		zsve_longest := columns(zsve_tmp,"","Average",,"# Beats","Duration")
+						. columns(zsve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
+		fields[7] := ["Longest SVT Episode","# Beats","Duration","Average","Range","Pt Triggered"]
+		labels[7] := ["Longest_time","Longest","null","null","null","null"]
+		fieldvals(zsve_longest,7,"sve")
+	}
 	
-	zve := columns(znums ">>>end","Ventricular Ectopy \(VE/PVCs\)",">>>end",1)
+	zve := columns(zectopics,"Ventricular Ectopy \(VE/PVCs\)",">>>end",1)
 	fields[8] := ["Isolated","Couplet","Triplet","Longest Ventricular Bigeminy Episode","Longest Ventricular Trigeminy Episode"]
 	labels[8] := ["SinglePVC","Couplets","Triplets","LongestBigem","LongestTrigem"]
 	fieldvals(zve,8,"ve")
@@ -1230,22 +1233,23 @@ Zio:
 				+ 3*(fldval["ve-Triplets"] ? fldval["ve-Triplets"] : 0)
 	formatField("ve","Total",zve_tot)
 	
-	zve := stregX(newtxt,"Episode Heart Rates.* VT",1,0,">>>page>>>",1)
-	zve := stregX(zve,"^(.*)VT with",1,0,"^(.*)Patient:",1) ">>>>>"
-	zve_fastest := stregX(zve,"^(.*)Fastest Heart Rate",1,0,"^(.*)Fastest Avg",1) ">>>>>"
-	zve_tmp := columns(zve_fastest,"",">>>>>",,"Average") ">>>>>"
-	zve_fastest := columns(zve_tmp,"","Average",,"# Beats","Duration")
-					. columns(zve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
-	fields[8] := ["Fastest Heart Rate","# Beats","Duration","Average","Range","Pt Triggered"]
-	labels[8] := ["Fastest_time","Beats","null","null","Fastest","null"]
-	fieldvals(zve_fastest,8,"ve")
-	zve_longest := stregX(zve,"^(.*)Longest VT",1,0,">>>>>",0)
-	zve_tmp := columns(zve_longest,"",">>>>>",,"Average") ">>>>>"
-	zve_longest := columns(zve_tmp,"","Average",,"# Beats","Duration")
-					. columns(zve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
-	fields[8] := ["Longest VT Episode","# Beats","Duration","Average","Range","Pt Triggered"]
-	labels[8] := ["Longest_time","Longest","null","null","null","null"]
-	fieldvals(zve_longest,8,"ve")
+	if (zve := stregX(newtxt,"Episode Heart Rates.* VT",1,0,">>>page>>>",1)) {
+		zve := stregX(zve,"^(.*)VT with",1,0,"^(.*)Patient:",1) ">>>>>"
+		zve_fastest := stregX(zve,"^(.*)Fastest Heart Rate",1,0,"^(.*)Fastest Avg",1) ">>>>>"
+		zve_tmp := columns(zve_fastest,"",">>>>>",,"Average") ">>>>>"
+		zve_fastest := columns(zve_tmp,"","Average",,"# Beats","Duration")
+						. columns(zve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
+		fields[8] := ["Fastest Heart Rate","# Beats","Duration","Average","Range","Pt Triggered"]
+		labels[8] := ["Fastest_time","Beats","null","null","Fastest","null"]
+		fieldvals(zve_fastest,8,"ve")
+		zve_longest := stregX(zve,"^(.*)Longest VT",1,0,">>>>>",0)
+		zve_tmp := columns(zve_longest,"",">>>>>",,"Average") ">>>>>"
+		zve_longest := columns(zve_tmp,"","Average",,"# Beats","Duration")
+						. columns(zve_tmp,"Average",">>>>>",,"Range","Pt Triggered")
+		fields[8] := ["Longest VT Episode","# Beats","Duration","Average","Range","Pt Triggered"]
+		labels[8] := ["Longest_time","Longest","null","null","null","null"]
+		fieldvals(zve_longest,8,"ve")
+	}
 	
 	LWify()
 	zinterp := cleanspace(columns(newtxt,"Preliminary Findings","SIGNATURE",,"Final Interpretation"))
