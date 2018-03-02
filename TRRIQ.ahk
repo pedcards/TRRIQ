@@ -1019,7 +1019,7 @@ CheckProcLW:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct												; If want to force click, don't include Acct Num
-	ptDem["Provider"] := fliterProv(chk.Prov)
+	ptDem["Provider"] := filterProv(chk.Prov)
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
