@@ -85,7 +85,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid fi
 
 if !(phase) {
 	phase := CMsgBox("Which task?","Click here to start"
-		, "&Process PDF folder"
+		, "&Process PDF folder|Get Preventice enrollments"
 		,"Q","")
 }
 ;~ if (instr(phase,"LifeWatch")) {
@@ -99,6 +99,12 @@ if !(phase) {
 	;~ }
 	;~ ExitApp
 ;~ }
+
+if (instr(phase,"enrollments")) {
+	eventlog("Update Preventice enrollments.")
+	gosub CheckPrEnroll
+	ExitApp
+}
 
 if (instr(phase,"PDF")) {
 	eventlog("Start PDF folder scan.")
@@ -348,11 +354,13 @@ fetchValid(field,rx,neg:=0) {
 }
 
 fetchGuiClose:
+{
 	Gui, fetch:destroy
 	getDem := false																	; break out of fetchDem loop
 	fetchQuit := true
 	eventlog("Manual [x] out of fetchDem.")
 Return
+}
 
 fetchSubmit:
 {
@@ -498,9 +506,13 @@ indSubmit:
 	return
 }
 
-webFill:
+CheckPrEnroll:
 {
-	MsgBox Fill a form
+	MsgBox,,Update Preventice enrollments,Navigate on Preventice website to:`n`nEnrollment / Submitted Patients
+	WinWait, Patient Enrollment
+	WinActivate, Patient Enrollment
+	Send, ^a^c
+	MsgBox Found it!
 	
 	return
 }
@@ -1159,7 +1171,7 @@ Zio:
 	demo2 := onecol(cleanblank(stregX(zcol,"\s+Prescribing Clinician",1,0,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)",1)))
 	demog := RegExReplace(demo1 "`n" demo2,">>>end") ">>>end"
 	
-	;~ gosub checkProcZio											; check validity of PDF, make demographics valid if not
+	gosub checkProcZio											; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
 	}
