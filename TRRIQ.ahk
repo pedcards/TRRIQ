@@ -508,7 +508,7 @@ indSubmit:
 
 CheckPrEnroll:
 {
-	MsgBox,,Update Preventice enrollments,Navigate on Preventice website to:`n`nEnrollment / Submitted Patients
+	MsgBox,4160,Update Preventice enrollments,Navigate on Preventice website to:`n`nEnrollment / Submitted Patients
 	WinWait, Patient Enrollment
 	WinActivate, Patient Enrollment
 	Send, ^a^c
