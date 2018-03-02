@@ -516,9 +516,19 @@ CheckPrEnroll:
 		if !(clip) {
 			break																		; Clicked "Cancel", exit out
 		}
+		if (clip = clip0) {																; Check if this is the same as the last page
+			MsgBox % "Done already!`n`nClick on 'Next Page'`nbefore proceding."
+			IfMsgBox, OK
+			{
+				continue
+			} else {
+				break
+			}
+		}
 		if (instr(clip,"Enrollment Queue (Submitted)")) {
 			list := stregX(clip,"patient name.*mrn.*[\r\n]*.*physician",1,1,"add new patient",1)
-			parseEnrollment(clip)
+			parseEnrollment(list)
+			clip0 := clip
 		} else {
 			MsgBox,4112,, Wrong page!`nNavigate to:`n`nEnrollment / Submitted Patients
 		}
@@ -546,7 +556,22 @@ grabWebpage(title) {
 }
 
 parseEnrollment(x) {
-	MsgBox % x
+	x .= "<<<"
+	Loop
+	{
+		blk := stregX(x,"Patient Enrollment",n,1,"Patient Enrollment|<<<",1,n)
+		if !(blk) {
+			break
+		}
+		name:= trim(stregX(blk,"",1,1,"[\r\n]+",1,nn)," `r`n")
+		mrn := trim(stregX(blk,"\d{6,7}",nn,0," ",1,nn))
+		date:= trim(stregX(blk,"\d{1,2}/\d{1,2}/\d{2,4}",nn,0," ",1,nn))
+		dev := trim(stregX(blk,"\w",nn,0,"Dr. ",1,nn))
+		prov:= filterProv(trim(stregX(blk,"\w",nn,0,"$",1,nn)))
+		
+		MsgBox % "'" name "'`n'" mrn "'`n'" date "'`n'" dev "'`n'" prov "'"
+		
+	}
 	return
 }
 
