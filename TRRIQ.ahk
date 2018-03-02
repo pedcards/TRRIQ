@@ -2173,13 +2173,18 @@ checkCrd(x) {
 }
 
 filterProv(x) {
-	x := RegExReplace(x,"i)Dr(\.)?(\s)?")
-	x := RegExReplace(x,"i)^[a-z](\.)?\s")
-	x := RegExReplace(x,"i)\s[a-z]$")
+	y := x
+	x := trim(x)																		; trim leading and trailing spaces
+	x := RegExReplace(x,"i)^Dr(\.)?(\s)?")												; remove preceding "(Dr. )Veronica..."
+	x := RegExReplace(x,"i)^[a-z](\.)?\s")												; remove preceding "(P. )Ruggerie, Dennis"
+	x := RegExReplace(x,"i)\s[a-z](\.)?$")												; remove trailing "Ruggerie, Dennis( P.)"
 	x := RegExReplace(x,"i)-(MAIN|BELLEVUE|EVERETT|TRI-CITIES|WENATCHEE|YAKIMA|TACOMA|SILVERDALE|GREAT FALLS)(\s)*,",",")
-	x := RegExReplace(x,"i) (MD|DO)$")
-	x := trim(x)
-	StringUpper,x,x,T
+	x := RegExReplace(x,"i) (MD|DO)$")													; remove trailing "( MD)"
+	x := RegExReplace(x,"i) (MD|DO),",",")												; replace "Ruggerie MD, Dennis" with "Ruggerie, Dennis"
+	StringUpper,x,x,T																	; convert "RUGGERIE, DENNIS" to "Ruggerie, Dennis"
+	if !(y==x) {
+		eventlog("Provider string '" y "' => '" x "'.")
+	}
 	return x
 }
 
