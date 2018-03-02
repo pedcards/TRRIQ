@@ -1019,7 +1019,7 @@ CheckProcLW:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct												; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
+	ptDem["Provider"] := fliterProv(chk.Prov)
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
@@ -1112,7 +1112,7 @@ CheckProcPr2:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
+	ptDem["Provider"] := filterProv(chk.Prov)
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
@@ -1369,7 +1369,7 @@ CheckProcZio:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
+	ptDem["Provider"] := filterProv(chk.Prov)
 	ptDem["EncDate"] := chk.DateStart
 	ptDem["Indication"] := chk.Ind
 	
@@ -1657,7 +1657,7 @@ CheckProcBGH:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := trim(RegExReplace(RegExReplace(RegExReplace(chk.Prov,"i)^Dr(\.)?(\s)?"),"i)^[A-Z]\.(\s)?"),"(-MAIN| MD)"))
+	ptDem["Provider"] := filterProv(chk.Prov)
 	ptDem["EncDate"] := chk.DateStart
 	ptDem["EndDate"] := chk.DateEnd
 	ptDem["Indication"] := chk.Ind
@@ -2170,6 +2170,17 @@ checkCrd(x) {
 		}
 	}
 	return {"fuzz":fuzz,"best":best,"group":group}
+}
+
+filterProv(x) {
+	x := RegExReplace(x,"i)Dr(\.)?(\s)?")
+	x := RegExReplace(x,"i)^[a-z](\.)?\s")
+	x := RegExReplace(x,"i)\s[a-z]$")
+	x := RegExReplace(x,"i)-(MAIN|BELLEVUE|EVERETT|TRI-CITIES|WENATCHEE|YAKIMA|TACOMA|SILVERDALE|GREAT FALLS)(\s)*,",",")
+	x := RegExReplace(x,"i) (MD|DO)$")
+	x := trim(x)
+	StringUpper,x,x,T
+	return x
 }
 
 httpComm(verb) {
