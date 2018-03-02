@@ -563,7 +563,8 @@ parseEnrollment(x) {
 		if !(blk) {
 			break
 		}
-		name:= trim(stregX(blk,"",1,1,"[\r\n]+",1,nn)," `r`n")
+		blk := RegExReplace(blk,"[\r\n]+")
+		name:= trim(stregX(blk,"",1,1,"\d{6,7}",1,nn))
 		mrn := trim(stregX(blk,"\d{6,7}",nn,0," ",1,nn))
 		date:= trim(stregX(blk,"\d{1,2}/\d{1,2}/\d{2,4}",nn,0," ",1,nn))
 		dev := trim(stregX(blk,"\w",nn,0,"Dr. ",1,nn))
