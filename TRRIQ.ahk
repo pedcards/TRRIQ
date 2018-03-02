@@ -510,14 +510,37 @@ CheckPrEnroll:
 {
 	MsgBox,4160,Update Preventice enrollments,Navigate on Preventice website to:`n`nEnrollment / Submitted Patients
 	WinWait, Patient Enrollment
-	WinActivate, Patient Enrollment
-	Send, ^a^c
-	clip := Clipboard
-	if (instr(clip,"Enrollment Queue (Submitted)")) {
-		list := stregX(clip,"patient name.*mrn.*physician",1,1,"add new patient",1)
-		MsgBox % list
+	loop
+	{
+		clip := grabWebpage("Patient Enrollment")
+		if !(clip) {
+			break
+		}
+		if (instr(clip,"Enrollment Queue (Submitted)")) {
+			list := stregX(clip,"patient name.*mrn.*[\r\n]*.*physician",1,1,"add new patient",1)
+			;~ parseEnrollment(clip)
+			MsgBox % list
+		}
 	}
 	return
+}
+
+grabWebpage(title) {
+/*	Copy text of an open webpage
+ *	title = string in window title
+ */
+	MsgBox, 4145, "%title%" grab, Found it!`n`nGrab this page?
+	IfMsgBox, OK
+	{
+		WinActivate, %title%															; activate the browser window when title matches
+		MouseGetPos,mouseX,mouseY														; get mouse coords
+			Send, ^a^c																	; Select All, Copy
+			clip := Clipboard
+			MouseClick, Left, 0, mouseY													; Click off to far side to clear selection
+		MouseMove, mouseX, mouseY														; move back to original coords
+		return clip
+	} 
+	return error
 }
 
 zybitSet:
