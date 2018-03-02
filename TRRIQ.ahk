@@ -510,16 +510,17 @@ CheckPrEnroll:
 {
 	MsgBox,4160,Update Preventice enrollments,Navigate on Preventice website to:`n`nEnrollment / Submitted Patients
 	WinWait, Patient Enrollment
-	loop
+	loop																				; Repeat until determine done
 	{
-		clip := grabWebpage("Patient Enrollment")
+		clip := grabWebpage("Patient Enrollment")										; Page exists, ask to grab
 		if !(clip) {
-			break
+			break																		; Clicked "Cancel", exit out
 		}
 		if (instr(clip,"Enrollment Queue (Submitted)")) {
 			list := stregX(clip,"patient name.*mrn.*[\r\n]*.*physician",1,1,"add new patient",1)
-			;~ parseEnrollment(clip)
-			MsgBox % list
+			parseEnrollment(clip)
+		} else {
+			MsgBox,4112,, Wrong page!`nNavigate to:`n`nEnrollment / Submitted Patients
 		}
 	}
 	return
@@ -542,6 +543,11 @@ grabWebpage(title) {
 		return clip
 	} 
 	return error
+}
+
+parseEnrollment(x) {
+	MsgBox % x
+	return
 }
 
 zybitSet:
