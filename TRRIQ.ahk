@@ -512,8 +512,11 @@ CheckPrEnroll:
 	WinWait, Patient Enrollment
 	WinActivate, Patient Enrollment
 	Send, ^a^c
-	MsgBox Found it!
-	
+	clip := Clipboard
+	if (instr(clip,"Enrollment Queue (Submitted)")) {
+		list := stregX(clip,"patient name.*mrn.*physician",1,1,"add new patient",1)
+		MsgBox % list
+	}
 	return
 }
 
