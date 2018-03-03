@@ -536,7 +536,10 @@ CheckPrEnroll:
 		}
 		if (instr(clip,"Enrollment Queue (Submitted)")) {
 			list := stregX(clip,"patient name.*mrn.*[\r\n]*.*physician",1,1,"add new patient",1)
-			parseEnrollment(list)
+			done:=parseEnrollment(list)
+			if !(done) {
+				MsgBox Reached the end of novel records.
+			}
 			clip0 := clip
 		} else {
 			MsgBox,4112,, Wrong page!`nNavigate to:`n`nEnrollment / Submitted Patients
@@ -601,14 +604,16 @@ parseEnrollment(x) {
 			wq.addElement("dev",newID,res.dev)
 			wq.addElement("prov",newID,filterProv(res.prov))
 			eventlog("Added new registration " res.mrn " " res.name " " date ".")
-			sleep 1
-		} else {
 			done ++
+			sleep 1
 		}
 	}
 	wq.selectSingleNode("/root/pending").setAttribute("update",A_now)
 	wq.save("worklist.xml")
 	return (done=count)
+/*		true = all records added
+ *		false = some duplicate records found
+ */
 }
 
 scanX(txt,fields,labels) {
