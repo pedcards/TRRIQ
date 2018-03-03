@@ -93,7 +93,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid fi
 
 if !(phase) {
 	phase := CMsgBox("Which task?","Click here to start"
-		, "&Process PDF folder|Get Preventice enrollments"
+		, "&Process PDF folder|Get Preventice enrollments||Scan tempfile worklist"
 		,"Q","")
 }
 ;~ if (instr(phase,"LifeWatch")) {
@@ -144,6 +144,14 @@ if (instr(phase,"PDF")) {
 	/* Consider asking if complete. The MA's appear to run one PDF at a time, despite the efficiency loss.
 	*/
 }
+
+if instr(phase,"tempfile") {
+	count:=scanTempfiles()
+	eventlog(count)
+	MsgBox % count
+	ExitApp
+}
+
 FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
 eventlog("<<<<< Session end.")
 ExitApp
@@ -638,6 +646,40 @@ findWQid(DT,MRN,name="") {
 	} else if IsObject(x := wq.selectSingleNode("/root/pending/enroll[name='" name "']")) {			; or neither, find matching name
 	}
 	return x.getAttribute("ID")																		; will return null (error) if no match
+}
+
+scanTempfiles() {
+	global wq
+	count := 0
+	
+	loop, files, tempfiles/*.csv
+	{
+		filenm := A_LoopFileName
+		files ++
+		RegExMatch(filenm,"O)^(\d{6,7}) (.*)? (\d{2}-\d{2}-\d{4})",wqnm)
+		if !(wqnm.value(0)) {
+			continue
+		}
+		mrn :=  wqnm.value(1)
+		name := wqnm.value(2)
+		dt := parseDate(wqnm.value(3))
+		date := dt.YYYY dt.MM dt.DD
+		
+		if IsObject(wq.selectSingleNode("/root/done/enroll[mrn='" mrn "'][date='" date "']")) {
+			continue
+		}
+		
+		id := A_TickCount 
+		wq.addElement("enroll","/root/done",{id:id})
+		newID := "/root/done/enroll[@id='" id "']"
+		wq.addElement("date",newID,date)
+		wq.addElement("name",newID,name)
+		wq.addElement("mrn",newID,mrn)
+		count ++
+		sleep 1
+	}
+	wq.save("worklist.xml")
+return "Scanned " files " files, " count " DONE records added."
 }
 
 zybitSet:
@@ -2425,6 +2467,10 @@ parseDate(x) {
 	if (x~="\d{4}-\d{2}-\d{2}") {												; 2017-02-11
 		StringSplit, DT, x, -
 		return {"YYYY":DT1, "MM":DT2, "DD":DT3}
+	}
+	if (x~="\d{2}-\d{2}-\d{4}") {												; 02-11-2017
+		StringSplit, DT, x, -
+		return {"MM":DT1, "DD":DT2, "YYYY":DT3}
 	}
 	if (x~="i)^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2}, \d{4}") {			; Mar 9, 2015 (8:33 am)?
 		StringSplit, DT, x, %A_Space%
