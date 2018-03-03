@@ -565,6 +565,7 @@ grabWebpage(title) {
 }
 
 parseEnrollment(x) {
+	global wq
 	x .= "<<<"
 	Loop
 	{
@@ -573,16 +574,55 @@ parseEnrollment(x) {
 			break
 		}
 		blk := RegExReplace(blk,"[\r\n]+")
-		name:= trim(stregX(blk,"",1,1,"\d{6,7}",1,nn))
-		mrn := trim(stregX(blk,"\d{6,7}",nn,0," ",1,nn))
-		date:= trim(stregX(blk,"\d{1,2}/\d{1,2}/\d{2,4}",nn,0," ",1,nn))
-		dev := trim(stregX(blk,"\w",nn,0,"Dr. ",1,nn))
-		prov:= filterProv(trim(stregX(blk,"\w",nn,0,"$",1,nn)))
+		fields := ["^"
+				,"\d{6,7}"
+				,"\d{1,2}/\d{1,2}/\d{2,4}"
+				,"\w"
+				,"Dr. "
+				,"$"]
+		labels := ["name"
+				,"mrn"
+				,"date"
+				,"dev"
+				,"prov"
+				,"end"]
+		res:=scanX(blk,fields,labels)
+		tmp := parseDate(res.date)
+		date := tmp.YYYY tmp.MM tmp.DD
 		
-		MsgBox % "'" name "'`n'" mrn "'`n'" date "'`n'" dev "'`n'" prov "'"
-		
+		count ++
+		id := A_TickCount 
+		if !IsObject(wq.selectSingleNode("/root/pending/enroll[date='" date "'][mrn='" res.mrn "']")) {
+			wq.addElement("enroll","/root/pending",{id:id})
+			newID := "/root/pending/enroll[@id='" id "']"
+			wq.addElement("date",newID,date)
+			wq.addElement("name",newID,res.name)
+			wq.addElement("mrn",newID,res.mrn)
+			wq.addElement("dev",newID,res.dev)
+			wq.addElement("prov",newID,filterProv(res.prov))
+			eventlog("Added new registration " res.mrn " " res.name " " date ".")
+			sleep 1
+		} else {
+			done ++
+		}
 	}
-	return
+	wq.selectSingleNode("/root/pending").setAttribute("update",A_now)
+	wq.save("worklist.xml")
+	return (done=count)
+}
+
+scanX(txt,fields,labels) {
+	res := Object()
+	for k, i in fields																	; Step through each val "i" from fields[bl,k]
+	{
+		x := fields[k]
+		y := fields[k+1]
+		
+		val := stregX(txt,x,n,0,y,1,n)
+		
+		res[labels[k]]:=trim(val)
+	}
+	return res
 }
 
 zybitSet:
@@ -2238,7 +2278,6 @@ checkCrd(x) {
 }
 
 filterProv(x) {
-	y := x
 	x := trim(x)																		; trim leading and trailing spaces
 	x := RegExReplace(x,"i)^Dr(\.)?(\s)?")												; remove preceding "(Dr. )Veronica..."
 	x := RegExReplace(x,"i)^[a-z](\.)?\s")												; remove preceding "(P. )Ruggerie, Dennis"
@@ -2247,9 +2286,6 @@ filterProv(x) {
 	x := RegExReplace(x,"i) (MD|DO)$")													; remove trailing "( MD)"
 	x := RegExReplace(x,"i) (MD|DO),",",")												; replace "Ruggerie MD, Dennis" with "Ruggerie, Dennis"
 	StringUpper,x,x,T																	; convert "RUGGERIE, DENNIS" to "Ruggerie, Dennis"
-	if !(y==x) {
-		eventlog("Provider string '" y "' => '" x "'.")
-	}
 	return x
 }
 
