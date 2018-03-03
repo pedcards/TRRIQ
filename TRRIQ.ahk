@@ -783,7 +783,29 @@ outputfiles:
 			. "`n"
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
 	
+	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
+	
 Return
+}
+
+moveWQ(id) {
+	global wq
+	
+	x := wq.selectSingleNode("/root/pending/enroll[@id='" id "']")
+	date := x.selectSingleNode("date").text
+	mrn := x.selectSingleNode("mrn").text
+	
+	if (mrn) {																			; record exists
+		clone := x.cloneNode(true)
+		wq.selectSingleNode("/root/done").appendChild(clone)							; copy x.clone to DONE
+		x.parentNode.removeChild(x)														; remove x
+		wq.save("worklist.xml")
+		eventlog("wqid " id " (" mrn " from " date ") moved to DONE list.")
+	} else {
+		eventlog("No wqid associated with record.")
+	}
+	
+	return
 }
 
 getMD:
