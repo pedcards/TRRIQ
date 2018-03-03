@@ -613,12 +613,18 @@ parseEnrollment(x) {
 			wq.addElement("mrn",newID,res.mrn)
 			wq.addElement("dev",newID,res.dev)
 			wq.addElement("prov",newID,filterProv(res.prov))
-			eventlog("Added new registration " res.mrn " " res.name " " date ".")
 			done ++
 			sleep 1
+			
+			if (res.prov~="-(TACOMA),") {												; Prov is in site not tracked in WQ
+				moveWQ(id)																; move from PENDING to DONE list
+				continue
+			}
+			
+			eventlog("Added new registration " res.mrn " " res.name " " date ".")
 		}
 	}
-	wq.selectSingleNode("/root/pending").setAttribute("update",A_now)
+	wq.selectSingleNode("/root/pending").setAttribute("update",A_now)					; set pending[@update] attr
 	wq.save("worklist.xml")
 	return (done=count)
 /*		true = all records added
