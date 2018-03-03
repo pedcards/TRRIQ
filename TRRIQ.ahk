@@ -80,6 +80,14 @@ Loop, Read, %chipDir%outdocs.csv
 }
 
 y := new XML(chipDir "currlist.xml")
+if fileexist("worklist.xml") {
+	wq := new XML("worklist.xml")
+} else {
+	wq := new XML("<root/>")
+	wq.addElement("pending","/root")
+	wq.addElement("done","/root")
+	wq.save("worklist.xml")
+}
 
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
