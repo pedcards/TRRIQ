@@ -516,7 +516,8 @@ indSubmit:
 
 CheckPrEnroll:
 {
-	MsgBox,4160,Update Preventice enrollments,Navigate on Preventice website to:`n`nEnrollment / Submitted Patients
+	browser := WinExist("Firefox")
+	MsgBox,4160,Update Preventice enrollments,Navigate on Preventice website to:`n`nEnrollment / Submitted Patients`n`n%browser%
 	WinWait, Patient Enrollment
 	loop																				; Repeat until determine done
 	{
