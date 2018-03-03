@@ -600,10 +600,12 @@ parseEnrollment(x) {
 		res:=scanX(blk,fields,labels)
 		tmp := parseDate(res.date)
 		date := tmp.YYYY tmp.MM tmp.DD
-		
 		count ++
-		id := A_TickCount 
-		if !IsObject(wq.selectSingleNode("/root/pending/enroll[date='" date "'][mrn='" res.mrn "']")) {
+		
+		if IsObject(wq.selectSingleNode("//enroll[date='" date "'][mrn='" res.mrn "']")) {	; exists in PENDING or DONE
+			continue
+		} else {																		; Not present, add to PENDING
+			id := A_TickCount 
 			wq.addElement("enroll","/root/pending",{id:id})
 			newID := "/root/pending/enroll[@id='" id "']"
 			wq.addElement("date",newID,date)
