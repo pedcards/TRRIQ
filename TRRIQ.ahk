@@ -641,11 +641,11 @@ scanX(txt,fields,labels) {
 findWQid(DT,MRN,name="") {
 	global wq
 	
-	if IsObject(x := wq.selectSingleNode("/root/pending/enroll[date='" DT "'][mrn='" MRN "']")) {	; Perfect match
-	} else if IsObject(x := wq.selectSingleNode("/root/pending/enroll[mrn='" MRN "']")) {			; or matches MRN only
-	} else if IsObject(x := wq.selectSingleNode("/root/pending/enroll[name='" name "']")) {			; or neither, find matching name
+	if IsObject(x := wq.selectSingleNode("//enroll[date='" DT "'][mrn='" MRN "']")) {				; Perfect match
+	} else if IsObject(x := wq.selectSingleNode("//enroll[mrn='" MRN "']")) {						; or matches MRN only
+	} else if IsObject(x := wq.selectSingleNode("//enroll[name='" name "']")) {						; or neither, find matching name
 	}
-	return x.getAttribute("ID")																		; will return null (error) if no match
+	return {id:x.getAttribute("ID"),node:x.parentNode.nodeName}										; will return null (error) if no match
 }
 
 scanTempfiles() {
@@ -831,7 +831,7 @@ Return
 }
 
 moveWQ(id) {
-	global wq
+	global wq, fldval
 	
 	x := wq.selectSingleNode("/root/pending/enroll[@id='" id "']")
 	date := x.selectSingleNode("date").text
@@ -841,11 +841,17 @@ moveWQ(id) {
 		clone := x.cloneNode(true)
 		wq.selectSingleNode("/root/done").appendChild(clone)							; copy x.clone to DONE
 		x.parentNode.removeChild(x)														; remove x
-		wq.save("worklist.xml")
 		eventlog("wqid " id " (" mrn " from " date ") moved to DONE list.")
 	} else {
-		eventlog("No wqid associated with record.")
+		id := A_TickCount
+		wq.addElement("enroll","/root/done",{id:id})
+		newID := "/root/pending/enroll[@id='" id "']"
+		wq.addElement("date",newID,fldval["dem-Test_date"])
+		wq.addElement("name",newID,fldval["dem-Name"])
+		wq.addElement("mrn",newID,fldval["dem-MRN"])
+		eventlog("No wqid. Saved new DONE record " fldval["dem-MRN"] ".")
 	}
+	wq.save("worklist.xml")
 	
 	return
 }
@@ -1248,7 +1254,10 @@ CheckProcPr2:
 		fetchQuit := true
 		return
 	}
-	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
+	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name).id
+	if (fldval["wqid"].node = "done") {
+		MsgBox File has been scanned already.
+	}
 	
 	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
 		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
@@ -1805,7 +1814,7 @@ CheckProcBGH:
 		chk.DateEnd := trim(strX(chk.Date," - ",0,3,"",0)," `r`n")
 		chk.DateStart := trim(strX(chk.Date,"",1,1," ",1,1)," `r`n")
 	chkDT := parseDate(chk.DateStart)
-	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
+	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name).id
 
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	;~ if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
