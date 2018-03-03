@@ -630,6 +630,16 @@ scanX(txt,fields,labels) {
 	return res
 }
 
+findWQid(DT,MRN,name="") {
+	global wq
+	
+	if IsObject(x := wq.selectSingleNode("/root/pending/enroll[date='" DT "'][mrn='" MRN "']")) {	; Perfect match
+	} else if IsObject(x := wq.selectSingleNode("/root/pending/enroll[mrn='" MRN "']")) {			; or matches MRN only
+	} else if IsObject(x := wq.selectSingleNode("/root/pending/enroll[name='" name "']")) {			; or neither, find matching name
+	}
+	return x.getAttribute("ID")																		; will return null (error) if no match
+}
+
 zybitSet:
 {
 	Loop
@@ -1174,6 +1184,7 @@ CheckProcPr2:
 		fetchQuit := true
 		return
 	}
+	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
 	
 	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
 		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
@@ -1729,7 +1740,9 @@ CheckProcBGH:
 	chk.Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
 		chk.DateEnd := trim(strX(chk.Date," - ",0,3,"",0)," `r`n")
 		chk.DateStart := trim(strX(chk.Date,"",1,1," ",1,1)," `r`n")
-	
+	chkDT := parseDate(chk.DateStart)
+	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
+
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
 	;~ if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
 		;~ && !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
