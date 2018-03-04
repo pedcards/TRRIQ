@@ -602,27 +602,51 @@ parseEnrollment(x) {
 		date := tmp.YYYY tmp.MM tmp.DD
 		count ++
 		
-		if IsObject(wq.selectSingleNode("//enroll[date='" date "'][mrn='" res.mrn "']")) {	; exists in PENDING or DONE
+		if IsObject(ens := wq.selectSingleNode("//enroll[date='" date "'][mrn='" res.mrn "']")) {	; exists in PENDING or DONE
+			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in " ens.parentNode.nodeName ".")
 			continue
-		} else {																		; Not present, add to PENDING
-			id := A_TickCount 
-			wq.addElement("enroll","/root/pending",{id:id})
-			newID := "/root/pending/enroll[@id='" id "']"
-			wq.addElement("date",newID,date)
-			wq.addElement("name",newID,res.name)
-			wq.addElement("mrn",newID,res.mrn)
-			wq.addElement("dev",newID,res.dev)
-			wq.addElement("prov",newID,filterProv(res.prov))
-			done ++
-			sleep 1
-			
-			if (res.prov~="-(TACOMA)\s*,") {												; Prov is in site not tracked in WQ
-				moveWQ(id)																; move from PENDING to DONE list
-				continue
+		} 
+		
+		loop, % (ens := wq.selectNodes("//enroll[date='" date "']")).length				; all items matching [date]
+		{
+			k := ens.item(A_index-1)
+			e0 := []
+			e0.id := k.getAttribute("id")
+			e0.name	:= k.selectSingleNode("name").text
+			e0.mrn	:= k.selectSingleNode("mrn").text
+			e0.fuzzName := 100*(1-fuzzysearch(e0.name,res.name))						; percent match
+			e0.fuzzMRN	:= 100*(1-fuzzysearch(e0.mrn,res.mrn))
+			if ((e0.fuzzName>85)||(e0.fuzzMRN>85)) {									; close match for either NAME or MRN
+				e0.match := true
+				break
 			}
-			
-			eventlog("Added new registration " res.mrn " " res.name " " date ".")
 		}
+		if (e0.match) {
+			eventlog("Enrollment close match (" res.mrn "/" e0.mrn ") and (" res.name "/" e0.name") found in " ens.parentNode.nodeName "[" date "].")
+			e0.match := ""
+			continue
+		}
+		
+		/*	No perfect or close match
+		 *	add new record to PENDING
+		 */
+		sleep 1																			; delay 1ms to ensure different tick time
+		id := A_TickCount 
+		wq.addElement("enroll","/root/pending",{id:id})
+		newID := "/root/pending/enroll[@id='" id "']"
+		wq.addElement("date",newID,date)
+		wq.addElement("name",newID,res.name)
+		wq.addElement("mrn",newID,res.mrn)
+		wq.addElement("dev",newID,res.dev)
+		wq.addElement("prov",newID,filterProv(res.prov))
+		done ++
+		
+		if (res.prov~="-(TACOMA)\s*,") {												; Prov is in site not tracked in WQ
+			moveWQ(id)																	; move from PENDING to DONE list
+			continue
+		}
+		
+		eventlog("Added new registration " res.mrn " " res.name " " date ".")
 	}
 	wq.selectSingleNode("/root/pending").setAttribute("update",A_now)					; set pending[@update] attr
 	wq.save("worklist.xml")
