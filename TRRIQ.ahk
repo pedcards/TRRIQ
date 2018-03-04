@@ -626,9 +626,9 @@ parseEnrollment(x) {
 	}
 	wq.selectSingleNode("/root/pending").setAttribute("update",A_now)					; set pending[@update] attr
 	wq.save("worklist.xml")
-	return (done=count)
-/*		true = all records added
- *		false = some duplicate records found
+	return done
+/*		value = records added
+ *		null  = no records added (no unique)
  */
 }
 
