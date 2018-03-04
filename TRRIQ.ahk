@@ -617,12 +617,12 @@ parseEnrollment(x) {
 			e0.fuzzName := 100*(1-fuzzysearch(e0.name,res.name))						; percent match
 			e0.fuzzMRN	:= 100*(1-fuzzysearch(e0.mrn,res.mrn))
 			if ((e0.fuzzName>85)||(e0.fuzzMRN>85)) {									; close match for either NAME or MRN
-				e0.match := true
+				e0.match := k.parentNode.nodeName 
 				break
 			}
 		}
 		if (e0.match) {
-			eventlog("Enrollment close match (" res.mrn "/" e0.mrn ") and (" res.name "/" e0.name") found in " ens.parentNode.nodeName "[" date "].")
+			eventlog("Enrollment close match (" res.mrn "/" e0.mrn ") and (" res.name "/" e0.name ") found in " e0.match "[" date "].")
 			e0.match := ""
 			continue
 		}
