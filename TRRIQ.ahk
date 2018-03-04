@@ -616,7 +616,7 @@ parseEnrollment(x) {
 			done ++
 			sleep 1
 			
-			if (res.prov~="-(TACOMA),") {												; Prov is in site not tracked in WQ
+			if (res.prov~="-(TACOMA)\s*,") {												; Prov is in site not tracked in WQ
 				moveWQ(id)																; move from PENDING to DONE list
 				continue
 			}
@@ -2381,7 +2381,7 @@ filterProv(x) {
 	x := RegExReplace(x,"i)^Dr(\.)?(\s)?")												; remove preceding "(Dr. )Veronica..."
 	x := RegExReplace(x,"i)^[a-z](\.)?\s")												; remove preceding "(P. )Ruggerie, Dennis"
 	x := RegExReplace(x,"i)\s[a-z](\.)?$")												; remove trailing "Ruggerie, Dennis( P.)"
-	x := RegExReplace(x,"i)-(MAIN|BELLEVUE|EVERETT|TRI-CITIES|WENATCHEE|YAKIMA|TACOMA|SILVERDALE|GREAT FALLS)(\s)*,",",")
+	x := RegExReplace(x,"i)-(MAIN|BELLEVUE|EVERETT|TRI-CITIES|WENATCHEE|YAKIMA|TACOMA|SILVERDALE|GREAT FALLS)\s*,",",")
 	x := RegExReplace(x,"i) (MD|DO)$")													; remove trailing "( MD)"
 	x := RegExReplace(x,"i) (MD|DO),",",")												; replace "Ruggerie MD, Dennis" with "Ruggerie, Dennis"
 	StringUpper,x,x,T																	; convert "RUGGERIE, DENNIS" to "Ruggerie, Dennis"
