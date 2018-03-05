@@ -96,16 +96,6 @@ if !(phase) {
 		, "&Process PDF folder|Get Preventice enrollments||Scan tempfile worklist"
 		,"Q","")
 }
-;~ if (instr(phase,"LifeWatch")) {
-	;~ eventlog("Start LifeWatch upload process.")
-	;~ Loop 
-	;~ {
-		;~ ptDem := Object()
-		;~ gosub fetchGUI								; Draw input GUI
-		;~ gosub fetchDem								; Grab demographics from CIS until accept
-		;~ gosub zybitSet								; Fill in Zybit demographics
-	;~ }
-	;~ ExitApp
 ;~ }
 
 if (instr(phase,"enrollments")) {
