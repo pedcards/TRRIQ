@@ -165,31 +165,48 @@ PhaseGUI:
 	Gui, Add, Button
 		, wp h40 vEnroll gPhaseTask
 		, Grab Preventice enrollments
-	Gui, Add, Button, wp h40 vTempfile gPhaseTask, Scan tempfile to worklist
-	Gui, Add, Button, wp h40 vFindlost gPhaseTask, Find returned devices
+	;~ Gui, Add, Button, wp h40 vTempfile gPhaseTask, Scan tempfile to worklist
+	;~ Gui, Add, Button, wp h40 vFindlost gPhaseTask, Find returned devices
 	
+	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
+	Menu, menuSys, Add, Find returned devices, WQfindlost
+	Menu, menuHelp, Add, About TRRIQ, menuTrriq
+	Menu, menuHelp, Add, Instructions..., menuInstr
+		
+	Menu, menuBar, Add, System, :menuSys
+	Menu, menuBar, Add, Help, :menuHelp
+	
+	Gui, Menu, menuBar
 	Gui, Show,, TRRIQ Dashboard
 	return
 }
 
 PhaseGUIclose:
 {
-	Gui, phase:Destroy
-	return
-}	
-
-PhaseGUIdone:
-{
-	Gui, phase:Destroy
-	return
+	wq.save("worklist.xml")
 	eventlog("<<<<< Session end.")
 	ExitApp
+}	
+
+menuTrriq:
+{
+	Gui, phase:hide
+	MsgBox About
+	Gui, phase:show
+	return
+}
+menuInstr:
+{
+	Gui, phase:hide
+	MsgBox How to...
+	gui, phase:show
+	return
 }
 
 PhaseTask:
 {
 	phase := A_GuiControl
-	Gui, phase:Destroy
+	Gui, phase:Hide
 	return
 }
 
