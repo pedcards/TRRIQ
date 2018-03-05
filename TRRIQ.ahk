@@ -291,6 +291,24 @@ WQlist() {
 	return
 }
 
+WQfindlost() {
+	MsgBox, 4132, Find devices, Scan database for duplicate devices?`n`n(this can take a while)
+	IfMsgBox, Yes
+	{
+		progress,,, Scanning lost devices
+		loop
+		{
+			res := WQfindreturned()
+			if (res="clean") {
+				eventlog("Device logs clean.")
+				break
+			}
+			moveWQ(res)
+		}
+	} 
+	reload
+}
+
 WQfindreturned() {
 	global wq
 	
