@@ -143,16 +143,21 @@ if (phase="Tempfile") {
 }
 
 if (phase="Findlost") {
-	progress,,, Scanning lost devices
-	loop
+	MsgBox, 4132, Find devices, Scan database for duplicate devices?`n`n(this can take a while)
+	IfMsgBox, Yes
 	{
-		res := WQfindreturned()
-		if (res="clean") {
-			eventlog("Device logs clean.")
-			break
+		progress,,, Scanning lost devices
+		loop
+		{
+			res := WQfindreturned()
+			if (res="clean") {
+				eventlog("Device logs clean.")
+				break
+			}
+			moveWQ(res)
 		}
-		moveWQ(res)
-	}
+		
+	} 
 	Reload
 }
 
@@ -168,8 +173,9 @@ PhaseGUI:
 	WQlist()
 	
 	Gui, Add, Text, x630 y20 w200 h80
-		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n`n"
-		.	"Double-click an item to remove from list"
+		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
+		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n`n"
+		.	"Dbl-click a patient item to remove from list"
 	Gui, Add, GroupBox, x620 y0 w220 h86
 	
 	Gui, Font, Bold
@@ -179,7 +185,7 @@ PhaseGUI:
 	Gui, Add, Button
 		, wp h40 vEnroll gPhaseTask
 		, Grab Preventice enrollments
-	;~ Gui, Add, Button, wp h40 vTempfile gPhaseTask, Scan tempfile worklist
+	Gui, Add, Button, wp h40 vTempfile gPhaseTask, Scan tempfile to worklist
 	Gui, Add, Button, wp h40 vFindlost gPhaseTask, Find returned devices
 	
 	Gui, Show,, TRRIQ Dashboard
@@ -256,7 +262,10 @@ WQfindreturned() {
 		dev := k.selectSingleNode("dev").text
 		find := trim(stregX(dev," -",1,1,"$",0))
 		findID := en2
-		
+		if (find="") {
+			continue
+		}
+		progress,% A_index,, Scanning for reused devices
 		loop, parse, enlist, `n
 		{
 			StringSplit, idk, A_LoopField, `,
@@ -648,9 +657,13 @@ CheckPrEnroll:
 	browser := WinExist("Firefox")
 	while !(WinExist("Patient Enrollment"))
 	{
-		MsgBox,4160,Update Preventice enrollments
+		MsgBox,4161,Update Preventice enrollments
 			, % "Navigate on Preventice website to:`n`nEnrollment / Submitted Patients`n`n"
 			.	"Click OK when ready to proceed"
+		IfMsgBox, Cancel
+		{
+			Reload
+		}
 	}
 	loop																				; Repeat until determine done
 	{
