@@ -18,6 +18,8 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%
 SetTitleMatchMode, 2
+
+progress,,,TRRIQ intializing...
 FileInstall, pdftotext.exe, pdftotext.exe
 FileInstall, pdftk.exe, pdftk.exe
 FileInstall, libiconv2.dll, libiconv2.dll
@@ -48,6 +50,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
+progress,,,Scanning providers...
 Docs := Object()
 tmpChk := false
 Loop, Read, %chipDir%outdocs.csv
@@ -91,20 +94,16 @@ if fileexist("worklist.xml") {
 
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
-if !(phase) {
-	phase := CMsgBox("Which task?","Click here to start"
-		, "&Process PDF folder|Get Preventice enrollments||Scan tempfile worklist"
-		,"Q","")
-}
-;~ }
+Gosub PhaseGUI
+WinWaitClose, TRRIQ Dashboard
 
-if (instr(phase,"enrollments")) {
+if (phase="Enroll") {
 	eventlog("Update Preventice enrollments.")
 	gosub CheckPrEnroll
-	ExitApp
+	Reload
 }
 
-if (instr(phase,"PDF")) {
+if (phase="PDF") {
 	eventlog("Start PDF folder scan.")
 	holterLoops := 0								; Reset counters
 	holtersDone := 
@@ -131,20 +130,152 @@ if (instr(phase,"PDF")) {
 		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 	}
 	MsgBox % "Monitors processed (" holterLoops ")`n" holtersDone
-	/* Consider asking if complete. The MA's appear to run one PDF at a time, despite the efficiency loss.
-	*/
+	FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
+	
+	Reload
 }
 
-if instr(phase,"tempfile") {
+if (phase="Tempfile") {
 	count:=scanTempfiles()
 	eventlog(count)
 	MsgBox % count
+	Reload
+}
+
+if (phase="Findlost") {
+	progress,,, Scanning lost devices
+	loop
+	{
+		res := WQfindreturned()
+		if (res="clean") {
+			eventlog("Device logs clean.")
+			break
+		}
+		moveWQ(res)
+	}
+	Reload
+}
+
+ExitApp
+
+PhaseGUI:
+{
+	Gui, phase:Destroy
+	Gui, phase:Default
+	Gui, +AlwaysOnTop
+	
+	Gui, Add, Listview, -Multi AltSubmit Grid BackgroundSilver W600 H200 gWQtask vWQlv hwndHLV, Date Enrolled|MRN|Enrolled Name|Device|Provider|ID
+	WQlist()
+	
+	Gui, Add, Text, x630 y20 w200 h80
+		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n`n"
+		.	"Double-click an item to remove from list"
+	Gui, Add, GroupBox, x620 y0 w220 h86
+	
+	Gui, Font, Bold
+	Gui, Add, Button
+		, Y+20 w220 h40 vPDF gPhaseTask
+		, Process PDF folder
+	Gui, Add, Button
+		, wp h40 vEnroll gPhaseTask
+		, Grab Preventice enrollments
+	;~ Gui, Add, Button, wp h40 vTempfile gPhaseTask, Scan tempfile worklist
+	Gui, Add, Button, wp h40 vFindlost gPhaseTask, Find returned devices
+	
+	Gui, Show,, TRRIQ Dashboard
+	return
+}
+
+PhaseGUIclose:
+{
+	Gui, phase:Destroy
+	return
+}	
+
+PhaseGUIdone:
+{
+	Gui, phase:Destroy
+	return
+	eventlog("<<<<< Session end.")
 	ExitApp
 }
 
-FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
-eventlog("<<<<< Session end.")
-ExitApp
+PhaseTask:
+{
+	phase := A_GuiControl
+	Gui, phase:Destroy
+	return
+}
+
+WQtask() {
+	
+return	
+}
+
+WQlist() {
+	global wq
+	
+	Progress,,,Scanning worklist...
+	Loop, % (ens:=wq.selectNodes("/root/pending/enroll")).length
+	{
+		e0 := []
+		k := ens.item(A_Index-1)
+		e0.date	:= k.selectSingleNode("date").text
+		e0.name	:= k.selectSingleNode("name").text
+		e0.mrn	:= k.selectSingleNode("mrn").text
+		e0.dev	:= RegExReplace(k.selectSingleNode("dev").text,"BodyGuardian","BG")
+		e0.prov	:= k.selectSingleNode("prov").text
+		e0.id	:= k.getAttribute("id")
+		LV_Add("",e0.date,e0.mrn,e0.name,e0.dev,e0.prov,e0.id)
+	}
+	LV_ModifyCol()
+	LV_ModifyCol(1,"80 Desc")
+	LV_ModifyCol(3,160)
+	LV_ModifyCol(5,160)
+	LV_ModifyCol(6,"0")
+	progress, off
+	return
+}
+
+WQfindreturned() {
+	global wq
+	
+	loop, % (ens:=wq.selectNodes("/root/pending/enroll")).length
+	{
+		e0 := []
+		k := ens.item(A_Index-1)
+		e0.id := k.getAttribute("id")
+		e0.date := k.selectSingleNode("date").text
+		enlist .= e0.date "," e0.id "`n"
+	}
+	sort, enlist
+	loop, parse, enlist, `n
+	{
+		StringSplit, en, A_LoopField, `,
+		k := wq.selectSingleNode("/root/pending/enroll[@id='" en2 "']")
+		dev := k.selectSingleNode("dev").text
+		find := trim(stregX(dev," -",1,1,"$",0))
+		findID := en2
+		
+		loop, parse, enlist, `n
+		{
+			StringSplit, idk, A_LoopField, `,
+			if (idk2=en2) {
+				continue
+			}
+			k2 := wq.selectSingleNode("/root/pending/enroll[@id='" idk2 "']")
+			dev2 := k2.selectSingleNode("dev").text
+			if instr(dev2,find) {
+				found := true
+				break
+			}
+		}
+		if (found) {
+			return findID
+		} 
+	}
+	return "clean"
+}
 
 FetchDem:
 {
@@ -515,8 +646,12 @@ indSubmit:
 CheckPrEnroll:
 {
 	browser := WinExist("Firefox")
-	MsgBox,4160,Update Preventice enrollments,Navigate on Preventice website to:`n`nEnrollment / Submitted Patients`n`n%browser%
-	WinWait, Patient Enrollment
+	while !(WinExist("Patient Enrollment"))
+	{
+		MsgBox,4160,Update Preventice enrollments
+			, % "Navigate on Preventice website to:`n`nEnrollment / Submitted Patients`n`n"
+			.	"Click OK when ready to proceed"
+	}
 	loop																				; Repeat until determine done
 	{
 		clip := grabWebpage("Patient Enrollment")										; Page exists, ask to grab
@@ -524,7 +659,7 @@ CheckPrEnroll:
 			break																		; Clicked "Cancel", exit out
 		}
 		if (clip = clip0) {																; Check if this is the same as the last page
-			MsgBox % "Done already!`n`nClick on 'Next Page'`nbefore proceding."
+			MsgBox,4144,, % "Done already!`n`nClick on 'Next Page'`nbefore proceding."
 			IfMsgBox, OK
 			{
 				continue
@@ -536,7 +671,7 @@ CheckPrEnroll:
 			list := stregX(clip,"patient name.*mrn.*[\r\n]*.*physician",1,1,"add new patient",1)
 			done:=parseEnrollment(list)
 			if !(done) {
-				MsgBox Reached the end of novel records.
+				MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
 			}
 			clip0 := clip
 		} else {
@@ -550,7 +685,8 @@ grabWebpage(title) {
 /*	Copy text of an open webpage
  *	title = string in window title
  */
-	MsgBox, 4145, "%title%" grab, Found it!`n`nGrab this page?
+	WinActivate, %title%																; activate the browser window when title matches
+	MsgBox, 4145, "%title%" grab, Ready to grab!`n`n`[OK] to grab this page`n[CANCEL] to exit
 	IfMsgBox, OK
 	{
 		WinActivate, %title%															; activate the browser window when title matches
