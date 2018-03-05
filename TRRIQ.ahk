@@ -144,11 +144,12 @@ ExitApp
 
 PhaseGUI:
 {
+	phase :=
 	Gui, phase:Destroy
 	Gui, phase:Default
 	Gui, +AlwaysOnTop
 	
-	Gui, Add, Listview, -Multi AltSubmit Grid BackgroundSilver W600 H200 gWQtask vWQlv hwndHLV, Date Enrolled|MRN|Enrolled Name|Device|Provider|ID
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv hwndHLV, Date Enrolled|MRN|Enrolled Name|Device|Provider|ID
 	WQlist()
 	
 	Gui, Add, Text, x630 y20 w200 h80
