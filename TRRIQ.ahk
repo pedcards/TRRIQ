@@ -741,7 +741,7 @@ CheckPrEnroll:
 			.	"Click OK when ready to proceed"
 		IfMsgBox, Cancel
 		{
-			Reload
+			return
 		}
 	}
 	loop																				; Repeat until determine done
@@ -929,6 +929,7 @@ scanTempfiles() {
 		sleep 1
 	}
 	wq.save("worklist.xml")
+	eventlog("Scanned " files " files, " count " DONE records added.")
 return "Scanned " files " files, " count " DONE records added."
 }
 
