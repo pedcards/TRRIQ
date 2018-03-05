@@ -211,7 +211,52 @@ PhaseTask:
 }
 
 WQtask() {
-	
+	if !(A_GuiEvent="DoubleClick") {
+		return
+	}
+	if !(A_GuiControl="WQlv") {
+		return
+	}
+	Gui, phase:Hide
+	LV_GetText(idx, A_EventInfo,6)
+	pt := readWQ(idx)
+	MsgBox, 4129, DELETE RECORD
+		, % "Delete this record?`n`n"
+		.	"  Name: 	" pt.Name "`n"
+		.	"  MRN:  	" pt.MRN "`n"
+		.	"  Date: 	" pt.date "`n"
+		.	"  Provider: " pt.prov
+	IfMsgBox, OK
+	{
+		reason := cmsgbox("Reason"
+				, "What is the reason to remove this record from the active worklist?"
+				, "Report in CIS|"
+				. "Device missing|"
+				. "Other (explain)"
+				, "Q")
+	} else {
+		return
+	}
+	if (reason="Close") {
+		return
+	}
+	if instr(reason,"Other") {
+		Loop
+		{
+			InputBox, reason, Clear record from worklist, Enter the reason for moving this record`n(Max 30 chars)
+			StringLen, addLength, reason
+			If (addLength > 30) {
+				MsgBox, 0, ERROR, String too long. Please explain in less than 30 chars.  	
+			} else {
+				break
+			}
+		}
+		if (reason="") {
+			return
+		}
+	}
+	eventlog(idx " Move from WQ: " reason)
+	moveWQ(idx)
 return	
 }
 
