@@ -352,6 +352,19 @@ WQfindreturned() {
 	return "clean"
 }
 
+readWQ(idx) {
+	global wq
+	
+	k := wq.selectSingleNode("//enroll[@id='" idx "']")
+	date := k.selectSingleNode("date").text
+	mrn := k.selectSingleNode("mrn").text
+	name := k.selectSingleNode("name").text
+	dev := k.selectSingleNode("dev").text
+	prov := k.selectSingleNode("prov").text
+	
+	return {date:date,mrn:mrn,name:name,dev:dev,prov:prov}
+}
+
 FetchDem:
 {
 	mdX := Object()										; clear Mouse Demographics X,Y coordinate arrays
