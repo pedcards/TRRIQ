@@ -91,74 +91,53 @@ if fileexist("worklist.xml") {
 	wq.addElement("done","/root")
 	wq.save("worklist.xml")
 }
+scanTempfiles()
 
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
 
-Gosub PhaseGUI
-WinWaitClose, TRRIQ Dashboard
+Loop
+{
+	Gosub PhaseGUI
+	WinWaitClose, TRRIQ Dashboard
 
-if (phase="Enroll") {
-	eventlog("Update Preventice enrollments.")
-	gosub CheckPrEnroll
-	Reload
-}
-
-if (phase="PDF") {
-	eventlog("Start PDF folder scan.")
-	holterLoops := 0								; Reset counters
-	holtersDone := 
-	loop, %holterDir%*.pdf							; Process all PDF files in holterDir
-	{
-		fileNam := RegExReplace(A_LoopFileName,"i)\.pdf")				; fileNam is name only without extension, no path
-		fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
-		FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
-		if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0000-0359 (already processed)
-			eventlog("Skipping file """ fileNam ".pdf"", already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
-			continue
-		}
-		FileGetSize, fileInSize, %fileIn%
-		eventlog("Processing """ fileNam ".pdf"" (" thousandsSep(fileInSize) ").")
-		gosub MainLoop													; process the PDF
-		if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
-			continue
-		}
-		if !IsObject(ptDem) {											; bad file, never acquires demographics
-			continue
-		}
-		;~ FileDelete, %fileIn%
-		holterLoops++													; increment counter for processed counter
-		holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
+	if (phase="Enroll") {
+		eventlog("Update Preventice enrollments.")
+		gosub CheckPrEnroll
+		;~ Reload
 	}
-	MsgBox % "Monitors processed (" holterLoops ")`n" holtersDone
-	FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
-	
-	Reload
-}
 
-if (phase="Tempfile") {
-	count:=scanTempfiles()
-	eventlog(count)
-	MsgBox % count
-	Reload
-}
-
-if (phase="Findlost") {
-	MsgBox, 4132, Find devices, Scan database for duplicate devices?`n`n(this can take a while)
-	IfMsgBox, Yes
-	{
-		progress,,, Scanning lost devices
-		loop
+	if (phase="PDF") {
+		eventlog("Start PDF folder scan.")
+		holterLoops := 0								; Reset counters
+		holtersDone := 
+		loop, %holterDir%*.pdf							; Process all PDF files in holterDir
 		{
-			res := WQfindreturned()
-			if (res="clean") {
-				eventlog("Device logs clean.")
-				break
+			fileNam := RegExReplace(A_LoopFileName,"i)\.pdf")				; fileNam is name only without extension, no path
+			fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
+			FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
+			if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0000-0359 (already processed)
+				eventlog("Skipping file """ fileNam ".pdf"", already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
+				continue
 			}
-			moveWQ(res)
+			FileGetSize, fileInSize, %fileIn%
+			eventlog("Processing """ fileNam ".pdf"" (" thousandsSep(fileInSize) ").")
+			gosub MainLoop													; process the PDF
+			if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
+				continue
+			}
+			if !IsObject(ptDem) {											; bad file, never acquires demographics
+				continue
+			}
+			;~ FileDelete, %fileIn%
+			holterLoops++													; increment counter for processed counter
+			holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 		}
+		MsgBox % "Monitors processed (" holterLoops ")`n" holtersDone
+		FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
 		
-	} 
-	Reload
+		;~ Reload
+	}
+
 }
 
 ExitApp
