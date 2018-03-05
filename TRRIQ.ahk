@@ -274,6 +274,12 @@ WQlist() {
 		e0.dev	:= RegExReplace(k.selectSingleNode("dev").text,"BodyGuardian","BG")
 		e0.prov	:= k.selectSingleNode("prov").text
 		e0.id	:= k.getAttribute("id")
+		now := A_Now
+		dt := e0.date
+		dt -= now, Days
+		if (instr(e0.dev,"BG") && (dt > -30)) {
+			continue
+		}
 		LV_Add("",e0.date,e0.mrn,e0.name,e0.dev,e0.prov,e0.id)
 	}
 	LV_ModifyCol()
