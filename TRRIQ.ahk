@@ -210,10 +210,10 @@ PhaseTask:
 }
 
 WQtask() {
-	if !(A_GuiEvent="DoubleClick") {
+	if !(A_GuiControl="WQlv") {
 		return
 	}
-	if !(A_GuiControl="WQlv") {
+	if !(A_GuiEvent="DoubleClick") {
 		return
 	}
 	Gui, phase:Hide
