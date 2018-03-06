@@ -170,6 +170,7 @@ PhaseGUI:
 	
 	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
 	Menu, menuSys, Add, Find returned devices, WQfindlost
+	Menu, menuSys, Add, Find close matches, WQfindclose
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -350,6 +351,39 @@ WQfindreturned() {
 		} 
 	}
 	return "clean"
+}
+
+WQfindclose() {
+	global wq
+	
+	loop, % (pend := wq.selectNodes("/root/pending/enroll")).Length
+	{
+		k1 := pend.item(A_Index-1)
+		id1 := k1.getAttribute("id")
+		e1 := readWQ(id1)
+		Progress, % 100*A_index/pend.length,, % e1.date
+		
+		loop, % (done := wq.selectNodes("/root/done/enroll[date='" e1.date "']")).length				; all items matching [date]
+		{
+			k2 := done.item(A_index-1)
+			id2 := k2.getAttribute("id")
+			e2 := readWQ(id2)
+			e2.fuzzName := 100*(1-fuzzysearch(e2.name,e1.name))						; percent match
+			e2.fuzzMRN	:= 100*(1-fuzzysearch(e2.mrn,e1.mrn))
+			if ((e2.fuzzName>85)||(e2.fuzzMRN>85)) {									; close match for either NAME or MRN
+				e2.match := id2
+				break
+			}
+		}
+		if (e2.match) {
+			;~ eventlog("Enrollment close match (" res.mrn "/" e0.mrn ") and (" res.name "/" e0.name ") found in " e0.match "[" date "].")
+			MsgBox % "Close match (" e1.mrn "/" e2.mrn ") and (" e1.name "/" e2.name ") found in " e2.match
+			e2.match := ""
+			continue
+		}
+	}
+	progress, off
+	return
 }
 
 readWQ(idx) {
