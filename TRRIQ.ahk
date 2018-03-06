@@ -408,6 +408,7 @@ FetchDem:
 		clipboard :=
 		ClipWait, 2
 		if !ErrorLevel {								; clipboard has data
+			sleep 200
 			clk := parseClip(clipboard)
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
 				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
@@ -497,8 +498,8 @@ mouseGrab(x,y) {
 	MouseMove, %x%, %y%, 0																; Goto coordinates
 	Click 2																				; Double-click
 	BlockInput, Off																		; Permit input again
-	sleep 100
 	ClipWait																			; sometimes there is delay for clipboard to populate
+	sleep 200
 	clk := parseClip(clipboard)															; get available values out of clipboard
 	return clk																			; Redundant? since this is what parseClip() returns
 }
