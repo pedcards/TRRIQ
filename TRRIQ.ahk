@@ -275,7 +275,7 @@ WQlist() {
 			continue
 		}
 		LV_Add(""
-			,e0.id
+			,id
 			,e0.date
 			,e0.sent
 			,e0.mrn
