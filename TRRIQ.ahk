@@ -930,7 +930,7 @@ findWQid(DT,MRN,name="") {
 	} else if IsObject(x := wq.selectSingleNode("//enroll[mrn='" MRN "']")) {						; or matches MRN only
 	} else if IsObject(x := wq.selectSingleNode("//enroll[name='" name "']")) {						; or neither, find matching name
 	}
-	return {id:x.getAttribute("ID"),node:x.parentNode.nodeName}										; will return null (error) if no match
+	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}										; will return null (error) if no match
 }
 
 scanTempfiles() {
