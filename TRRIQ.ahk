@@ -165,8 +165,6 @@ PhaseGUI:
 	Gui, Add, Button
 		, wp h40 vEnroll gPhaseTask
 		, Grab Preventice enrollments
-	;~ Gui, Add, Button, wp h40 vTempfile gPhaseTask, Scan tempfile to worklist
-	;~ Gui, Add, Button, wp h40 vFindlost gPhaseTask, Find returned devices
 	
 	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
 	Menu, menuSys, Add, Find returned devices, WQfindlost
@@ -267,14 +265,9 @@ WQlist() {
 	Progress,,,Scanning worklist...
 	Loop, % (ens:=wq.selectNodes("/root/pending/enroll")).length
 	{
-		e0 := []
 		k := ens.item(A_Index-1)
-		e0.date	:= k.selectSingleNode("date").text
-		e0.name	:= k.selectSingleNode("name").text
-		e0.mrn	:= k.selectSingleNode("mrn").text
-		e0.dev	:= RegExReplace(k.selectSingleNode("dev").text,"BodyGuardian","BG")
-		e0.prov	:= k.selectSingleNode("prov").text
-		e0.id	:= k.getAttribute("id")
+		id	:= k.getAttribute("id")
+		e0 := readWQ(id)
 		now := A_Now
 		dt := e0.date
 		dt -= now, Days
@@ -400,13 +393,13 @@ readWQ(idx) {
 	global wq
 	
 	k := wq.selectSingleNode("//enroll[@id='" idx "']")
-	date := k.selectSingleNode("date").text
-	mrn := k.selectSingleNode("mrn").text
-	name := k.selectSingleNode("name").text
-	dev := k.selectSingleNode("dev").text
-	prov := k.selectSingleNode("prov").text
-	
-	return {date:date,mrn:mrn,name:name,dev:dev,prov:prov}
+	return {  date:k.selectSingleNode("date").text
+			, mrn:k.selectSingleNode("mrn").text
+			, name:k.selectSingleNode("name").text
+			, dev:k.selectSingleNode("dev").text
+			, prov:k.selectSingleNode("prov").text
+			, site:k.selectSingleNode("site").text
+			, sent:k.selectSingleNode("sent").text }
 }
 
 FetchDem:
