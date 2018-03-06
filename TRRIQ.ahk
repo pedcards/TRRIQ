@@ -2654,11 +2654,12 @@ checkCrd(x) {
 }
 
 filterProv(x) {
+	locs := "(MAIN|BELLEVUE|EVERETT|TRI-CITIES|WENATCHEE|YAKIMA|TACOMA|SILVERDALE|GREAT FALLS)"
 	x := trim(x)																		; trim leading and trailing spaces
 	x := RegExReplace(x,"i)^Dr(\.)?(\s)?")												; remove preceding "(Dr. )Veronica..."
 	x := RegExReplace(x,"i)^[a-z](\.)?\s")												; remove preceding "(P. )Ruggerie, Dennis"
 	x := RegExReplace(x,"i)\s[a-z](\.)?$")												; remove trailing "Ruggerie, Dennis( P.)"
-	x := RegExReplace(x,"i)-(MAIN|BELLEVUE|EVERETT|TRI-CITIES|WENATCHEE|YAKIMA|TACOMA|SILVERDALE|GREAT FALLS)\s*,",",")
+	x := RegExReplace(x,"i)-" locs "\s*,",",")
 	x := RegExReplace(x,"i) (MD|DO)$")													; remove trailing "( MD)"
 	x := RegExReplace(x,"i) (MD|DO),",",")												; replace "Ruggerie MD, Dennis" with "Ruggerie, Dennis"
 	StringUpper,x,x,T																	; convert "RUGGERIE, DENNIS" to "Ruggerie, Dennis"
