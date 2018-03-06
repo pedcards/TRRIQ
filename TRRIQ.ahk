@@ -891,7 +891,8 @@ parseEnrollment(x) {
 		wq.addElement("name",newID,res.name)
 		wq.addElement("mrn",newID,res.mrn)
 		wq.addElement("dev",newID,res.dev)
-		wq.addElement("prov",newID,filterProv(res.prov))
+		wq.addElement("prov",newID,filterProv(res.prov).name)
+		wq.addElement("site",newID,filterProv(res.prov).site)
 		done ++
 		
 		if (res.prov~="-(TACOMA)\s*,") {												; Prov is in site not tracked in WQ
@@ -1495,7 +1496,7 @@ CheckProcLW:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct												; If want to force click, don't include Acct Num
-	ptDem["Provider"] := filterProv(chk.Prov)
+	ptDem["Provider"] := filterProv(chk.Prov).name
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
@@ -1592,7 +1593,7 @@ CheckProcPr2:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := filterProv(chk.Prov)
+	ptDem["Provider"] := filterProv(chk.Prov).name
 	ptDem["EncDate"] := chk.Date
 	ptDem["Indication"] := chk.Ind
 	
@@ -1849,7 +1850,7 @@ CheckProcZio:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := filterProv(chk.Prov)
+	ptDem["Provider"] := filterProv(chk.Prov).name
 	ptDem["EncDate"] := chk.DateStart
 	ptDem["Indication"] := chk.Ind
 	
@@ -2139,7 +2140,7 @@ CheckProcBGH:
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
 	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := filterProv(chk.Prov)
+	ptDem["Provider"] := filterProv(chk.Prov).name
 	ptDem["EncDate"] := chk.DateStart
 	ptDem["EndDate"] := chk.DateEnd
 	ptDem["Indication"] := chk.Ind
@@ -2655,16 +2656,18 @@ checkCrd(x) {
 }
 
 filterProv(x) {
-	locs := "(MAIN|BELLEVUE|EVERETT|TRI-CITIES|WENATCHEE|YAKIMA|TACOMA|SILVERDALE|GREAT FALLS)"
+	locs := "MAIN|BELLEVUE|EVERETT|TRI-CITIES|WENATCHEE|YAKIMA|TACOMA|SILVERDALE|GREAT FALLS"
+	RegExMatch(x,"i)-(" locs ")\s*,",site)
 	x := trim(x)																		; trim leading and trailing spaces
 	x := RegExReplace(x,"i)^Dr(\.)?(\s)?")												; remove preceding "(Dr. )Veronica..."
 	x := RegExReplace(x,"i)^[a-z](\.)?\s")												; remove preceding "(P. )Ruggerie, Dennis"
 	x := RegExReplace(x,"i)\s[a-z](\.)?$")												; remove trailing "Ruggerie, Dennis( P.)"
-	x := RegExReplace(x,"i)-" locs "\s*,",",")
+	x := RegExReplace(x,"i)-(" locs ")\s*,",",")
 	x := RegExReplace(x,"i) (MD|DO)$")													; remove trailing "( MD)"
 	x := RegExReplace(x,"i) (MD|DO),",",")												; replace "Ruggerie MD, Dennis" with "Ruggerie, Dennis"
 	StringUpper,x,x,T																	; convert "RUGGERIE, DENNIS" to "Ruggerie, Dennis"
-	return x
+	StringUpper,site1,site1,T
+	return {name:x, site:site1}
 }
 
 httpComm(verb) {
