@@ -149,7 +149,7 @@ PhaseGUI:
 	Gui, phase:Default
 	Gui, +AlwaysOnTop
 	
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv hwndHLV, Date Enrolled|MRN|Enrolled Name|Device|Provider|ID
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv hwndHLV, ID|Enrolled|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	WQlist()
 	
 	Gui, Add, Text, x630 y20 w200 h80
@@ -219,13 +219,13 @@ WQtask() {
 		return
 	}
 	Gui, phase:Hide
-	LV_GetText(idx, A_EventInfo,6)
+	LV_GetText(idx, A_EventInfo,1)
 	pt := readWQ(idx)
 	MsgBox, 4129, DELETE RECORD
 		, % "Delete this record?`n`n"
 		.	"  Name: 	" pt.Name "`n"
 		.	"  MRN:  	" pt.MRN "`n"
-		.	"  Date: 	" pt.date "`n"
+		.	"  Date: 	" niceDate(pt.date) "`n"
 		.	"  Provider: " pt.prov
 	IfMsgBox, OK
 	{
@@ -281,13 +281,23 @@ WQlist() {
 		if (instr(e0.dev,"BG") && (dt > -30)) {
 			continue
 		}
-		LV_Add("",e0.date,e0.mrn,e0.name,e0.dev,e0.prov,e0.id)
+		LV_Add(""
+			,e0.id
+			,e0.date
+			,e0.sent
+			,e0.mrn
+			,e0.name
+			,RegExReplace(e0.dev,"BodyGuardian","BG")
+			,e0.prov
+			,e0.site)
 	}
 	LV_ModifyCol()
-	LV_ModifyCol(1,"80 Desc")
-	LV_ModifyCol(3,160)
-	LV_ModifyCol(5,160)
-	LV_ModifyCol(6,"0")
+	LV_ModifyCol(1,"0")
+	LV_ModifyCol(2,"60 Desc")
+	LV_ModifyCol(2,"Sort")
+	LV_ModifyCol(3,"60")
+	LV_ModifyCol(5,140)
+	LV_ModifyCol(7,130)
 	progress, off
 	return
 }
