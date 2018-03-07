@@ -222,13 +222,16 @@ WQtask() {
 	if !(A_GuiEvent="DoubleClick") {
 		return
 	}
-	
+	Gui, ListView, %agc%
+	LV_GetText(idx, A_EventInfo,1)
+	if (idx="ID") {
+		return
+	}
 	global wq, user
 	
 	Gui, phase:Hide
-	Gui, ListView, %agc%
-	LV_GetText(idx, A_EventInfo,1)
 	pt := readWQ(idx)
+	idstr := "/root/pending/enroll[@id='" idx "']"
 	
 	choice := cmsgbox("Patient task"
 			,	"Which action on this patient?`n`n"
@@ -236,16 +239,35 @@ WQtask() {
 			.	"  MRN: " pt.MRN "`n"
 			.	"  Date: " niceDate(pt.date) "`n"
 			.	"  Provider: " pt.prov
-			, "Log upload to Preventice|Delete record"
+			, "Log upload to Preventice|Note communication|Delete record"
 			, "Q")
 	if (choice="Close") {
 		return
 	}
 	if instr(choice,"upload") {
-		wq.addElement("sent","/root/pending/enroll[@id='" idx "']",{user:user},substr(A_now,1,8))
+		wq.addElement("sent",idstr,{user:user},substr(A_now,1,8))
 		wq.save("worklist.xml")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
 		MsgBox, 4160, Logged, % pt.Name "`nUpload date logged!"
+		return
+	}
+	if instr(choice,"note") {
+		list :=
+		Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
+		{
+			k := notes.item(A_index-1)
+			list .= k.getAttribute("date") "/" k.getAttribute("user") ": " k.text "`n"
+		}
+		note := maxinput("Communication note", list "`nEnter a brief communication note",60)
+		if (note="") {
+			return
+		}
+		if !IsObject(wq.selectSingleNode(idstr "/notes")) {
+			wq.addElement("notes",idstr)
+		}
+		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
+		wq.save("worklist.xml")
+		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
 		return
 	}
 	if instr(choice,"delete") {
@@ -259,16 +281,7 @@ WQtask() {
 			return
 		}
 		if instr(reason,"Other") {
-			Loop
-			{
-				InputBox, reason, Clear record from worklist, Enter the reason for moving this record`n(Max 30 chars)
-				StringLen, addLength, reason
-				If (addLength > 30) {
-					MsgBox, 0, ERROR, String too long. Please explain in less than 30 chars.  	
-				} else {
-					break
-				}
-			}
+			reason := maxinput("Clear record from worklist","Enter the reason for moving this record",30)
 			if (reason="") {
 				return
 			}
@@ -277,6 +290,26 @@ WQtask() {
 		moveWQ(idx)
 	}
 return	
+}
+
+maxinput(title, prompt, max) {
+	Loop
+	{
+		prompt .= "`n(Max " max " chars)"
+		StrReplace(prompt,"`n","`n",lines)
+		InputBox, reason, % title, % prompt " " lines " lines",,400,% (lines*20)+150
+		StringLen, addLength, reason
+		If (addLength > max) {
+			MsgBox, 0, ERROR, % "String too long. Please explain in less than " max " chars." 	
+		} else {
+			break
+		}
+	}
+	if (reason="") {
+		return error
+	}
+	
+	return reason
 }
 
 WQlist() {
