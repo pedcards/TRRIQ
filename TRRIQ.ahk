@@ -215,24 +215,26 @@ PhaseTask:
 }
 
 WQtask() {
-	if !(A_GuiControl="WQlv") {
+	agc := A_GuiControl
+	if !instr(agc,"WQlv") {
 		return
 	}
 	if !(A_GuiEvent="DoubleClick") {
 		return
 	}
 	
-	global wq
+	global wq, user
 	
 	Gui, phase:Hide
+	Gui, ListView, %agc%
 	LV_GetText(idx, A_EventInfo,1)
 	pt := readWQ(idx)
 	
 	choice := cmsgbox("Patient task"
 			,	"Which action on this patient?`n`n"
 			.	pt.Name "`n"
-			.	"  MRN:  	" pt.MRN "`n"
-			.	"  Date: 	" niceDate(pt.date) "`n"
+			.	"  MRN: " pt.MRN "`n"
+			.	"  Date: " niceDate(pt.date) "`n"
 			.	"  Provider: " pt.prov
 			, "Log upload to Preventice|Delete record"
 			, "Q")
@@ -240,7 +242,7 @@ WQtask() {
 		return
 	}
 	if instr(choice,"upload") {
-		wq.addElement("sent","/root/pending/enroll[@id='" idx "']",substr(A_now,1,8))
+		wq.addElement("sent","/root/pending/enroll[@id='" idx "']",{user:user},substr(A_now,1,8))
 		wq.save("worklist.xml")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
 		MsgBox, 4160, Logged, % pt.Name "`nUpload date logged!"
