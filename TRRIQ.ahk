@@ -2718,17 +2718,19 @@ checkCrd(x) {
 }
 
 filterProv(x) {
-	locs := "MAIN|BELLEVUE|EVERETT|TRI-CITIES|WENATCHEE|YAKIMA|TACOMA|SILVERDALE|GREAT FALLS"
-	RegExMatch(x,"i)-(" locs ")\s*,",site)
+	global sites, sites0
+	
+	allsites := sites "|" sites0
+	RegExMatch(x,"i)-(" allsites ")\s*,",site)
 	x := trim(x)																		; trim leading and trailing spaces
 	x := RegExReplace(x,"i)^Dr(\.)?(\s)?")												; remove preceding "(Dr. )Veronica..."
 	x := RegExReplace(x,"i)^[a-z](\.)?\s")												; remove preceding "(P. )Ruggerie, Dennis"
 	x := RegExReplace(x,"i)\s[a-z](\.)?$")												; remove trailing "Ruggerie, Dennis( P.)"
-	x := RegExReplace(x,"i)-(" locs ")\s*,",",")
+	x := RegExReplace(x,"i)-(" allsites ")\s*,",",")									; remove "SCHMER(-YAKIMA), VERONICA"
 	x := RegExReplace(x,"i) (MD|DO)$")													; remove trailing "( MD)"
 	x := RegExReplace(x,"i) (MD|DO),",",")												; replace "Ruggerie MD, Dennis" with "Ruggerie, Dennis"
 	StringUpper,x,x,T																	; convert "RUGGERIE, DENNIS" to "Ruggerie, Dennis"
-	StringUpper,site1,site1,T
+	;~ StringUpper,site1,site1,T
 	return {name:x, site:site1}
 }
 
