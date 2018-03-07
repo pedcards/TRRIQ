@@ -280,30 +280,69 @@ return
 }
 
 WQlist() {
-	global wq
+	global
+	local k, ens, id, e0, now, dt, site
 	
 	Progress,,,Scanning worklist...
-	Loop, % (ens:=wq.selectNodes("/root/pending/enroll")).length
+	
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv0 hwndHLV0, ID|Enrolled|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+		LV_ModifyCol()
+		LV_ModifyCol(1,"0")
+		LV_ModifyCol(2,"60 Desc")
+		LV_ModifyCol(2,"Sort")
+		LV_ModifyCol(3,"60")
+		LV_ModifyCol(5,140)
+		LV_ModifyCol(7,130)
+	
+	Loop, parse, sites, |
 	{
-		k := ens.item(A_Index-1)
-		id	:= k.getAttribute("id")
-		e0 := readWQ(id)
-		now := A_Now
-		dt := e0.date
-		dt -= now, Days
-		if (instr(e0.dev,"BG") && (dt > -30)) {
-			continue
+		i := A_index
+		site := A_LoopField
+		Gui, Tab, % site
+		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|Uploaded|MRN|Enrolled Name|Device|Provider
+		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
+		{
+			k := ens.item(A_Index-1)
+			id	:= k.getAttribute("id")
+			e0 := readWQ(id)
+			now := A_Now
+			dt := e0.date
+			dt -= now, Days
+			if (instr(e0.dev,"BG") && (dt > -30)) {
+				continue
+			}
+			Gui, ListView, WQlv%i%
+			LV_Add(""
+				,id
+				,e0.date
+				,e0.sent
+				,e0.mrn
+				,e0.name
+				,RegExReplace(e0.dev,"BodyGuardian","BG")
+				,e0.prov
+				,e0.site)
+			Gui, ListView, WQlv0
+			LV_Add(""
+				,id
+				,e0.date
+				,e0.sent
+				,e0.mrn
+				,e0.name
+				,RegExReplace(e0.dev,"BodyGuardian","BG")
+				,e0.prov
+				,e0.site)
+			
 		}
-		LV_Add(""
-			,id
-			,e0.date
-			,e0.sent
-			,e0.mrn
-			,e0.name
-			,RegExReplace(e0.dev,"BodyGuardian","BG")
-			,e0.prov
-			,e0.site)
+		Gui, ListView, WQlv%i%
+		LV_ModifyCol()
+		LV_ModifyCol(1,"0")
+		LV_ModifyCol(2,"60 Desc")
+		LV_ModifyCol(2,"Sort")
+		LV_ModifyCol(3,"60")
+		LV_ModifyCol(5,140)
+		LV_ModifyCol(7,130)
 	}
+	Gui, ListView, WQlv0
 	LV_ModifyCol()
 	LV_ModifyCol(1,"0")
 	LV_ModifyCol(2,"60 Desc")
