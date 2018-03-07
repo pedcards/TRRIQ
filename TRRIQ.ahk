@@ -149,15 +149,15 @@ PhaseGUI:
 	Gui, phase:Destroy
 	Gui, phase:Default
 	Gui, +AlwaysOnTop
-	
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv hwndHLV, ID|Enrolled|Uploaded|MRN|Enrolled Name|Device|Provider|Site
-	WQlist()
-	
-	Gui, Add, Text, x630 y20 w200 h80
+
+	Gui, Add, Text, x650 y20 w200 h110
 		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
 		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n`n"
-		.	"Dbl-click a patient item to remove from list"
-	Gui, Add, GroupBox, x620 y0 w220 h86
+		.	"Dbl-click a patient item to:`n"
+		.	"  - Log upload to Preventice`n"
+		.	"  - Note communication`n"
+		.	"  - Delete a record"
+	Gui, Add, GroupBox, x640 y0 w220 h120
 	
 	Gui, Font, Bold
 	Gui, Add, Button
@@ -166,6 +166,10 @@ PhaseGUI:
 	Gui, Add, Button
 		, wp h40 vEnroll gPhaseTask
 		, Grab Preventice enrollments
+	Gui, Font, Normal
+	
+	Gui, Add, Tab3, -Wrap x10 y10 w620 h240 vWQtab, % "ALL|" sites						; add Tab bar with tracked sites
+	WQlist()
 	
 	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
 	Menu, menuSys, Add, Find returned devices, WQfindlost
