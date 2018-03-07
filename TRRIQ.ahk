@@ -94,7 +94,8 @@ if fileexist("worklist.xml") {
 scanTempfiles()
 
 demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
-
+sites := "MAIN|BELLEVUE|EVERETT|TRI-CITIES|WENATCHEE|YAKIMA|GREAT FALLS"				; sites we are tracking
+sites0 := "TACOMA|SILVERDALE"															; sites we are not tracking
 Loop
 {
 	Gosub PhaseGUI
