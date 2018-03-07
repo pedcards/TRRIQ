@@ -341,6 +341,7 @@ WQlist() {
 			now := A_Now
 			dt := e0.date
 			dt -= now, Days
+			e0.dev := RegExReplace(e0.dev,"BodyGuardian","BG")
 			if (instr(e0.dev,"BG") && (dt > -30)) {
 				continue
 			}
@@ -351,7 +352,7 @@ WQlist() {
 				,e0.sent
 				,e0.mrn
 				,e0.name
-				,RegExReplace(e0.dev,"BodyGuardian","BG")
+				,e0.dev
 				,e0.prov
 				,e0.site)
 			Gui, ListView, WQlv0
@@ -361,7 +362,7 @@ WQlist() {
 				,e0.sent
 				,e0.mrn
 				,e0.name
-				,RegExReplace(e0.dev,"BodyGuardian","BG")
+				,e0.dev
 				,e0.prov
 				,e0.site)
 			
