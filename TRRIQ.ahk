@@ -216,46 +216,59 @@ WQtask() {
 	if !(A_GuiEvent="DoubleClick") {
 		return
 	}
+	
+	global wq
+	
 	Gui, phase:Hide
 	LV_GetText(idx, A_EventInfo,1)
 	pt := readWQ(idx)
-	MsgBox, 4129, DELETE RECORD
-		, % "Delete this record?`n`n"
-		.	"  Name: 	" pt.Name "`n"
-		.	"  MRN:  	" pt.MRN "`n"
-		.	"  Date: 	" niceDate(pt.date) "`n"
-		.	"  Provider: " pt.prov
-	IfMsgBox, OK
-	{
+	
+	choice := cmsgbox("Patient task"
+			,	"Which action on this patient?`n`n"
+			.	pt.Name "`n"
+			.	"  MRN:  	" pt.MRN "`n"
+			.	"  Date: 	" niceDate(pt.date) "`n"
+			.	"  Provider: " pt.prov
+			, "Log upload to Preventice|Delete record"
+			, "Q")
+	if (choice="Close") {
+		return
+	}
+	if instr(choice,"upload") {
+		wq.addElement("sent","/root/pending/enroll[@id='" idx "']",substr(A_now,1,8))
+		wq.save("worklist.xml")
+		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
+		MsgBox, 4160, Logged, % pt.Name "`nUpload date logged!"
+		return
+	}
+	if instr(choice,"delete") {
 		reason := cmsgbox("Reason"
 				, "What is the reason to remove this record from the active worklist?"
 				, "Report in CIS|"
 				. "Device missing|"
 				. "Other (explain)"
 				, "Q")
-	} else {
-		return
-	}
-	if (reason="Close") {
-		return
-	}
-	if instr(reason,"Other") {
-		Loop
-		{
-			InputBox, reason, Clear record from worklist, Enter the reason for moving this record`n(Max 30 chars)
-			StringLen, addLength, reason
-			If (addLength > 30) {
-				MsgBox, 0, ERROR, String too long. Please explain in less than 30 chars.  	
-			} else {
-				break
-			}
-		}
-		if (reason="") {
+		if (reason="Close") {
 			return
 		}
+		if instr(reason,"Other") {
+			Loop
+			{
+				InputBox, reason, Clear record from worklist, Enter the reason for moving this record`n(Max 30 chars)
+				StringLen, addLength, reason
+				If (addLength > 30) {
+					MsgBox, 0, ERROR, String too long. Please explain in less than 30 chars.  	
+				} else {
+					break
+				}
+			}
+			if (reason="") {
+				return
+			}
+		}
+		eventlog(idx " Move from WQ: " reason)
+		moveWQ(idx)
 	}
-	eventlog(idx " Move from WQ: " reason)
-	moveWQ(idx)
 return	
 }
 
