@@ -276,7 +276,7 @@ WQtask() {
 				, "Report in CIS|"
 				. "Device missing|"
 				. "Other (explain)"
-				, "Q")
+				, "E")
 		if (reason="Close") {
 			return
 		}
@@ -286,8 +286,12 @@ WQtask() {
 				return
 			}
 		}
-		eventlog(idx " Move from WQ: " reason)
+		if !IsObject(wq.selectSingleNode(idstr "/notes")) {
+			wq.addElement("notes",idstr)
+		}
+		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},"MOVED: " reason)
 		moveWQ(idx)
+		eventlog(idx " Move from WQ: " reason)
 	}
 return	
 }
