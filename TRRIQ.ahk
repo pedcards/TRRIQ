@@ -2835,6 +2835,17 @@ ObjHasValue(aObj, aValue, rx:="") {
     return, false, errorlevel := 1
 }
 
+strQ(var1,txt) {
+/*	Print Query - Returns text based on presence of var
+	var1	= var to query
+	txt		= text to return with ### on spot to insert var1 if present
+*/
+	if (var1="") {
+		return error
+	}
+	return RegExReplace(txt,"###",var1)
+}
+
 eventlog(event) {
 	global user
 	comp := A_ComputerName
