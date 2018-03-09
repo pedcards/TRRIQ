@@ -238,10 +238,25 @@ WQtask() {
 			.	pt.Name "`n"
 			.	"  MRN: " pt.MRN "`n"
 			.	"  Date: " niceDate(pt.date) "`n"
-			.	"  Provider: " pt.prov
-			, "Log upload to Preventice|Note communication|Delete record"
+			.	"  Provider: " pt.prov "`n"
+			.	strQ(pt.FedEx,"  FedEx: ###`n")
+			, "Add FedEx tracking number|"
+			. "Log upload to Preventice|"
+			. "Note communication|"
+			. "Delete record"
 			, "Q")
 	if (choice="Close") {
+		return
+	}
+	if instr(choice,"FedEx") {
+		InputBox, fedex, FedEx, Enter FedEx tracking number,,,,,,,,% pt.FedEx
+		if (fedex="") {
+			return
+		}
+		wq.setText(idstr "/fedex",fedex)
+		wq.setAtt(idstr "/fedex", {user:user, date:substr(A_now,1,8)})
+		wq.save("worklist.xml")
+		eventlog(pt.MRN "[" pt.Date "] FedEx tracking #" fedex)
 		return
 	}
 	if instr(choice,"upload") {
