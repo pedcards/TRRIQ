@@ -240,23 +240,11 @@ WQtask() {
 			.	"  Date: " niceDate(pt.date) "`n"
 			.	"  Provider: " pt.prov "`n"
 			.	strQ(pt.FedEx,"  FedEx: ###`n")
-			, "Add FedEx tracking number|"
-			. "Log upload to Preventice|"
-			. "Note communication|"
-			. "Delete record"
+			, "NOTE communication|"
+			. "Log UPLOAD to Preventice|"
+			. "DELETE record"
 			, "Q")
 	if (choice="Close") {
-		return
-	}
-	if instr(choice,"FedEx") {
-		InputBox, fedex, FedEx, Enter FedEx tracking number,,,,,,,,% pt.FedEx
-		if (fedex="") {
-			return
-		}
-		wq.setText(idstr "/fedex",fedex)
-		wq.setAtt(idstr "/fedex", {user:user, date:substr(A_now,1,8)})
-		wq.save("worklist.xml")
-		eventlog(pt.MRN "[" pt.Date "] FedEx tracking #" fedex)
 		return
 	}
 	if instr(choice,"upload") {
@@ -279,6 +267,19 @@ WQtask() {
 		}
 		if !IsObject(wq.selectSingleNode(idstr "/notes")) {
 			wq.addElement("notes",idstr)
+		}
+		if (RegExMatch(note,"((\d\s*){12})",fedex)) {
+			MsgBox,4132,, % "FedEx tracking number?`n" fedex1
+			IfMsgBox, Yes
+			{
+				fedex := RegExReplace(fedex1," ")
+				if !IsObject(wq.selectSingleNode(idstr "/fedex")) {
+					wq.addElement("fedex",idstr)
+				}
+				wq.setText(idstr "/fedex",fedex)
+				wq.setAtt(idstr "/fedex", {user:user, date:substr(A_now,1,8)})
+				eventlog(pt.MRN "[" pt.Date "] FedEx tracking #" fedex)
+			}
 		}
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
 		wq.save("worklist.xml")
