@@ -248,7 +248,11 @@ WQtask() {
 		return
 	}
 	if instr(choice,"upload") {
-		wq.addElement("sent",idstr,{user:user},substr(A_now,1,8))
+		if !IsObject(wq.selectSingleNode(idstr "/sent")) {
+			wq.addElement("sent",idstr)
+		}
+		wq.setText(idstr "/sent",substr(A_now,1,8))
+		wq.setAtt(idstr "/sent",{user:user})
 		wq.save("worklist.xml")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
 		MsgBox, 4160, Logged, % pt.Name "`nUpload date logged!"
@@ -338,21 +342,14 @@ WQlist() {
 	
 	Progress,,,Scanning worklist...
 	
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv0 hwndHLV0, ID|Enrolled|Uploaded|MRN|Enrolled Name|Device|Provider|Site
-		LV_ModifyCol()
-		LV_ModifyCol(1,"0")
-		LV_ModifyCol(2,"60 Desc")
-		LV_ModifyCol(2,"Sort")
-		LV_ModifyCol(3,"60")
-		LV_ModifyCol(5,140)
-		LV_ModifyCol(7,130)
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv0 hwndHLV0, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
 	Loop, parse, sites, |
 	{
 		i := A_index
 		site := A_LoopField
 		Gui, Tab, % site
-		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
 		{
 			k := ens.item(A_Index-1)
@@ -368,8 +365,9 @@ WQlist() {
 			Gui, ListView, WQlv%i%
 			LV_Add(""
 				,id
-				,e0.date
-				,e0.sent
+				,parseDate(e0.date).MM "/" parseDate(e0.date).DD
+				,strQ(e0.fedex,"X")
+				,strQ(e0.sent,parseDate(e0.date).MM "/" parseDate(e0.date).DD)
 				,e0.mrn
 				,e0.name
 				,e0.dev
@@ -378,8 +376,9 @@ WQlist() {
 			Gui, ListView, WQlv0
 			LV_Add(""
 				,id
-				,e0.date
-				,e0.sent
+				,parseDate(e0.date).MM "/" parseDate(e0.date).DD
+				,strQ(e0.fedex,"X")
+				,strQ(e0.sent,parseDate(e0.date).MM "/" parseDate(e0.date).DD)
 				,e0.mrn
 				,e0.name
 				,e0.dev
@@ -392,18 +391,20 @@ WQlist() {
 		LV_ModifyCol(1,"0")
 		LV_ModifyCol(2,"60 Desc")
 		LV_ModifyCol(2,"Sort")
-		LV_ModifyCol(3,"60")
-		LV_ModifyCol(5,140)
-		LV_ModifyCol(7,130)
+		LV_ModifyCol(3,"40")
+		LV_ModifyCol(4,"60")
+		LV_ModifyCol(6,140)
+		LV_ModifyCol(8,130)
 	}
 	Gui, ListView, WQlv0
 	LV_ModifyCol()
 	LV_ModifyCol(1,"0")
 	LV_ModifyCol(2,"60 Desc")
 	LV_ModifyCol(2,"Sort")
-	LV_ModifyCol(3,"60")
-	LV_ModifyCol(5,140)
-	LV_ModifyCol(7,130)
+	LV_ModifyCol(3,"40")
+	LV_ModifyCol(4,"60")
+	LV_ModifyCol(6,140)
+	LV_ModifyCol(8,130)
 	progress, off
 	return
 }
@@ -2897,6 +2898,9 @@ parseDate(x) {
 	if (x~="\d{4}-\d{2}-\d{2}") {												; 2017-02-11
 		StringSplit, DT, x, -
 		return {"YYYY":DT1, "MM":DT2, "DD":DT3}
+	}
+	if (x~="\d{8}") {
+		return {"YYYY":substr(x,1,4), "MM":substr(x,5,2), "DD":substr(x,7,2)}
 	}
 	if (x~="\d{2}-\d{2}-\d{4}") {												; 02-11-2017
 		StringSplit, DT, x, -
