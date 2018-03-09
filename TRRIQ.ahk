@@ -489,14 +489,16 @@ WQfindclose() {
 readWQ(idx) {
 	global wq
 	
+	res := []
 	k := wq.selectSingleNode("//enroll[@id='" idx "']")
-	return {  date:k.selectSingleNode("date").text
-			, mrn:k.selectSingleNode("mrn").text
-			, name:k.selectSingleNode("name").text
-			, dev:k.selectSingleNode("dev").text
-			, prov:k.selectSingleNode("prov").text
-			, site:k.selectSingleNode("site").text
-			, sent:k.selectSingleNode("sent").text }
+	Loop, % (ch:=k.selectNodes("*")).Length
+	{
+		i := ch.item(A_index-1)
+		node := i.nodeName
+		val := i.text
+		res[node]:=val
+	}
+	return res
 }
 
 FetchDem:
