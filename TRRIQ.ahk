@@ -365,9 +365,9 @@ WQlist() {
 			Gui, ListView, WQlv%i%
 			LV_Add(""
 				,id
-				,parseDate(e0.date).MM "/" parseDate(e0.date).DD
+				,e0.date																;~ ,parseDate(e0.date).MM "/" parseDate(e0.date).DD
 				,strQ(e0.fedex,"X")
-				,strQ(e0.sent,parseDate(e0.date).MM "/" parseDate(e0.date).DD)
+				,e0.sent																;~ ,strQ(e0.sent,parseDate(e0.date).MM "/" parseDate(e0.date).DD)
 				,e0.mrn
 				,e0.name
 				,e0.dev
@@ -376,9 +376,9 @@ WQlist() {
 			Gui, ListView, WQlv0
 			LV_Add(""
 				,id
-				,parseDate(e0.date).MM "/" parseDate(e0.date).DD
+				,e0.date																;~ ,parseDate(e0.date).MM "/" parseDate(e0.date).DD
 				,strQ(e0.fedex,"X")
-				,strQ(e0.sent,parseDate(e0.date).MM "/" parseDate(e0.date).DD)
+				,e0.sent																;~ ,strQ(e0.sent,parseDate(e0.date).MM "/" parseDate(e0.date).DD)
 				,e0.mrn
 				,e0.name
 				,e0.dev
