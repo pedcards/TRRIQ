@@ -249,10 +249,16 @@ WQtask() {
 		return
 	}
 	if instr(choice,"upload") {
+		InputBox ,inDT,Upload log,`n`nEnter date uploaded to Preventice,,,,,,,,% niceDate(A_now)
+		if (ErrorLevel) {
+			return
+		}
+		tmp := parseDate(inDT)
+		dt := tmp.YYYY tmp.MM tmp.DD
 		if !IsObject(wq.selectSingleNode(idstr "/sent")) {
 			wq.addElement("sent",idstr)
 		}
-		wq.setText(idstr "/sent",substr(A_now,1,8))
+		wq.setText(idstr "/sent",dt)
 		wq.setAtt(idstr "/sent",{user:user})
 		wq.save("worklist.xml")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
