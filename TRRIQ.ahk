@@ -28,7 +28,7 @@ SplitPath, A_ScriptDir,,fileDir
 user := A_UserName
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
-	chip := httpComm("full")
+	chip := httpComm("","full")
 	FileDelete, .\Chipotle\currlist.xml
 	FileAppend, % chip, .\Chipotle\currlist.xml
 	isAdmin := true
@@ -2791,19 +2791,20 @@ filterProv(x) {
 	return {name:x, site:site1}
 }
 
-httpComm(verb) {
-	; consider two parameters?
-	;~ global servFold
-	servfold := "patlist"
-	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr
-		whr.Open("GET"															; set the http verb to GET file "change"
-			, "https://depts.washington.edu/pedcards/change/direct.php?" 
+httpComm(url:="",verb:="") {
+	global servFold
+	if (url="") {
+		url := "https://depts.washington.edu/pedcards/change/direct.php?" 
 				. ((servFold="testlist") ? "test=true&" : "") 
 				. "do=" . verb
+	}
+	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr
+		whr.Open("GET"															; set the http verb to GET file "change"
+			, url
 			, true)
 		whr.Send()																; SEND the command to the address
-		whr.WaitForResponse()	
-	return whr.ResponseText													; the http response
+		whr.WaitForResponse()													; and wait for
+	return whr.ResponseText														; the http response
 }
 
 cleancolon(ByRef txt) {
