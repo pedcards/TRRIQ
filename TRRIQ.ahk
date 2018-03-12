@@ -174,6 +174,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
 	Menu, menuSys, Add, Find returned devices, WQfindlost
 	Menu, menuSys, Add, Find close matches, WQfindclose
+	Menu, menuSys, Add, Show GeoIP info, showGeoIP
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -471,6 +472,9 @@ WQfindreturned() {
 }
 
 WQfindclose() {
+/*	This may be a redundant function
+	Consider removing
+*/
 	global wq
 	
 	loop, % (pend := wq.selectNodes("/root/pending/enroll")).Length
@@ -500,6 +504,14 @@ WQfindclose() {
 		}
 	}
 	progress, off
+	return
+}
+
+showGeoIP() {
+	geo := httpComm("http://api.geoiplookup.net")
+	MsgBox % "IP: " A_IPAddress1 "`n"
+		.	"-------------`n"
+		.	geo
 	return
 }
 
