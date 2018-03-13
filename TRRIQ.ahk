@@ -932,7 +932,7 @@ CheckPrEnroll:
 			}
 		}
 		if (instr(clip,"Enrollment Queue (Submitted)")) {
-			list := stregX(clip,"patient name.*mrn.*[\r\n]*.*physician",1,1,"add new patient",1)
+			list := clip
 			done:=parseEnrollment(list)
 			if !(done) {
 				MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
