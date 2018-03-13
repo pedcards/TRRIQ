@@ -967,14 +967,14 @@ grabWebpage(title) {
 
 parseEnrollment(x) {
 	global wq
-	x .= "<<<"
+	
 	Loop
 	{
-		blk := stregX(x,"Patient Enrollment",n,1,"Patient Enrollment|<<<",1,n)
+		blk := stregX(x,"Patient Enrollment",n,1,"Dr\..*?[\r\n]",0,n)
 		if !(blk) {
 			break
 		}
-		blk := RegExReplace(blk,"[\r\n]+")
+		blk := trim(RegExReplace(blk,"[\r\n]+")," `r`n")
 		fields := ["^"
 				,"\d{6,7}"
 				,"\d{1,2}/\d{1,2}/\d{2,4}"
