@@ -152,12 +152,12 @@ PhaseGUI:
 
 	Gui, Add, Text, x650 y20 w200 h110
 		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n`n"
-		.	"Dbl-click a patient item to:`n"
-		.	"  - Log upload to Preventice`n"
-		.	"  - Note communication`n"
-		.	"  - Delete a record"
-	Gui, Add, GroupBox, x640 y0 w220 h120
+		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) 
+		;~ .	"Dbl-click a patient item to:`n"
+		;~ .	"  - Log upload to Preventice`n"
+		;~ .	"  - Note communication`n"
+		;~ .	"  - Delete a record"
+	Gui, Add, GroupBox, x640 y0 w220 h60
 	
 	Gui, Font, Bold
 	Gui, Add, Button
@@ -166,6 +166,9 @@ PhaseGUI:
 	Gui, Add, Button
 		, wp h40 vEnroll gPhaseTask
 		, Grab Preventice enrollments
+	Gui, Add, Button
+		, wp h40 vUpload gPhaseTask
+		, Prepare/Upload Holter
 	Gui, Font, Normal
 	
 	Gui, Add, Tab3, -Wrap x10 y10 w620 h240 vWQtab, % "ALL|" sites						; add Tab bar with tracked sites
