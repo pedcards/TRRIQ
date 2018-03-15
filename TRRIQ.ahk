@@ -138,7 +138,10 @@ Loop
 		
 		;~ Reload
 	}
-
+	if (phase="Upload") {
+		eventlog("Start Mortara preparation/upload.")
+		gosub MortaraUpload
+	}
 }
 
 ExitApp
@@ -1108,6 +1111,24 @@ scanTempfiles() {
 	wq.save("worklist.xml")
 	eventlog("Scanned " files " files, " count " DONE records added.")
 return "Scanned " files " files, " count " DONE records added."
+}
+
+MortaraUpload:
+{
+	Loop
+	{
+		if (muWinID := winexist("FreeCommander")) {		;"Mortara Web Upload")) {
+			WinGetClass, muWinClass, ahk_id %muWinID%
+			break
+		}
+		MsgBox, 262193, Inject demographics, Must launch Mortara Web Upload program!
+		IfMsgBox Cancel 
+		{
+			return
+		}
+	}
+	MsgBox % muWinClass
+	ExitApp
 }
 
 zybitSet:
