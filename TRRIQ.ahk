@@ -1144,13 +1144,34 @@ MortaraUpload()
 		line += 5 - 100*(line>100)
 	}
 */
+	muWinTxt := mu.txt
+	if instr(muWinTxt,"Prepare recorder media", true) {
+		muTRtxt := stregX(muWinTxt ">>>"," Transfer Recording ",1,0," Prepare Recorder Media |>>>",1)
+			muTRser := substr(stregX(muTRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
+			muTRser := muTRser ? muTRser : ""
+		muPRtxt := stregX(muWinTxt ">>>"," Prepare Recorder Media ",1,0," Recordings |>>>",1)
+			muPRser := substr(stregX(muPRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
+			muPRser := muTRser ? muTRser : ""
+		;~ muPRser := "52427"																; ****************
+		
+		loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length
+		{
+			i := sn.item(A_index-1)
+			j := strX(i.text," ",0,1,"",0)
+			if (muPRser=j) {																; S/N already registered, this must be an upload
+				snName := i.ParentNode.selectSingleNode("name").text
+				muPrepare := false
+			}
+		}
+		muPrepare := true
+		
+		
 		;~ MsgBox, 262192, Start NEW patient, Click OK when ready to inject demographic information
-	if instr(muWinText,"Prepare recorder media", true) {
-		muUI := MortaraTempRead()
 		ptDem := Object()																; New enroll needs demographics
 		gosub fetchGUI																	; Grab it first
 		gosub fetchDem
-		MsgBox here
+		
+		ExitApp
 	}
 	ExitApp
 	
