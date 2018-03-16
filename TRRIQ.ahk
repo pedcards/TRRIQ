@@ -1150,6 +1150,27 @@ MortaraUpload()
 	}
 	ExitApp
 	
+id := WinExist("Mortara Web Upload")
+
+WinGet, muWinText, ControlList, ahk_id %id%
+
+Loop, parse, % muWinText, `r`n
+{
+	fld := A_LoopField
+	ControlGetText, txt, %fld%, ahk_id %id%
+	ControlGetPos, mx, my, mw, mh, %A_LoopField%, ahk_id %id%
+	fld := RegExReplace(fld,"WindowsForms10.")
+	fld := RegExReplace(fld,"app.0.33c0d9d","..")
+	
+	out .= "[" mx "," my "," mw "," mh "] " fld ": '" txt "'`n"
+	;~ MsgBox,,% A_loopfield, % txt
+}
+
+Clipboard := out
+
+MsgBox % out
+
+ExitApp
 }
 
 zybitSet:
