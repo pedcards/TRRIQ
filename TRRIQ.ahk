@@ -1115,12 +1115,9 @@ return "Scanned " files " files, " count " DONE records added."
 
 MortaraUpload()
 {
-	global wq, muTempTxt
+	global wq
 	
-	muUI := MortaraTempRead()
-	MsgBox % muTempTxt
-	ExitApp
-	
+	mu := MortaraTempRead()
 /*
 	Loop																				; Do until Web Upload program is running
 	{
@@ -1181,7 +1178,7 @@ ExitApp
 }
 
 MortaraTempRead() {
-	global muTempTxt
+	;~ global muTempTxt
 	q := {}
 	muTempTxt := 
 
@@ -1204,6 +1201,8 @@ MortaraTempRead() {
 		q[A_index] := el
 		muTempTxt .= val "`n"
 	}
+	q.txt := muTempTxt
+	
 	return q
 }
 
