@@ -1115,7 +1115,11 @@ return "Scanned " files " files, " count " DONE records added."
 
 MortaraUpload()
 {
-	global wq
+	global wq, muTempTxt
+	
+	muUI := MortaraTempRead()
+	MsgBox % muTempTxt
+	ExitApp
 	
 	Loop																				; Do until Web Upload program is running
 	{
@@ -1143,6 +1147,7 @@ MortaraUpload()
 	}
 		;~ MsgBox, 262192, Start NEW patient, Click OK when ready to inject demographic information
 	if instr(muWinText,"Prepare recorder media", true) {
+		muUI := MortaraTempRead()
 		ptDem := Object()																; New enroll needs demographics
 		gosub fetchGUI																	; Grab it first
 		gosub fetchDem
@@ -1172,6 +1177,35 @@ MsgBox % out
 
 ExitApp
 }
+
+MortaraTempRead() {
+	global muTempTxt
+	q := {}
+	muTempTxt := 
+
+	FileRead, txt, files\muWinTransferPrepare.txt
+	loop, parse, txt, `n, `r
+	{
+		i := A_LoopField
+		j := A_index
+		if !(i) {
+			break
+		}
+		coord := stregx(i,"\[",1,1,"\]",1,n)
+			mx := stregX(coord,"",1,0,",",1,nn)
+			my := stregx(coord,",",nn,1,",",1,nn)
+			mw := stregx(coord,",",nn,1,",",1,nn)
+			mh := stregx(coord,",",nn,1,"$",0)
+		str := stregx(i," ",n,1,":",1,n)
+		val := trim(stregx(i," ",n,1,"$",0,n),"'")
+		el := {x:mx,y:my,w:mw,h:mh,str:str,val:val}
+		q[A_index] := el
+		muTempTxt .= val "`n"
+	}
+	return q
+}
+
+;~ MortaraUIfind(
 
 zybitSet:
 {
