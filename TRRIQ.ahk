@@ -1121,6 +1121,7 @@ MortaraUpload()
 	MsgBox % muTempTxt
 	ExitApp
 	
+/*
 	Loop																				; Do until Web Upload program is running
 	{
 		;~ if (muWinID := winexist("Mortara Web Upload")) {								; Break out of loop when window present
@@ -1145,6 +1146,7 @@ MortaraUpload()
 		Sleep, 500
 		line += 5 - 100*(line>100)
 	}
+*/
 		;~ MsgBox, 262192, Start NEW patient, Click OK when ready to inject demographic information
 	if instr(muWinText,"Prepare recorder media", true) {
 		muUI := MortaraTempRead()
