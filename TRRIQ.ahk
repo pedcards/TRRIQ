@@ -140,7 +140,7 @@ Loop
 	}
 	if (phase="Upload") {
 		eventlog("Start Mortara preparation/upload.")
-		gosub MortaraUpload
+		MortaraUpload()
 	}
 }
 
@@ -1113,22 +1113,43 @@ scanTempfiles() {
 return "Scanned " files " files, " count " DONE records added."
 }
 
-MortaraUpload:
+MortaraUpload()
 {
-	Loop
+	global wq
+	
+	Loop																				; Do until Web Upload program is running
 	{
-		if (muWinID := winexist("FreeCommander")) {		;"Mortara Web Upload")) {
-			WinGetClass, muWinClass, ahk_id %muWinID%
+		;~ if (muWinID := winexist("Mortara Web Upload")) {								; Break out of loop when window present
+		if (muWinID := winexist("Mortara Web Upload")) {								; Break out of loop when window present
+			WinGetClass, muWinClass, ahk_id %muWinID%									; Grab WinClass string for processing
 			break
 		}
-		MsgBox, 262193, Inject demographics, Must launch Mortara Web Upload program!
+		MsgBox, 262193, Inject demographics, Must launch Mortara Web Upload program!	; Otherwise remind to launch program
 		IfMsgBox Cancel 
 		{
-			return
+			return																		; Can cancel out of this process if desired
 		}
 	}
-	MsgBox % muWinClass
+	
+	Loop																				; Do until either Upload or Prepare window text is present
+	{
+		progress, % line,, Waiting for device info screen...
+		WinGetText, muWinText, ahk_id %muWinID%
+		if instr(muWinText,"complete the form below") {									; Window text found
+			break																		; Break out of loop
+		}
+		Sleep, 500
+		line += 5 - 100*(line>100)
+	}
+		;~ MsgBox, 262192, Start NEW patient, Click OK when ready to inject demographic information
+	if instr(muWinText,"Prepare recorder media", true) {
+		ptDem := Object()																; New enroll needs demographics
+		gosub fetchGUI																	; Grab it first
+		gosub fetchDem
+		MsgBox here
+	}
 	ExitApp
+	
 }
 
 zybitSet:
