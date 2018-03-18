@@ -1255,6 +1255,42 @@ MorUIfind(val,start) {
 	return el
 }
 
+MorUIfield(val,start) {
+/*	el = element (x,y,w,h,str,val)
+	var = pixels +/- variance
+	start = where in mu_ui to start
+	returns windows control names of next elements in line
+*/
+	global mu_UI
+	qx := []
+	el := MorUIfind(val,start)
+	var := 5
+	
+	loop, % mu_UI.MaxIndex()
+	{
+		if (A_index<start) {
+			continue
+		}
+		i := mu_UI[A_Index]
+		if !(i.str~="i)EDIT|Button|COMBOBOX") {
+			continue
+		}
+		if (i.x < el.x+el.w) {
+			continue
+		}
+		if ((i.y>el.y-var) and (i.y<el.y+var)) {
+			q .= substr("000" i.x,-3) "- " A_index "`n"
+		}
+	}
+	sort, q
+	loop, parse, q, `n
+	{
+		res := strx(A_LoopField,"- ",1,2,"`n",1)
+		qx.push(mu_UI[res].str)
+	}
+	return qx
+}
+
 zybitSet:
 {
 	Loop
