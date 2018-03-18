@@ -1187,11 +1187,14 @@ MortaraUpload()
 		}
 		eventlog("Indications entered.")
 		
-		;~ ExitApp
+		Vals := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
+				,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
+				,"Gender":ptDem["Sex"],"DOB":ptDem["DOB"]
+				,"Referring Physician":ptDem["Provider"],"Hookup Tech":user
+				,"Indications":ptDem["Indications"]}
+		
+		MorUIfill(vals,muPRct,muWinID)
 	}
-	el := MorUIfield("dob",muPRct)
-	MsgBox % el.2
-	ExitApp
 	
 }
 
@@ -1277,7 +1280,7 @@ MorUIfield(val,start) {
 /*	el = element (x,y,w,h,str,val)
 	var = pixels +/- variance
 	start = where in mu_ui to start
-	returns windows control names of next elements in line
+	returns array of windows control names of next elements in line
 */
 	global mu_UI
 	qx := []
