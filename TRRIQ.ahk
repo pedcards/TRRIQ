@@ -1115,9 +1115,9 @@ return "Scanned " files " files, " count " DONE records added."
 
 MortaraUpload()
 {
-	global wq
+	global wq, mu_UI
 	
-	mu := MortaraTempRead()
+	mu_UI := MorTempRead()
 /*
 	Loop																				; Do until Web Upload program is running
 	{
@@ -1143,18 +1143,24 @@ MortaraUpload()
 		Sleep, 500
 		line += 5 - 100*(line>100)
 	}
+	
+	Use ControlGet to determine which tab is clicked
+	User clicks on ID field to start, identifies which control and page
+	
 */
-	muWinTxt := mu.txt
+	muWinTxt := mu_UI.txt
 	if instr(muWinTxt,"Prepare recorder media", true) {
-		muTRtxt := stregX(muWinTxt ">>>"," Transfer Recording ",1,0," Prepare Recorder Media |>>>",1)
+		muTRtxt := stregX(muWinTxt ">>>"," Transfer Recording ",1,0," Prepare Recorder Media |>>>",1,n)
 			muTRser := substr(stregX(muTRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
 			muTRser := muTRser ? muTRser : ""
-		muPRtxt := stregX(muWinTxt ">>>"," Prepare Recorder Media ",1,0," Recordings |>>>",1)
+			muTRct := countlines(muWinTxt,n)
+		muPRtxt := stregX(muWinTxt ">>>"," Prepare Recorder Media ",1,0," Recordings |>>>",1,n)
 			muPRser := substr(stregX(muPRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
-			muPRser := muTRser ? muTRser : ""
+			muPRser := muPRser ? muPRser : ""
+			muPRct := countlines(muWinTxt,RegExMatch(muWinTxt," Prepare Recorder Media "))
 		;~ muPRser := "52427"																; ****************
 		
-		loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length
+		loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length						; Check if S/N is in use
 		{
 			i := sn.item(A_index-1)
 			j := strX(i.text," ",0,1,"",0)
@@ -1171,13 +1177,15 @@ MortaraUpload()
 		gosub fetchGUI																	; Grab it first
 		gosub fetchDem
 		
-		ExitApp
+		;~ ExitApp
 	}
+	el := MorUIfield("dob",muPRct)
+	MsgBox % el.2
 	ExitApp
 	
 }
 
-MortaraTempRead() {
+MorTempRead() {
 	;~ global muTempTxt
 	q := {}
 	muTempTxt := 
@@ -1206,7 +1214,7 @@ MortaraTempRead() {
 	return q
 }
 
-MortaraUIfind() {
+MorUIgrab() {
 id := WinExist("Mortara Web Upload")
 
 WinGet, muWinText, ControlList, ahk_id %id%
