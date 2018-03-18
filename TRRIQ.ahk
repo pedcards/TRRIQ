@@ -3031,6 +3031,15 @@ strQ(var1,txt) {
 	return RegExReplace(txt,"###",var1)
 }
 
+countlines(hay,n) {
+	hay := substr(hay,1,n)
+	loop, parse, hay, `n, `r
+	{
+		max := A_Index
+	}
+	return max
+}
+
 eventlog(event) {
 	global user
 	comp := A_ComputerName
