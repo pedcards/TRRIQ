@@ -1230,6 +1230,31 @@ MsgBox % out
 ExitApp
 }
 
+MorUIfind(val,start) {
+/*	val = string to find, e.g. "First Name"
+	start = starting index for TR vs PR
+	returns object element matching val string
+*/
+	global mu_UI
+	
+	loop, % mu_UI.maxIndex()
+	{
+		if (A_index<start) {
+			continue
+		}
+		el := mu_UI[A_Index]
+		if (val=trim(el.val," :")) {
+			idx := A_Index
+			break
+		}
+	}
+	if !(idx) {
+		return
+	}
+	
+	return el
+}
+
 zybitSet:
 {
 	Loop
