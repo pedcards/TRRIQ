@@ -1312,6 +1312,27 @@ MorUIfield(val,start) {
 	return qx
 }
 
+MorUIfill(fields,start,win) {
+/*	fields = array of labels:values to fill
+	start = starting line
+	win = winID to use
+*/
+	WinActivate, ahk_id %win%
+	for key,val in fields
+	{
+		el := MorUIfield(key,start)
+		if (key="DOB") {
+			dt := breakDate(val)
+			ControlSetText, % el[2], % dt.DD, ahk_id %win%
+			ControlSetText, % el[3], % dt.MMM, ahk_id %win%
+			ControlSetText, % el[4], % dt.YYYY, ahk_id %win%
+			continue
+		}
+		ControlSetText, % el[1], %val%, ahk_id %win%
+	}
+	return
+}
+
 zybitSet:
 {
 	Loop
