@@ -1171,8 +1171,6 @@ MortaraUpload()
 		}
 		muPrepare := true
 		
-		
-		;~ MsgBox, 262192, Start NEW patient, Click OK when ready to inject demographic information
 		ptDem := Object()																; New enroll needs demographics
 		gosub fetchGUI																	; Grab it first
 		gosub fetchDem
@@ -1194,8 +1192,20 @@ MortaraUpload()
 				,"Indications":ptDem["Indications"]}
 		
 		MorUIfill(vals,muPRct,muWinID)
+		
+		id := A_TickCount 
+		wq.addElement("enroll","/root/pending",{id:id})
+		newID := "/root/pending/enroll[@id='" id "']"
+		wq.addElement("date",newID,substr(A_Now1,8))
+		wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
+		wq.addElement("mrn",newID,ptDem["mrn"])
+		wq.addElement("dev",newID,"Mortara H3+ - " muPRser)
+		wq.addElement("prov",newID,ptDem["Provider"])
+		wq.addElement("site",newID,ptDem["loc"])
+		wq.save("worklist.xml")
 	}
 	
+	return
 }
 
 MorTempRead() {
