@@ -1117,11 +1117,9 @@ MortaraUpload()
 {
 	global wq, mu_UI
 	
-	mu_UI := MorTempRead()
-/*
+	;~ mu_UI := MorTempRead()
 	Loop																				; Do until Web Upload program is running
 	{
-		;~ if (muWinID := winexist("Mortara Web Upload")) {								; Break out of loop when window present
 		if (muWinID := winexist("Mortara Web Upload")) {								; Break out of loop when window present
 			WinGetClass, muWinClass, ahk_id %muWinID%									; Grab WinClass string for processing
 			break
@@ -1143,10 +1141,8 @@ MortaraUpload()
 		Sleep, 500
 		line += 5 - 100*(line>100)
 	}
-	
-	Use ControlGet to determine which tab is clicked
+/*	Use ControlGet to determine which tab is clicked
 	User clicks on ID field to start, identifies which control and page
-	
 */
 	muWinTxt := mu_UI.txt
 	if instr(muWinTxt,"Prepare recorder media", true) {
