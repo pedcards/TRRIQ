@@ -1328,7 +1328,7 @@ MorUIfill(fields,start,win) {
 	{
 		el := MorUIfield(key,start)
 		if (key="DOB") {
-			dt := breakDate(val)
+			dt := parseDate(val)
 			ControlSetText, % el[2], % dt.DD, ahk_id %win%
 			ControlSetText, % el[3], % dt.MMM, ahk_id %win%
 			ControlSetText, % el[4], % dt.YYYY, ahk_id %win%
