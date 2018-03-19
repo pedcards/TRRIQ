@@ -1339,47 +1339,6 @@ MorUIfill(fields,start,win) {
 	return
 }
 
-zybitSet:
-{
-	Loop
-	{
-		if (zyWinId := WinExist("ahk_exe ZybitRemote.exe")) {
-			break
-		}
-		MsgBox, 262193, Inject demographics, Must run Zybit Holter program!
-		IfMsgBox Cancel
-			ExitApp
-	}
-	Loop
-	{
-		if (zyNewId := WinExist("New Patient - Demographics")) {
-			break
-		}
-		MsgBox, 262192, Start NEW patient, Click OK when ready to inject demographic information
-	}
-	zyVals := {"Edit1":ptDem["nameL"],"Edit2":ptDem["nameF"]
-				,"Edit4":ptDem["Sex"],"Edit5":ptDem["DOB"]
-				,"Edit6":ptDem["mrn"],"Edit8":ptDem["Account number"]
-				,"Edit7":ptDem["loc"]
-				,"Edit9":indChoices
-				,"Edit11":ptDem["Provider"],"Edit12":user }
-	
-	zybitFill(zyNewId,zyVals)
-	
-	; Log the entry?
-	
-	return
-}
-
-zybitFill(win,fields) {
-	WinActivate, ahk_id %win%
-	for key,val in fields
-	{
-		ControlSetText, %key%, %val%, ahk_id %win%
-	}
-	return
-}
-
 MainLoop:
 {
 /*	This main loop accepts a %fileIn% filename,
