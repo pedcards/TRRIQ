@@ -1234,27 +1234,34 @@ MorTempRead() {
 }
 
 MorUIgrab() {
-id := WinExist("Mortara Web Upload")
+	id := WinExist("Mortara Web Upload")
+	q := {}
+	WinGet, WinText, ControlList, ahk_id %id%
 
-WinGet, muWinText, ControlList, ahk_id %id%
-
-Loop, parse, % muWinText, `r`n
-{
-	fld := A_LoopField
-	ControlGetText, txt, %fld%, ahk_id %id%
-	ControlGetPos, mx, my, mw, mh, %A_LoopField%, ahk_id %id%
-	fld := RegExReplace(fld,"WindowsForms10.")
-	fld := RegExReplace(fld,"app.0.33c0d9d","..")
+	Loop, parse, % WinText, `r`n
+	{
+		str := A_LoopField
+		if !(str) {
+			break
+		}
+		ControlGetText, val, %str%, ahk_id %id%
+		ControlGetPos, mx, my, mw, mh, %str%, ahk_id %id%
+		if (val=" Transfer Recording ") {
+			TRct := A_index
+		}
+		if (val=" Prepare Recorder Media ") {
+			PRct := A_Index
+		}
+		;~ str := RegExReplace(str,"WindowsForms10.")
+		;~ str := RegExReplace(str,"app.0.33c0d9d","..")
+		el := {x:mx,y:my,w:mw,h:mh,str:str,val:val}
+		q[A_index] := el
+	}
+	q.txt := WinText
+	q.TRct := TRct
+	q.PRct := PRct
 	
-	out .= "[" mx "," my "," mw "," mh "] " fld ": '" txt "'`n"
-	;~ MsgBox,,% A_loopfield, % txt
-}
-
-Clipboard := out
-
-MsgBox % out
-
-ExitApp
+	return q
 }
 
 MorUIfind(val,start) {
@@ -3132,7 +3139,7 @@ parseDate(x) {
 		return {"MMM":DT1, "MM":zDigit(objHasValue(mo,DT1)), "DD":zDigit(trim(DT2,",")),"YYYY":DT3
 			,	hr:zDigit((DT5~="i)p")?(DHM1+12):DHM1),min:DHM2}
 	}
-	if (x~="\d{1,2}/\d{1,2}/\d{2,4) \d{2}/\d{2}")										; 12/15/1969 16:39
+	if (x~="\d{1,2}/\d{1,2}/\d{2,4) \d{2}/\d{2}") {										; 12/15/1969 16:39
 		StringSplit, DT, x, %A_Space%
 		StringSplit, DY, DT1, /
 		StringSplit, DHM, DT2, :
