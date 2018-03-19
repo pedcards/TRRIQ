@@ -1115,9 +1115,10 @@ return "Scanned " files " files, " count " DONE records added."
 
 MortaraUpload()
 {
-	global wq, mu_UI
+	global wq, mu_UI, ptDem
 	
 	;~ mu_UI := MorTempRead()
+
 	Loop																				; Do until Web Upload program is running
 	{
 		if (muWinID := winexist("Mortara Web Upload")) {								; Break out of loop when window present
@@ -1141,6 +1142,7 @@ MortaraUpload()
 		Sleep, 500
 		line += 5 - 100*(line>100)
 	}
+*/
 /*	Use ControlGet to determine which tab is clicked
 	User clicks on ID field to start, identifies which control and page
 */
@@ -1149,18 +1151,18 @@ MortaraUpload()
 		muTRtxt := stregX(muWinTxt ">>>"," Transfer Recording ",1,0," Prepare Recorder Media |>>>",1,n)
 			muTRser := substr(stregX(muTRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
 			muTRser := muTRser ? muTRser : ""
-			muTRct := countlines(muWinTxt,n)
+			muTRct := mu_UI.TRct
 		muPRtxt := stregX(muWinTxt ">>>"," Prepare Recorder Media ",1,0," Recordings |>>>",1,n)
 			muPRser := substr(stregX(muPRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
 			muPRser := muPRser ? muPRser : ""
-			muPRct := countlines(muWinTxt,RegExMatch(muWinTxt," Prepare Recorder Media "))
-		;~ muPRser := "52427"																; ****************
+			muPRct := mu_UI.PRct
+		;~ muPRser := "52427"															; ****************
 		
-		loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length						; Check if S/N is in use
+		loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length					; Check if S/N is in use
 		{
 			i := sn.item(A_index-1)
 			j := strX(i.text," ",0,1,"",0)
-			if (muPRser=j) {																; S/N already registered, this must be an upload
+			if (muPRser=j) {															; S/N already registered, this must be an upload
 				snName := i.ParentNode.selectSingleNode("name").text
 				muPrepare := false
 			}
@@ -1172,12 +1174,11 @@ MortaraUpload()
 		gosub fetchDem
 		Loop
 		{
-			if (ptDem.Indication) {													; loop until we have filled indChoices
+			if (ptDem.Indication) {														; loop until we have filled indChoices
 				break
 			}
 			gosub indGUI
 			WinWaitClose, Enter indications
-			break
 		}
 		eventlog("Indications entered.")
 		
