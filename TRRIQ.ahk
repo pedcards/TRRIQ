@@ -3154,29 +3154,34 @@ parseDate(x) {
 	}
 	if (x~="\d{1,2}_\d{1,2}_\d{2,4}") {											; 03_06_17 or 03_06_2017
 		StringSplit, DT, x, _
-		return {"MM":zDigit(DT1), "DD":zDigit(DT2), "MMM":mo[DT2], "YYYY":year4dig(DT3)}
+		return {"MM":zDigit(DT1), "DD":zDigit(DT2), "MMM":mo[DT1], "YYYY":year4dig(DT3)}
 	}
 	if (x~="\d{4}-\d{2}-\d{2}") {												; 2017-02-11
 		StringSplit, DT, x, -
-		return {"YYYY":DT1, "MM":DT2, "DD":DT3}
+		return {"YYYY":DT1, "MM":DT2, "MMM":mo[DT2], "DD":DT3}
 	}
-	if (x~="\d{8}") {
-		return {"YYYY":substr(x,1,4), "MM":substr(x,5,2), "DD":substr(x,7,2)}
+	if (x~="\d{8}") {																	; 20170211
+		return {"YYYY":substr(x,1,4), "MM":substr(x,5,2), "MMM":mo[substr(x,5,2)], "DD":substr(x,7,2)}
 	}
-	if (x~="\d{2}-\d{2}-\d{4}") {												; 02-11-2017
+	if (x~="\d{2}-\d{2}-\d{4}") {														; 02-11-2017
 		StringSplit, DT, x, -
-		return {"MM":DT1, "DD":DT2, "YYYY":DT3}
+		return {"MM":DT1, "MMM":mo[DT1], "DD":DT2, "YYYY":DT3}
 	}
 	if (x~="i)^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2}, \d{4}") {			; Mar 9, 2015 (8:33 am)?
 		StringSplit, DT, x, %A_Space%
 		StringSplit, DHM, DT4, :
-		return {"MM":zDigit(objHasValue(mo,DT1)),"DD":zDigit(trim(DT2,",")),"YYYY":DT3
+		return {"MMM":DT1, "MM":zDigit(objHasValue(mo,DT1)), "DD":zDigit(trim(DT2,",")),"YYYY":DT3
 			,	hr:zDigit((DT5~="i)p")?(DHM1+12):DHM1),min:DHM2}
 	}
-	StringSplit, DT, x, %A_Space%
-	StringSplit, DY, DT1, /
-	StringSplit, DHM, DT2, :
-	return {"MM":zDigit(DY1), "DD":zDigit(DY2), "YYYY":year4dig(DY3), "hr":zDigit(DHM1), "min":zDigit(DHM2), "Date":DT1, "Time":DT2}
+	if (x~="\d{1,2}/\d{1,2}/\d{2,4) \d{2}/\d{2}")										; 12/15/1969 16:39
+		StringSplit, DT, x, %A_Space%
+		StringSplit, DY, DT1, /
+		StringSplit, DHM, DT2, :
+		return {"MM":zDigit(DY1), "DD":zDigit(DY2), "YYYY":year4dig(DY3)
+				, "hr":zDigit(DHM1), "min":zDigit(DHM2), "Date":DT1, "Time":DT2}
+	}
+	
+	return error
 }
 
 niceDate(x) {
