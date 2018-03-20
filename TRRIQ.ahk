@@ -1168,10 +1168,8 @@ MortaraUpload()
 			j := strX(i.text," ",0,1,"",0)
 			if (muPRser=j) {															; S/N already registered, this must be an upload
 				snName := i.ParentNode.selectSingleNode("name").text
-				muPrepare := false
 			}
 		}
-		muPrepare := true
 		
 		ptDem := Object()																; New enroll needs demographics
 		gosub fetchGUI																	; Grab it first
