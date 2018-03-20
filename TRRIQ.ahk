@@ -1135,8 +1135,8 @@ MortaraUpload()
 	Loop																				; Do until either Upload or Prepare window text is present
 	{
 		progress, % line,, Waiting for device info screen...
-		WinGetText, muWinText, ahk_id %muWinID%
-		if instr(muWinText,"complete the form below") {									; Window text found
+		WinGetText, muWinTxt, ahk_id %muWinID%
+		if instr(muWinTxt,"complete the form below") {									; Window text found
 			break																		; Break out of loop
 		}
 		Sleep, 500
@@ -1145,8 +1145,11 @@ MortaraUpload()
 */
 /*	Use ControlGet to determine which tab is clicked
 	User clicks on ID field to start, identifies which control and page
+	ControlGet, tabnum, Tab, , WindowsForms10.SysTabControl32.app.0.33c0d9d1 
+
 */
-	muWinTxt := mu_UI.txt
+	;~ muWinTxt := mu_UI.txt
+	MsgBox % muWinTxt
 	if instr(muWinTxt,"Prepare recorder media", true) {
 		muTRtxt := stregX(muWinTxt ">>>"," Transfer Recording ",1,0," Prepare Recorder Media |>>>",1,n)
 			muTRser := substr(stregX(muTRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
