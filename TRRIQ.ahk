@@ -1662,6 +1662,7 @@ CheckProcPr2:
 {
 	eventlog("CheckProcPr")
 	chk.Name := strVal(demog,"Name","\R")												; Name
+		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")							; Filter out 
 		chk.Last := trim(strX(chk.Name,"",1,1,",",1,1)," `r`n")								; NameL				must be [A-Z]
 		chk.First := trim(strX(chk.Name,",",1,1,"",0)," `r`n")								; NameF				must be [A-Z]
 	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
@@ -1925,6 +1926,7 @@ ZioArrField(txt,fld) {
 CheckProcZio:
 {
 	chk.Name := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
+		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")									; Filter out 
 		chk.Last := trim(strX(chk.Name, "", 1,1, ",", 1,1))
 		chk.First := trim(strX(chk.Name, ", ", 1,2, "", 0))
 	chk.DOB := RegExReplace(strVal(demog,"Date of Birth","Patient ID"),"\s+\(.*(yrs|mos)\)")		; DOB
@@ -2228,6 +2230,7 @@ Return
 CheckProcBGH:
 {
 	chk.Name := strVal(demog,"Patient Name","Patient ID")										; Name
+		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")									; Filter out JR
 		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")									; NameL				must be [A-Z]
 		chk.Last := trim(strX(chk.Name," ",0,1,"",0)," `r`n")										; NameF				must be [A-Z]
 	chk.MRN := strVal(demog,"Patient ID","Physician")											; MRN
