@@ -909,6 +909,24 @@ indSubmit:
 	return
 }
 
+getDem:
+{
+	ptDem := Object()																	; New enroll needs demographics
+	gosub fetchGUI																		; Grab it first
+	gosub fetchDem
+	Loop
+	{
+		if (ptDem.Indication) {															; loop until we have filled indChoices
+			break
+		}
+		gosub indGUI
+		WinWaitClose, Enter indications
+	}
+	eventlog("Indications entered.")
+	
+	return
+}
+
 CheckPrEnroll:
 {
 	browser := WinExist("Firefox")
