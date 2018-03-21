@@ -1181,7 +1181,41 @@ MortaraUpload()
 			muTRser := substr(stregX(muTRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
 			muTRser := muTRser ? muTRser : ""
 			muTRct := mu_UI.TRct
+		
+		loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length					; Check if S/N is in use
+		{
+			i := sn.item(A_index-1)
+			j := strX(i.text," ",0,1,"",0)
+			if (muTRser=j) {															; Node exists in wq
+				wqTR := i.parentNode													; Select the <enroll>
+				eventlog(muTRser " Mortara pre-registered.")
+				break
+			}
+		}
+		if IsObject(wqTR) {																; Node exists...
+			if IsObject(wqTR.selectSingleNode("acct")) {								; ...and valid
+				pt := readwq(wqTR.getAtt("id"))
+				ptDem["mrn"] := pt.mrn													; fill ptDem[] with values
+				ptDem["loc"] := pt.site
+				ptDem["Account Number"] := pt.acct
+				ptDem["nameL"] := pt.name
+				ptDem["nameF"] := pt.name
+				ptDem["Sex"] := pt.sex
+				ptDem["dob"] := pt.dob
+				ptDem["Provider"] := pt.prov
+				ptDem["Indications" := pt.ind
+			} else {																	; Node exists, but not valid
+				removeNode()
+				gosub getDem
+			}
+		}
+		Vals := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
+				,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
+				,"Gender":ptDem["Sex"],"DOB":ptDem["DOB"]
+				,"Referring Physician":ptDem["Provider"],"Hookup Tech":user
+				,"Indications":ptDem["Indications"]}
 	}
+				
 	if (muTabnum=2) {																	; PREPARE MEDIA TAB
 		muPRtxt := stregX(muWinTxt ">>>"," Prepare Recorder Media ",1,0," Recordings |>>>",1,n)
 			muPRser := substr(stregX(muPRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
