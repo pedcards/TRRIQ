@@ -1188,31 +1188,11 @@ MortaraUpload()
 			muPRser := muPRser ? muPRser : ""
 			muPRct := mu_UI.PRct
 		
-		;~ loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length					; Check if S/N is in use
-		;~ {
-			;~ i := sn.item(A_index-1)
-			;~ j := strX(i.text," ",0,1,"",0)
-			;~ if (muPRser=j) {															; S/N already registered, this must be an upload
-				;~ snName := i.ParentNode.selectSingleNode("name").text
-			;~ }
-		;~ }
 		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" muPRser "']") {
 			eventlog(muPRser " Mortara pre-registered.")
-			; remove node?
+			removeNode()
 		}
-		
-		ptDem := Object()																; New enroll needs demographics
-		gosub fetchGUI																	; Grab it first
-		gosub fetchDem
-		Loop
-		{
-			if (ptDem.Indication) {														; loop until we have filled indChoices
-				break
-			}
-			gosub indGUI
-			WinWaitClose, Enter indications
-		}
-		eventlog("Indications entered.")
+		gosub getDem
 		
 		Vals := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
 				,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
@@ -1228,9 +1208,13 @@ MortaraUpload()
 		wq.addElement("date",newID,substr(A_Now1,8))
 		wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
 		wq.addElement("mrn",newID,ptDem["mrn"])
+		wq.addElement("sex",newID,ptDem["Sex"])
+		wq.addElement("dob",newID,ptDem["dob"])
 		wq.addElement("dev",newID,"Mortara H3+ - " muPRser)
 		wq.addElement("prov",newID,ptDem["Provider"])
 		wq.addElement("site",newID,ptDem["loc"])
+		wq.addElement("acct",newID,ptDem["Account Number"]
+		wq.addElement("ind",newID,ptDem["Indications"]
 		wq.save("worklist.xml")
 	}
 	
