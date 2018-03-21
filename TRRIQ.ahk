@@ -1170,13 +1170,17 @@ MortaraUpload()
 			muPRser := muPRser ? muPRser : ""
 			muPRct := mu_UI.PRct
 		
-		loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length					; Check if S/N is in use
-		{
-			i := sn.item(A_index-1)
-			j := strX(i.text," ",0,1,"",0)
-			if (muPRser=j) {															; S/N already registered, this must be an upload
-				snName := i.ParentNode.selectSingleNode("name").text
-			}
+		;~ loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length					; Check if S/N is in use
+		;~ {
+			;~ i := sn.item(A_index-1)
+			;~ j := strX(i.text," ",0,1,"",0)
+			;~ if (muPRser=j) {															; S/N already registered, this must be an upload
+				;~ snName := i.ParentNode.selectSingleNode("name").text
+			;~ }
+		;~ }
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" muPRser "']") {
+			eventlog(muPRser " Mortara pre-registered.")
+			; remove node?
 		}
 		
 		ptDem := Object()																; New enroll needs demographics
