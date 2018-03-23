@@ -640,10 +640,10 @@ mouseGrab(x,y) {
 	BlockInput, On																		; Prevent extraneous input
 	MouseMove, %x%, %y%, 0																; Goto coordinates
 	Click 2																				; Double-click
-	BlockInput, Off																		; Permit input again
 	ClipWait																			; sometimes there is delay for clipboard to populate
 	sleep 200
 	clk := parseClip(clipboard)															; get available values out of clipboard
+	BlockInput, Off																		; Permit input again
 	return clk																			; Redundant? since this is what parseClip() returns
 }
 
