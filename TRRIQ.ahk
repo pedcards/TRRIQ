@@ -1380,13 +1380,33 @@ MorUIfill(fields,start,win) {
 		el := MorUIfield(key,start)
 		if (key="DOB") {
 			dt := parseDate(val)
-			ControlSetText, % el[2], % dt.DD, ahk_id %win%
-			ControlSetText, % el[3], % dt.MMM, ahk_id %win%
-			ControlSetText, % el[4], % dt.YYYY, ahk_id %win%
+			uiFieldFill(el[2],dt.DD,win)
+			uiFieldFill(el[3],dt.MMM,win)
+			uiFieldFill(el[4],dt.YYYY,win)
 			continue
 		}
-		ControlSetText, % el[1], %val%, ahk_id %win%
+		;~ ControlSetText, % el[1], %val%, ahk_id %win%
+		uiFieldFill(el[1],val,win)
 	}
+	return
+}
+
+UiFieldFill(fld,val,win) {
+	cb := []
+	if instr(fld,"COMBOBOX") {
+		MsgBox % val
+		ControlGet, cbox, List,, % fld, ahk_id %win%
+		loop, parse, cbox, `n
+		{
+			cb[A_index] := A_LoopField
+		}
+		ControlSetText, % fld, % val, ahk_id %win%
+		Control, Choose, % ObjHasValue(cb,val), % fld, ahk_id %win%
+		return
+	}
+	
+	ControlSetText, % fld, % val, ahk_id %win%
+	
 	return
 }
 
