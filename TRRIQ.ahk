@@ -1387,7 +1387,6 @@ MorUIfill(fields,start,win) {
 			uiFieldFill(el[4],dt.YYYY,win)
 			continue
 		}
-		;~ ControlSetText, % el[1], %val%, ahk_id %win%
 		uiFieldFill(el[1],val,win)
 	}
 	return
@@ -1395,6 +1394,7 @@ MorUIfill(fields,start,win) {
 
 UiFieldFill(fld,val,win) {
 	cb := []
+	ControlSetText, % fld, % val, ahk_id %win%
 	if instr(fld,"COMBOBOX") {
 		MsgBox % val
 		ControlGet, cbox, List,, % fld, ahk_id %win%
@@ -1402,13 +1402,8 @@ UiFieldFill(fld,val,win) {
 		{
 			cb[A_index] := A_LoopField
 		}
-		ControlSetText, % fld, % val, ahk_id %win%
 		Control, Choose, % ObjHasValue(cb,val), % fld, ahk_id %win%
-		return
 	}
-	
-	ControlSetText, % fld, % val, ahk_id %win%
-	
 	return
 }
 
