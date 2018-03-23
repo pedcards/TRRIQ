@@ -603,7 +603,7 @@ FetchDem:
 					Gui, fetch:hide
 					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2]).value						; grab remaining demographic values
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2]).value
-					ptDem["Sex"] := substr(mouseGrab(mdX[3],mdY[1]).value,1,1)
+					ptDem["Sex"] := mouseGrab(mdX[3],mdY[1]).value
 					eventlog("MouseGrab other fields. MRN=" ptDem["MRN"] " DOB=" ptDem["DOB"] " Sex=" ptDem["Sex"] ".")
 					
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
@@ -806,7 +806,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	ptDem.EncDate := EncDt
 	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 					; valid names
 			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8}") 						; valid MRN and Acct numbers
-			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="[MF]") 		; valid DOB and Sex
+			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="^[MF]") 		; valid DOB and Sex
 			&& (ptDem["Loc"]) && (ptDem["Type"])													; Loc and type is not null
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])								; prov any string, encDate not null
 	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
