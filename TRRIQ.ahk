@@ -1195,7 +1195,7 @@ MortaraUpload()
 				ptDem["Sex"] := pt.sex
 				ptDem["dob"] := pt.dob
 				ptDem["Provider"] := pt.prov
-				ptDem["Indications"] := pt.ind
+				ptDem["Indication"] := pt.ind
 			} else {																	; Node exists, but not valid
 				;~ removeNode()
 				gosub getDem
@@ -1204,8 +1204,8 @@ MortaraUpload()
 		Vals := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
 				,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
 				,"Gender":ptDem["Sex"],"DOB":ptDem["DOB"]
-				,"Referring Physician":ptDem["Provider"],"Hookup Tech":user
-				,"Indications":ptDem["Indications"]}
+				,"Referring Physician":ptDem["Provider"],"Hookup Tech":A_UserName
+				,"Indications":RegExReplace(ptDem["Indication"],"\|",";")}
 	}
 				
 	if (muTabnum=2) {																	; PREPARE MEDIA TAB
@@ -1223,8 +1223,8 @@ MortaraUpload()
 		Vals := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
 				,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
 				,"Gender":ptDem["Sex"],"DOB":ptDem["DOB"]
-				,"Referring Physician":ptDem["Provider"],"Hookup Tech":user
-				,"Indications":ptDem["Indications"]}
+				,"Referring Physician":ptDem["Provider"],"Hookup Tech":A_UserName
+				,"Indications":RegExReplace(ptDem["Indication"],"\|",";")}
 		
 		MorUIfill(vals,muPRct,muWinID)
 		
@@ -1243,7 +1243,7 @@ MortaraUpload()
 		wq.addElement("prov",newID,ptDem["Provider"])
 		wq.addElement("site",newID,ptDem["loc"])
 		wq.addElement("acct",newID,ptDem["Account Number"])
-		wq.addElement("ind",newID,ptDem["Indications"])
+		wq.addElement("ind",newID,ptDem["Indication"])
 		wq.save("worklist.xml")
 	}
 	
@@ -1396,7 +1396,6 @@ UiFieldFill(fld,val,win) {
 	cb := []
 	ControlSetText, % fld, % val, ahk_id %win%
 	if instr(fld,"COMBOBOX") {
-		MsgBox % val
 		ControlGet, cbox, List,, % fld, ahk_id %win%
 		loop, parse, cbox, `n
 		{
