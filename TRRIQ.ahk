@@ -3245,6 +3245,13 @@ ThousandsSep(x, s=",") {
 	return RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
 }
 
+RemoveNode(node) {
+	global wq
+	q := wq.selectSingleNode(node)
+	q.parentNode.removeChild(q)
+	return
+}
+
 #Include CMsgBox.ahk
 #Include xml.ahk
 #Include sift3.ahk
