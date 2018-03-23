@@ -1152,25 +1152,18 @@ MortaraUpload()
 	
 	Loop																				; Do until either Upload or Prepare window text is present
 	{
-		;~ progress, % line,, Select the Waiting for device info screen...
-		;~ WinGetText, muWinTxt, ahk_id %muWinID%
-		;~ if instr(muWinTxt,"complete the form below") {								; Window text found
-			;~ break																	; Break out of loop
-		;~ }
-		;~ Sleep, 500
-		;~ line += 5 - 100*(line>100)
+		MsgBox, 262193, Inject demographics
+			, Select the device activity,`nTransfer or Prepare Holter
+		IfMsgBox Cancel 
+		{
+			return																		; Can cancel out of this process if desired
+		}
 		ControlGet , muTabnum, Tab, 													; Wait until a tab is selected
 			, WindowsForms10.SysTabControl32.app.0.33c0d9d1
 			, ahk_id %muWinID%
 		if (muTabnum) {																	; Tab is selected
 			WinGetText, muWinTxt, ahk_id %muWinID%										; Get winText
 			break																		; Break out of loop
-		}
-		MsgBox, 262193, Inject demographics
-			, Select the device activity,`nTransfer or Prepare Holter
-		IfMsgBox Cancel 
-		{
-			return																		; Can cancel out of this process if desired
 		}
 	}
 	mu_UI := MorUIgrab()
