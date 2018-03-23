@@ -1196,9 +1196,9 @@ MortaraUpload()
 				ptDem["Sex"] := pt.sex
 				ptDem["dob"] := pt.dob
 				ptDem["Provider"] := pt.prov
-				ptDem["Indications" := pt.ind
+				ptDem["Indications"] := pt.ind
 			} else {																	; Node exists, but not valid
-				removeNode()
+				;~ removeNode()
 				gosub getDem
 			}
 		}
@@ -1215,9 +1215,9 @@ MortaraUpload()
 			muPRser := muPRser ? muPRser : ""
 			muPRct := mu_UI.PRct
 		
-		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" muPRser "']") {
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" muPRser "']")) {
 			eventlog(muPRser " Mortara pre-registered.")
-			removeNode()
+			;~ removeNode()
 		}
 		gosub getDem
 		
@@ -1240,8 +1240,8 @@ MortaraUpload()
 		wq.addElement("dev",newID,"Mortara H3+ - " muPRser)
 		wq.addElement("prov",newID,ptDem["Provider"])
 		wq.addElement("site",newID,ptDem["loc"])
-		wq.addElement("acct",newID,ptDem["Account Number"]
-		wq.addElement("ind",newID,ptDem["Indications"]
+		wq.addElement("acct",newID,ptDem["Account Number"])
+		wq.addElement("ind",newID,ptDem["Indications"])
 		wq.save("worklist.xml")
 	}
 	
