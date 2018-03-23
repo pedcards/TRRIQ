@@ -3180,6 +3180,10 @@ parseDate(x) {
 		StringSplit, DT, x, -
 		return {"MM":DT1, "MMM":mo[DT1], "DD":DT2, "YYYY":DT3}
 	}
+	if (x~="\d{2}/\d{2}/\d{4}") {														; 02/11/2017
+		StringSplit, DT, x, /
+		return {"MM":DT1, "MMM":mo[DT1], "DD":DT2, "YYYY":DT3}
+	}
 	if (x~="i)^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2}, \d{4}") {			; Mar 9, 2015 (8:33 am)?
 		StringSplit, DT, x, %A_Space%
 		StringSplit, DHM, DT4, :
