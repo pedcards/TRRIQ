@@ -914,6 +914,9 @@ getDem:
 	ptDem := Object()																	; New enroll needs demographics
 	gosub fetchGUI																		; Grab it first
 	gosub fetchDem
+	if (fetchQuit=true) {
+		return
+	}
 	Loop
 	{
 		if (ptDem.Indication) {															; loop until we have filled indChoices
@@ -1133,7 +1136,7 @@ return "Scanned " files " files, " count " DONE records added."
 
 MortaraUpload()
 {
-	global wq, mu_UI, ptDem
+	global wq, mu_UI, ptDem, fetchQuit
 	
 	Loop																				; Do until Web Upload program is running
 	{
@@ -1219,6 +1222,10 @@ MortaraUpload()
 			removeNode("/root/pending/enroll[dev='" muPRser "']")
 		}
 		gosub getDem
+		if (fetchQuit=true) {
+			fetchQuit:=false
+			return
+		}
 		
 		Vals := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
 				,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
@@ -1228,13 +1235,14 @@ MortaraUpload()
 		
 		MorUIfill(vals,muPRct,muWinID)
 		
-		clkbut := MorUIfind("Set Clock...",muPRct)
-		ControlClick,,Set Clock...
+		ControlGet, clkbut, HWND,, Set Clock...
+		sleep 500
+		ControlClick,, ahk_id %clkbut%,,,,NA
 		
 		id := A_TickCount 
 		wq.addElement("enroll","/root/pending",{id:id})
 		newID := "/root/pending/enroll[@id='" id "']"
-		wq.addElement("date",newID,substr(A_Now1,8))
+		wq.addElement("date",newID,substr(A_Now,1,8))
 		wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
 		wq.addElement("mrn",newID,ptDem["mrn"])
 		wq.addElement("sex",newID,ptDem["Sex"])
@@ -1245,6 +1253,8 @@ MortaraUpload()
 		wq.addElement("acct",newID,ptDem["Account Number"])
 		wq.addElement("ind",newID,ptDem["Indication"])
 		wq.save("worklist.xml")
+		
+		WinWaitClose, Set Recorder Time
 	}
 	
 	return
