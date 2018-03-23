@@ -1135,8 +1135,6 @@ MortaraUpload()
 {
 	global wq, mu_UI, ptDem
 	
-	;~ mu_UI := MorTempRead()
-
 	Loop																				; Do until Web Upload program is running
 	{
 		if (muWinID := winexist("Mortara Web Upload")) {								; Break out of loop when window present
@@ -1166,9 +1164,10 @@ MortaraUpload()
 			break																		; Break out of loop
 		}
 	}
+	
 	mu_UI := MorUIgrab()
 	muWinTxt := mu_UI.txt
-*/
+	
 	if (muTabnum=1) {																	; TRANSFER RECORDING TAB
 		muTRtxt := stregX(muWinTxt ">>>"," Transfer Recording ",1,0," Prepare Recorder Media |>>>",1,n)
 			muTRser := substr(stregX(muTRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
@@ -1217,7 +1216,7 @@ MortaraUpload()
 		
 		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" muPRser "']")) {
 			eventlog(muPRser " Mortara pre-registered.")
-			;~ removeNode()
+			removeNode("/root/pending/enroll[dev='" muPRser "']")
 		}
 		gosub getDem
 		
@@ -1228,6 +1227,9 @@ MortaraUpload()
 				,"Indications":ptDem["Indications"]}
 		
 		MorUIfill(vals,muPRct,muWinID)
+		
+		clkbut := MorUIfind("Set Clock...",muPRct)
+		ControlClick,,Set Clock...
 		
 		id := A_TickCount 
 		wq.addElement("enroll","/root/pending",{id:id})
