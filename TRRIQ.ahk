@@ -1183,85 +1183,66 @@ MortaraUpload()
 	SerNum := SerNum ? SerNum : ""
 	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "']"
 	
+	if (Tabnum=1) {																		; TRANSFER RECORDING TAB
+		mu_UI := MorUIgrab()
+		;~ muWinTxt := mu_UI.txt
+		;~ muTRct := mu_UI.TRct
+		;~ muTxtStart := mu_UI.TRct
 		
-		loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length					; Check if S/N is in use
-		{
-			i := sn.item(A_index-1)
-			j := strX(i.text," ",0,1,"",0)
-			if (muTRser=j) {															; Node exists in wq
-				wqTR := i.parentNode													; Select the <enroll>
-				eventlog(muTRser " Mortara pre-registered.")
-				break
+		;~ muTRtxt := stregX(muWinTxt ">>>"," Transfer Recording ",1,0," Prepare Recorder Media |>>>",1,n)
+			;~ muTRser := substr(stregX(muTRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
+			;~ muTRser := muTRser ? muTRser : ""
+		
+		wqTR:=wq.selectSingleNode(wqStr)
+		if IsObject(wqTR.selectSingleNode("acct")) {									; S/N exists, and valid
+			pt := readwq(wqTR.getAttribute("id"))
+			ptDem["mrn"] := pt.mrn														; fill ptDem[] with values
+			ptDem["loc"] := pt.site
+			ptDem["Account Number"] := pt.acct
+			ptDem["nameL"] := strX(pt.name,"",0,1,",",1,1)
+			ptDem["nameF"] := strX(pt.name,",",1,1,"",0)
+			ptDem["Sex"] := pt.sex
+			ptDem["dob"] := pt.dob
+			ptDem["Provider"] := pt.prov
+			ptDem["Indication"] := pt.ind
+			ptDem["loc"] := pt.site
+		} else {																		; no valid S/N exists
+			gosub getDem																; fill ptDem[] with values
+			if (fetchQuit=true) {
+				fetchQuit:=false
+				return
 			}
+			muWqSave(muSer)
 		}
-		if IsObject(wqTR) {																; Node exists...
-			if IsObject(wqTR.selectSingleNode("acct")) {								; ...and valid
-				pt := readwq(wqTR.getAtt("id"))
-				ptDem["mrn"] := pt.mrn													; fill ptDem[] with values
-				ptDem["loc"] := pt.site
-				ptDem["Account Number"] := pt.acct
-				ptDem["nameL"] := pt.name
-				ptDem["nameF"] := pt.name
-				ptDem["Sex"] := pt.sex
-				ptDem["dob"] := pt.dob
-				ptDem["Provider"] := pt.prov
-				ptDem["Indication"] := pt.ind
-			} else {																	; Node exists, but not valid
-				;~ removeNode()
-				gosub getDem
-			}
-		}
-		Vals := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
-				,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
-				,"Gender":ptDem["Sex"],"DOB":ptDem["DOB"]
-				,"Referring Physician":ptDem["Provider"],"Hookup Tech":A_UserName
-				,"Indications":RegExReplace(ptDem["Indication"],"\|",";")}
+		
+		MorUIfill(mu_UI.TRct,muWinID)
+		
 	}
-				
-	if (muTabnum=2) {																	; PREPARE MEDIA TAB
-		muPRtxt := stregX(muWinTxt ">>>"," Prepare Recorder Media ",1,0," Recordings |>>>",1,n)
-			muPRser := substr(stregX(muPRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
-			muPRser := muPRser ? muPRser : ""
-			muPRct := mu_UI.PRct
+	
+	if (Tabnum=2) {																	; PREPARE MEDIA TAB
+		mu_UI := MorUIgrab()
+		;~ muWinTxt := mu_UI.txt
+		;~ muPRct := mu_UI.PRct
+		;~ muStart := mu_UI.PRct
 		
-		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" muPRser "']")) {
-			eventlog(muPRser " Mortara pre-registered.")
-			removeNode("/root/pending/enroll[dev='" muPRser "']")
-		}
+		;~ muPRtxt := stregX(muWinTxt ">>>"," Prepare Recorder Media ",1,0," Recordings |>>>",1,n)
+			;~ muPRser := substr(stregX(muPRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
+			;~ muPRser := muPRser ? muPRser : ""
+		
 		gosub getDem
 		if (fetchQuit=true) {
 			fetchQuit:=false
 			return
 		}
 		
-		Vals := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
-				,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
-				,"Gender":ptDem["Sex"],"DOB":ptDem["DOB"]
-				,"Referring Physician":ptDem["Provider"],"Hookup Tech":A_UserName
-				,"Indications":RegExReplace(ptDem["Indication"],"\|",";")}
-		
-		MorUIfill(vals,muPRct,muWinID)
-		
 		ControlGet, clkbut, HWND,, Set Clock...
 		sleep 500
 		ControlClick,, ahk_id %clkbut%,,,,NA
-		
-		id := A_TickCount 
-		wq.addElement("enroll","/root/pending",{id:id})
-		newID := "/root/pending/enroll[@id='" id "']"
-		wq.addElement("date",newID,substr(A_Now,1,8))
-		wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
-		wq.addElement("mrn",newID,ptDem["mrn"])
-		wq.addElement("sex",newID,ptDem["Sex"])
-		wq.addElement("dob",newID,ptDem["dob"])
-		wq.addElement("dev",newID,"Mortara H3+ - " muPRser)
-		wq.addElement("prov",newID,ptDem["Provider"])
-		wq.addElement("site",newID,ptDem["loc"])
-		wq.addElement("acct",newID,ptDem["Account Number"])
-		wq.addElement("ind",newID,ptDem["Indication"])
-		wq.save("worklist.xml")
-		
 		WinWaitClose, Set Recorder Time
+		
+		MorUIfill(mu_UI.PRct,muWinID)
+		
+		muWqSave(muSer)
 	}
 	
 	return
