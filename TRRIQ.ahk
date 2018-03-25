@@ -1248,6 +1248,33 @@ MortaraUpload()
 	return
 }
 
+muWqSave(sernum) {
+	global wq, ptDem, user, sitesLong
+	
+	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " sernum "']"
+	if IsObject(wq.selectSingleNode(wqStr)) {
+		eventlog(sernum " Mortara pre-registered.")
+		removeNode(wqStr)
+	}
+	id := A_TickCount 
+	wq.addElement("enroll","/root/pending",{id:id})
+	newID := "/root/pending/enroll[@id='" id "']"
+	wq.addElement("date",newID,substr(A_Now,1,8))
+	wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
+	wq.addElement("mrn",newID,ptDem["mrn"])
+	wq.addElement("sex",newID,ptDem["Sex"])
+	wq.addElement("dob",newID,ptDem["dob"])
+	wq.addElement("dev",newID,"Mortara H3+ - " sernum)
+	wq.addElement("prov",newID,ptDem["Provider"])
+	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
+	wq.addElement("acct",newID,ptDem["Account Number"])
+	wq.addElement("ind",newID,ptDem["Indication"])
+	
+	wq.save("worklist.xml")
+	
+	return
+}
+
 MorTempRead() {
 	;~ global muTempTxt
 	q := {}
@@ -1369,11 +1396,19 @@ MorUIfield(val,start) {
 	return qx
 }
 
-MorUIfill(fields,start,win) {
+MorUIfill(start,win) {
 /*	fields = array of labels:values to fill
 	start = starting line
 	win = winID to use
 */
+	global ptDem, user
+	
+	Vals := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
+			,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
+			,"Gender":ptDem["Sex"],"DOB":ptDem["DOB"]
+			,"Referring Physician":ptDem["Provider"],"Hookup Tech":user
+			,"Indications":RegExReplace(ptDem["Indication"],"\|",";")}
+	
 	WinActivate, ahk_id %win%
 	for key,val in fields
 	{
