@@ -1161,31 +1161,28 @@ MortaraUpload()
 		}
 	}
 	
+	DetectHiddenText, Off																; Only check the visible text
 	Loop																				; Do until either Upload or Prepare window text is present
 	{
+		WinGetText, muWinTxt, ahk_id %muWinID%											; Should only check visible window
+		if instr(muWinTxt,"complete the form below") {
+			break
+		}
 		MsgBox, 262193, Inject demographics
 			, Select the device activity,`nTransfer or Prepare Holter
 		IfMsgBox Cancel 
 		{
 			return																		; Can cancel out of this process if desired
 		}
-		ControlGet , muTabnum, Tab, 													; Wait until a tab is selected
-			, WindowsForms10.SysTabControl32.app.0.33c0d9d1
-			, ahk_id %muWinID%
-		if (muTabnum) {																	; Tab is selected
-			WinGetText, muWinTxt, ahk_id %muWinID%										; Get winText
-			break																		; Break out of loop
-		}
 	}
+	DetectHiddenText, On
+	ControlGet , Tabnum, Tab, 															; Get selected tab num
+		, WindowsForms10.SysTabControl32.app.0.33c0d9d1
+		, ahk_id %muWinID%
+	SerNum := substr(stregX(muWintxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)		; Get S/N on visible page
+	SerNum := SerNum ? SerNum : ""
+	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "']"
 	
-	mu_UI := MorUIgrab()
-	muWinTxt := mu_UI.txt
-	
-	if (muTabnum=1) {																	; TRANSFER RECORDING TAB
-		muTRtxt := stregX(muWinTxt ">>>"," Transfer Recording ",1,0," Prepare Recorder Media |>>>",1,n)
-			muTRser := substr(stregX(muTRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
-			muTRser := muTRser ? muTRser : ""
-			muTRct := mu_UI.TRct
 		
 		loop, % (sn:=wq.selectNodes("/root/pending/enroll/dev")).length					; Check if S/N is in use
 		{
