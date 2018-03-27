@@ -1221,6 +1221,7 @@ MortaraUpload()
 			return
 		}
 		
+		WinActivate, ahk_id %muWinID%
 		ControlGet, clkbut, HWND,, Set Clock...
 		sleep 500
 		ControlClick,, ahk_id %clkbut%,,,,NA
