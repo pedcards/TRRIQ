@@ -1254,7 +1254,7 @@ muWqSave(sernum) {
 	wq.addElement("dev",newID,"Mortara H3+ - " sernum)
 	wq.addElement("prov",newID,ptDem["Provider"])
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
-	wq.addElement("acct",newID,ptDem["Account Number"])
+	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account Number"])
 	wq.addElement("ind",newID,ptDem["Indication"])
 	
 	wq.save("worklist.xml")
@@ -1361,7 +1361,7 @@ MorUIfill(start,win) {
 */
 	global ptDem, user
 	
-	Vals := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
+	fields := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
 			,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
 			,"Gender":ptDem["Sex"],"DOB":ptDem["DOB"]
 			,"Referring Physician":ptDem["Provider"],"Hookup Tech":user
