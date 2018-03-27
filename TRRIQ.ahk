@@ -1205,7 +1205,7 @@ MortaraUpload()
 				fetchQuit:=false
 				return
 			}
-			muWqSave(muSer)
+			muWqSave(SerNum)
 		}
 		
 		MorUIfill(mu_UI.TRct,muWinID)
@@ -1228,7 +1228,7 @@ MortaraUpload()
 		
 		MorUIfill(mu_UI.PRct,muWinID)
 		
-		muWqSave(muSer)
+		muWqSave(SerNum)
 	}
 	
 	return
