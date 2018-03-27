@@ -1185,13 +1185,6 @@ MortaraUpload()
 	
 	if (Tabnum=1) {																		; TRANSFER RECORDING TAB
 		mu_UI := MorUIgrab()
-		;~ muWinTxt := mu_UI.txt
-		;~ muTRct := mu_UI.TRct
-		;~ muTxtStart := mu_UI.TRct
-		
-		;~ muTRtxt := stregX(muWinTxt ">>>"," Transfer Recording ",1,0," Prepare Recorder Media |>>>",1,n)
-			;~ muTRser := substr(stregX(muTRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
-			;~ muTRser := muTRser ? muTRser : ""
 		
 		wqTR:=wq.selectSingleNode(wqStr)
 		if IsObject(wqTR.selectSingleNode("acct")) {									; S/N exists, and valid
@@ -1221,13 +1214,6 @@ MortaraUpload()
 	
 	if (Tabnum=2) {																	; PREPARE MEDIA TAB
 		mu_UI := MorUIgrab()
-		;~ muWinTxt := mu_UI.txt
-		;~ muPRct := mu_UI.PRct
-		;~ muStart := mu_UI.PRct
-		
-		;~ muPRtxt := stregX(muWinTxt ">>>"," Prepare Recorder Media ",1,0," Recordings |>>>",1,n)
-			;~ muPRser := substr(stregX(muPRtxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)
-			;~ muPRser := muPRser ? muPRser : ""
 		
 		gosub getDem
 		if (fetchQuit=true) {
