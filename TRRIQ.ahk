@@ -1179,8 +1179,8 @@ MortaraUpload()
 	ControlGet , Tabnum, Tab, 															; Get selected tab num
 		, WindowsForms10.SysTabControl32.app.0.33c0d9d1
 		, ahk_id %muWinID%
-	SerNum := substr(stregX(muWintxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-5)		; Get S/N on visible page
-	SerNum := SerNum ? SerNum : ""
+	SerNum := substr(stregX(muWintxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-6)		; Get S/N on visible page
+	SerNum := SerNum ? trim(SerNum," `r`n") : ""
 	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "']"
 	
 	if (Tabnum=1) {																		; TRANSFER RECORDING TAB
