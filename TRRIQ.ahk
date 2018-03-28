@@ -462,7 +462,7 @@ WQfindreturned() {
 		enlist .= e0.date "," e0.id "`n"
 	}
 	sort, enlist
-	loop, parse, enlist, `n
+	loop, parse, enlist, `n,`r
 	{
 		StringSplit, en, A_LoopField, `,
 		k := wq.selectSingleNode("/root/pending/enroll[@id='" en2 "']")
@@ -473,7 +473,7 @@ WQfindreturned() {
 			continue
 		}
 		progress,% A_index,, Scanning for reused devices
-		loop, parse, enlist, `n
+		loop, parse, enlist, `n,`r
 		{
 			StringSplit, idk, A_LoopField, `,
 			if (idk2=en2) {
@@ -1267,11 +1267,11 @@ MorUIgrab() {
 	q := {}
 	WinGet, WinText, ControlList, ahk_id %id%
 
-	Loop, parse, % WinText, `r`n
+	Loop, parse, % WinText, `n,`r
 	{
 		str := A_LoopField
 		if !(str) {
-			break
+			continue
 		}
 		ControlGetText, val, %str%, ahk_id %id%
 		ControlGetPos, mx, my, mw, mh, %str%, ahk_id %id%
@@ -1346,7 +1346,7 @@ MorUIfield(val,start) {
 		}
 	}
 	sort, q
-	loop, parse, q, `n
+	loop, parse, q, `n, `r
 	{
 		res := strx(A_LoopField,"- ",1,2,"`n",1)
 		qx.push(mu_UI[res].str)
@@ -1388,7 +1388,7 @@ UiFieldFill(fld,val,win) {
 	ControlSetText, % fld, % val, ahk_id %win%
 	if instr(fld,"COMBOBOX") {
 		ControlGet, cbox, List,, % fld, ahk_id %win%
-		loop, parse, cbox, `n
+		loop, parse, cbox, `n, `r
 		{
 			cb[A_index] := A_LoopField
 		}
