@@ -1006,6 +1006,8 @@ grabWebpage(title) {
 parseEnrollment(x) {
 	global wq
 	
+	fileCheck()
+	FileOpen(".lock", "W")															; Create lock file.
 	Loop
 	{
 		blk := stregX(x,"Patient Enrollment",n,1,"Dr\..*?[\r\n]",0,n)
@@ -1083,6 +1085,8 @@ parseEnrollment(x) {
 	}
 	wq.selectSingleNode("/root/pending").setAttribute("update",A_now)					; set pending[@update] attr
 	wq.save("worklist.xml")
+	filedelete, .lock
+	
 	return done
 /*		value = records added
  *		null  = no records added (no unique)
@@ -1117,6 +1121,9 @@ scanTempfiles() {
 	global wq
 	count := 0
 	
+	filecheck()
+	FileOpen(".lock", "W")															; Create lock file.
+	
 	loop, files, tempfiles/*.csv
 	{
 		filenm := A_LoopFileName
@@ -1144,6 +1151,7 @@ scanTempfiles() {
 		sleep 1
 	}
 	wq.save("worklist.xml")
+	FileDelete, .lock
 	eventlog("Scanned " files " files, " count " DONE records added.")
 return "Scanned " files " files, " count " DONE records added."
 }
@@ -1243,6 +1251,9 @@ MortaraUpload()
 muWqSave(sernum) {
 	global wq, ptDem, user, sitesLong
 	
+	filecheck()
+	FileOpen(".lock", "W")															; Create lock file.
+	
 	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " sernum "']"
 	if IsObject(wq.selectSingleNode(wqStr)) {
 		eventlog(sernum " Mortara pre-registered.")
@@ -1263,6 +1274,7 @@ muWqSave(sernum) {
 	wq.addElement("ind",newID,ptDem["Indication"])
 	
 	wq.save("worklist.xml")
+	filedelete, .lock
 	
 	return
 }
@@ -1524,6 +1536,9 @@ Return
 moveWQ(id) {
 	global wq, fldval
 	
+	filecheck()
+	FileOpen(".lock", "W")															; Create lock file.
+	
 	x := wq.selectSingleNode("/root/pending/enroll[@id='" id "']")
 	date := x.selectSingleNode("date").text
 	mrn := x.selectSingleNode("mrn").text
@@ -1543,6 +1558,7 @@ moveWQ(id) {
 		eventlog("No wqid. Saved new DONE record " fldval["dem-MRN"] ".")
 	}
 	wq.save("worklist.xml")
+	FileDelete, .lock
 	
 	return
 }
