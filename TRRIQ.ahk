@@ -1034,6 +1034,10 @@ parseEnrollment(x) {
 			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in " ens.parentNode.nodeName ".")
 			continue
 		} 
+		if IsObject(wq.selectSingleNode("//enroll[dev='" res.dev "']") {							; S/N is already in use
+			eventlog("Enrollment for " res.dev " already exists in " ens.parentNode.nodeName ".")
+			continue
+		}
 		
 		loop, % (ens := wq.selectNodes("//enroll[date='" date "']")).length				; all items matching [date]
 		{
