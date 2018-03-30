@@ -1373,10 +1373,22 @@ MorUIfill(start,win) {
 	{
 		el := MorUIfield(key,start)
 		if (key="DOB") {
+			dobEdit := []
+			dobCombo := []
 			dt := parseDate(val)
-			uiFieldFill(el[2],dt.DD,win)
-			uiFieldFill(el[3],dt.MMM,win)
-			uiFieldFill(el[4],dt.YYYY,win)
+			loop, % el.MaxIndex() 
+			{
+				x := el[A_index]
+				if instr(x,"edit") {
+					dobEdit.push(x)
+				}
+				if instr(x,"combobox") {
+					dobCombo.push(x)
+				}
+			}
+			uiFieldFill(dobEdit[1],dt.DD,win)
+			uiFieldFill(dobCombo[2],dt.MMM,win)
+			uiFieldFill(dobEdit[2],dt.YYYY,win)
 			continue
 		}
 		uiFieldFill(el[1],val,win)
