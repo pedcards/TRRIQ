@@ -1147,6 +1147,7 @@ return "Scanned " files " files, " count " DONE records added."
 MortaraUpload()
 {
 	global wq, mu_UI, ptDem, fetchQuit
+	ptDem := {}
 	
 	Loop																				; Do until Web Upload program is running
 	{
