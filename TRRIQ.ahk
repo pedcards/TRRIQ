@@ -1037,7 +1037,7 @@ parseEnrollment(x) {
 			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in " ens.parentNode.nodeName ".")
 			continue
 		} 
-		if IsObject(wq.selectSingleNode("//enroll[dev='" res.dev "']") {							; S/N is already in use
+		if IsObject(wq.selectSingleNode("//enroll[dev='" res.dev "']")) {							; S/N is already in use
 			eventlog("Enrollment for " res.dev " already exists in " ens.parentNode.nodeName ".")
 			continue
 		}
@@ -3287,8 +3287,7 @@ WriteOut(path,node) {
 	z := new XML("worklist.xml")														; load a copy into z
 	
 	if !IsObject(z.selectSingleNode(path "/" node)) {									; no such node in z
-			z.addElement(node,path)														; create one
-		}
+		z.addElement(node,path)															; create one
 	}
 	zPath := z.selectSingleNode(path)													; find same "node" in z
 	zNode := zPath.selectSingleNode(node)
