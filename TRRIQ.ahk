@@ -1199,7 +1199,7 @@ MortaraUpload()
 			ptDem["dob"] := pt.dob
 			ptDem["Provider"] := pt.prov
 			ptDem["Indication"] := pt.ind
-			ptDem["loc"] := pt.site
+			ptDem["loc"] := z1
 		} else {																		; no valid S/N exists
 			gosub getDem																; fill ptDem[] with values
 			if (fetchQuit=true) {
