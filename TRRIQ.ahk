@@ -3268,10 +3268,65 @@ ThousandsSep(x, s=",") {
 	return RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
 }
 
+WriteOut(path,node) {
+	global wq
+	
+	filecheck()
+	FileOpen(".lock", "W")															; Create lock file.
+	locPath := wq.selectSingleNode(path)
+	locNode := locPath.selectSingleNode(node)
+	clone := locNode.cloneNode(true)													; make copy of wq.node
+	
+	if !IsObject(locNode) {
+		eventlog("No such node <" path "/" node "> for WriteOut.")
+		FileDelete, .lock															; release lock file.
+		return error
+	}
+	
+	z := new XML("worklist.xml")														; load a copy into z
+	
+	if !IsObject(z.selectSingleNode(path "/" node)) {									; no such node in z
+			z.addElement(node,path)														; create one
+		}
+	}
+	zPath := z.selectSingleNode(path)													; find same "node" in z
+	zNode := zPath.selectSingleNode(node)
+	zPath.replaceChild(clone,zNode)														; replace existing zNode with node clone
+	
+	z.save("worklist.xml")
+	wq := z
+	FileDelete, .lock
+	
+	return
+}
+
 RemoveNode(node) {
 	global wq
 	q := wq.selectSingleNode(node)
 	q.parentNode.removeChild(q)
+	return
+}
+
+filecheck() {
+	if FileExist(".lock") {
+		err=0
+		Progress, , Waiting to clear lock, File write queued...
+		loop 50 {
+			if (FileExist(".lock")) {
+				progress, %p%
+				Sleep 100
+				p += 2
+			} else {
+				err=1
+				break
+			}
+		}
+		if !(err) {
+			progress off
+			return error
+		}
+		progress off
+	} 
 	return
 }
 
