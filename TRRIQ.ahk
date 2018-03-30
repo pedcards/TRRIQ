@@ -309,7 +309,8 @@ WQtask() {
 			}
 		}
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
-		wq.save("worklist.xml")
+		;~ wq.save("worklist.xml")
+		WriteOut("enroll[@id='" idx "']","/root/pending")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
 		return
 	}
@@ -1076,7 +1077,7 @@ parseEnrollment(x) {
 		wq.addElement("site",newID,filterProv(res.prov).site)
 		done ++
 		
-		if (res.prov~="-(" sites0 ")\s*,") {												; Prov is in site not tracked in WQ
+		if (res.prov~="-(" sites0 ")\s*,") {											; Prov is in site not tracked in WQ
 			moveWQ(id)																	; move from PENDING to DONE list
 			continue
 		}
