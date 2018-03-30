@@ -1074,7 +1074,7 @@ parseEnrollment(x) {
 		wq.addElement("site",newID,filterProv(res.prov).site)
 		done ++
 		
-		if (res.prov~="-(TACOMA)\s*,") {												; Prov is in site not tracked in WQ
+		if (res.prov~="-(" sites0 ")\s*,") {												; Prov is in site not tracked in WQ
 			moveWQ(id)																	; move from PENDING to DONE list
 			continue
 		}
