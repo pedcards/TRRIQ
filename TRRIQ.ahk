@@ -1192,7 +1192,7 @@ MortaraUpload()
 			pt := readwq(wqTR.getAttribute("id"))
 			ptDem["mrn"] := pt.mrn														; fill ptDem[] with values
 			ptDem["loc"] := pt.site
-			ptDem["Account Number"] := pt.acct
+			ptDem["Account Number"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
 			ptDem["nameL"] := strX(pt.name,"",0,1,",",1,1)
 			ptDem["nameF"] := strX(pt.name,",",1,1,"",0)
 			ptDem["Sex"] := pt.sex
