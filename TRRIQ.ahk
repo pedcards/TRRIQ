@@ -1328,7 +1328,7 @@ MorUIfield(val,start) {
 	global mu_UI
 	qx := []
 	el := MorUIfind(val,start)
-	var := 5
+	var := 3
 	
 	loop, % mu_UI.MaxIndex()
 	{
