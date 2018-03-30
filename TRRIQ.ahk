@@ -1243,6 +1243,20 @@ MortaraUpload()
 		
 		MorUIfill(mu_UI.PRct,muWinID)
 		
+		loop
+		{
+			winget, x, ProcessName, A
+			if !instr(x,"WebUpload") {
+				continue
+			}
+			WinGetText, x, A															; WinWait for dialog with no name
+			if (x="OK`r`n") {
+				WinGet, finOK, ID, A
+				break
+			}
+		}
+		Winwaitclose, ahk_id %finOK%
+		
 		muWqSave(SerNum)
 	}
 	
