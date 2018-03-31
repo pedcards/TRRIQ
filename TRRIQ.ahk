@@ -1238,6 +1238,12 @@ MortaraUpload()
 		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
 		wuDirSerial := substr(wuDirSerial,-6)
 		
+		loop
+		{
+			if FileExist(wuDirName "\Uploaded.txt") {
+				FileRead, wuDirUpload, % wuDirName "\Uploaded.txt"
+				break
+			}
 	}
 	
 	if (Tabnum=2) {																		; PREPARE MEDIA TAB
