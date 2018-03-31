@@ -1223,9 +1223,18 @@ MortaraUpload()
 			}
 			muWqSave(SerNum)
 		}
-		
 		MorUIfill(mu_UI.TRct,muWinID)
 		
+		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
+		{
+			loopDate := A_LoopFileTimeModified
+			loopName := A_LoopFileName
+			if (loopDate>wuDirDate) {
+				wuDirDate := loopDate
+				wuDirName := loopName
+			}
+		}
+			
 	}
 	
 	if (Tabnum=2) {																	; PREPARE MEDIA TAB
