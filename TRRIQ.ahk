@@ -1247,17 +1247,17 @@ MortaraUpload()
 		
 		loop
 		{
-			winget, x, ProcessName, A
-			if !instr(x,"WebUpload") {
+			winget, x, ProcessName, A													; Dialog has no title
+			if !instr(x,"WebUpload") {													; so find the WebUpload
 				continue
 			}
-			WinGetText, x, A															; WinWait for dialog with no name
-			if (x="OK`r`n") {
+			WinGetText, x, A
+			if (x="OK`r`n") {															; dialog that has only "OK`r`n" as the text
 				WinGet, finOK, ID, A
 				break
 			}
 		}
-		Winwaitclose, ahk_id %finOK%
+		Winwaitclose, ahk_id %finOK%													; Now we can wait until it is closed
 		
 		muWqSave(SerNum)
 	}
