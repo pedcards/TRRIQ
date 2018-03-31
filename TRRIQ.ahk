@@ -1228,16 +1228,19 @@ MortaraUpload()
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
 		{
 			loopDate := A_LoopFileTimeModified
-			loopName := A_LoopFileName
+			loopName := A_LoopFileLongPath
 			if (loopDate>wuDirDate) {
 				wuDirDate := loopDate
 				wuDirName := loopName
 			}
 		}
-			
+		wuDirManifest := new xml(wuDirName "\Manifest.xml")
+		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
+		wuDirSerial := substr(wuDirSerial,-6)
+		
 	}
 	
-	if (Tabnum=2) {																	; PREPARE MEDIA TAB
+	if (Tabnum=2) {																		; PREPARE MEDIA TAB
 		mu_UI := MorUIgrab()
 		
 		gosub getDem
