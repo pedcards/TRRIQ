@@ -1254,6 +1254,13 @@ MortaraUpload()
 			}
 		}
 		
+		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
+			wq.addElement("sent",wqStr)
+		}
+		wq.setText(wqStr "/sent",substr(A_now,8))
+		wq.setAtt(wqStr "/sent",{user:user})
+		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "']")
+		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
 	}
 	
 	if (Tabnum=2) {																		; PREPARE MEDIA TAB
