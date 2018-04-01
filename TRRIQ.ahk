@@ -1161,7 +1161,7 @@ return "Scanned " files " files, " count " DONE records added."
 
 MortaraUpload()
 {
-	global wq, mu_UI, ptDem, fetchQuit
+	global wq, mu_UI, ptDem, fetchQuit, MtCt
 	ptDem := {}
 	
 	Loop																				; Do until Web Upload program is running
@@ -1238,12 +1238,22 @@ MortaraUpload()
 		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
 		wuDirSerial := substr(wuDirSerial,-6)
 		
+		Gui, muTm:Add, Progress, w150 h6 -smooth hwndMtCt 0x8
+		Gui, muTm:+ToolWindow
+		Gui, muTm:Show, AutoSize, Close to cancel upload...
+		SetTimer, muTimer, 50
+		
 		loop
 		{
 			if FileExist(wuDirName "\Uploaded.txt") {
 				FileRead, wuDirUpload, % wuDirName "\Uploaded.txt"
 				break
 			}
+			if (ptDem.timer) {
+				return
+			}
+		}
+		
 	}
 	
 	if (Tabnum=2) {																		; PREPARE MEDIA TAB
@@ -1280,6 +1290,18 @@ MortaraUpload()
 		muWqSave(SerNum)
 	}
 	
+	return
+}
+
+muTmGuiClose:
+{
+	ptDem.timer := true
+	return
+}
+
+muTimer:
+{
+	GuiControl,,% MTCT
 	return
 }
 
