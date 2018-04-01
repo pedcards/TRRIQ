@@ -312,7 +312,7 @@ WQtask() {
 		}
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
 		;~ wq.save("worklist.xml")
-		WriteOut("enroll[@id='" idx "']","/root/pending")
+		WriteOut("/root/pending","enroll[@id='" idx "']")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
 		return
 	}
