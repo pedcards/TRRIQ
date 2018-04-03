@@ -1250,9 +1250,12 @@ MortaraUpload()
 		{
 			if FileExist(wuDirName "\Uploaded.txt") {
 				FileRead, wuDirUpload, % wuDirName "\Uploaded.txt"
+				Gui, muTm:Destroy
 				break
 			}
 			if (ptDem.timer) {
+				Gui, muTm:Destroy
+				eventlog("muTimer closed.")
 				return
 			}
 		}
