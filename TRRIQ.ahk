@@ -179,10 +179,10 @@ PhaseGUI:
 		, Y+20 w220 h40 vPDF gPhaseTask
 		, Process PDF folder
 	Gui, Add, Button
-		, wp h40 vEnroll gPhaseTask
+		, Y+20 wp h40 vEnroll gPhaseTask
 		, Grab Preventice enrollments
 	Gui, Add, Button
-		, wp h40 vUpload gPhaseTask
+		, Y+20 wp h40 vUpload gPhaseTask
 		, Prepare/Upload Holter
 	Gui, Font, Normal
 	
