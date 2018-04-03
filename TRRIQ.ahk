@@ -1207,6 +1207,7 @@ MortaraUpload()
 			pt := readwq(wqTR.getAttribute("id"))
 			ptDem["mrn"] := pt.mrn														; fill ptDem[] with values
 			ptDem["loc"] := pt.site
+			ptDem["date"] := pt.date
 			ptDem["Account Number"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
 			ptDem["nameL"] := strX(pt.name,"",0,1,",",1,1)
 			ptDem["nameF"] := strX(pt.name,",",1,1,"",0)
@@ -1234,9 +1235,11 @@ MortaraUpload()
 				wuDirName := loopName
 			}
 		}
+		eventlog("Found WebUploadDir " strX(wuDirName,"\",0,1,"",0))
 		wuDirManifest := new xml(wuDirName "\Manifest.xml")
 		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
 		wuDirSerial := substr(wuDirSerial,-6)
+		eventlog("Manifest serial number " wuDirSerial)
 		
 		Gui, muTm:Add, Progress, w150 h6 -smooth hwndMtCt 0x8
 		Gui, muTm:+ToolWindow
