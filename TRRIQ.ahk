@@ -46,7 +46,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	chipDir := "\\childrens\files\HCChipotle\"
 	OnbaseDir1 := "\\childrens\apps$\OnbaseFaxFiles\CardiacCathReport\" 
 	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads\"
-	webUploadDir := "C:\files\Web Upload Files for h3.preventice.com  WebUploadApplication.application\"
+	webUploadDir := "C:\Web Upload Files for h3.preventice.com  WebUploadApplication.application\"
 	eventlog(">>>>> Started in PROD mode.")
 }
 
@@ -1161,7 +1161,7 @@ return "Scanned " files " files, " count " DONE records added."
 
 MortaraUpload()
 {
-	global wq, mu_UI, ptDem, fetchQuit, MtCt
+	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir
 	ptDem := {}
 	
 	Loop																				; Do until Web Upload program is running
