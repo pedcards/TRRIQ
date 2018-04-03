@@ -1181,7 +1181,7 @@ MortaraUpload()
 	Loop																				; Do until either Upload or Prepare window text is present
 	{
 		WinGetText, muWinTxt, ahk_id %muWinID%											; Should only check visible window
-		if instr(muWinTxt,"complete the form below") {
+		if instr(muWinTxt,"Recorder S/N") {
 			break
 		}
 		MsgBox, 262193, Inject demographics
@@ -1338,6 +1338,7 @@ muWqSave(sernum) {
 	wq.addElement("ind",newID,ptDem["Indication"])
 	
 	wq.save("worklist.xml")
+	eventlog(sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	filedelete, .lock
 	
 	return
