@@ -3324,7 +3324,11 @@ ParseDate(x) {
 		date.mm := objhasvalue(mo,d1)
 			? zdigit(objhasvalue(mo,d1))
 			: zdigit(d1)
-		date.yyyy := d3
+		date.yyyy := (d3~="\d{4}")
+			? d3
+			: (d3>50)
+				? "19" d3
+				: "20" d3
 		date.date := trim(d)
 	}
 	else if RegExMatch(x,"\b(\d{4})(\d{2})(\d{2})\b",d) {								; 20150103
