@@ -1240,6 +1240,8 @@ MortaraUpload()
 		}
 		eventlog("Found WebUploadDir " strX(wuDirName,"\",0,1,"",0))
 		wuDirManifest := new xml(wuDirName "\Manifest.xml")
+		FileGetSize, wuDirManifestSize, % wuDirName "\Manifest.xml"
+		eventlog("Manifest.xml " wuDirManifestSize)
 		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
 		wuDirSerial := substr(wuDirSerial,-6)
 		eventlog("Manifest serial number " wuDirSerial)
