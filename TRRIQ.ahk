@@ -1161,7 +1161,7 @@ return "Scanned " files " files, " count " DONE records added."
 
 MortaraUpload()
 {
-	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir
+	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
 	ptDem := Object()
 	
 	Loop																				; Do until Web Upload program is running
@@ -1270,7 +1270,7 @@ MortaraUpload()
 		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
 			wq.addElement("sent",wqStr)
 		}
-		wq.setText(wqStr "/sent",substr(A_now,8))
+		wq.setText(wqStr "/sent",substr(A_now,1,8))
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "']")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
