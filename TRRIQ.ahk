@@ -1162,7 +1162,7 @@ return "Scanned " files " files, " count " DONE records added."
 MortaraUpload()
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir
-	ptDem := {}
+	ptDem := Object()
 	
 	Loop																				; Do until Web Upload program is running
 	{
@@ -1356,7 +1356,7 @@ muWqSave(sernum) {
 
 MorUIgrab() {
 	id := WinExist("Mortara Web Upload")
-	q := {}
+	q := Object()
 	WinGet, WinText, ControlList, ahk_id %id%
 
 	Loop, parse, % WinText, `n,`r
@@ -1518,7 +1518,7 @@ MainLoop:
 	
 	blocks := Object()																; clear all objects
 	fields := Object()
-	fldval := {}
+	fldval := Object()
 	labels := Object()
 	blk := Object()
 	blk2 := Object()
