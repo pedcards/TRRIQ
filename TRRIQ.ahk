@@ -1198,8 +1198,10 @@ MortaraUpload()
 	SerNum := substr(stregX(muWintxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-6)		; Get S/N on visible page
 	SerNum := SerNum ? trim(SerNum," `r`n") : ""
 	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "']"
+	eventlog("Device S/N " sernum " attached.")
 	
 	if (Tabnum=1) {																		; TRANSFER RECORDING TAB
+		eventlog("Transfer recording selected.")
 		mu_UI := MorUIgrab()
 		
 		wqTR:=wq.selectSingleNode(wqStr)
@@ -1216,6 +1218,7 @@ MortaraUpload()
 			ptDem["Provider"] := pt.prov
 			ptDem["Indication"] := pt.ind
 			ptDem["loc"] := z1
+			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
 		} else {																		; no valid S/N exists
 			gosub getDem																; fill ptDem[] with values
 			if (fetchQuit=true) {
@@ -1270,6 +1273,7 @@ MortaraUpload()
 	}
 	
 	if (Tabnum=2) {																		; PREPARE MEDIA TAB
+		eventlog("Prepare media selected.")
 		mu_UI := MorUIgrab()
 		
 		gosub getDem
@@ -1369,8 +1373,6 @@ MorUIgrab() {
 		if (val=" Prepare Recorder Media ") {
 			PRct := A_Index
 		}
-		;~ str := RegExReplace(str,"WindowsForms10.")
-		;~ str := RegExReplace(str,"app.0.33c0d9d","..")
 		el := {x:mx,y:my,w:mw,h:mh,str:str,val:val}
 		q[A_index] := el
 	}
