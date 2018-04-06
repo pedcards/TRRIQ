@@ -1359,9 +1359,7 @@ muWqSave(sernum) {
 	wq.addElement("ind",newID,ptDem["Indication"])
 	
 	writeOut("/root/pending","enroll[@id='" id "']")
-	;~ wq.save("worklist.xml")
 	eventlog(sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
-	;~ filedelete, .lock
 	
 	return
 }
