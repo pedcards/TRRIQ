@@ -3410,10 +3410,10 @@ WriteOut(path,node) {
 	z := new XML("worklist.xml")														; load a copy into z
 	
 	if !IsObject(z.selectSingleNode(path "/" node)) {									; no such node in z
-		z.addElement(node,path)															; create one
+		z.addElement("newnode",path)													; create a blank node
 	}
 	zPath := z.selectSingleNode(path)													; find same "node" in z
-	zNode := zPath.selectSingleNode(node)
+	zNode := zPath.selectSingleNode("newnode")
 	zPath.replaceChild(clone,zNode)														; replace existing zNode with node clone
 	
 	z.save("worklist.xml")
