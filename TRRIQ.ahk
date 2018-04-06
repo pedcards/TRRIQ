@@ -1330,9 +1330,8 @@ muTimer:
 muWqSave(sernum) {
 	global wq, ptDem, user, sitesLong
 	
-	;~ filecheck()
-	;~ FileOpen(".lock", "W")																; Create lock file.
-	
+	filecheck()
+	FileOpen(".lock", "W")																; Create lock file.
 	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " sernum "']"
 	loop, % (ens:=wq.selectNodes(wqStr)).length											; Clear all prior instances of wqID
 	{
@@ -1341,7 +1340,10 @@ muWqSave(sernum) {
 		enID := i.getAttribute("id")
 		enStr := "/root/pending/enroll[@id='" enId "']"
 		removeNode(enStr)
+		wq.save("worklist.xml")
 	}
+	filedelete, .lock
+	
 	id := A_TickCount 
 	wq.addElement("enroll","/root/pending",{id:id})
 	newID := "/root/pending/enroll[@id='" id "']"
