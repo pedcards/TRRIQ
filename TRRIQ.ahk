@@ -1273,7 +1273,7 @@ MortaraUpload()
 		wq.setText(wqStr "/sent",substr(A_now,1,8))
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "']")
-		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
+		eventlog(ptDem.MRN " " ptDem.Name " study " ptDem.Date " uploaded to Preventice.")
 	}
 	
 	if (Tabnum=2) {																		; PREPARE MEDIA TAB
