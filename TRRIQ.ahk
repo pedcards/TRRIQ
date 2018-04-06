@@ -1336,11 +1336,12 @@ muWqSave(sernum) {
 	if IsObject(wq.selectSingleNode(wqStr)) {
 		eventlog(sernum " Mortara pre-registered.")
 		removeNode(wqStr)
+		wq.save("worklist.xml")
 	}
 	id := A_TickCount 
 	wq.addElement("enroll","/root/pending",{id:id})
 	newID := "/root/pending/enroll[@id='" id "']"
-	wq.addElement("date",newID,substr(A_Now,1,8))
+	wq.addElement("date",newID,ptDem["date"])
 	wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
 	wq.addElement("mrn",newID,ptDem["mrn"])
 	wq.addElement("sex",newID,ptDem["Sex"])
