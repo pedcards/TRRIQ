@@ -3418,6 +3418,7 @@ RemoveNode(node) {
 	global wq
 	q := wq.selectSingleNode(node)
 	q.parentNode.removeChild(q)
+	eventlog("Removed node " node)
 	return
 }
 
