@@ -1627,7 +1627,8 @@ moveWQ(id) {
 	
 	if (mrn) {																			; record exists
 		clone := x.cloneNode(true)
-		z.selectSingleNode("/root/done").appendChild(clone)							; copy x.clone to DONE
+		z.selectSingleNode("/root/done").appendChild(clone)								; copy x.clone to DONE
+		x := z.selectSingleNode("/root/pending/enroll[@id='" id "']")
 		x.parentNode.removeChild(x)														; remove x
 		eventlog("wqid " id " (" mrn " from " date ") moved to DONE list.")
 	} else {
