@@ -1333,10 +1333,13 @@ muWqSave(sernum) {
 	FileOpen(".lock", "W")															; Create lock file.
 	
 	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " sernum "']"
-	if IsObject(wq.selectSingleNode(wqStr)) {
+	loop, % (ens:=wq.selectNodes(wqStr)).length
+	{
 		eventlog(sernum " Mortara pre-registered.")
-		removeNode(wqStr)
-		wq.save("worklist.xml")
+		i := ens.item(A_index-1)
+		enID := i.getAttribute("id")
+		enStr := "/root/pending/enroll[@id=['" enId "']"
+		removeNode(enStr)
 	}
 	id := A_TickCount 
 	wq.addElement("enroll","/root/pending",{id:id})
