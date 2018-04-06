@@ -1339,7 +1339,7 @@ muWqSave(sernum) {
 		eventlog(sernum " Mortara pre-registered.")
 		i := ens.item(A_index-1)
 		enID := i.getAttribute("id")
-		enStr := "/root/pending/enroll[@id=['" enId "']"
+		enStr := "/root/pending/enroll[@id='" enId "']"
 		removeNode(enStr)
 	}
 	id := A_TickCount 
