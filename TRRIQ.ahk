@@ -1243,7 +1243,7 @@ MortaraUpload()
 		FileGetSize, wuDirManifestSize, % wuDirName "\Manifest.xml"
 		eventlog("Manifest.xml " wuDirManifestSize)
 		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
-		wuDirSerial := substr(wuDirSerial,-6)
+		wuDirSerial := substr(wuDirSerial,-4)
 		eventlog("Manifest serial number " wuDirSerial)
 		
 		Gui, muTm:Add, Progress, w150 h6 -smooth hwndMtCt 0x8
