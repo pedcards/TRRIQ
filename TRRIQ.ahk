@@ -1238,7 +1238,7 @@ MortaraUpload()
 				wuDirName := loopName
 			}
 		}
-		eventlog("Found WebUploadDir " strX(wuDirName,"\",0,1,"",0))
+		eventlog("Found WebUploadDir " wuDirName) ; strX(wuDirName,"\",0,1,"",0))
 		wuDirManifest := new xml(wuDirName "\Manifest.xml")
 		FileGetSize, wuDirManifestSize, % wuDirName "\Manifest.xml"
 		eventlog("Manifest.xml " wuDirManifestSize)
