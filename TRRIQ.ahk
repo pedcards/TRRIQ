@@ -1218,6 +1218,7 @@ MortaraUpload()
 			ptDem["Provider"] := pt.prov
 			ptDem["Indication"] := pt.ind
 			ptDem["loc"] := z1
+			ptDem["wqid"] := wqTR.getAttribute("id")
 			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
 		} else {																		; no valid S/N exists
 			gosub getDem																; fill ptDem[] with values
@@ -1329,11 +1330,11 @@ muTimer:
 muWqSave(sernum) {
 	global wq, ptDem, user, sitesLong
 	
-	filecheck()
-	FileOpen(".lock", "W")															; Create lock file.
+	;~ filecheck()
+	;~ FileOpen(".lock", "W")																; Create lock file.
 	
 	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " sernum "']"
-	loop, % (ens:=wq.selectNodes(wqStr)).length
+	loop, % (ens:=wq.selectNodes(wqStr)).length											; Clear all prior instances of wqID
 	{
 		eventlog(sernum " Mortara pre-registered.")
 		i := ens.item(A_index-1)
@@ -1355,9 +1356,10 @@ muWqSave(sernum) {
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account Number"])
 	wq.addElement("ind",newID,ptDem["Indication"])
 	
-	wq.save("worklist.xml")
+	writeOut("/root/pending","enroll[@id='" id "']")
+	;~ wq.save("worklist.xml")
 	eventlog(sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
-	filedelete, .lock
+	;~ filedelete, .lock
 	
 	return
 }
