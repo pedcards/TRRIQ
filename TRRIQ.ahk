@@ -1465,7 +1465,8 @@ MorUIfill(start,win) {
 			,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
 			,"Gender":ptDem["Sex"],"DOB":ptDem["DOB"]
 			,"Referring Physician":ptDem["Provider"],"Hookup Tech":user
-			,"Indications":RegExReplace(ptDem["Indication"],"\|",";")}
+			,"Indications":RegExReplace(ptDem["Indication"],"\|",";")
+			,"Medications":ptDem["loc"] ptDem["Account Number"]}
 	
 	WinActivate, ahk_id %win%
 	for key,val in fields
