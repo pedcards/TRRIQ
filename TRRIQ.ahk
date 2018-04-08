@@ -1288,8 +1288,9 @@ MortaraUpload()
 		}
 		
 		WinActivate, ahk_id %muWinID%
-		ControlGet, clkbut, HWND,, Set Clock...
 		sleep 500
+		ControlGet, clkbut, HWND,, Set Clock...
+		sleep 200
 		ControlClick,, ahk_id %clkbut%,,,,NA
 		WinWaitClose, Set Recorder Time
 		
