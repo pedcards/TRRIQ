@@ -1345,10 +1345,14 @@ muWqSave(sernum) {
 	}
 	filedelete, .lock
 	
+	if (ptDem.EncDate) {
+		ptDem.date := ptDem.EncDate
+	}
+	
 	id := A_TickCount 
 	wq.addElement("enroll","/root/pending",{id:id})
 	newID := "/root/pending/enroll[@id='" id "']"
-	wq.addElement("date",newID,ptDem["date"] ? ptDem["date"] : substr(A_now,1,8))
+	wq.addElement("date",newID,(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
 	wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
 	wq.addElement("mrn",newID,ptDem["mrn"])
 	wq.addElement("sex",newID,ptDem["Sex"])
