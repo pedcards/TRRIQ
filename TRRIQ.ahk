@@ -2086,83 +2086,66 @@ CheckProcPr2:
 		ptDem["Indication"] := pt.ind
 		ptDem["loc"] := z1
 		eventlog("Pulled valid data for " pt.name " " pt.mrn " " pt.date)
-	}
-	
-	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	;~ if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
-		;~ && !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
-		;~ && (chk.Acct~="\d{8}"))															; and EncNum present
-	;~ {
-		;~ MsgBox, 4132, Valid PDF, % ""
-			;~ . chk.Last ", " chk.First "`n"
-			;~ . "MRN " chk.MRN "`n"
-			;~ . "Acct " chk.Acct "`n"
-			;~ . "Ordering: " chk.Prov "`n"
-			;~ . "Study date: " chk.Date "`n`n"
-			;~ . "Is all the information correct?`n"
-			;~ . "If NO, reacquire demographics."
-		;~ IfMsgBox, Yes																; All tests valid
-		;~ {
-			;~ eventlog("Demographics valid. Processing.")
-			;~ return																	; Select YES, return to processing Holter
-		;~ } 
-		;~ else 																		; Select NO, reacquire demographics
-		;~ {
-			;~ eventlog("Demographics valid. Wants to reacquire.")
-			;~ MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			;~ . "Paste clipboard into CIS search to select patient and encounter"
-		;~ }
-	;~ }
-	;~ else 																			; Not valid PDF, get demographics post hoc
-	{
+		MsgBox, 4132, Valid PDF, % "" 
+		  . pt.Name "`n" 
+		  . "MRN " pt.MRN "`n" 
+		  . "Acct " pt.Acct "`n" 
+		  . "Ordering: " pt.Prov "`n" 
+		  . "Study date: " pt.Date "`n`n" 
+	} else {																			; no prior TRRIQ data
 		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
-		MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+		Clipboard := chk.Last ", " chk.First											; fill clipboard with name, so can just paste into CIS search bar
+		MsgBox, 4096,, % "Extracted data for:`n"
+			. "   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
-	}
-	; Either invalid PDF or want to correct values
-	ptDem := Object()																	; initialize/clear ptDem array
-	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
-	ptDem["nameF"] := chk.First
-	ptDem["mrn"] := chk.MRN
-	ptDem["DOB"] := chk.DOB
-	ptDem["Sex"] := chk.Sex
-	ptDem["Loc"] := chk.Loc
-	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := filterProv(chk.Prov).name
-	ptDem["EncDate"] := chk.Date
-	ptDem["Indication"] := chk.Ind
-	
-	fetchQuit:=false
-	gosub fetchGUI
-	gosub fetchDem
-	
-	tmp:=fuzzysearch(format("{:U}",chk.Last ", " chk.First), format("{:U}",ptDem["nameL"] ", " ptDem["nameF"]))
-	if (tmp > 0.15) {
-		eventlog("Name error. Parsed """ chk.mrn """, """ chk.Last ", " chk.First """ Grabbed """ ptDem["mrn"] """, """ ptDem["nameL"] ", " ptDem["nameF"] """.")
-		if (chk.MRN=ptDem["mrn"]) {
-			MsgBox, 262193, % "Name error (" round((1-tmp)*100,2) "%)"
-				, % "Name does not match!`n`n"
-				.	"	Parsed:	" chk.Last ", " chk.First "`n"
-				.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
-				.	"OK = use " ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
-				.	"Cancel = skip this file"
-			IfMsgBox, Cancel
-			{
+			
+		ptDem["nameL"] := chk.Last														; Placeholder values for fetchGUI from PDF
+		ptDem["nameF"] := chk.First
+		ptDem["mrn"] := chk.MRN
+		ptDem["DOB"] := chk.DOB
+		ptDem["Sex"] := chk.Sex
+		ptDem["Loc"] := chk.Loc
+		ptDem["Account number"] := chk.Acct												; If want to force click, don't include Acct Num
+		ptDem["Provider"] := filterProv(chk.Prov).name
+		ptDem["EncDate"] := chk.Date
+		ptDem["Indication"] := chk.Ind
+		
+		fetchQuit:=false
+		gosub fetchGUI
+		gosub fetchDem
+		
+		tmp:=fuzzysearch(format("{:U}",chk.Last ", " chk.First), format("{:U}",ptDem["nameL"] ", " ptDem["nameF"]))
+		if (tmp > 0.15) {
+			eventlog("Name error. "
+				. "Parsed """ chk.mrn """, """ chk.Last ", " chk.First """ "
+				. "Grabbed """ ptDem["mrn"] """, """ ptDem["nameL"] ", " ptDem["nameF"] """.")
+				
+			if (chk.MRN=ptDem["mrn"]) {													; correct MRN but bad name match
+				MsgBox, 262193, % "Name error (" round((1-tmp)*100,2) "%)"
+					, % "Name does not match!`n`n"
+					.	"	Parsed:	" chk.Last ", " chk.First "`n"
+					.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
+					.	"OK = use " ptDem["nameL"] ", " ptDem["nameF"] "`n`n"			; "OK" will accept this fetchDem data
+					.	"Cancel = skip this file"
+				IfMsgBox, Cancel
+				{
+					eventlog("Cancel this PDF.")
+					fetchQuit:=true														; cancel out of processing file
+					return
+				}
+			} else {																	; just plain doesn't match
+				MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
+					, % "Name does not match!`n`n"
+					.	"	Parsed:	" chk.Last ", " chk.First "`n"
+					.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
+					.	"Skipping this file."
+					
+				eventlog("Demographics mismatch.")
 				fetchQuit:=true
 				return
 			}
-		} else {
-			MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
-				, % "Name does not match!`n`n"
-				.	"	Parsed:	" chk.Last ", " chk.First "`n"
-				.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
-				.	"Skipping this file."
-				
-			fetchQuit:=true
-			return
 		}
 	}
-		
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
 	 */
@@ -2175,7 +2158,7 @@ CheckProcPr2:
 	demog := RegExReplace(demog,"i`a)(Ordering|Referring) Phys(ician)?:? (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
 	demog := RegExReplace(demog,"i`a)Indications: (.*) Medications:", "Indications:   " ptDem["Indication"] "   Medications:")	
 	demog := RegExReplace(demog,"i`a)Recording Start Date/Time: (.*)\R", "Recording Start Date/Time:   " chk.Date "`n")
-	demog := RegExReplace(demog,"i`a)Analyst: (.*) Recorder Number","Analyst:   $1   Recorder Number")
+	demog := RegExReplace(demog,"i`a)Analyst: (.*) Recorder N(o|umber)","Analyst:   $1   Recorder No")
 	demog := RegExReplace(demog,"i`a)Technician: (.*) Recording Duration","Hookup Tech:   $1   Recording Duration")
 	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
 	demog .= "   Location:    " ptDem["Loc"] "`n"
