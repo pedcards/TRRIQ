@@ -1539,6 +1539,7 @@ MainLoop:
 	blk := Object()
 	blk2 := Object()
 	ptDem := Object()
+	pt := Object()
 	chk := Object()
 	matchProv := Object()
 	fileOut := fileOut1 := fileOut2 := ""
@@ -2059,12 +2060,26 @@ CheckProcPr2:
 	}
 	tmpWQ := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
 	fldval["wqid"] := tmpWQ.id
+	pt := readwq(tmpWQ.id)
 	if (tmpWQ.node = "done") {
 		MsgBox File has been scanned already.
 		eventlog(fileIn " already scanned.")
 		fetchQuit := true
 		return
 	}
+	if (pt.acct) {																		; <acct> exists, has been registered or uploaded through TRRIQ
+		ptDem["mrn"] := pt.mrn															; fill ptDem[] with values
+		ptDem["loc"] := pt.site
+		ptDem["EncDate"] := pt.date
+		ptDem["Account Number"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
+		ptDem["nameL"] := strX(pt.name,"",0,1,",",1,1)
+		ptDem["nameF"] := strX(pt.name,",",1,1,"",0)
+		ptDem["Sex"] := pt.sex
+		ptDem["dob"] := pt.dob
+		ptDem["Provider"] := pt.prov
+		ptDem["Indication"] := pt.ind
+		ptDem["loc"] := z1
+		eventlog("Pulled valid data for " pt.name " " pt.mrn " " pt.date)
 	}
 	
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
