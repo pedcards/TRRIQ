@@ -2045,6 +2045,8 @@ CheckProcPr2:
 	chk.Sex := strVal(demog,"Gender","\R")												; Sex
 	chk.Prov := cleanspace(strVal(demog,"(Ordering|Referring) Phys(ician)?","\R"))		; Ordering MD
 	chk.Ind := strVal(demog,"Indications","Medications")								; Indication
+	chk.Med := strVal(demog,"Medications","Diagnosis")									; Meds (contains upload code)
+	chk.Ser := strVal(demog,"Recorder N(o|umber)","\R")									; Ser Num
 	chk.Date := strVal(demog,"Recording Start Date/Time","\R")							; Study date
 	
 	chkDT := parseDate(chk.Date)
