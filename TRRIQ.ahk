@@ -2067,6 +2067,12 @@ CheckProcPr2:
 		fetchQuit := true
 		return
 	}
+	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
+		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
+	}
+	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons							; convert PDF all pages to txt file
+	eventlog("Extracting full text.")
+	
 	if (pt.acct) {																		; <acct> exists, has been registered or uploaded through TRRIQ
 		ptDem["mrn"] := pt.mrn															; fill ptDem[] with values
 		ptDem["loc"] := pt.site
@@ -2175,12 +2181,6 @@ CheckProcPr2:
 	demog .= "   Location:    " ptDem["Loc"] "`n"
 	demog .= "   Acct Num:    " ptDem["Account number"] "`n"
 	eventlog("Demog replaced.")
-	
-	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
-		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
-	}
-	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons							; convert PDF all pages to txt file
-	eventlog("Extracting full text.")
 	
 	return
 }
