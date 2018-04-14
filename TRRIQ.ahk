@@ -1348,7 +1348,8 @@ muWqSave(sernum) {
 	filedelete, .lock
 	
 	if (ptDem.EncDate) {
-		ptDem.date := ptDem.EncDate
+		tmp := parsedate(ptDem.EncDate)
+		ptDem.date := tmp.YYYY tmp.MM tmp.DD
 	}
 	
 	id := A_TickCount 
