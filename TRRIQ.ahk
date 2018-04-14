@@ -2057,9 +2057,13 @@ CheckProcPr2:
 		fetchQuit := true
 		return
 	}
-	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name).id
-	if (fldval["wqid"].node = "done") {
+	tmpWQ := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
+	fldval["wqid"] := tmpWQ.id
+	if (tmpWQ.node = "done") {
 		MsgBox File has been scanned already.
+		eventlog(fileIn " already scanned.")
+		fetchQuit := true
+		return
 	}
 	
 	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
