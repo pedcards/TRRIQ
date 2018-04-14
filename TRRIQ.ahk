@@ -118,7 +118,6 @@ Loop
 	if (phase="Enroll") {
 		eventlog("Update Preventice enrollments.")
 		gosub CheckPrEnroll
-		;~ Reload
 	}
 
 	if (phase="PDF") {
@@ -149,8 +148,6 @@ Loop
 		}
 		MsgBox % "Monitors processed (" holterLoops ")`n" holtersDone
 		FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
-		
-		;~ Reload
 	}
 	if (phase="Upload") {
 		eventlog("Start Mortara preparation/upload.")
