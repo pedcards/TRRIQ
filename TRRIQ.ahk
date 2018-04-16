@@ -260,7 +260,7 @@ WQtask() {
 			.	strQ(pt.FedEx,"  FedEx: ###`n")
 			, "NOTE communication|"
 			. "Log UPLOAD to Preventice|"
-			. "DELETE record"
+			. "Mark record as DONE"
 			, "Q")
 	if (choice="Close") {
 		return
@@ -315,7 +315,7 @@ WQtask() {
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
 		return
 	}
-	if instr(choice,"delete") {
+	if instr(choice,"done") {
 		reason := cmsgbox("Reason"
 				, "What is the reason to remove this record from the active worklist?"
 				, "Report in CIS|"
