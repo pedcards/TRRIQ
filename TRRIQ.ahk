@@ -605,13 +605,14 @@ FetchDem:
 					gosub getDemName													; extract patient name, MRN
 				}
 				if (mdProv and mdAcct) {												; we have both critical coordinates
-					mdXd := (mdX[4]-mdX[1])/3											; determine delta X between columns
-					mdX[2] := mdX[1]+mdXd												; determine remaining column positions
-					mdX[3] := mdX[2]+mdXd
+					WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY
+					mdXd := mdWinW/6													; determine delta X between columns
+					mdX[1] := 20
+					mdX[2] := mdX[1] + mdXd
+					mdX[3] := mdX[2] + mdXd
+					mdX[4] := mdX[3] + mdXd
 					mdY[2] := mdY[1]+(mdY[3]-mdY[1])/2									; determine remaning row coordinate
-					/*	possible to just divide the window width into 6 columns
-						rather than dividing the space into delta X ?
-					*/
+					
 					Gui, fetch:hide
 					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2]).value						; grab remaining demographic values
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2]).value
@@ -621,7 +622,7 @@ FetchDem:
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
 					ptDem["Type"] := tmp.value
 					if (ptDem["Type"]="Outpatient") {
-						ptDem["Loc"] := mouseGrab(mdX[3]+mdXd*0.5,mdY[2]).value			; most outpatient locations are short strings, click the right half of cell to grab location name
+						ptDem["Loc"] := mouseGrab(mdX[4]-50,mdY[2]).value				; most outpatient locations are short strings, click the right half of cell to grab location name
 					} else {
 						ptDem["Loc"] := tmp.loc
 					}
@@ -653,7 +654,7 @@ mouseGrab(x,y) {
 	MouseMove, %x%, %y%, 0																; Goto coordinates
 	Click 2																				; Double-click
 	ClipWait																			; sometimes there is delay for clipboard to populate
-	sleep 200
+	sleep 250
 	clk := parseClip(clipboard)															; get available values out of clipboard
 	BlockInput, Off																		; Permit input again
 	return clk																			; Redundant? since this is what parseClip() returns
