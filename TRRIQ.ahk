@@ -2086,7 +2086,7 @@ CheckProcPr2:
 		ptDem["Indication"] := pt.ind
 		ptDem["loc"] := z1
 		eventlog("Pulled valid data for " pt.name " " pt.mrn " " pt.date)
-		MsgBox, 4132, Valid PDF, % "" 
+		MsgBox, 4160, Found valid registration, % "" 
 		  . pt.Name "`n" 
 		  . "MRN " pt.MRN "`n" 
 		  . "Acct " pt.Acct "`n" 
