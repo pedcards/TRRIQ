@@ -1637,7 +1637,7 @@ moveWQ(id) {
 	mrn := x.selectSingleNode("mrn").text
 	
 	if (mrn) {																			; record exists
-		wq.addElement("done",wqStr,{date:substr(A_now,1,8)},A_UserName)					; set as done
+		wq.addElement("done",wqStr,{date:A_now},A_UserName)					; set as done
 		x := wq.selectSingleNode("/root/pending/enroll[@id='" id "']")					; reload x node
 		clone := x.cloneNode(true)
 		z.selectSingleNode("/root/done").appendChild(clone)								; copy x.clone to DONE
@@ -1651,7 +1651,7 @@ moveWQ(id) {
 		z.addElement("date",newID,fldval["dem-Test_date"])
 		z.addElement("name",newID,fldval["dem-Name"])
 		z.addElement("mrn",newID,fldval["dem-MRN"])
-		z.addElement("done",newID,{date:substr(A_now,1,8)},A_UserName)
+		z.addElement("done",newID,{date:A_now},A_UserName)
 		eventlog("No wqid. Saved new DONE record " fldval["dem-MRN"] ".")
 	}
 	z.save("worklist.xml")
