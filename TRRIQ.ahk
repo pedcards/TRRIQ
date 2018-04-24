@@ -1162,6 +1162,9 @@ MortaraUpload()
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
 	ptDem := Object()
+	mu_UI := Object()
+	fetchQuit := false
+	MtCt := ""
 	
 	Loop																				; Do until Web Upload program is running
 	{
@@ -1323,7 +1326,7 @@ muTmGuiClose:
 
 muTimer:
 {
-	GuiControl,,% MTCT
+	GuiControl,,% MtCt
 	return
 }
 
