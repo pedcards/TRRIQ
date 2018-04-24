@@ -945,7 +945,6 @@ getDem:
 
 CheckPrEnroll:
 {
-	browser := WinExist("Firefox")
 	while !(WinExist("Patient Enrollment"))
 	{
 		MsgBox,4161,Update Preventice enrollments
