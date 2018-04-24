@@ -566,7 +566,7 @@ FetchDem:
 			sleep 200
 			clk := parseClip(clipboard)
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
-				MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
+				;~ MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
 				if (clk.field = "Provider") {
 					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {						; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
@@ -3471,6 +3471,11 @@ filecheck() {
 	} 
 	return
 }
+
+~LButton::
+If (A_PriorHotKey = A_ThisHotKey and A_TimeSincePriorHotkey < DllCall("GetDoubleClickTime"))
+	MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
+return
 
 #Include CMsgBox.ahk
 #Include xml.ahk
