@@ -593,6 +593,7 @@ FetchDem:
 					}
 					mdX[4] := mouseXpos													; demographics grid[4,1]
 					mdY[1] := mouseYpos
+					;~ mdLineDetect(mouseXpos,mouseYpos)
 					mdProv := true														; we have got Provider
 					WinGetTitle, mdTitle, ahk_id %mouseWinID%
 					gosub getDemName													; extract patient name, MRN from window title 
@@ -658,7 +659,7 @@ mouseGrab(x,y) {
 	MouseMove, %x%, %y%, 0																; Goto coordinates
 	Click 2																				; Double-click
 	ClipWait																			; sometimes there is delay for clipboard to populate
-	sleep 250
+	sleep 300
 	clk := parseClip(clipboard)															; get available values out of clipboard
 	return clk																			; Redundant? since this is what parseClip() returns
 }
