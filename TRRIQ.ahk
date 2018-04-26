@@ -559,6 +559,9 @@ FetchDem:
 	mdX := Object()										; clear Mouse Demographics X,Y coordinate arrays
 	mdY := Object()
 	getDem := true
+	mdProv := false
+	mdAcct := false
+	
 	while (getDem) {									; Repeat until we get tired of this
 		clipboard :=
 		ClipWait, 2
