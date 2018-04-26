@@ -616,8 +616,9 @@ FetchDem:
 					mdX[4] := mdX[3] + mdXd
 					mdY[2] := mdY[1]+(mdY[3]-mdY[1])/2									; determine remaning row coordinate
 					
-					Gui, fetch:hide
-					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2]).value						; grab remaining demographic values
+					Gui, fetch:hide														; grab remaining demographic values
+					BlockInput, On														; Prevent extraneous input
+					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2]).value
 					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2]).value
 					ptDem["Sex"] := mouseGrab(mdX[3],mdY[1]).value
 					eventlog("MouseGrab other fields. MRN=" ptDem["MRN"] " DOB=" ptDem["DOB"] " Sex=" ptDem["Sex"] ".")
@@ -636,6 +637,7 @@ FetchDem:
 					
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
+					BlockInput, Off														; Permit input again
 					Gui, fetch:show
 					eventlog("MouseGrab other fields."
 						. " Type=" ptDem["Type"] " Loc=" ptDem["Loc"]
@@ -653,13 +655,11 @@ mouseGrab(x,y) {
 	Process through parseClip to validate
 	Return the value portion of parseClip
 */
-	BlockInput, On																		; Prevent extraneous input
 	MouseMove, %x%, %y%, 0																; Goto coordinates
 	Click 2																				; Double-click
 	ClipWait																			; sometimes there is delay for clipboard to populate
 	sleep 250
 	clk := parseClip(clipboard)															; get available values out of clipboard
-	BlockInput, Off																		; Permit input again
 	return clk																			; Redundant? since this is what parseClip() returns
 }
 
