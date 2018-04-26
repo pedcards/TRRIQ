@@ -2080,6 +2080,9 @@ CheckProcPr2:
 	}
 	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
 		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
+		MsgBox, 4112, Filesize error!, This file does not appear to be a full-disclosure PDF. Please download the proper file and try again.
+		fetchQuit := true
+		return
 	}
 	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons							; convert PDF all pages to txt file
 	eventlog("Extracting full text.")
