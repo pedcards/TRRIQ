@@ -839,28 +839,28 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			. ((ptDem["Provider"]) ? "" : " Provider")
 			. ".")
 		MsgBox,, % "Data incomplete. Try again", % ""
-			. ((ptDem["nameF"]) ? "" : "First name`n")
-			. ((ptDem["nameL"]) ? "" : "Last name`n")
-			. ((ptDem["mrn"]) ? "" : "MRN`n")
-			. ((ptDem["Account number"]) ? "" : "Account number`n")
-			. ((ptDem["DOB"]) ? "" : "DOB`n")
-			. ((ptDem["Sex"]) ? "" : "Sex`n")
-			. ((ptDem["Loc"]) ? "" : "Location`n")
-			. ((ptDem["Type"]) ? "" : "Visit type`n")
-			. ((ptDem["EncDate"]) ? "" : "Date Holter placed`n")
-			. ((ptDem["Provider"]) ? "" : "Provider`n")
+			;~ . ((ptDem["nameF"]) ? "" : "First name`n")
+			;~ . ((ptDem["nameL"]) ? "" : "Last name`n")
+			;~ . ((ptDem["mrn"]) ? "" : "MRN`n")
+			;~ . ((ptDem["Account number"]) ? "" : "Account number`n")
+			;~ . ((ptDem["DOB"]) ? "" : "DOB`n")
+			;~ . ((ptDem["Sex"]) ? "" : "Sex`n")
+			;~ . ((ptDem["Loc"]) ? "" : "Location`n")
+			;~ . ((ptDem["Type"]) ? "" : "Visit type`n")
+			;~ . ((ptDem["EncDate"]) ? "" : "Date Holter placed`n")
+			;~ . ((ptDem["Provider"]) ? "" : "Provider`n")
+			;~ . "`nREQUIRED!"
+			. "First name " ptDem["nameF"] "`n"
+			. "Last name " ptDem["nameL"] "`n"
+			. "MRN " ptDem["mrn"] "`n"
+			. "Account number " ptDem["Account number"] "`n"
+			. "DOB " ptDem["DOB"] "`n"
+			. "Sex " ptDem["Sex"] "`n"
+			. "Location " ptDem["Loc"] "`n"
+			. "Visit type " ptDem["Type"] "`n"
+			. "Date Holter placed " ptDem["EncDate"] "`n"
+			. "Provider " ptDem["Provider"] "`n"
 			. "`nREQUIRED!"
-		;~ MsgBox % ""
-			;~ . "First name " ptDem["nameF"] "`n"
-			;~ . "Last name " ptDem["nameL"] "`n"
-			;~ . "MRN " ptDem["mrn"] "`n"
-			;~ . "Account number " ptDem["Account number"] "`n"
-			;~ . "DOB " ptDem["DOB"] "`n"
-			;~ . "Sex " ptDem["Sex"] "`n"
-			;~ . "Location " ptDem["Loc"] "`n"
-			;~ . "Visit type " ptDem["Type"] "`n"
-			;~ . "Date Holter placed " ptDem["EncDate"] "`n"
-			;~ . "Provider " ptDem["Provider"] "`n"
 		gosub fetchGUI
 		return
 	}
