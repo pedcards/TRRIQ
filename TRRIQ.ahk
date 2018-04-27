@@ -48,7 +48,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	OnbaseDir1 := "\\childrens\apps$\OnbaseFaxFiles\CardiacCathReport\" 
 	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads\"
 	webUploadDir := "C:\Web Upload Files for h3.preventice.com  WebUploadApplication.application\"
-	eventlog(">>>>> Started in PROD mode. Exe ver " tmp)
+	eventlog(">>>>> Started in PROD mode. Exe ver " substr(tmp,1,12))
 }
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
