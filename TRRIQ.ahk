@@ -566,12 +566,10 @@ FetchDem:
 	
 	while (getDem) {									; Repeat until we get tired of this
 		clipboard :=
-		ClipWait, 2
+		ClipWait, 0
 		if !ErrorLevel {								; clipboard has data
-			sleep 300
-			clk := parseClip(clipboard)
+			clk := parseClip()
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
-				;~ MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
 				WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY
 				if (clk.field = "Provider") {
 					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {						; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
@@ -658,16 +656,18 @@ mouseGrab(x,y) {
 	MouseMove, %x%, %y%, 0																; Goto coordinates
 	Click 2																				; Double-click
 	ClipWait																			; sometimes there is delay for clipboard to populate
-	sleep 300
-	clk := parseClip(clipboard)															; get available values out of clipboard
+	clk := parseClip()																	; get available values out of clipboard
 	return clk																			; Redundant? since this is what parseClip() returns
 }
 
-parseClip(clip) {
+parseClip() {
 /*	If clip matches "val1:val2" format, and val1 in demVals[], return field:val
 	If clip contains proper Encounter Type ("Outpatient", "Inpatient", "Observation", etc), return Type, Date, Time
 */
 	global demVals
+	
+	sleep 300
+	clip := clipboard
 	
 	StringSplit, val, clip, :															; break field into val1:val2
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
