@@ -560,8 +560,7 @@ readWQ(idx) {
 
 FetchDem:
 {
-	mdX := Object()										; clear Mouse Demographics X,Y coordinate arrays
-	mdY := Object()
+	mdCoord := Object()											; clear Mouse Demographics X,Y coordinate arrays
 	getDem := true
 	mdProv := false
 	mdAcct := false
@@ -596,39 +595,38 @@ FetchDem:
 						ptDem.Provider := tmpPrv										; but leave ptDem.Provider alone if tmpPrv null
 						eventlog("MouseGrab provider empty --> " tmpPrv ".")
 					}
-					mdX[4] := mouseXpos													; demographics grid[4,1]
-					mdY[1] := mouseYpos
+					mdCoord.x4 := mouseXpos													; demographics grid[4,1]
+					mdCoord.y1 := mouseYpos
 					mdProv := true														; we have got Provider
 					gosub getDemName													; extract patient name, MRN from window title 
-					
-				}																		;(this is why it must be sister or parent VM).
+				}																		; (this is why it must be sister or parent VM).
 				if (clk.field = "Account Number") {
 					ptDem["Account Number"] := clk.value
 					eventlog("MouseGrab Account Number " clk.value ".")
-					mdX[1] := mouseXpos													; demographics grid[1,3]
-					mdY[3] := mouseYpos
+					mdCoord.x1 := mouseXpos													; demographics grid[1,3]
+					mdCoord.y3 := mouseYpos
 					mdAcct := true														; we have got Acct Number
 					gosub getDemName													; extract patient name, MRN
 				}
 				if (mdProv and mdAcct) {												; we have both critical coordinates
-					mdXd := mdWinW/6													; determine delta X between columns
-					mdX[1] := 50
-					mdX[2] := mdX[1] + mdXd
-					mdX[3] := mdX[2] + mdXd
-					mdX[4] := mdX[3] + mdXd
-					mdY[2] := mdY[1]+(mdY[3]-mdY[1])/2									; determine remaning row coordinate
+					mdX0 := 50
+					mdCoord.x1 := mdX0
+					mdCoord.x2 := mdX0 + mdXd
+					mdCoord.x3 := mdX0 + mdXd*2
+					mdCoord.x4 := mdX0 + mdXd*3
+					mdCoord.y2 := mdCoord.y1+(mdCoord.y3-mdCoord.y1)/2									; determine remaning row coordinate
 					
 					Gui, fetch:hide														; grab remaining demographic values
 					BlockInput, On														; Prevent extraneous input
-					ptDem["MRN"] := mouseGrab(mdX[1],mdY[2]).value
-					ptDem["DOB"] := mouseGrab(mdX[2],mdY[2]).value
-					ptDem["Sex"] := mouseGrab(mdX[3],mdY[1]).value
+					ptDem["MRN"] := mouseGrab(mdCoord.x1,mdCoord.y2).value
+					ptDem["DOB"] := mouseGrab(mdCoord.x2,mdCoord.y2).value
+					ptDem["Sex"] := mouseGrab(mdCoord.x3,mdCoord.y1).value
 					eventlog("MouseGrab other fields. MRN=" ptDem["MRN"] " DOB=" ptDem["DOB"] " Sex=" ptDem["Sex"] ".")
 					
-					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
+					tmp := mouseGrab(mdCoord.x3,mdCoord.y3)										; grab Encounter Type field
 					ptDem["Type"] := tmp.value
 					if (ptDem["Type"]="Outpatient") {
-						ptDem["Loc"] := mouseGrab(mdX[4]-80,mdY[2]).value				; most outpatient locations are short strings, click the right half of cell to grab location name
+						ptDem["Loc"] := mouseGrab(mdCoord.x4-mdX0-30,mdCoord.y2).value				; most outpatient locations are short strings, click the right half of cell to grab location name
 					} else {
 						ptDem["Loc"] := tmp.loc
 					}
