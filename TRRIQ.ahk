@@ -568,10 +568,11 @@ FetchDem:
 		clipboard :=
 		ClipWait, 0
 		if !ErrorLevel {								; clipboard has data
-			WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY					; get window coords as well
-			mdXd := mdWinW/6															; determine delta X between columns
 			clk := parseClip()
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
+				WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY					; get window coords as well
+				mdXd := mdWinW/6															; determine delta X between columns
+				
 				if (clk.field = "Provider") {
 					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {						; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
