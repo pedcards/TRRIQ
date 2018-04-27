@@ -568,6 +568,8 @@ FetchDem:
 		clipboard :=
 		ClipWait, 0
 		if !ErrorLevel {								; clipboard has data
+			WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY					; get window coords as well
+			mdXd := mdWinW/6															; determine delta X between columns
 			clk := parseClip()
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
 				if (clk.field = "Provider") {
@@ -3479,7 +3481,6 @@ filecheck() {
 {
 	If (A_PriorHotKey = A_ThisHotKey and A_TimeSincePriorHotkey < DllCall("GetDoubleClickTime")) {
 		MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
-		WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY				; get window coords as well
 	}
 return
 }
