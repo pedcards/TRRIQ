@@ -566,6 +566,7 @@ FetchDem:
 	mdAcct := false
 	
 	while (getDem) {									; Repeat until we get tired of this
+		clk := Object()
 		clipboard :=
 		ClipWait, 0
 		if !ErrorLevel {								; clipboard has data
@@ -637,12 +638,16 @@ FetchDem:
 					
 					mdProv := false														; processed demographic fields,
 					mdAcct := false														; so reset check bits
+					mdCoord := Object()
+					
 					BlockInput, Off														; Permit input again
 					Gui, fetch:show
 					eventlog("MouseGrab other fields."
 						. " Type=" ptDem["Type"] " Loc=" ptDem["Loc"]
 						. " EncDate=" ptDem["EncDate"] " EncTime=" ptDem["Hookup time"] ".")
 				}
+				mouseXpos := ""
+				mouseYpos := ""
 			}
 			gosub fetchGUI							; Update GUI with new info
 		}
@@ -673,12 +678,14 @@ parseClip() {
 	
 	StringSplit, val, clip, :															; break field into val1:val2
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
+		clipboard := ""
 		return {"field":val1
 				, "value":val2}
 	}
 	
 	dt := strX(clip," [",1,2, "]",1,1)													; get date
 	if (clip~="Outpatient\s\[") {														; Outpatient type
+		clipboard := ""
 		return {"field":"Type"
 				, "value":"Outpatient"
 				, "loc":"Outpatient"
@@ -686,18 +693,21 @@ parseClip() {
 				, "time":parseDate(dt).time}
 	}
 	if (clip~="Inpatient|Observation\s\[") {											; Inpatient types
+		clipboard := ""
 		return {"field":"Type"
 				, "value":"Inpatient"
 				, "loc":"Inpatient"
 				, "date":""}															; can span many days, return blank
 	}
 	if (clip~="Day Surg.*\s\[") {														; Day Surg type
+		clipboard := ""
 		return {"field":"Type"
 				, "value":"Day Surg"
 				, "loc":"SurgCntr"
 				, "date":parseDate(dt).date}
 	}
 	if (clip~="Emergency") {															; Emergency type
+		clipboard := ""
 		return {"field":"Type"
 				, "value":"Emergency"
 				, "loc":"Emergency"
