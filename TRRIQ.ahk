@@ -572,6 +572,7 @@ FetchDem:
 			clk := parseClip(clipboard)
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
 				;~ MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
+				WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY
 				if (clk.field = "Provider") {
 					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {						; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
@@ -595,9 +596,7 @@ FetchDem:
 					}
 					mdX[4] := mouseXpos													; demographics grid[4,1]
 					mdY[1] := mouseYpos
-					;~ mdLineDetect(mouseXpos,mouseYpos)
 					mdProv := true														; we have got Provider
-					WinGetTitle, mdTitle, ahk_id %mouseWinID%
 					gosub getDemName													; extract patient name, MRN from window title 
 					
 				}																		;(this is why it must be sister or parent VM).
@@ -607,11 +606,9 @@ FetchDem:
 					mdX[1] := mouseXpos													; demographics grid[1,3]
 					mdY[3] := mouseYpos
 					mdAcct := true														; we have got Acct Number
-					WinGetTitle, mdTitle, ahk_id %mouseWinID%
 					gosub getDemName													; extract patient name, MRN
 				}
 				if (mdProv and mdAcct) {												; we have both critical coordinates
-					WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY
 					mdXd := mdWinW/6													; determine delta X between columns
 					mdX[1] := 50
 					mdX[2] := mdX[1] + mdXd
