@@ -1475,12 +1475,11 @@ MorUIfill(start,win) {
 */
 	global ptDem, user
 	
-	fields := {"ID":ptDem["mrn"],"Second ID":ptDem["loc"] ptDem["Account Number"]
+	fields := {"ID":ptDem["mrn"]
 			,"Last Name":ptDem["nameL"],"First":ptDem["nameF"]
 			,"Gender":ptDem["Sex"],"DOB":ptDem["DOB"]
 			,"Referring Physician":ptDem["Provider"],"Hookup Tech":user
-			,"Indications":RegExReplace(ptDem["Indication"],"\|",";")
-			,"Medications":ptDem["loc"] ptDem["Account Number"]}
+			,"Indications":RegExReplace(ptDem["Indication"],"\|",";")}
 	
 	WinActivate, ahk_id %win%
 	for key,val in fields
