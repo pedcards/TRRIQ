@@ -876,7 +876,6 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		gosub indGUI
 		WinWaitClose, Enter indications
 	}
-	eventlog("Indications entered.")
 	return
 }
 
@@ -925,6 +924,7 @@ indSubmit:
 		indChoices := RegExReplace(indChoices,"OTHER", "OTHER - " indOther)
 	}
 	ptDem["Indication"] := indChoices
+	eventlog("Indications entered.")
 	return
 }
 
@@ -944,7 +944,6 @@ getDem:
 		gosub indGUI
 		WinWaitClose, Enter indications
 	}
-	eventlog("Indications entered.")
 	
 	return
 }
