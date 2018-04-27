@@ -613,7 +613,7 @@ FetchDem:
 				if (mdProv and mdAcct) {												; we have both critical coordinates
 					WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY
 					mdXd := mdWinW/6													; determine delta X between columns
-					mdX[1] := 20
+					mdX[1] := 50
 					mdX[2] := mdX[1] + mdXd
 					mdX[3] := mdX[2] + mdXd
 					mdX[4] := mdX[3] + mdXd
@@ -629,7 +629,7 @@ FetchDem:
 					tmp := mouseGrab(mdX[3],mdY[3])										; grab Encounter Type field
 					ptDem["Type"] := tmp.value
 					if (ptDem["Type"]="Outpatient") {
-						ptDem["Loc"] := mouseGrab(mdX[4]-50,mdY[2]).value				; most outpatient locations are short strings, click the right half of cell to grab location name
+						ptDem["Loc"] := mouseGrab(mdX[4]-80,mdY[2]).value				; most outpatient locations are short strings, click the right half of cell to grab location name
 					} else {
 						ptDem["Loc"] := tmp.loc
 					}
