@@ -568,7 +568,7 @@ FetchDem:
 		clipboard :=
 		ClipWait, 2
 		if !ErrorLevel {								; clipboard has data
-			sleep 200
+			sleep 300
 			clk := parseClip(clipboard)
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
 				;~ MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
