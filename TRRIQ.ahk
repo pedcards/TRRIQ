@@ -40,6 +40,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	webUploadDir := ".\files\Web Upload Files for h3.preventice.com  WebUploadApplication.application\"
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
+	FileGetTime, tmp, TRRIQ.exe
 	isAdmin := false
 	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
@@ -47,7 +48,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	OnbaseDir1 := "\\childrens\apps$\OnbaseFaxFiles\CardiacCathReport\" 
 	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads\"
 	webUploadDir := "C:\Web Upload Files for h3.preventice.com  WebUploadApplication.application\"
-	eventlog(">>>>> Started in PROD mode.")
+	eventlog(">>>>> Started in PROD mode. Exe ver " tmp)
 }
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
@@ -213,7 +214,8 @@ PhaseGUIclose:
 menuTrriq:
 {
 	Gui, phase:hide
-	MsgBox About
+	FileGetTime, tmp, TRRIQ.exe
+	MsgBox, 64, About..., % "TRRIQ version " substr(tmp,1,12) "`nTerrence Chun, MD"
 	Gui, phase:show
 	return
 }
