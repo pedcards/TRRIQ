@@ -1091,6 +1091,7 @@ parseEnrollment(x) {
 		wq.addElement("dev",newID,res.dev)
 		wq.addElement("prov",newID,filterProv(res.prov).name)
 		wq.addElement("site",newID,filterProv(res.prov).site)
+		wq.addElement("webgrab",newID,A_now)
 		done ++
 		
 		if (res.prov~="-(" sites0 ")\s*,") {											; Prov is in site not tracked in WQ
