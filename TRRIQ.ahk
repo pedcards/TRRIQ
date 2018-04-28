@@ -663,7 +663,7 @@ mouseGrab(x,y) {
 */
 	MouseMove, %x%, %y%, 0																; Goto coordinates
 	Click 2																				; Double-click
-	ClipWait																			; sometimes there is delay for clipboard to populate
+	ClipWait, 0																			; sometimes there is delay for clipboard to populate
 	clk := parseClip()																	; get available values out of clipboard
 	return clk																			; Redundant? since this is what parseClip() returns
 }
@@ -674,7 +674,7 @@ parseClip() {
 */
 	global demVals
 	
-	sleep 300
+	;~ sleep 100
 	clip := clipboard
 	
 	StringSplit, val, clip, :															; break field into val1:val2
