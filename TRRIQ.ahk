@@ -1244,6 +1244,7 @@ MortaraUpload()
 				fetchQuit:=false
 				return
 			}
+			ptDem["muphase"] := "upload"
 			muWqSave(SerNum)
 		}
 		MorUIfill(mu_UI.TRct,muWinID)
@@ -1330,6 +1331,7 @@ MortaraUpload()
 		}
 		Winwaitclose, ahk_id %finOK%													; Now we can wait until it is closed
 		
+		ptDem["muphase"] := "prepare"
 		muWqSave(SerNum)
 	}
 	
@@ -1383,6 +1385,7 @@ muWqSave(sernum) {
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account Number"])
 	wq.addElement("ind",newID,ptDem["Indication"])
+	wq.addElement(ptDem["muphase"],newId,A_now)
 	
 	writeOut("/root/pending","enroll[@id='" id "']")
 	eventlog(sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
