@@ -1049,14 +1049,14 @@ parseEnrollment(x) {
 		date := tmp.YYYY tmp.MM tmp.DD
 		count ++
 		
-		if IsObject(ens := wq.selectSingleNode("//enroll[date='" date "'][mrn='" res.mrn "']")) {			; exists in PENDING or DONE
-			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in " ens.parentNode.nodeName ".")
-			continue
-		} 
 		if IsObject(wq.selectSingleNode("/pending/enroll[dev='" res.dev "']")) {							; S/N is currently in use
 			eventlog("Enrollment for " res.dev " already exists in Pending.")
 			continue
 		}
+		if IsObject(ens := wq.selectSingleNode("//enroll[date='" date "'][mrn='" res.mrn "']")) {			; exists in PENDING or DONE
+			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in " ens.parentNode.nodeName ".")
+			continue
+		} 
 		
 		loop, % (ens := wq.selectNodes("//enroll[date='" date "']")).length				; all items matching [date]
 		{
@@ -1247,6 +1247,8 @@ MortaraUpload()
 		}
 		MorUIfill(mu_UI.TRct,muWinID)
 		
+		wuDirDate := ""
+		wuDirName := ""
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
 		{
 			loopDate := A_LoopFileTimeModified
