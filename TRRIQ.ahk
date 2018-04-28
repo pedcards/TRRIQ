@@ -570,13 +570,14 @@ FetchDem:
 		clipboard :=
 		ClipWait, 0
 		if !ErrorLevel {								; clipboard has data
+			MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2				; put mouse coords into mouseXpos and mouseYpos, and associated winID
 			clk := parseClip()
 			if !ErrorLevel {															; parseClip {field:value} matches valid data
-				WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY					; get window coords as well
-				mdXd := mdWinW/6															; determine delta X between columns
+				WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY				; get window coords as well
+				mdXd := mdWinW/6														; determine delta X between columns
 				
 				if (clk.field = "Provider") {
-					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {						; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
+					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {					; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
 						eventlog("MouseGrab provider " tmpPrv ".")
 					} else {
@@ -3488,13 +3489,13 @@ filecheck() {
 	return
 }
 
-~LButton::
-{
-	If (A_PriorHotKey = A_ThisHotKey and A_TimeSincePriorHotkey < DllCall("GetDoubleClickTime")) {
-		MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
-	}
-return
-}
+;~ ~LButton::
+;~ {
+	;~ If (A_PriorHotKey = A_ThisHotKey and A_TimeSincePriorHotkey < DllCall("GetDoubleClickTime")) {
+		;~ MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
+	;~ }
+;~ return
+;~ }
 
 #Include CMsgBox.ahk
 #Include xml.ahk
