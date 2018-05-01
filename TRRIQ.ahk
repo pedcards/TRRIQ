@@ -1222,7 +1222,7 @@ MortaraUpload()
 		eventlog("Transfer recording selected.")
 		mu_UI := MorUIgrab()
 		
-{	;	******************************
+; 	******************************
 		wuDirDate := ""
 		wuDirFull := ""
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
@@ -1247,7 +1247,7 @@ MortaraUpload()
 		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
 		wuDirSerial := substr(wuDirSerial,-4)
 		eventlog("Pass 1: Manifest serial number " wuDirSerial)
-}	;	****************************
+; 	******************************
 		
 		wqTR:=wq.selectSingleNode(wqStr)
 		if IsObject(wqTR.selectSingleNode("acct")) {									; S/N exists, and valid
@@ -1276,7 +1276,7 @@ MortaraUpload()
 		}
 		MorUIfill(mu_UI.TRct,muWinID)
 		
-{	;	Pass 2 ***********************************
+; 	******************************
 		wuDirDate := ""
 		wuDirFull := ""
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
@@ -1301,7 +1301,7 @@ MortaraUpload()
 		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
 		wuDirSerial := substr(wuDirSerial,-4)
 		eventlog("Pass 2: Manifest serial number " wuDirSerial)
-}	;	*****************************************
+; 	******************************
 		
 		Gui, muTm:Add, Progress, w150 h6 -smooth hwndMtCt 0x8
 		Gui, muTm:+ToolWindow
