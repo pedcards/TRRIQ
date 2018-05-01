@@ -1669,7 +1669,6 @@ moveWQ(id) {
 	
 	filecheck()
 	FileOpen(".lock", "W")															; Create lock file.
-	z := new xml("worklist.xml")
 	
 	wqStr := "/root/pending/enroll[@id='" id "']"
 	x := wq.selectSingleNode(wqStr)
@@ -1680,23 +1679,21 @@ moveWQ(id) {
 		wq.addElement("done",wqStr,{user:A_UserName},A_Now)								; set as done
 		x := wq.selectSingleNode("/root/pending/enroll[@id='" id "']")					; reload x node
 		clone := x.cloneNode(true)
-		z.selectSingleNode("/root/done").appendChild(clone)								; copy x.clone to DONE
-		x := z.selectSingleNode("/root/pending/enroll[@id='" id "']")
+		wq.selectSingleNode("/root/done").appendChild(clone)							; copy x.clone to DONE
 		x.parentNode.removeChild(x)														; remove x
 		eventlog("wqid " id " (" mrn " from " date ") moved to DONE list.")
 	} else {
 		id := A_TickCount
-		z.addElement("enroll","/root/done",{id:id})
+		wq.addElement("enroll","/root/done",{id:id})
 		newID := "/root/pending/enroll[@id='" id "']"
-		z.addElement("date",newID,fldval["dem-Test_date"])
-		z.addElement("name",newID,fldval["dem-Name"])
-		z.addElement("mrn",newID,fldval["dem-MRN"])
-		z.addElement("done",newID,{user:A_UserName},A_Now)
+		wq.addElement("date",newID,fldval["dem-Test_date"])
+		wq.addElement("name",newID,fldval["dem-Name"])
+		wq.addElement("mrn",newID,fldval["dem-MRN"])
+		wq.addElement("done",newID,{user:A_UserName},A_Now)
 		eventlog("No wqid. Saved new DONE record " fldval["dem-MRN"] ".")
 	}
-	z.save("worklist.xml")
+	wq.save("worklist.xml")
 	
-	wq := z
 	FileDelete, .lock
 	
 	return
