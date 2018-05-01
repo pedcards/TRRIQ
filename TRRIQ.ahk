@@ -1250,20 +1250,26 @@ MortaraUpload()
 		MorUIfill(mu_UI.TRct,muWinID)
 		
 		wuDirDate := ""
-		wuDirName := ""
+		wuDirFull := ""
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
 		{
 			loopDate := A_LoopFileTimeModified
 			loopName := A_LoopFileLongPath
 			if (loopDate>wuDirDate) {
 				wuDirDate := loopDate
-				wuDirName := loopName
+				wuDirFull := loopName
 			}
 		}
-		eventlog("Found WebUploadDir " wuDirName) ; strX(wuDirName,"\",0,1,"",0))
-		wuDirManifest := new xml(wuDirName "\Manifest.xml")
-		FileGetSize, wuDirManifestSize, % wuDirName "\Manifest.xml"
-		eventlog("Manifest.xml " wuDirManifestSize)
+		wuDirName := strX(wuDirName,"\",0,1,"",0)
+		wuDirDT := RegExReplace(strX(wuDirName,"_",0,1,"",0),"_")
+		eventlog("Found WebUploadDir " wuDirName)
+		FileCopy, % wuDirFull "\Manifest.xml", % wuDirDT "-manifest.xml"
+		FileCopy, % wuDirFull "\PatientInfoV1.dat", % wuDirDT "-patientinfo.xml"
+		FileGetSize, wuDirManifestSize, % wuDirDT "-manifest.xml"
+		FileGetSize, wuDirPatInfoSize, % wuDirDT "-patientinfo.xml"
+		eventlog("Manifest (" wuDirManifestSize "), PatientInfo (" wuDirPatInfoSize ").")
+		wuDirManifest := new xml(wuDirDT "-manifest.xml")
+		wuDirPatInfo := new xml(wuDirDT "-patientinfo.xml")
 		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
 		wuDirSerial := substr(wuDirSerial,-4)
 		eventlog("Manifest serial number " wuDirSerial)
