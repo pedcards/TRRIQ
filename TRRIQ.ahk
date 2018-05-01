@@ -1222,6 +1222,33 @@ MortaraUpload()
 		eventlog("Transfer recording selected.")
 		mu_UI := MorUIgrab()
 		
+{	;	******************************
+		wuDirDate := ""
+		wuDirFull := ""
+		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
+		{
+			loopDate := A_LoopFileTimeModified
+			loopName := A_LoopFileLongPath
+			if (loopDate>wuDirDate) {
+				wuDirDate := loopDate
+				wuDirFull := loopName
+			}
+		}
+		wuDirName := strX(wuDirName,"\",0,1,"",0)
+		wuDirDT := RegExReplace(strX(wuDirName,"_",0,1,"",0),"_")
+		eventlog("Pass 1: Found WebUploadDir " wuDirName)
+		FileCopy, % wuDirFull "\Manifest.xml", % wuDirDT "-manifest.xml", 1
+		FileCopy, % wuDirFull "\PatientInfoV1.dat", % wuDirDT "-patientinfo.xml", 1
+		FileGetSize, wuDirManifestSize, % wuDirDT "-manifest.xml"
+		FileGetSize, wuDirPatInfoSize, % wuDirDT "-patientinfo.xml"
+		eventlog("Pass 1: Manifest (" wuDirManifestSize "), PatientInfo (" wuDirPatInfoSize ").")
+		wuDirManifest := new xml(wuDirDT "-manifest.xml")
+		wuDirPatInfo := new xml(wuDirDT "-patientinfo.xml")
+		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
+		wuDirSerial := substr(wuDirSerial,-4)
+		eventlog("Pass 1: Manifest serial number " wuDirSerial)
+}	;	****************************
+		
 		wqTR:=wq.selectSingleNode(wqStr)
 		if IsObject(wqTR.selectSingleNode("acct")) {									; S/N exists, and valid
 			pt := readwq(wqTR.getAttribute("id"))
