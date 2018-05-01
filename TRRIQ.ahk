@@ -1361,15 +1361,30 @@ muWqSave(sernum) {
 	
 	filecheck()
 	FileOpen(".lock", "W")																; Create lock file.
+	z := wq
 	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " sernum "']"
-	loop, % (ens:=wq.selectNodes(wqStr)).length											; Clear all prior instances of wqID
+	loop, % (ens:=wq.selectNodes(wqStr)).length											; Clear all prior instances of this sernum
 	{
-		eventlog(sernum " Mortara pre-registered.")
 		i := ens.item(A_index-1)
 		enID := i.getAttribute("id")
+		enName := i.selectSingleNode("name").text
+		enMRN := i.selectSingleNode("mrn").text
+		enDate := i.selectSingleNode("date").text
+		enSent := i.selectSingleNode("sent").text
+		if (enSent) {																	; pending/enroll/sent = uploaded, waiting for PDF
+			continue																	; so don't remove
+		}
 		enStr := "/root/pending/enroll[@id='" enId "']"
-		removeNode(enStr)
-		wq.save("worklist.xml")
+			wq.addElement("removed",enStr,{user:A_UserName},A_Now)						; set as done
+			x := wq.selectSingleNode(enStr)												; reload x node
+			clone := x.cloneNode(true)
+			z.selectSingleNode("/root/done").appendChild(clone)							; copy x.clone to z.DONE
+			x := z.selectSingleNode(enStr)												; get z.enStr
+			x.parentNode.removeChild(x)													; and remove it
+			
+			z.save("worklist.xml")
+			wq := z
+		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
 	}
 	filedelete, .lock
 	
@@ -1391,10 +1406,10 @@ muWqSave(sernum) {
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account Number"])
 	wq.addElement("ind",newID,ptDem["Indication"])
-	wq.addElement(ptDem["muphase"],newId,A_now)
+	wq.addElement(ptDem["muphase"],newID,A_now)
 	
 	writeOut("/root/pending","enroll[@id='" id "']")
-	eventlog(sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
+	eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	
 	return
 }
