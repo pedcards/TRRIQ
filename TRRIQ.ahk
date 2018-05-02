@@ -1229,24 +1229,19 @@ MortaraUpload()
 		{
 			loopDate := A_LoopFileTimeModified
 			loopName := A_LoopFileLongPath
-			if (loopDate>wuDirDate) {
+			if (loopDate>=wuDirDate) {
 				wuDirDate := loopDate
 				wuDirFull := loopName
 			}
 		}
-		wuDirName := strX(wuDirFull,"\",0,1,"",0)
-		wuDirDT := RegExReplace(strX(wuDirName,"_",0,1,"",0),"_")
-		eventlog("Pass 1: Found WebUploadDir " wuDirName)
-		FileCopy, % wuDirFull "\Manifest.xml", % wuDirDT "-manifest.xml", 1
-		FileCopy, % wuDirFull "\PatientInfoV1.dat", % wuDirDT "-patientinfo.xml", 1
-		FileGetSize, wuDirManifestSize, % wuDirDT "-manifest.xml"
-		FileGetSize, wuDirPatInfoSize, % wuDirDT "-patientinfo.xml"
-		eventlog("Pass 1: Manifest (" wuDirManifestSize "), PatientInfo (" wuDirPatInfoSize ").")
-		wuDirManifest := new xml(wuDirDT "-manifest.xml")
-		wuDirPatInfo := new xml(wuDirDT "-patientinfo.xml")
-		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
-		wuDirSerial := substr(wuDirSerial,-4)
-		eventlog("Pass 1: Manifest serial number " wuDirSerial)
+		wuDirShort := strX(wuDirFull,"\",0,1,"",0)
+		wuDirDT := RegExReplace(strX(wuDirShort,"_",0,1,"",0),"_")
+		eventlog("Pass 1: Found WebUploadDir " wuDirShort " [" wuDirDT "]")
+		FileReadLine, wuRecord, % wuDirFull "\RECORD.LOG", 1
+		FileReadLine, wuDevice, % wuDirFull "\DEVICE.LOG", 1
+		wuDirSerial := substr(wuDevice,-4)
+		wuDirMRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
+		eventlog("Pass 1: Manifest serial number " wuDirSerial ", MRN " wuDirMRN)
 ; 	******************************
 		
 		wqTR:=wq.selectSingleNode(wqStr)
