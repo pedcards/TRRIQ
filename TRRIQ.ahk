@@ -1232,7 +1232,6 @@ MortaraUpload()
 		, ahk_id %muWinID%
 	SerNum := substr(stregX(muWintxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-6)		; Get S/N on visible page
 	SerNum := SerNum ? trim(SerNum," `r`n") : ""
-	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "']"
 	eventlog("Device S/N " sernum " attached.")
 	
 	if (Tabnum=1) {																		; TRANSFER RECORDING TAB
@@ -1253,14 +1252,13 @@ MortaraUpload()
 		}
 		wuDirShort := strX(wuDirFull,"\",0,1,"",0)
 		wuDirDT := RegExReplace(strX(wuDirShort,"_",0,1,"",0),"_")
-		eventlog("Pass 1: Found WebUploadDir " wuDirShort " [" wuDirDT "]")
+		eventlog("Found WebUploadDir " wuDirShort " [" wuDirDT "]")
 		FileReadLine, wuRecord, % wuDirFull "\RECORD.LOG", 1
-		FileReadLine, wuDevice, % wuDirFull "\DEVICE.LOG", 1
-		wuDirSerial := substr(wuDevice,-4)
 		wuDirMRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
-		eventlog("Pass 1: Manifest serial number " wuDirSerial ", MRN " wuDirMRN)
+		eventlog("Manifest serial number " serNum ", MRN " wuDirMRN)
 ; 	******************************
 		
+		wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" wuDirMRN "']"
 		wqTR:=wq.selectSingleNode(wqStr)
 		if IsObject(wqTR.selectSingleNode("acct")) {									; S/N exists, and valid
 			pt := readwq(wqTR.getAttribute("id"))
@@ -1277,6 +1275,14 @@ MortaraUpload()
 			ptDem["loc"] := z1
 			ptDem["wqid"] := wqTR.getAttribute("id")
 			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
+			MsgBox,, 
+			MsgBox, 262193
+				, Match!
+				, % "Found valid registration for:`n" pt.name "`n" pt.mrn "`n" pt.date
+			IfMsgBox, Cancel
+			{
+				return
+			}
 		} else {																		; no valid S/N exists
 			gosub getDem																; fill ptDem[] with values
 			if (fetchQuit=true) {
@@ -1285,35 +1291,9 @@ MortaraUpload()
 			}
 			ptDem["muphase"] := "upload"
 			muWqSave(SerNum)
+			wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']"
 		}
 		MorUIfill(mu_UI.TRct,muWinID)
-		
-; 	******************************
-		wuDirDate := ""
-		wuDirFull := ""
-		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
-		{
-			loopDate := A_LoopFileTimeModified
-			loopName := A_LoopFileLongPath
-			if (loopDate>wuDirDate) {
-				wuDirDate := loopDate
-				wuDirFull := loopName
-			}
-		}
-		wuDirName := strX(wuDirName,"\",0,1,"",0)
-		wuDirDT := RegExReplace(strX(wuDirName,"_",0,1,"",0),"_")
-		eventlog("Pass 2: Found WebUploadDir " wuDirName)
-		FileCopy, % wuDirFull "\Manifest.xml", % wuDirDT "-manifest.xml", 1
-		FileCopy, % wuDirFull "\PatientInfoV1.dat", % wuDirDT "-patientinfo.xml", 1
-		FileGetSize, wuDirManifestSize, % wuDirDT "-manifest.xml"
-		FileGetSize, wuDirPatInfoSize, % wuDirDT "-patientinfo.xml"
-		eventlog("Pass 2: Manifest (" wuDirManifestSize "), PatientInfo (" wuDirPatInfoSize ").")
-		wuDirManifest := new xml(wuDirDT "-manifest.xml")
-		wuDirPatInfo := new xml(wuDirDT "-patientinfo.xml")
-		wuDirSerial := wuDirManifest.selectSingleNode("manifest").getAttribute("serialnumber")
-		wuDirSerial := substr(wuDirSerial,-4)
-		eventlog("Pass 2: Manifest serial number " wuDirSerial)
-; 	******************************
 		
 		Gui, muTm:Add, Progress, w150 h6 -smooth hwndMtCt 0x8
 		Gui, muTm:+ToolWindow
@@ -1322,8 +1302,8 @@ MortaraUpload()
 		
 		loop
 		{
-			if FileExist(wuDirName "\Uploaded.txt") {
-				FileRead, wuDirUpload, % wuDirName "\Uploaded.txt"
+			if FileExist(wuDirFull "\Uploaded.txt") {
+				;~ FileRead, wuDirUpload, % wuDirFull "\Uploaded.txt"
 				Gui, muTm:Destroy
 				settimer, muTimer, off
 				break
@@ -1341,7 +1321,7 @@ MortaraUpload()
 		}
 		wq.setText(wqStr "/sent",substr(A_now,1,8))
 		wq.setAtt(wqStr "/sent",{user:user})
-		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "']")
+		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']")
 		eventlog(ptDem.MRN " " ptDem.Name " study " ptDem.Date " uploaded to Preventice.")
 	}
 	
