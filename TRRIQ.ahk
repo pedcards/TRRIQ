@@ -1234,7 +1234,7 @@ MortaraUpload()
 				wuDirFull := loopName
 			}
 		}
-		wuDirName := strX(wuDirName,"\",0,1,"",0)
+		wuDirName := strX(wuDirFull,"\",0,1,"",0)
 		wuDirDT := RegExReplace(strX(wuDirName,"_",0,1,"",0),"_")
 		eventlog("Pass 1: Found WebUploadDir " wuDirName)
 		FileCopy, % wuDirFull "\Manifest.xml", % wuDirDT "-manifest.xml", 1
