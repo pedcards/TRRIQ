@@ -373,6 +373,23 @@ WQlist() {
 	
 	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv0 hwndHLV0, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
+	fileCheck()
+	FileOpen(".lock", "W")																; Create lock file.
+	loop, parse, sites0, |
+	{
+		site := A_LoopField
+		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
+		{
+			k := ens.item(A_Index-1)
+			clone := k.cloneNode(true)
+			wq.selectSingleNode("/root/done").appendChild(clone)						; copy k.clone to DONE
+			k.parentNode.removeChild(k)													; remove k node
+			eventlog("Moved " site " record " k.selectSingleNode("mrn").text " " k.selectSingleNode("name").text)
+		}
+	}
+	wq.save("worklist.xml")
+	FileDelete, .lock
+	
 	Loop, parse, sites, |
 	{
 		i := A_index
