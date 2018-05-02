@@ -1249,8 +1249,14 @@ MortaraUpload()
 		wuDirDT := RegExReplace(strX(wuDirShort,"_",0,1,"",0),"_")
 		eventlog("Found WebUploadDir " wuDirShort " [" wuDirDT "]")
 		FileReadLine, wuRecord, % wuDirFull "\RECORD.LOG", 1
+		FileReadLine, wuDevice, % wuDirFull "\DEVICE.LOG", 1
 		wuDirMRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
-		eventlog("Manifest serial number " serNum ", MRN " wuDirMRN)
+		wuDirSer := substr(wuDevice,-4)
+		eventlog("S/N " serNum ", wuDirSer " wuDirSer ", MRN " wuDirMRN)
+		if !(serNum=wuDirSer) {
+			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
+			return
+		}
 ; 	******************************
 		
 		wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" wuDirMRN "']"
