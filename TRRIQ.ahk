@@ -1111,11 +1111,6 @@ parseEnrollment(x) {
 		wq.addElement("webgrab",newID,A_now)
 		done ++
 		
-		if (res.prov~="-(" sites0 ")\s*,") {											; Prov is in site not tracked in WQ
-			moveWQ(id)																	; move from PENDING to DONE list
-			continue
-		}
-		
 		eventlog("Added new registration " res.mrn " " res.name " " date ".")
 	}
 	wq.selectSingleNode("/root/pending").setAttribute("update",A_now)					; set pending[@update] attr
