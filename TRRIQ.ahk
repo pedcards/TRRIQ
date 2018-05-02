@@ -1066,7 +1066,7 @@ parseEnrollment(x) {
 		date := tmp.YYYY tmp.MM tmp.DD
 		count ++
 		
-		if IsObject(wq.selectSingleNode("/pending/enroll[dev='" res.dev "']")) {							; S/N is currently in use
+		if IsObject(wq.selectSingleNode("/pending/enroll[mrn='" res.mrn "'][dev='" res.dev "']")) {			; S/N is currently in use
 			eventlog("Enrollment for " res.dev " already exists in Pending.")
 			continue
 		}
