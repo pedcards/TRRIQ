@@ -1981,15 +1981,20 @@ CheckProcPr2:
 		fetchQuit := true
 		return
 	}
-	tmpWQ := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
+	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " chk.Ser "'][mrn='" chk.MRN "']"
+	if IsObject(wq.selectSingleNode(wqStr)) {											; perfect match
+		tmpWQ.id := wq.selectSingleNode(wqStr).getAttribute("id")
+	} else {
+		tmpWQ := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
+		if (tmpWQ.node = "done") {
+			MsgBox File has been scanned already.
+			eventlog(fileIn " already scanned.")
+			fetchQuit := true
+			return
+		}
+	}
 	fldval["wqid"] := tmpWQ.id
 	pt := readwq(tmpWQ.id)
-	if (tmpWQ.node = "done") {
-		MsgBox File has been scanned already.
-		eventlog(fileIn " already scanned.")
-		fetchQuit := true
-		return
-	}
 	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
 		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
 		MsgBox, 4112, Filesize error!, This file does not appear to be a full-disclosure PDF. Please download the proper file and try again.
