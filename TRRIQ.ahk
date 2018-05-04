@@ -1982,8 +1982,10 @@ CheckProcPr2:
 		return
 	}
 	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " chk.Ser "'][mrn='" chk.MRN "']"
+	tmpWQ := object()
 	if IsObject(wq.selectSingleNode(wqStr)) {											; perfect match
 		tmpWQ.id := wq.selectSingleNode(wqStr).getAttribute("id")
+		eventlog("Found registration ID " tmpWQ.id)
 	} else {
 		tmpWQ := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
 		if (tmpWQ.node = "done") {
