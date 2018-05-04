@@ -1992,7 +1992,7 @@ CheckProcPr2:
 	} else {
 		tmpWQ := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
 		if (tmpWQ.node = "done") {
-			MsgBox % fileIn " has been scanned already.")
+			MsgBox % fileIn " has been scanned already."
 			eventlog(fileIn " already scanned.")
 			fetchQuit := true
 			return
