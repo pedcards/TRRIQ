@@ -1177,6 +1177,7 @@ scanTempfiles() {
 		wq.addElement("date",newID,date)
 		wq.addElement("name",newID,name)
 		wq.addElement("mrn",newID,mrn)
+		wq.addElement("scantemp",newID,A_Now)
 		count ++
 		sleep 1
 	}
