@@ -1234,26 +1234,24 @@ MortaraUpload()
 		mu_UI := MorUIgrab()
 		
 ; 	******************************
-		wuDirDate := ""
-		wuDirFull := ""
 		wuDir := {}
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
 		{
 			loopDate := A_LoopFileTimeModified
 			loopName := A_LoopFileLongPath
-			if (loopDate>=wuDirDate) {
+			if (loopDate>=wuDir.Date) {
 				wuDir.Date := loopDate
 				wuDir.Full := loopName
 			}
 		}
 		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)
 		eventlog("Found WebUploadDir " wuDir.Short )
-		FileReadLine, wuRecord, % wuDirFull "\RECORD.LOG", 1
-		FileReadLine, wuDevice, % wuDirFull "\DEVICE.LOG", 1
+		FileReadLine, wuRecord, % wuDir.Full "\RECORD.LOG", 1
+		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
 		wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
 		wuDir.Ser := substr(wuDevice,-4)
 		eventlog("Data files: wuDirSer " wuDir.Ser ", MRN " wuDir.MRN)
-		if !(serNum=wuDirSer) {
+		if !(serNum=wuDir.Ser) {
 			eventlog("Serial number mismatch.")
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			return
