@@ -1236,30 +1236,31 @@ MortaraUpload()
 ; 	******************************
 		wuDirDate := ""
 		wuDirFull := ""
+		wuDir := {}
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
 		{
 			loopDate := A_LoopFileTimeModified
 			loopName := A_LoopFileLongPath
 			if (loopDate>=wuDirDate) {
-				wuDirDate := loopDate
-				wuDirFull := loopName
+				wuDir.Date := loopDate
+				wuDir.Full := loopName
 			}
 		}
-		wuDirShort := strX(wuDirFull,"\",0,1,"",0)
-		wuDirDT := RegExReplace(strX(wuDirShort,"_",0,1,"",0),"_")
-		eventlog("Found WebUploadDir " wuDirShort " [" wuDirDT "]")
+		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)
+		eventlog("Found WebUploadDir " wuDir.Short )
 		FileReadLine, wuRecord, % wuDirFull "\RECORD.LOG", 1
 		FileReadLine, wuDevice, % wuDirFull "\DEVICE.LOG", 1
-		wuDirMRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
-		wuDirSer := substr(wuDevice,-4)
-		eventlog("S/N " serNum ", wuDirSer " wuDirSer ", MRN " wuDirMRN)
+		wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
+		wuDir.Ser := substr(wuDevice,-4)
+		eventlog("Data files: wuDirSer " wuDir.Ser ", MRN " wuDir.MRN)
 		if !(serNum=wuDirSer) {
+			eventlog("Serial number mismatch.")
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			return
 		}
 ; 	******************************
 		
-		wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" wuDirMRN "']"
+		wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" wuDir.MRN "']"
 		wqTR:=wq.selectSingleNode(wqStr)
 		if IsObject(wqTR.selectSingleNode("acct")) {									; S/N exists, and valid
 			pt := readwq(wqTR.getAttribute("id"))
@@ -1276,18 +1277,19 @@ MortaraUpload()
 			ptDem["loc"] := z1
 			ptDem["wqid"] := wqTR.getAttribute("id")
 			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
-			MsgBox,, 
 			MsgBox, 262193
 				, Match!
 				, % "Found valid registration for:`n" pt.name "`n" pt.mrn "`n" pt.date
 			IfMsgBox, Cancel
 			{
+				eventlog("Cancelled GUI.")
 				return
 			}
 		} else {																		; no valid S/N exists
 			gosub getDem																; fill ptDem[] with values
 			if (fetchQuit=true) {
 				fetchQuit:=false
+				eventlog("Cancelled getDem.")
 				return
 			}
 			ptDem["muphase"] := "upload"
@@ -1300,11 +1302,11 @@ MortaraUpload()
 		Gui, muTm:+ToolWindow
 		Gui, muTm:Show, AutoSize, Close to cancel upload...
 		SetTimer, muTimer, 50
+		ptDem.timer := false
 		
 		loop
 		{
-			if FileExist(wuDirFull "\Uploaded.txt") {
-				;~ FileRead, wuDirUpload, % wuDirFull "\Uploaded.txt"
+			if FileExist(wuDir.Full "\Uploaded.txt") {
 				Gui, muTm:Destroy
 				settimer, muTimer, off
 				break
@@ -1333,6 +1335,7 @@ MortaraUpload()
 		gosub getDem
 		if (fetchQuit=true) {
 			fetchQuit:=false
+			eventlog("Cancelled getDem.")
 			return
 		}
 		
@@ -1989,7 +1992,7 @@ CheckProcPr2:
 	} else {
 		tmpWQ := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
 		if (tmpWQ.node = "done") {
-			MsgBox File has been scanned already.
+			MsgBox % fileIn " has been scanned already.")
 			eventlog(fileIn " already scanned.")
 			fetchQuit := true
 			return
