@@ -170,10 +170,6 @@ PhaseGUI:
 	Gui, Add, Text, x650 y20 w200 h110
 		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
 		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) 
-		;~ .	"Dbl-click a patient item to:`n"
-		;~ .	"  - Log upload to Preventice`n"
-		;~ .	"  - Note communication`n"
-		;~ .	"  - Delete a record"
 	Gui, Add, GroupBox, x640 y0 w220 h60
 	
 	Gui, Font, Bold
@@ -3012,7 +3008,6 @@ filterProv(x) {
 	x := RegExReplace(x,"i) (MD|DO)$")													; remove trailing "( MD)"
 	x := RegExReplace(x,"i) (MD|DO),",",")												; replace "Ruggerie MD, Dennis" with "Ruggerie, Dennis"
 	StringUpper,x,x,T																	; convert "RUGGERIE, DENNIS" to "Ruggerie, Dennis"
-	;~ StringUpper,site1,site1,T
 	if (site1="TRI") {																	; sometimes site improperly registered as "tri"
 		site1 := "TRI-CITIES"
 	}
