@@ -184,7 +184,7 @@ PhaseGUI:
 		, Prepare/Upload Holter
 	Gui, Font, Normal
 	
-	Gui, Add, Tab3, -Wrap x10 y10 w620 h240 vWQtab, % "ALL|" sites						; add Tab bar with tracked sites
+	Gui, Add, Tab3, -Wrap x10 y10 w620 h240 vWQtab, % "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	WQlist()
 	
 	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
