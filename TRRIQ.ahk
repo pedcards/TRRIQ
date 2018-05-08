@@ -3013,6 +3013,9 @@ filterProv(x) {
 	x := RegExReplace(x,"i) (MD|DO),",",")												; replace "Ruggerie MD, Dennis" with "Ruggerie, Dennis"
 	StringUpper,x,x,T																	; convert "RUGGERIE, DENNIS" to "Ruggerie, Dennis"
 	;~ StringUpper,site1,site1,T
+	if (site1="TRI") {																	; sometimes site improperly registered as "tri"
+		site1 := "TRI-CITIES"
+	}
 	return {name:x, site:site1}
 }
 
