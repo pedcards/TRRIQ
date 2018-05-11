@@ -104,6 +104,7 @@ sites0 := "TACOMA|SILVERDALE|ALASKA"													; sites we are not tracking
 sitesLong := {CRD:"MAIN"
 			, EKG:"MAIN"
 			, INPATIENT:"MAIN"
+			, SURGCNTR:"MAIN"
 			, CRDBEL:"BELLEVUE"
 			, CRDEVT:"EVERETT"
 			, CRDTRI:"TRI-CITIES"
