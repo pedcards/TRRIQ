@@ -1588,13 +1588,13 @@ MainLoop:
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
  */
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" temp.txt					; convert PDF pages 1-2 to txt file
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" %filenam%.txt			; convert PDF pages 1-2 to txt file
 	newTxt:=""																		; clear the full txt variable
-	FileRead, maintxt, temp.txt														; load into maintxt
+	FileRead, maintxt, %filenam%.txt												; load into maintxt
 	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
-	FileDelete tempfile.txt															; remove any leftover tempfile
-	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
-	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt								; move a copy into tempfiles for troubleshooting
+	FileDelete %filenam%.txt														; remove any leftover tempfile
+	FileAppend %newtxt%, %filenam%.txt												; create new tempfile with newtxt result
+	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1							; move a copy into tempfiles for troubleshooting
 	eventlog("tempfile.txt -> " fileNam ".txt")
 	
 	blocks := Object()																; clear all objects
@@ -1858,9 +1858,11 @@ shortenPDF(find) {
 	sleep 500
 	ConsWin := WinExist("ahk_pid " winCons)								; get window ID
 
+	Run , pdftotext.exe "%fileIn%" %filenam%full.txt,,min,wincons						; convert PDF all pages to txt file
+	eventlog("Extracting full text.")
 	loop, 100
 	{
-		FileGetSize, fullsize, tempfull.txt
+		FileGetSize, fullsize, %filenam%full.txt
 		IfWinNotExist ahk_id %consWin% 
 		{
 			break
@@ -1870,8 +1872,8 @@ shortenPDF(find) {
 		sleep 120
 	}
 	progress,100,fullsize, Shrinking PDF...
-	FileRead, fulltxt, tempfull.txt
-	filedelete, tempfull.txt
+	FileRead, fulltxt, %filenam%full.txt
+	filedelete, %filenam%full.txt
 	findpos := RegExMatch(fulltxt,find)
 	pgpos := instr(fulltxt,"Page ",,findpos-strlen(fulltxt))
 	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
@@ -2006,8 +2008,6 @@ CheckProcPr2:
 		fetchQuit := true
 		return
 	}
-	Run , pdftotext.exe "%fileIn%" tempfull.txt,,min,wincons							; convert PDF all pages to txt file
-	eventlog("Extracting full text.")
 	
 	if (pt.acct) {																		; <acct> exists, has been registered or uploaded through TRRIQ
 		ptDem["mrn"] := pt.mrn															; fill ptDem[] with values
@@ -2109,14 +2109,14 @@ Zio:
 	eventlog("Holter_Zio")
 	monType := "Zio"
 	
-	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" temp.txt, , hide				; reconvert entire Zio PDF 
+	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" %filenam%.txt, , hide			; reconvert entire Zio PDF 
 	newTxt:=""																		; clear the full txt variable
-	FileRead, maintxt, temp.txt														; load into maintxt
+	FileRead, maintxt, %filenam%.txt												; load into maintxt
 	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
 	StringReplace, newtxt, newtxt, % chr(12), >>>page>>>`r`n, All
-	FileDelete tempfile.txt															; remove any leftover tempfile
-	FileAppend %newtxt%, tempfile.txt												; create new tempfile with newtxt result
-	FileMove tempfile.txt, .\tempfiles\%fileNam%.txt, 1								; overwrite copy in tempfiles
+	FileDelete %filenam%.txt														; remove any leftover tempfile
+	FileAppend %newtxt%, %filenam%.txt												; create new tempfile with newtxt result
+	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1							; overwrite copy in tempfiles
 	eventlog("Zio PDF rescanned -> " fileNam ".txt")
 	
 	zcol := columns(newtxt,"","SIGNATURE",0,"Enrollment Period") ">>>end"
