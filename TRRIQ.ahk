@@ -371,6 +371,7 @@ WQlist() {
 	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv0 hwndHLV0, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
 	fileCheck()
+	wq := new XML("worklist.xml")														; refresh WQ
 	FileOpen(".lock", "W")																; Create lock file.
 	loop, parse, sites0, |																; move studies from sites0 to DONE
 	{
@@ -1038,6 +1039,7 @@ parseEnrollment(x) {
 	global wq
 	
 	fileCheck()
+	wq := new XML("worklist.xml")													; refresh WQ
 	FileOpen(".lock", "W")															; Create lock file.
 	Loop
 	{
@@ -1149,6 +1151,7 @@ scanTempfiles() {
 	count := 0
 	
 	filecheck()
+	wq := new XML("worklist.xml")
 	FileOpen(".lock", "W")															; Create lock file.
 	
 	loop, files, tempfiles/*.csv
@@ -1231,7 +1234,6 @@ MortaraUpload()
 		eventlog("Transfer recording selected.")
 		mu_UI := MorUIgrab()
 		
-; 	******************************
 		wuDir := {}
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
 		{
@@ -1254,8 +1256,8 @@ MortaraUpload()
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			return
 		}
-; 	******************************
 		
+		wq := new XML("worklist.xml")													; refresh WQ
 		wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" wuDir.MRN "']"
 		wqTR:=wq.selectSingleNode(wqStr)
 		if IsObject(wqTR.selectSingleNode("acct")) {									; S/N exists, and valid
@@ -1358,6 +1360,7 @@ MortaraUpload()
 		}
 		Winwaitclose, ahk_id %finOK%													; Now we can wait until it is closed
 		
+		wq := new XML("worklist.xml")													; refresh WQ
 		ptDem["muphase"] := "prepare"
 		muWqSave(SerNum)
 	}
@@ -1689,6 +1692,7 @@ moveWQ(id) {
 	global wq, fldval
 	
 	filecheck()
+	wq := new XML("worklist.xml")
 	FileOpen(".lock", "W")															; Create lock file.
 	
 	wqStr := "/root/pending/enroll[@id='" id "']"
