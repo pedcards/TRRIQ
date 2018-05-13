@@ -113,7 +113,7 @@ hl7.OBR.map := {4:"Test code^Test name",7:"date",25:"status"}
 	Link to Parent Order			OBR.29		Parent Test Code								20		O
 */
 hl7.OBX := []
-hl7.OBX.map := {2:"Obs type",3:"resCode^resName",5:"resValue",6:"resUnits"}
+hl7.OBX.map := {2:"Obs type",3:"resCode^resName",4:"resFname",5:"resValue",6:"resUnits"}
 /*	This is a required segment. It contains the values corresponding to the results.
 	Sequence Number					OBX.01		Serial Number starting from 1					4		R
 	Type Value						OBX.02		CE–Coded entry NM–Num ST–String TX-Text			2		R
