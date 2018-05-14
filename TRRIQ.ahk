@@ -30,9 +30,10 @@ SplitPath, A_ScriptDir,,fileDir
 user := A_UserName
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
-	chip := httpComm("","full")
-	FileDelete, .\Chipotle\currlist.xml
-	FileAppend, % chip, .\Chipotle\currlist.xml
+	
+	;~ chip := httpComm("","full")
+	;~ FileDelete, .\Chipotle\currlist.xml
+	;~ FileAppend, % chip, .\Chipotle\currlist.xml
 	isAdmin := true
 	holterDir := ".\Holter PDFs\"
 	importFld := ".\Import\"
@@ -551,7 +552,7 @@ WQfindclose() {
 }
 
 showGeoIP() {
-	geo := httpComm("http://api.geoiplookup.net")
+	;~ geo := httpComm("http://api.geoiplookup.net")
 	MsgBox % "IP: " A_IPAddress1 "`n"
 		.	"-------------`n"
 		.	geo
