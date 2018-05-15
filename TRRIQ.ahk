@@ -1592,7 +1592,7 @@ MainLoop:
 	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt"			; convert PDF pages 1-2 to txt file
 	newTxt:=""																		; clear the full txt variable
 	FileRead, maintxt, %filenam%.txt												; load into maintxt
-	MsgBox % maintxt
+	FileDelete, %filenam%.txt
 	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
 	FileAppend %newtxt%, %filenam%.txt												; create new tempfile with newtxt result
 	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1							; move a copy into tempfiles for troubleshooting
