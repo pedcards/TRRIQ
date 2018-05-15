@@ -1855,26 +1855,15 @@ return
 
 shortenPDF(find) {
 	eventlog("ShortenPDF")
-	global fileIn, winCons
+	global fileIn, fileNam, wincons
 	sleep 500
-	ConsWin := WinExist("ahk_pid " winCons)								; get window ID
+	fullNam := filenam "full.txt"
 
-	Run , pdftotext.exe "%fileIn%" %filenam%full.txt,,min,wincons						; convert PDF all pages to txt file
+	Progress,,,Scanning full size PDF...
+	Runwait, pdftotext.exe "%fileIn%" "%fullnam%",,min,wincons								; convert PDF all pages to txt file
 	eventlog("Extracting full text.")
-	loop, 100
-	{
-		FileGetSize, fullsize, %filenam%full.txt
-		IfWinNotExist ahk_id %consWin% 
-		{
-			break
-		}
-		Progress, % A_index,% fullsize,Scanning full size PDF...%winCons%,%consWin%
-		
-		sleep 120
-	}
-	progress,100,fullsize, Shrinking PDF...
-	FileRead, fulltxt, %filenam%full.txt
-	filedelete, %filenam%full.txt
+	progress,100,, Shrinking PDF...
+	FileRead, fulltxt, %fullnam%
 	findpos := RegExMatch(fulltxt,find)
 	pgpos := instr(fulltxt,"Page ",,findpos-strlen(fulltxt))
 	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
@@ -1883,6 +1872,7 @@ shortenPDF(find) {
 	if !FileExist(fileIn "sh.pdf") {
 		FileCopy, %fileIn%, %fileIn%sh.pdf
 	}
+	filedelete, %fullnam%
 	FileGetSize, sizeIn, %fileIn%
 	FileGetSize, sizeOut, %fileIn%sh.pdf
 	eventlog("IN: " thousandsSep(sizeIn) ", OUT: " thousandsSep(sizeOut))
