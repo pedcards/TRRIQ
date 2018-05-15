@@ -1956,6 +1956,7 @@ return
 CheckProcPr2:
 {
 	eventlog("CheckProcPr")
+	fetchQuit := false
 	chk.Name := strVal(demog,"Name","\R")												; Name
 		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")							; Filter out 
 		chk.Last := trim(strX(chk.Name,"",1,1,",",1,1)," `r`n")								; NameL				must be [A-Z]
@@ -2246,6 +2247,8 @@ ZioArrField(txt,fld) {
 
 CheckProcZio:
 {
+	eventlog("CheckProcZio")
+	fetchQuit := false
 	chk.Name := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
 		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")									; Filter out 
 		chk.Last := trim(strX(chk.Name, "", 1,1, ",", 1,1))
@@ -2408,6 +2411,8 @@ Return
 
 CheckProcBGH:
 {
+	eventlog("CheckProcBGH")
+	fetchQuit := false
 	chk.Name := strVal(demog,"Patient Name","Patient ID")										; Name
 		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")									; Filter out JR
 		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")									; NameL				must be [A-Z]
