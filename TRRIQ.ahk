@@ -2100,7 +2100,7 @@ Zio:
 	eventlog("Holter_Zio")
 	monType := "Zio"
 	
-	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" %filenam%.txt, , hide			; reconvert entire Zio PDF 
+	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" "%filenam%.txt", , hide			; reconvert entire Zio PDF 
 	newTxt:=""																		; clear the full txt variable
 	FileRead, maintxt, %filenam%.txt												; load into maintxt
 	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
