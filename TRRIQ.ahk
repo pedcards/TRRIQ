@@ -206,7 +206,7 @@ PhaseGUI:
 
 PhaseGUIclose:
 {
-	wq.save("worklist.xml")
+	;~ wq.save("worklist.xml")
 	eventlog("<<<<< Session end.")
 	ExitApp
 }	
