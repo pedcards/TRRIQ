@@ -206,7 +206,6 @@ PhaseGUI:
 
 PhaseGUIclose:
 {
-	;~ wq.save("worklist.xml")
 	eventlog("<<<<< Session end.")
 	ExitApp
 }	
@@ -272,6 +271,7 @@ WQtask() {
 		if (ErrorLevel) {
 			return
 		}
+		wq := new XML("worklist.xml")
 		tmp := parseDate(inDT)
 		dt := tmp.YYYY tmp.MM tmp.DD
 		if !IsObject(wq.selectSingleNode(idstr "/sent")) {
@@ -285,6 +285,7 @@ WQtask() {
 		return
 	}
 	if instr(choice,"note") {
+		wq := new XML("worklist.xml")
 		list :=
 		Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
 		{
@@ -312,7 +313,6 @@ WQtask() {
 			}
 		}
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
-		;~ wq.save("worklist.xml")
 		WriteOut("/root/pending","enroll[@id='" idx "']")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
 		return
@@ -333,6 +333,7 @@ WQtask() {
 				return
 			}
 		}
+		wq := new XML("worklist.xml")
 		if !IsObject(wq.selectSingleNode(idstr "/notes")) {
 			wq.addElement("notes",idstr)
 		}
@@ -372,8 +373,8 @@ WQlist() {
 	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv0 hwndHLV0, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
 	fileCheck()
-	wq := new XML("worklist.xml")														; refresh WQ
 	FileOpen(".lock", "W")																; Create lock file.
+	wq := new XML("worklist.xml")														; refresh WQ
 	loop, parse, sites0, |																; move studies from sites0 to DONE
 	{
 		site := A_LoopField
@@ -1100,8 +1101,8 @@ parseEnrollment(x) {
 		 */
 		sleep 1																			; delay 1ms to ensure different tick time
 		id := A_TickCount 
-		wq.addElement("enroll","/root/pending",{id:id})
 		newID := "/root/pending/enroll[@id='" id "']"
+		wq.addElement("enroll","/root/pending",{id:id})
 		wq.addElement("date",newID,date)
 		wq.addElement("name",newID,res.name)
 		wq.addElement("mrn",newID,res.mrn)
@@ -1631,6 +1632,7 @@ MainLoop:
 		return
 	}
 	if (fetchQuit=true) {																	; exited demographics fetchGUI
+		fetchQuit := false
 		return																				; so skip processing this file
 	}
 	gosub epRead																			; find out which EP is reading today
@@ -1693,7 +1695,6 @@ moveWQ(id) {
 	global wq, fldval
 	
 	filecheck()
-	wq := new XML("worklist.xml")
 	FileOpen(".lock", "W")															; Create lock file.
 	
 	wqStr := "/root/pending/enroll[@id='" id "']"
@@ -1978,6 +1979,7 @@ CheckProcPr2:
 		fetchQuit := true
 		return
 	}
+	wq := new XML("worklist.xml")
 	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " chk.Ser "'][mrn='" chk.MRN "']"
 	tmpWQ := object()
 	if IsObject(wq.selectSingleNode(wqStr)) {											; perfect match
