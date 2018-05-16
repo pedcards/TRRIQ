@@ -456,9 +456,11 @@ WQlist() {
 }
 
 WQfindlost() {
+	global wq
 	MsgBox, 4132, Find devices, Scan database for duplicate devices?`n`n(this can take a while)
 	IfMsgBox, Yes
 	{
+		wq := new XML("worklist.xml")
 		progress,,, Scanning lost devices
 		loop
 		{
@@ -1409,7 +1411,6 @@ muWqSave(sernum) {
 			wq.save("worklist.xml")
 		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
 	}
-	filedelete, .lock
 	
 	if (ptDem.EncDate) {
 		tmp := parsedate(ptDem.EncDate)
@@ -1431,6 +1432,7 @@ muWqSave(sernum) {
 	wq.addElement("ind",newID,ptDem["Indication"])
 	wq.addElement(ptDem["muphase"],newID,A_now)
 	
+	filedelete, .lock
 	writeOut("/root/pending","enroll[@id='" id "']")
 	eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	
@@ -1686,6 +1688,7 @@ outputfiles:
 			. "`n"
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
 	
+	wq := new XML("worklist.xml")
 	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
 	
 Return
