@@ -148,7 +148,6 @@ Loop
 			if !IsObject(ptDem) {											; bad file, never acquires demographics
 				continue
 			}
-			;~ FileDelete, %fileIn%
 			holterLoops++													; increment counter for processed counter
 			holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
 		}
@@ -1623,10 +1622,6 @@ MainLoop:
 		gosub Holter_Pr2
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {		; Body Guardian Heart CEM
 		gosub Event_BGH
-	;~ } else if ((newtxt~="i)Philips|Lifewatch") && instr(newtxt,"Holter")) {				; Obsolete LW Holters
-		;~ gosub Holter_LW
-	;~ } else if ((newtxt~="i)Philips|Lifewatch") && InStr(newtxt,"Transmission")) {		; Lifewatch event
-		;~ gosub Event_LW
 	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {					; Original Preventice Holter
 		;~ gosub Holter_Pr
 	} else {
@@ -2435,29 +2430,6 @@ CheckProcBGH:
 	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name).id
 
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	;~ if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
-		;~ && !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
-		;~ && (chk.Acct~="\d{8}"))															; and EncNum present
-	;~ {
-		;~ MsgBox, 4132, Valid PDF, % ""
-			;~ . chk.Last ", " chk.First "`n"
-			;~ . "MRN " chk.MRN "`n"
-			;~ . "Acct " chk.Acct "`n"
-			;~ . "Ordering: " chk.Prov "`n"
-			;~ . "Study date: " chk.DateStart "`n`n"
-			;~ . "Is all the information correct?`n"
-			;~ . "If NO, reacquire demographics."
-		;~ IfMsgBox, Yes																; All tests valid
-		;~ {
-			;~ return																	; Select YES, return to processing Holter
-		;~ } 
-		;~ else 																		; Select NO, reacquire demographics
-		;~ {
-			;~ MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			;~ . "Paste clipboard into CIS search to select patient and encounter"
-		;~ }
-	;~ }
-	;~ else 																			; Not valid PDF, get demographics post hoc
 	{
 		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
 		MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
