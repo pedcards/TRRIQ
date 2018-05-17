@@ -2429,12 +2429,10 @@ CheckProcBGH:
 	chkDT := parseDate(chk.DateStart)
 	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name).id
 
+	eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	{
-		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
-		MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
-	}
+	MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+		. "Paste clipboard into CIS search to select patient and encounter"
 	; Either invalid PDF or want to correct values
 	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
 	ptDem["nameF"] := chk.First
