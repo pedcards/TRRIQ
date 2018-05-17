@@ -2003,6 +2003,7 @@ CheckProcPr2:
 	}
 	
 	if (pt.acct) {																		; <acct> exists, has been registered or uploaded through TRRIQ
+		eventlog("Pulled valid data for " pt.name " " pt.mrn " " pt.date)
 		ptDem["mrn"] := pt.mrn															; fill ptDem[] with values
 		ptDem["loc"] := pt.site
 		ptDem["EncDate"] := pt.date
@@ -2014,7 +2015,6 @@ CheckProcPr2:
 		ptDem["Provider"] := pt.prov
 		ptDem["Indication"] := pt.ind
 		ptDem["loc"] := z1
-		eventlog("Pulled valid data for " pt.name " " pt.mrn " " pt.date)
 		MsgBox, 4160, Found valid registration, % "" 
 		  . pt.Name "`n" 
 		  . "MRN " pt.MRN "`n" 
