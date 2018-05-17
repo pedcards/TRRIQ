@@ -1630,7 +1630,6 @@ MainLoop:
 		return
 	}
 	if (fetchQuit=true) {																	; exited demographics fetchGUI
-		fetchQuit := false
 		return																				; so skip processing this file
 	}
 	gosub epRead																			; find out which EP is reading today
