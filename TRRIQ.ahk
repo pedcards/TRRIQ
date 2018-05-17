@@ -2041,6 +2041,9 @@ CheckProcPr2:
 		fetchQuit:=false
 		gosub fetchGUI
 		gosub fetchDem
+		if (fetchQuit=true) {
+			return
+		}
 		
 		tmp:=fuzzysearch(format("{:U}",chk.Last ", " chk.First), format("{:U}",ptDem["nameL"] ", " ptDem["nameF"]))
 		if (tmp > 0.15) {
@@ -2321,6 +2324,9 @@ CheckProcZio:
 	fetchQuit:=false
 	gosub fetchGUI
 	gosub fetchDem
+	if (fetchQuit=true) {
+		return
+	}
 	
 	if (tmp:=fuzzysearch(chk.Last " " chk.First, ptDem["nameL"] " " ptDem["nameF"]) > 0.15) {
 		MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
@@ -2458,6 +2464,9 @@ CheckProcBGH:
 	fetchQuit:=false
 	gosub fetchGUI
 	gosub fetchDem
+	if (fetchQuit=true) {
+		return
+	}
 	
 	tmp:=fuzzysearch(format("{:U}",chk.Last ", " chk.First), format("{:U}",ptDem["nameL"] ", " ptDem["nameF"]))
 	if (tmp > 0.15) {
