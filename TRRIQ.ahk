@@ -2462,26 +2462,31 @@ CheckProcBGH:
 	
 	tmp:=fuzzysearch(format("{:U}",chk.Last ", " chk.First), format("{:U}",ptDem["nameL"] ", " ptDem["nameF"]))
 	if (tmp > 0.15) {
-		eventlog("Name error. Parsed """ chk.mrn """, """ chk.Last ", " chk.First """ Grabbed """ ptDem["mrn"] """, """ ptDem["nameL"] ", " ptDem["nameF"] """.")
-		if (chk.MRN=ptDem["mrn"]) {
+		eventlog("Name error. "
+			. "Parsed """ chk.mrn """, """ chk.Last ", " chk.First """ "
+			. "Grabbed """ ptDem["mrn"] """, """ ptDem["nameL"] ", " ptDem["nameF"] """.")
+			
+		if (chk.MRN=ptDem["mrn"]) {														; correct MRN but bad name match
 			MsgBox, 262193, % "Name error (" round((1-tmp)*100,2) "%)"
 				, % "Name does not match!`n`n"
 				.	"	Parsed:	" chk.Last ", " chk.First "`n"
 				.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
-				.	"OK = use " ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
+				.	"OK = use " ptDem["nameL"] ", " ptDem["nameF"] "`n`n"				; "OK" will accept this fetchDem data
 				.	"Cancel = skip this file"
 			IfMsgBox, Cancel
 			{
-				fetchQuit:=true
+				eventlog("Cancel this PDF.")
+				fetchQuit:=true															; cancel out of processing file
 				return
 			}
-		} else {
+		} else {																		; just plain doesn't match
 			MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
 				, % "Name does not match!`n`n"
 				.	"	Parsed:	" chk.Last ", " chk.First "`n"
 				.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
 				.	"Skipping this file."
 				
+			eventlog("Demographics mismatch.")
 			fetchQuit:=true
 			return
 		}
