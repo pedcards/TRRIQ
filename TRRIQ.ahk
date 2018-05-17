@@ -2423,10 +2423,20 @@ CheckProcBGH:
 	chk.Sex := strVal(demog,"Gender","Date of Birth")											; Sex
 	chk.DOB := strVal(demog,"Date of Birth","Practice")											; DOB
 	chk.Ind := strVal(demog,"Diagnosis","\R")													; Indication
+	chk.Ser := 																					; No S/N in PDF!
 	chk.Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
 		chk.DateEnd := trim(strX(chk.Date," - ",0,3,"",0)," `r`n")
 		chk.DateStart := trim(strX(chk.Date,"",1,1," ",1,1)," `r`n")
+	
 	chkDT := parseDate(chk.DateStart)
+	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
+	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
+		FileDelete, %fileIn%
+		eventlog(chk.MRN " PDF archive exists, deleting '" fileIn "'")
+		fetchQuit := true
+		return
+	}
+	wq := new XML("worklist.xml")
 	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name).id
 
 	eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
