@@ -2455,7 +2455,6 @@ CheckProcBGH:
 	ptDem["EncDate"] := chk.DateStart
 	ptDem["EndDate"] := chk.DateEnd
 	ptDem["Indication"] := chk.Ind
-	MsgBox % chk.Prov " >>> " ptDem.Provider
 	
 	fetchQuit:=false
 	gosub fetchGUI
