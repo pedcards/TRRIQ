@@ -1430,7 +1430,7 @@ muWqSave(sernum) {
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account Number"])
 	wq.addElement("ind",newID,ptDem["Indication"])
-	wq.addElement(ptDem["muphase"],newID,A_now)
+	wq.addElement(ptDem["muphase"],newID,{user:A_UserName},A_now)
 	
 	filedelete, .lock
 	writeOut("/root/pending","enroll[@id='" id "']")
