@@ -1,65 +1,78 @@
-hl7 := Object()
-IniRead, s0, hl7.ini
-loop, parse, s0, `n, `r
-{
-	i := A_LoopField
-	hl7[i] := []
-	IniRead, s1, hl7.ini, % i
-	loop, parse, s1, `n, `r
-	{
-		j := A_LoopField
-		arr := strSplit(j,"=",,2)
-		hl7[i][arr[1]] := arr[2]
-	}
-}
-	
+initHL7()
+
 FileRead, txt, samples\hl7test.txt
 
 loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore `r for Unix files
 {
 	seg := A_LoopField																	; read next Segment line
-	StringSplit, fld, seg, |															; split on `|` field separator into fld pseudo-array
-		segNum := fld0																	; number of elements from StringSplit
-		segName := fld1																	; first array element should be NAME
+	if (seg=="") {
+		continue
+	}
+	fld := StrSplit(seg,"|")															; split on `|` field separator into fld pseudo-array
+		fld.0 := fld.length()
+		segName := fld.1																; first array element should be NAME
 	if !IsObject(hl7[segName]) {
-		MsgBox,,% segName, BAD SEGMENT NAME
+		MsgBox,,% A_Index, % seg "-" segName "`nBAD SEGMENT NAME"
 		continue																		; skip if segment name not allowed
 	}
-	loop, % segNum
-	{
-		hl7[segName][A_Index-1] := fld%A_Index%											; start counting at 0
-	}
-	if (segName="MSH") {
-		if !(hl7.MSH.8="ORU^R01") {
-			MsgBox % hl7.MSH.8 "`nWrong message type"
-			break
+	out := hl7sep(fld)
+	if (segName="OBX") {																; need to special process OBX[3], test result strings
+		if (out.Filename) {																; file follows
+			MsgBox % out.Filename
+		} else {
+			lab := out.resName															; label is actually the component
+			res := (out.resValue) 
+				? out.resValue . (out.resUnits ? " " out.resUnits : "")					; [5] value and [6] units
+				: ""
+			MsgBox % lab ": " res
 		}
-	}
-	if (segName="OBX") {																; need to process each OBX in turn during loop
-		hl7sep("OBX",3)
 	}
 }
 
 ExitApp
 
-hl7sep(seg,fld) {
+initHL7() {
 	global hl7
-	str := hl7[seg][fld]																; Field string to separate
-	map := hl7[seg].map[fld]															; Equivalent map to separate
-	StringSplit, cmp, str, `^															; Split string into components
-	StringSplit, val, map, `^															; Split map into text values
-	
-	if (seg="OBX" && fld=3) {															; need to special process OBX[3], test result strings
-		lab := cmp1																		; label is actually the component
-		res := hl7.OBX.5 " " hl7.OBX.6													; [5] value and [6] units
-		MsgBox % lab ": " res
-		return
-	}
-	loop, % val0																		; perform as long as map string exists
+	hl7 := Object()
+	IniRead, s0, hl7.ini																	; s0 = Section headers
+	loop, parse, s0, `n, `r																	; parse s0
 	{
-		lab := val%A_Index%																; generate label and value pairs
-		res := cmp%A_Index%																; for each component, single or multiple
-		
-		MsgBox % lab "`n" res
+		i := A_LoopField
+		hl7[i] := []																		; create array for each header
+		IniRead, s1, hl7.ini, % i															; s1 = individual header
+		loop, parse, s1, `n, `r																; parse s1
+		{
+			j := A_LoopField
+			arr := strSplit(j,"=",,2)														; split into arr.1 and arr.2
+			hl7[i][arr.1] := arr.2															; set hl7.OBX.2 = "Obs Type"
+		}
 	}
+	return
+}
+
+hl7sep(fld) {
+	global hl7
+	res := Object()
+	segName := fld.1
+	segMap := hl7[segName]
+	Loop, % fld.0
+	{
+		i := A_Index																	; step through each of the fld[] strings
+		str := fld[i]
+		strMap := segMap[i-1]															; get hl7 substring that maps to this 
+		if (strMap=="") {																; no matching string map
+			if !(str=="") {																; but a value
+				res[i-1] := str															; create a [0] marker
+			}
+			continue
+		}
+		map := StrSplit(strMap,"^")														; array of substring map
+		val := StrSplit(str,"^")														; array of subelements
+		loop, % map.length()
+		{
+			j := A_Index
+			res[map[j]] := val[j]														; add each subelement
+		}
+	}
+	return res
 }
