@@ -1,6 +1,6 @@
 initHL7()
 
-FileRead, txt, samples\hl7test.txt
+FileRead, txt, samples\hl7test2.txt
 
 loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore `r for Unix files
 {
@@ -8,15 +8,8 @@ loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore
 	if (seg=="") {
 		continue
 	}
-	fld := StrSplit(seg,"|")															; split on `|` field separator into fld pseudo-array
-		fld.0 := fld.length()
-		segName := fld.1																; first array element should be NAME
-	if !IsObject(hl7[segName]) {
-		MsgBox,,% A_Index, % seg "-" segName "`nBAD SEGMENT NAME"
-		continue																		; skip if segment name not allowed
-	}
-	out := hl7sep(fld)
-	if (segName="OBX") {																; need to special process OBX[3], test result strings
+	out := hl7sep(seg)
+	if (out.0="OBX") {																	; need to special process OBX[3], test result strings
 		if (out.Filename) {																; file follows
 			MsgBox % out.Filename
 		} else {
@@ -50,12 +43,17 @@ initHL7() {
 	return
 }
 
-hl7sep(fld) {
+hl7sep(seg) {
 	global hl7
 	res := Object()
-	segName := fld.1
+	fld := StrSplit(seg,"|")															; split on `|` field separator into fld pseudo-array
+	segName := fld.1																	; first array element should be NAME
 	segMap := hl7[segName]
-	Loop, % fld.0
+	if !IsObject(hl7[segName]) {
+		MsgBox,,% A_Index, % seg "-" segName "`nBAD SEGMENT NAME"
+		return error																	; skip if segment name not allowed
+	}
+	Loop, % fld.length()
 	{
 		i := A_Index																	; step through each of the fld[] strings
 		str := fld[i]
