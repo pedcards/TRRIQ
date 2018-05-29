@@ -1,6 +1,7 @@
 initHL7()
+fldVal := []																		; ///	Use this for testing
 
-FileRead, txt, samples\hl7test2.txt
+FileRead, txt, samples\hl7test.txt
 
 loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore `r for Unix files
 {
@@ -9,21 +10,6 @@ loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore
 		continue
 	}
 	out := hl7sep(seg)
-	if (out.0="OBX") {																	; need to special process OBX[3], test result strings
-		if (out.Filename) {																; file follows
-			MsgBox % out.Filename
-			nBytes := Base64Dec( out.resValue, Bin )
-			File := FileOpen( out.Filename, "w")
-			File.RawWrite(Bin, nBytes)
-			File.Close()
-		} else {
-			lab := out.resName															; label is actually the component
-			res := (out.resValue) 
-				? out.resValue . (out.resUnits ? " " out.resUnits : "")					; [5] value and [6] units
-				: ""
-			MsgBox % lab ": " res
-		}
-	}
 }
 
 ExitApp
@@ -48,23 +34,23 @@ initHL7() {
 }
 
 hl7sep(seg) {
-	global hl7
+	global hl7, fldVal
 	res := Object()
-	fld := StrSplit(seg,"|")															; split on `|` field separator into fld pseudo-array
+	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
 	segName := fld.1																	; first array element should be NAME
 	segMap := hl7[segName]
-	if !IsObject(hl7[segName]) {
+	if !IsObject(hl7[segName]) {														; no matching hl7 map?
 		MsgBox,,% A_Index, % seg "-" segName "`nBAD SEGMENT NAME"
-		return error																	; skip if segment name not allowed
+		return error																	; fail if segment name not allowed
 	}
-	Loop, % fld.length()
+	Loop, % fld.length()																; step through each of the fld[] strings
 	{
-		i := A_Index																	; step through each of the fld[] strings
-		str := fld[i]
+		i := A_Index
+		str := fld[i]																	; each segment field
 		strMap := segMap[i-1]															; get hl7 substring that maps to this 
 		if (strMap=="") {																; no matching string map
 			if !(str=="") {																; but a value
-				res[i-1] := str															; create a [0] marker
+				res[i-1] := str															; create a [n] marker
 			}
 			continue
 		}
@@ -74,8 +60,27 @@ hl7sep(seg) {
 		{
 			j := A_Index
 			res[map[j]] := val[j]														; add each subelement
+			fldVal[map[j]] := val[j]
 		}
 	}
+	if (segName="OBX") {																	; need to special process OBX[3], test result strings
+		if !(res.Filename=="") {																; file follows
+			fldVal.Filename := res.Filename
+			;~ MsgBox % res.Filename
+			;~ nBytes := Base64Dec( out.resValue, Bin )
+			;~ File := FileOpen( out.Filename, "w")
+			;~ File.RawWrite(Bin, nBytes)
+			;~ File.Close()
+		} else {
+			label := res.resCode															; label is actually the component
+			result := (res.resValue) 
+				? res.resValue . (res.resUnits ? " " res.resUnits : "")					; [5] value and [6] units
+				: ""
+			fldVal[label] := result
+			;~ MsgBox % lab ": " res
+		}
+	}
+	
 	return res
 }
 
