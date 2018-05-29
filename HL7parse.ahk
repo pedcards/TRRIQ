@@ -12,6 +12,10 @@ loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore
 	if (out.0="OBX") {																	; need to special process OBX[3], test result strings
 		if (out.Filename) {																; file follows
 			MsgBox % out.Filename
+			nBytes := Base64Dec( out.resValue, Bin )
+			File := FileOpen( out.Filename, "w")
+			File.RawWrite(Bin, nBytes)
+			File.Close()
 		} else {
 			lab := out.resName															; label is actually the component
 			res := (out.resValue) 
@@ -74,3 +78,15 @@ hl7sep(seg) {
 	}
 	return res
 }
+
+Base64Dec( ByRef B64, ByRef Bin ) {  ; By SKAN / 18-Aug-2017
+; from https://autohotkey.com/boards/viewtopic.php?t=35964
+Local Rqd := 0, BLen := StrLen(B64)                 ; CRYPT_STRING_BASE64 := 0x1
+  DllCall( "Crypt32.dll\CryptStringToBinary", "Str",B64, "UInt",BLen, "UInt",0x1
+         , "UInt",0, "UIntP",Rqd, "Int",0, "Int",0 )
+  VarSetCapacity( Bin, 128 ), VarSetCapacity( Bin, 0 ),  VarSetCapacity( Bin, Rqd, 0 )
+  DllCall( "Crypt32.dll\CryptStringToBinary", "Str",B64, "UInt",BLen, "UInt",0x1
+         , "Ptr",&Bin, "UIntP",Rqd, "Int",0, "Int",0 )
+Return Rqd
+}
+
