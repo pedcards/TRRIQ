@@ -68,7 +68,6 @@ hl7sep(seg) {
 	if (segName="OBX") {																	; need to special process OBX[3], test result strings
 		if !(res.Filename=="") {																; file follows
 			fldVal.Filename := res.Filename
-			;~ MsgBox % res.Filename
 			;~ nBytes := Base64Dec( out.resValue, Bin )
 			;~ File := FileOpen( out.Filename, "w")
 			;~ File.RawWrite(Bin, nBytes)
@@ -79,7 +78,6 @@ hl7sep(seg) {
 				? res.resValue . (res.resUnits ? " " res.resUnits : "")					; [5] value and [6] units
 				: ""
 			fldVal[label] := result
-			;~ MsgBox % lab ": " res
 		}
 	}
 	
