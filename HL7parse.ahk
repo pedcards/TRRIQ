@@ -60,7 +60,9 @@ hl7sep(seg) {
 		{
 			j := A_Index
 			res[map[j]] := val[j]														; add each subelement
-			fldVal[map[j]] := val[j]
+			if !(fldVal[map[j]]) {
+				fldVal[map[j]] := val[j]
+			}
 		}
 	}
 	if (segName="OBX") {																	; need to special process OBX[3], test result strings
