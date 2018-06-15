@@ -1,15 +1,14 @@
-initHL7()
-fldVal := []																		; ///	Use this for testing
+parseHL7(txt) {
+	;~ FileRead, txt, samples\hl7test.txt
 
-FileRead, txt, samples\hl7test.txt
-
-loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore `r for Unix files
-{
-	seg := A_LoopField																	; read next Segment line
-	if (seg=="") {
-		continue
+	loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore `r for Unix files
+	{
+		seg := A_LoopField																	; read next Segment line
+		if (seg=="") {
+			continue
+		}
+		out := hl7sep(seg)
 	}
-	out := hl7sep(seg)
 }
 
 ExitApp

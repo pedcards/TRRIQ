@@ -115,6 +115,9 @@ sitesLong := {CRD:"MAIN"
 			, CRDTAC:"TACOMA"
 			, CRDSIL:"SILVERDALE"}
 
+initHL7()
+
+
 Loop
 {
 	Gosub PhaseGUI
@@ -3272,3 +3275,4 @@ filecheck() {
 #Include CMsgBox.ahk
 #Include xml.ahk
 #Include sift3.ahk
+#Include hl7.ahk
