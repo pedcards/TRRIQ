@@ -11,8 +11,6 @@ parseHL7(txt) {
 	}
 }
 
-ExitApp
-
 initHL7() {
 	global hl7
 	hl7 := Object()
