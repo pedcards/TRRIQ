@@ -198,7 +198,7 @@ PhaseGUI:
 		, Prepare/Upload Holter
 	Gui, Font, Normal
 	
-	Gui, Add, Tab3, -Wrap x10 y10 w620 h290 vWQtab, % "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
+	Gui, Add, Tab3, -Wrap x10 y10 w620 h285 vWQtab, % "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	WQlist()
 	
 	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
@@ -407,7 +407,7 @@ WQlist() {
 		i := A_index
 		site := A_LoopField
 		Gui, Tab, % site
-		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H250 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
 		{
 			k := ens.item(A_Index-1)
