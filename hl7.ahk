@@ -1,16 +1,3 @@
-parseHL7(txt) {
-	;~ FileRead, txt, samples\hl7test.txt
-
-	loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore `r for Unix files
-	{
-		seg := A_LoopField																	; read next Segment line
-		if (seg=="") {
-			continue
-		}
-		out := hl7sep(seg)
-	}
-}
-
 initHL7() {
 	global hl7
 	hl7 := Object()
@@ -28,6 +15,19 @@ initHL7() {
 		}
 	}
 	return
+}
+
+parseHL7(txt) {
+	;~ FileRead, txt, samples\hl7test.txt
+
+	loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore `r for Unix files
+	{
+		seg := A_LoopField																	; read next Segment line
+		if (seg=="") {
+			continue
+		}
+		out := hl7sep(seg)
+	}
 }
 
 hl7sep(seg) {
