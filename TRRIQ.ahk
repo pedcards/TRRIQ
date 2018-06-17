@@ -180,7 +180,10 @@ PhaseGUI:
 	
 	Gui, Font, Bold
 	Gui, Add, Button
-		, Y+20 w220 h40 vPDF gPhaseTask
+		, Y+10 w220 h40 vHL7 gPhaseTask
+		, Check for new reports
+	Gui, Add, Button
+		, Y+20 wp h40 vPDF gPhaseTask
 		, Process PDF folder
 	Gui, Add, Button
 		, Y+20 wp h40 vEnroll gPhaseTask
@@ -190,7 +193,7 @@ PhaseGUI:
 		, Prepare/Upload Holter
 	Gui, Font, Normal
 	
-	Gui, Add, Tab3, -Wrap x10 y10 w620 h240 vWQtab, % "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
+	Gui, Add, Tab3, -Wrap x10 y10 w620 h290 vWQtab, % "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	WQlist()
 	
 	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
@@ -374,7 +377,7 @@ WQlist() {
 	
 	Progress,,,Scanning worklist...
 	
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv0 hwndHLV0, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H250 gWQtask vWQlv0 hwndHLV0, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
