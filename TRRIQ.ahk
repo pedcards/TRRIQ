@@ -124,6 +124,11 @@ Loop
 	Gosub PhaseGUI
 	WinWaitClose, TRRIQ Dashboard
 
+	if (phase="HL7") {
+		eventlog("Scan hl7 files.")
+		gosub readHL7dir
+	}
+	
 	if (phase="Enroll") {
 		eventlog("Update Preventice enrollments.")
 		gosub CheckPrEnroll
@@ -587,6 +592,17 @@ readWQ(idx) {
 		res[node]:=val
 	}
 	return res
+}
+
+readHL7dir:
+{
+	loop, Files, % hl7Dir "*.hl7"
+	{
+		fldVal := Object()
+		FileRead, fileIn, % A_LoopFileFullPath
+		parseHL7(fileIn)
+	}
+	return
 }
 
 FetchDem:
