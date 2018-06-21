@@ -28,6 +28,7 @@ parseHL7(txt) {
 		}
 		out := hl7sep(seg)
 	}
+	return
 }
 
 hl7sep(seg) {
