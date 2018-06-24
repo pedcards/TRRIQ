@@ -66,10 +66,10 @@ hl7sep(seg) {
 	if (segName="OBX") {																	; need to special process OBX[3], test result strings
 		if !(res.Filename=="") {																; file follows
 			fldVal.Filename := res.Filename
-			;~ nBytes := Base64Dec( out.resValue, Bin )
-			;~ File := FileOpen( out.Filename, "w")
-			;~ File.RawWrite(Bin, nBytes)
-			;~ File.Close()
+			nBytes := Base64Dec( res.resValue, Bin )
+			File := FileOpen( res.Filename, "w")
+			File.RawWrite(Bin, nBytes)
+			File.Close()
 		} else {
 			label := res.resCode															; label is actually the component
 			result := (res.resValue) 
