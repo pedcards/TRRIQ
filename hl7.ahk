@@ -60,22 +60,24 @@ hl7sep(seg) {
 			res[map[j]] := val[j]														; add each subelement
 			if !(fldVal[map[j]]) {
 				fldVal[map[j]] := val[j]
+			} else {
+				MsgBox,, % map[j], % val[j]
 			}
 		}
 	}
-	if (segName="OBX") {																	; need to special process OBX[3], test result strings
-		if !(res.Filename=="") {																; file follows
+	if (segName="OBX") {																; need to special process OBX[], test result strings
+		if !(res.Filename=="") {															; file follows
 			fldVal.Filename := res.Filename
 			nBytes := Base64Dec( res.resValue, Bin )
 			File := FileOpen( res.Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
 		} else {
-			label := res.resCode															; label is actually the component
-			result := (res.resValue) 
-				? res.resValue . (res.resUnits ? " " res.resUnits : "")					; [5] value and [6] units
-				: ""
-			fldVal[label] := result
+			;~ label := res.resCode														; label is actually the component
+			;~ result := (res.resValue) 
+				;~ ? res.resValue . (res.resUnits ? " " res.resUnits : "")					; [5] value and [6] units
+				;~ : ""
+			;~ fldVal[label] := result
 		}
 	}
 	
