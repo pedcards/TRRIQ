@@ -120,6 +120,13 @@ sitesLong := {CRD:"MAIN"
 
 initHL7()
 
+progress,,,Identifying workstation...
+if !(wksLoc := GetLocation()) {
+	progress, off
+	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
+	ExitApp
+}
+
 Loop
 {
 	Gosub PhaseGUI
