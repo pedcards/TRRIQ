@@ -12,9 +12,6 @@
 ;                      root -> workstations -> workstation -> wsname
 ;                      root -> workstations -> workstation -> location
 ;
-#SingleInstance force
-
-#Include xml.ahk
 
 ; **** Globals used for GUI
 global SelectedLocation := ""      
@@ -23,7 +20,7 @@ global SelectConfirm := ""
 ; **** Globals used as constants (do not change these variables in the code)
 global m_strXmlFilename := "wkslocation.xml"                                 ; path to xml data file that contains workstation information
 global m_strXmlLocationsPath := "/root/locations"                            ; xml path to locations node (location names)
-global m_strXmlWorkstationsPath := "/root//workstations"                     ; xml path to workstations node (contains all infomation for workstations)
+global m_strXmlWorkstationsPath := "/root/workstations"                      ; xml path to workstations node (contains all infomation for workstations)
 global m_strXmlWksNodeName := "workstation"                                  ; name of "workstation" node in the xml data file
 global m_strXmlWksName := "wsname"                                           ; name of the "workstation name node" in the xml data file
 global m_strXmlLocationName := "location"                                    ; name of the "location" node in the xml data file
@@ -94,7 +91,7 @@ GetWksLocation(nameIn)
 ;
 PromptForLocation()
 {
-	workstationLocation = ""
+	workstationLocation := ""
 
     locationData := GetLocations()                                              ; Function to retrive the location list from the data store
 
