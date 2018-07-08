@@ -3329,6 +3329,7 @@ filecheck() {
 ;~ return
 ;~ }
 
+#Include HostName.ahk
 #Include CMsgBox.ahk
 #Include xml.ahk
 #Include sift3.ahk
