@@ -55,6 +55,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	hl7Dir := "\\childrens\files\HCCardiologyFiles\EP\PreventiceData\"
 	eventlog(">>>>> Started in PROD mode. Exe ver " substr(tmp,1,12))
 }
+#Include HostName.ahk
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -3329,7 +3330,6 @@ filecheck() {
 ;~ return
 ;~ }
 
-#Include HostName.ahk
 #Include CMsgBox.ahk
 #Include xml.ahk
 #Include sift3.ahk
