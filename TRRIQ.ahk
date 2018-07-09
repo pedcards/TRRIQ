@@ -55,7 +55,6 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	hl7Dir := "\\childrens\files\HCCardiologyFiles\EP\PreventiceData\"
 	eventlog(">>>>> Started in PROD mode. Exe ver " substr(tmp,1,12))
 }
-#Include HostName.ahk
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -121,12 +120,26 @@ sitesLong := {CRD:"MAIN"
 initHL7()
 
 progress,,,Identifying workstation...
+; **** Globals used for GUI
+global	SelectedLocation := ""
+	,	SelectConfirm := ""
+
+; **** Globals used as constants (do not change these variables in the code)
+global	m_strXmlFilename := "wkslocation.xml"                                 ; path to xml data file that contains workstation information
+	,	m_strXmlLocationsPath := "/root/locations"                            ; xml path to locations node (location names)
+	,	m_strXmlWorkstationsPath := "/root/workstations"                      ; xml path to workstations node (contains all infomation for workstations)
+	,	m_strXmlWksNodeName := "workstation"                                  ; name of "workstation" node in the xml data file
+	,	m_strXmlWksName := "wsname"                                           ; name of the "workstation name node" in the xml data file
+	,	m_strXmlLocationName := "location"                                    ; name of the "location" node in the xml data file
+
 if !(wksLoc := GetLocation()) {
 	progress, off
 	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
 	ExitApp
 }
 
+/*	This is the main part ==============================================================
+*/
 Loop
 {
 	Gosub PhaseGUI
@@ -3341,3 +3354,4 @@ filecheck() {
 #Include xml.ahk
 #Include sift3.ahk
 #Include hl7.ahk
+#Include HostName.ahk
