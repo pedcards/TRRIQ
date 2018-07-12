@@ -631,23 +631,29 @@ FetchDem:
 				}
 				if (mdProv and mdAcct) {												; we have both critical coordinates
 					mdX0 := 50
+					mdX1 := mdWinW*0.15
+					mdX2 := mdWinW*0.25
+					mdX3 := mdWinW*0.35
 					mdCoord.x1 := mdX0
-					mdCoord.x2 := mdX0 + mdXd
-					mdCoord.x3 := mdX0 + mdXd*2
-					mdCoord.x4 := mdX0 + mdXd*3
+					mdCoord.x2 := mdX0 + mdWinW*0.15
+					mdCoord.x3 := mdX0 + mdWinW*0.25
+					mdCoord.x4 := mdX0 + mdWinW*0.35
+					mdCoord.x5 := mdX0 + mdWinW*0.45
+					mdCoord.x6 := mdX0 + mdWinW*0.65
+					mdCoord.x7 := mdX0 + mdWinW*0.85
 					mdCoord.y2 := mdCoord.y1+(mdCoord.y3-mdCoord.y1)/2									; determine remaning row coordinate
 					
 					Gui, fetch:hide														; grab remaining demographic values
 					BlockInput, On														; Prevent extraneous input
 					ptDem["MRN"] := mouseGrab(mdCoord.x1,mdCoord.y2).value
 					ptDem["DOB"] := mouseGrab(mdCoord.x2,mdCoord.y2).value
-					ptDem["Sex"] := mouseGrab(mdCoord.x3,mdCoord.y1).value
+					ptDem["Sex"] := mouseGrab(mdCoord.x4,mdCoord.y1).value
 					eventlog("MouseGrab other fields. MRN=" ptDem["MRN"] " DOB=" ptDem["DOB"] " Sex=" ptDem["Sex"] ".")
 					
-					tmp := mouseGrab(mdCoord.x3,mdCoord.y3)										; grab Encounter Type field
+					tmp := mouseGrab(mdCoord.x6,mdCoord.y3)										; grab Encounter Type field
 					ptDem["Type"] := tmp.value
 					if (ptDem["Type"]="Outpatient") {
-						ptDem["Loc"] := mouseGrab(mdCoord.x4-mdX0-30,mdCoord.y2).value				; most outpatient locations are short strings, click the right half of cell to grab location name
+						ptDem["Loc"] := mouseGrab(mdCoord.x7-mdX0-30,mdCoord.y2).value				; most outpatient locations are short strings, click the right half of cell to grab location name
 					} else {
 						ptDem["Loc"] := tmp.loc
 					}
