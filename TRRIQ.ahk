@@ -99,7 +99,7 @@ if fileexist("worklist.xml") {
 }
 scanTempfiles()
 
-demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]						; valid field names for parseClip()
+demVals := ["MRN","Account Number","DOB","Sex","Legal Sex","Birth Sex","Loc","Provider"]						; valid field names for parseClip()
 sites := "MAIN|BELLEVUE|EVERETT|TRI-CITIES|TRI|WENATCHEE|YAKIMA|GREAT FALLS"			; sites we are tracking
 sites0 := "TACOMA|SILVERDALE|ALASKA"													; sites we are not tracking
 sitesLong := {CRD:"MAIN"
@@ -698,6 +698,7 @@ parseClip() {
 	
 	StringSplit, val, clip, :															; break field into val1:val2
 	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
+		val1 := RegExReplace(val1,"Legal Sex|Birth Sex","Sex")
 		clipboard := ""
 		return {"field":val1
 				, "value":val2}
