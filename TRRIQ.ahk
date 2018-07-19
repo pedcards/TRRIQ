@@ -204,15 +204,7 @@ PhaseGUI:
 		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) 
 	Gui, Add, GroupBox, x640 y0 w220 h60
 	
-	loop, Files, % hl7Dir "*.hl7"
-	{
-		hl7ct := A_Index
-	}
-	
 	Gui, Font, Bold
-	Gui, Add, Button
-		, Y+10 w220 h40 vHL7 gPhaseTask
-		, Check new reports (%hl7ct%)
 	Gui, Add, Button
 		, Y+20 wp h40 vPDF gPhaseTask
 		, Process PDF folder
@@ -484,6 +476,10 @@ WQlist() {
 		LV_ModifyCol(8,130)
 	}
 	
+	loop, Files, % hl7Dir "*.hl7"
+	{
+		hl7ct := A_Index
+	}
 	Gui, ListView, WQlv_in
 	LV_ModifyCol()
 	LV_ModifyCol(1,"0")
