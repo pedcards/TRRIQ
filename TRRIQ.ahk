@@ -35,6 +35,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	;~ FileDelete, .\Chipotle\currlist.xml
 	;~ FileAppend, % chip, .\Chipotle\currlist.xml
 	isAdmin := true
+	preventiceDir := ".\Preventice\"
 	holterDir := ".\Holter PDFs\"
 	importFld := ".\Import\"
 	chipDir := ".\Chipotle\"
@@ -46,6 +47,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 } else {
 	FileGetTime, tmp, TRRIQ.exe
 	isAdmin := false
+	preventiceDir := "..\Holter PDFs\Preventice\"
 	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
