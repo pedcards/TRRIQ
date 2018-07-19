@@ -411,7 +411,7 @@ WQlist() {
 	Progress,,,Scanning worklist...
 	
 	Gui, Tab, INBOX
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_in hwndHLV_in, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|Extracted|FullDisc
 	Gui, Tab, ALL
 	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
@@ -485,6 +485,18 @@ WQlist() {
 		LV_ModifyCol(6,140)
 		LV_ModifyCol(8,130)
 	}
+	
+	Gui, ListView, WQlv_in
+	LV_ModifyCol()
+	LV_ModifyCol(1,"0")
+	LV_ModifyCol(2,"140 Desc")
+	LV_ModifyCol(2,"Sort")
+	LV_ModifyCol(3,"60")
+	LV_ModifyCol(4,"80")
+	LV_ModifyCol(5,"80")
+	LV_ModifyCol(6,"80")
+	LV_ModifyCol(7,"80")
+	
 	Gui, ListView, WQlv_all
 	LV_ModifyCol()
 	LV_ModifyCol(1,"0")
@@ -494,6 +506,7 @@ WQlist() {
 	LV_ModifyCol(4,"60")
 	LV_ModifyCol(6,140)
 	LV_ModifyCol(8,130)
+	
 	progress, off
 	return
 }
