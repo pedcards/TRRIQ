@@ -35,26 +35,24 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	;~ FileDelete, .\Chipotle\currlist.xml
 	;~ FileAppend, % chip, .\Chipotle\currlist.xml
 	isAdmin := true
-	preventiceDir := ".\Preventice\"
+	hl7Dir := ".\Preventice\"
 	holterDir := ".\Holter PDFs\"
 	importFld := ".\Import\"
 	chipDir := ".\Chipotle\"
 	OnbaseDir1 := ".\Onbase\"
 	OnbaseDir2 := ".\HCClinic\"
 	webUploadDir := ".\files\Web Upload Files for h3.preventice.com  WebUploadApplication.application\"
-	hl7Dir := ".\PreventiceData\"
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
 	FileGetTime, tmp, TRRIQ.exe
 	isAdmin := false
-	preventiceDir := "..\Holter PDFs\Preventice\"
+	hl7Dir := "..\Holter PDFs\Preventice\"
 	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
 	OnbaseDir1 := "\\childrens\apps$\OnbaseFaxFiles\CardiacCathReport\" 
 	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads\"
 	webUploadDir := "C:\Web Upload Files for h3.preventice.com  WebUploadApplication.application\"
-	hl7Dir := "\\childrens\files\HCCardiologyFiles\EP\PreventiceData\"
 	eventlog(">>>>> Started in PROD mode. Exe ver " substr(tmp,1,12))
 }
 
