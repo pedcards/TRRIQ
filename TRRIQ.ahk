@@ -226,7 +226,7 @@ PhaseGUI:
 		, Prepare/Upload Holter
 	Gui, Font, Normal
 	
-	Gui, Add, Tab3, -Wrap x10 y10 w620 h285 vWQtab, % "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
+	Gui, Add, Tab3, -Wrap x10 y10 w620 h240 vWQtab, % "INBOX|ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	WQlist()
 	
 	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
@@ -410,7 +410,10 @@ WQlist() {
 	
 	Progress,,,Scanning worklist...
 	
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H250 gWQtask vWQlv0 hwndHLV0, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, Tab, INBOX
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_in hwndHLV_in, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, Tab, ALL
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
@@ -459,7 +462,7 @@ WQlist() {
 				,e0.dev
 				,e0.prov
 				,e0.site)
-			Gui, ListView, WQlv0
+			Gui, ListView, WQlv_all														
 			LV_Add(""
 				,id
 				,e0.date																;~ ,parseDate(e0.date).MM "/" parseDate(e0.date).DD
@@ -482,7 +485,7 @@ WQlist() {
 		LV_ModifyCol(6,140)
 		LV_ModifyCol(8,130)
 	}
-	Gui, ListView, WQlv0
+	Gui, ListView, WQlv_all
 	LV_ModifyCol()
 	LV_ModifyCol(1,"0")
 	LV_ModifyCol(2,"60 Desc")
