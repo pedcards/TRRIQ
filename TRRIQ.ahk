@@ -400,11 +400,6 @@ WQlist() {
 	
 	Progress,,,Scanning worklist...
 	
-	Gui, Tab, INBOX
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|Extracted|FullDisc
-	Gui, Tab, ALL
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
-	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
 	wq := new XML("worklist.xml")														; refresh WQ
@@ -422,6 +417,40 @@ WQlist() {
 	}
 	wq.save("worklist.xml")
 	FileDelete, .lock
+	
+	Gui, Tab, INBOX
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|ID|Extracted|FullDisc
+	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
+	{
+		hl7ct := A_Index
+		filenam := A_LoopFileName
+		x := StrSplit(filenam,"_")
+		id := findWQid(SubStr(x.5,1,8),x.3).id
+		e0 := readWQ(id)
+		LV_Add(""
+			, filenam
+			, x.1 ", " x.2
+			, x.3
+			, x.4
+			, x.5
+			, id
+			, e0.name
+			, filenam)
+	}
+	Gui, ListView, WQlv_in
+		LV_ModifyCol()
+		LV_ModifyCol(1,"0")
+		LV_ModifyCol(2,"140")
+		LV_ModifyCol(3,"60")
+		LV_ModifyCol(4,"80")
+		LV_ModifyCol(5,"80 Asc")
+		LV_ModifyCol(5,"Sort")
+		LV_ModifyCol(6,"60")
+		LV_ModifyCol(7,"80")
+		LV_ModifyCol(8,"80")
+	
+	Gui, Tab, ALL
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
 	Loop, parse, sites, |
 	{
@@ -466,6 +495,17 @@ WQlist() {
 			
 		}
 		Gui, ListView, WQlv%i%
+			LV_ModifyCol()
+			LV_ModifyCol(1,"0")
+			LV_ModifyCol(2,"60 Desc")
+			LV_ModifyCol(2,"Sort")
+			LV_ModifyCol(3,"40")
+			LV_ModifyCol(4,"60")
+			LV_ModifyCol(6,140)
+			LV_ModifyCol(8,130)
+	}
+	
+	Gui, ListView, WQlv_all
 		LV_ModifyCol()
 		LV_ModifyCol(1,"0")
 		LV_ModifyCol(2,"60 Desc")
@@ -474,32 +514,6 @@ WQlist() {
 		LV_ModifyCol(4,"60")
 		LV_ModifyCol(6,140)
 		LV_ModifyCol(8,130)
-	}
-	
-	loop, Files, % hl7Dir "*.hl7"
-	{
-		hl7ct := A_Index
-	}
-	Gui, ListView, WQlv_in
-	LV_ModifyCol()
-	LV_ModifyCol(1,"0")
-	LV_ModifyCol(2,"140 Desc")
-	LV_ModifyCol(2,"Sort")
-	LV_ModifyCol(3,"60")
-	LV_ModifyCol(4,"80")
-	LV_ModifyCol(5,"80")
-	LV_ModifyCol(6,"80")
-	LV_ModifyCol(7,"80")
-	
-	Gui, ListView, WQlv_all
-	LV_ModifyCol()
-	LV_ModifyCol(1,"0")
-	LV_ModifyCol(2,"60 Desc")
-	LV_ModifyCol(2,"Sort")
-	LV_ModifyCol(3,"40")
-	LV_ModifyCol(4,"60")
-	LV_ModifyCol(6,140)
-	LV_ModifyCol(8,130)
 	
 	progress, off
 	return
