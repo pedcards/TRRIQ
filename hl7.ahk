@@ -27,12 +27,12 @@ parseHL7(txt) {
 		if (seg=="") {
 			continue
 		}
-		out := hl7sep(seg)
+		out := hl7line(seg)
 	}
 	return
 }
 
-hl7sep(seg) {
+hl7line(seg) {
 	global hl7, fldVal
 	res := Object()
 	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
