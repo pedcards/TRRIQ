@@ -57,22 +57,27 @@ hl7line(seg) {
 		str := fld[i]																	; each segment field
 		strMap := segMap[i-1]															; get hl7 substring that maps to this 
 		
-		if (strMap=="") {																; no matching string map
-			if !(str=="") {																; but a value
-				res[i-1] := str															; create a [n] marker
+		val := StrSplit(str,"^")														; array of subelements
+		if (strMap=="") {
+			loop, % val.length()
+			{
+				strMap .= "zzz" A_Index "^"
 			}
-			continue
 		}
 		map := StrSplit(strMap,"^")														; array of substring map
-		val := StrSplit(str,"^")														; array of subelements
 		loop, % map.length()
 		{
 			j := A_Index
-			res[map[j]] := val[j]														; add each subelement
-			if !(fldVal[map[j]]) {
-				fldVal[map[j]] := val[j]
+			x := segName "_" map[j]
+			res[x] := val[j]															; add each mapped result as subelement, res.mapped_name
+			
+			if (fldVal[x]=="") {														; if mapped value is null, place it in fldVal.name
+				fldVal[x] := val[j]
 			} else {
-				MsgBox,, % map[j], % val[j]
+				MsgBox,
+					, % "fldVal[" x "]"
+					, % "Existing: " fldVal[x] "`n"
+					.	"Proposed: " val[j]
 			}
 		}
 	}
