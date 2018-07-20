@@ -650,14 +650,13 @@ readHL7()
 	;~ if (idx="ID") {																	; returns column name if line blank
 		;~ return
 	;~ }
-	global wq, user
+	global wq, user, fldval, hl7Dir
 	
 	Gui, phase:Hide
-	MsgBox % fnam
 	
-	;~ fldVal := Object()
-	;~ FileRead, fileIn, % fnam
-	;~ parseHL7(fileIn)
+	fldVal := Object()
+	FileRead, fileIn, % hl7Dir . fnam
+	parseHL7(fileIn)
 	;~ mapHL7()
 	Gui, phase:Show
 	return
