@@ -414,7 +414,7 @@ WQlist() {
 	FileDelete, .lock
 	
 	Gui, Tab, INBOX
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|ID|Extracted|FullDisc
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadHL7 vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|ID|Extracted|FullDisc
 	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
 	{
 		hl7ct := A_Index
@@ -636,15 +636,29 @@ readWQ(idx) {
 	return res
 }
 
-readHL7dir:
+readHL7()
 {
-	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
-	{
-		fldVal := Object()
-		FileRead, fileIn, % A_LoopFileFullPath
-		parseHL7(fileIn)
-		mapHL7()
+	agc := A_GuiControl
+	if !instr(agc,"WQlv") {
+		return
 	}
+	if !(A_GuiEvent="DoubleClick") {
+		return
+	}
+	Gui, ListView, %agc%
+	LV_GetText(fnam, A_EventInfo,1)
+	;~ if (idx="ID") {																	; returns column name if line blank
+		;~ return
+	;~ }
+	global wq, user
+	
+	MsgBox % fnam
+	
+	;~ fldVal := Object()
+	;~ FileRead, fileIn, % fnam
+	;~ parseHL7(fileIn)
+	;~ mapHL7()
+	
 	return
 }
 
