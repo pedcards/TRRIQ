@@ -652,13 +652,14 @@ readHL7()
 	;~ }
 	global wq, user
 	
+	Gui, phase:Hide
 	MsgBox % fnam
 	
 	;~ fldVal := Object()
 	;~ FileRead, fileIn, % fnam
 	;~ parseHL7(fileIn)
 	;~ mapHL7()
-	
+	Gui, phase:Show
 	return
 }
 
