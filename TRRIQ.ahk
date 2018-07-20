@@ -166,7 +166,7 @@ Loop
 			FileGetSize, fileInSize, %fileIn%
 			eventlog("----------")
 			eventlog("Processing """ fileNam ".pdf"" (" thousandsSep(fileInSize) ").")
-			gosub MainLoop													; process the PDF
+			gosub processPDF												; process the PDF
 			if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
 				continue
 			}
@@ -1677,7 +1677,7 @@ UiFieldFill(fld,val,win) {
 	return
 }
 
-MainLoop:
+ProcessPDF:
 {
 /*	This main loop accepts a %fileIn% filename,
  *	determines the filetype based on header contents,
