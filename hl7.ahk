@@ -18,9 +18,10 @@ initHL7() {
 }
 
 parseHL7(txt) {
-	;~ FileRead, txt, samples\hl7test.txt
 	global fldval
-	loop, parse, txt, `n, `r																; parse HL7 message, split on `n, ignore `r for Unix files
+	StringReplace, txt, txt, `r`n, `r														; convert `r`n to `r
+	StringReplace, txt, txt, `n, `r															; convert `n to `r
+	loop, parse, txt, `r, `n																; parse HL7 message, split on `r, ignore `n
 	{
 		seg := A_LoopField																	; read next Segment line
 		if (seg=="") {
