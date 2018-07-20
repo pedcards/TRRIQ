@@ -51,8 +51,12 @@ hl7line(seg) {
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
 		i := A_Index
+		if (i<=2) {																		; skip first 2 elements in OBX|2|TX
+			continue
+		}
 		str := fld[i]																	; each segment field
 		strMap := segMap[i-1]															; get hl7 substring that maps to this 
+		
 		if (strMap=="") {																; no matching string map
 			if !(str=="") {																; but a value
 				res[i-1] := str															; create a [n] marker
