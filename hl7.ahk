@@ -33,6 +33,12 @@ parseHL7(txt) {
 }
 
 hl7line(seg) {
+/*	Interpret an hl7 message "segment" (line)
+	segments are comprised of fields separated by "|" char
+	field elements can contain subelements separated by "^" char
+	field elements stored in res[i] object
+	attempt to map each field to recognized structure for that field element
+*/
 	global hl7, fldVal
 	res := Object()
 	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
