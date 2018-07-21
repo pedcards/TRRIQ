@@ -48,6 +48,15 @@ hl7line(seg) {
 		MsgBox,,% A_Index, % seg "-" segName "`nBAD SEGMENT NAME"
 		return error																	; fail if segment name not allowed
 	}
+	if (segName=="OBX") {
+		if (fld.3 ~= "^(CE|NM|ST|TX|ED)$") {
+			
+		}
+		segPre := "OBX_" fld.3
+	} else {
+		segPre := segName
+	}
+	
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
 		i := A_Index
@@ -61,14 +70,18 @@ hl7line(seg) {
 		if (strMap=="") {
 			loop, % val.length()
 			{
-				strMap .= "zzz" A_Index "^"
+				strMap .= "z" i "_" A_Index "^"
 			}
 		}
 		map := StrSplit(strMap,"^")														; array of substring map
 		loop, % map.length()
 		{
 			j := A_Index
-			x := segName "_" map[j]
+			if (map[j]=="") {
+				continue
+			}
+			x := segPre "_" map[j]
+			
 			res[x] := val[j]															; add each mapped result as subelement, res.mapped_name
 			
 			if (fldVal[x]=="") {														; if mapped value is null, place it in fldVal.name
@@ -89,11 +102,11 @@ hl7line(seg) {
 			File.RawWrite(Bin, nBytes)
 			File.Close()
 		} else {
-			;~ label := res.resCode														; label is actually the component
-			;~ result := (res.resValue) 
-				;~ ? res.resValue . (res.resUnits ? " " res.resUnits : "")					; [5] value and [6] units
-				;~ : ""
-			;~ fldVal[label] := result
+			label := res.resCode														; label is actually the component
+			result := (res.resValue) 
+				? res.resValue . (res.resUnits ? " " res.resUnits : "")					; [5] value and [6] units
+				: ""
+			fldVal[label] := result
 		}
 	}
 	
