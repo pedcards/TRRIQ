@@ -27,7 +27,7 @@ parseHL7(txt) {
 		if (seg=="") {
 			continue
 		}
-		out := hl7line(seg)
+		hl7line(seg)
 	}
 	return
 }
