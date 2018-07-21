@@ -43,19 +43,15 @@ hl7line(seg) {
 	res := Object()
 	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
 	segName := fld.1																	; first array element should be NAME
-	segMap := hl7[segName]
 	if !IsObject(hl7[segName]) {														; no matching hl7 map?
 		MsgBox,,% A_Index, % seg "-" segName "`nBAD SEGMENT NAME"
 		return error																	; fail if segment name not allowed
 	}
-	if (segName=="OBX") {
-		if (fld.3 ~= "^(CE|NM|ST|TX|ED)$") {
-			
-		}
-		segPre := "OBX_" fld.3
-	} else {
-		segPre := segName
-	}
+	
+	isOBX := (segName == "OBX")
+	isResult := (fld.3 ~= "^(CE|NM|ST|TX|ED)$")
+	segMap := hl7[segName]
+	segPre := (isOBX) ? "" : segName "_"
 	
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
@@ -65,10 +61,10 @@ hl7line(seg) {
 		}
 		str := fld[i]																	; each segment field
 		strMap := segMap[i-1]															; get hl7 substring that maps to this 
-		
 		val := StrSplit(str,"^")														; array of subelements
-		if (strMap=="") {
-			loop, % val.length()
+		
+		if (strMap=="") {																; no mapped fields
+			loop, % val.length()														; create strMap "^^^" based on subelements in val
 			{
 				strMap .= "z" i "_" A_Index "^"
 			}
@@ -77,35 +73,28 @@ hl7line(seg) {
 		loop, % map.length()
 		{
 			j := A_Index
-			if (map[j]=="") {
+			if (map[j]=="") {															; skip if map value is null
 				continue
 			}
-			x := segPre "_" map[j]
+			x := segPre . map[j]														; res.pre_map
 			
 			res[x] := val[j]															; add each mapped result as subelement, res.mapped_name
 			
-			if (fldVal[x]=="") {														; if mapped value is null, place it in fldVal.name
-				fldVal[x] := val[j]
-			} else {
-				MsgBox,
-					, % "fldVal[" x "]"
-					, % "Existing: " fldVal[x] "`n"
-					.	"Proposed: " val[j]
+			if !(isOBX) {																; non-OBX results
+				fldVal[x] := val[j]														; populate all fldVal.mapped_name
 			}
 		}
 	}
-	if (segName="OBX") {																; need to special process OBX[], test result strings
-		if !(res.Filename=="") {															; file follows
-			fldVal.Filename := res.Filename
+	if (isOBX) {																		; need to special process OBX[], test result strings
+		if !(res.Filename == "") {
+			fldVal.Filename := res.Filename												; file follows
 			nBytes := Base64Dec( res.resValue, Bin )
 			File := FileOpen( res.Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
 		} else {
-			label := res.resCode														; label is actually the component
-			result := (res.resValue) 
-				? res.resValue . (res.resUnits ? " " res.resUnits : "")					; [5] value and [6] units
-				: ""
+			label := res.resCode														; result value
+			result := strQ(res.resValue, "###" strQ(res.resUnits," ###"))
 			fldVal[label] := result
 		}
 	}
