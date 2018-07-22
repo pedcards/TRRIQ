@@ -649,15 +649,18 @@ readHL7()
 	if !(x := LV_GetNext()) {															; Must be on actual row
 		return
 	}
-	LV_GetText(fnam,x,1)
-	
-	global wq, user, fldval, hl7Dir
+	LV_GetText(fnam,x,1)																; hl7 filename
+	LV_GetText(wqid,x,6)																; WQID
 	
 	Gui, phase:Hide
 	
-	fldVal := Object()
+	global wq, user, fldval, hl7Dir
+	fldVal := readWQ(wqid)
+	fldval.wqid := wqid
+	
 	FileRead, fileIn, % hl7Dir . fnam
 	parseHL7(fileIn)
+	
 	type := fldval["OBR_TestCode"]
 	if (type="Holter") {
 		;~ gosub Holter_PR3
