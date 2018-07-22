@@ -427,7 +427,7 @@ WQlist() {
 			, x.1 ", " x.2
 			, x.3
 			, x.4
-			, x.5
+			, SubStr(x.5,1,8)
 			, id
 			, e0.name
 			, filenam)
