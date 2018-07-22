@@ -52,6 +52,7 @@ hl7line(seg) {
 	isResult := (fld.3 ~= "^(CE|NM|ST|TX|ED)$")
 	segMap := hl7[segName]
 	segPre := (isOBX) ? "" : segName "_"
+	segPre .= (isResult) ? fld.3 "_" : ""
 	
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
@@ -86,10 +87,10 @@ hl7line(seg) {
 		}
 	}
 	if (isOBX) {																		; need to special process OBX[], test result strings
-		if !(res.Filename == "") {
-			fldVal.Filename := res.Filename												; file follows
-			nBytes := Base64Dec( res.resValue, Bin )
-			File := FileOpen( HolterDir . res.Filename, "w")
+		if !(res.ED_Filename == "") {
+			fldVal.Filename := res.ED_Filename												; file follows
+			nBytes := Base64Dec( res.ED_resValue, Bin )
+			File := FileOpen( HolterDir . res.ED_Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
 		} else {
