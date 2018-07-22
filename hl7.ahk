@@ -17,8 +17,9 @@ initHL7() {
 	return
 }
 
-processHL7(txt) {
-	global fldval
+processHL7(fnam) {
+	global fldval, hl7Dir
+	FileRead, txt, % hl7Dir . fnam
 	StringReplace, txt, txt, `r`n, `r														; convert `r`n to `r
 	StringReplace, txt, txt, `n, `r															; convert `n to `r
 	loop, parse, txt, `r, `n																; parse HL7 message, split on `r, ignore `n
