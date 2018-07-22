@@ -639,17 +639,18 @@ readWQ(idx) {
 readHL7()
 {
 	agc := A_GuiControl
-	if !instr(agc,"WQlv") {
+	if !instr(agc,"WQlv") {																; Must be in WQlv listview
 		return
 	}
-	if !(A_GuiEvent="DoubleClick") {
+	if !(A_GuiEvent="DoubleClick") {													; Must be double click
 		return
 	}
 	Gui, ListView, %agc%
-	LV_GetText(fnam, A_EventInfo,1)
-	;~ if (idx="ID") {																	; returns column name if line blank
-		;~ return
-	;~ }
+	if !(x := LV_GetNext()) {															; Must be on actual row
+		return
+	}
+	LV_GetText(fnam,x,1)
+	
 	global wq, user, fldval, hl7Dir
 	
 	Gui, phase:Hide
