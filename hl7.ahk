@@ -39,7 +39,7 @@ hl7line(seg) {
 	field elements stored in res[i] object
 	attempt to map each field to recognized structure for that field element
 */
-	global hl7, fldVal, HolterDir
+	global hl7, fldVal, hl7Dir
 	res := Object()
 	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
 	segName := fld.1																	; first array element should be NAME
@@ -90,7 +90,7 @@ hl7line(seg) {
 		if !(res.ED_Filename == "") {
 			fldVal.Filename := res.ED_Filename												; file follows
 			nBytes := Base64Dec( res.ED_resValue, Bin )
-			File := FileOpen( HolterDir . res.ED_Filename, "w")
+			File := FileOpen( hl7Dir . res.ED_Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
 		} else {
