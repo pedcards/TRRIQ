@@ -18,7 +18,7 @@ initHL7() {
 }
 
 processHL7(fnam) {
-	global fldval, hl7Dir
+	global hl7Dir
 	FileRead, txt, % hl7Dir . fnam
 	StringReplace, txt, txt, `r`n, `r														; convert `r`n to `r
 	StringReplace, txt, txt, `n, `r															; convert `n to `r
