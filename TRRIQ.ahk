@@ -1244,10 +1244,7 @@ scanX(txt,fields,labels) {
 findWQid(DT,MRN,name="") {
 	global wq
 	
-	if IsObject(x := wq.selectSingleNode("//enroll[date='" DT "'][mrn='" MRN "']")) {				; Perfect match
-	} else if IsObject(x := wq.selectSingleNode("//enroll[mrn='" MRN "']")) {						; or matches MRN only
-	} else if IsObject(x := wq.selectSingleNode("//enroll[name='" name "']")) {						; or neither, find matching name
-	}
+	x := wq.selectSingleNode("//enroll[date='" DT "'][mrn='" MRN "']")
 	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}										; will return null (error) if no match
 }
 
