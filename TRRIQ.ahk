@@ -659,7 +659,7 @@ readHL7()
 	fldval.wqid := wqid
 	
 	FileRead, fileIn, % hl7Dir . fnam
-	parseHL7(fileIn)
+	processHL7(fileIn)
 	
 	type := fldval["OBR_TestCode"]
 	if (type="Holter") {

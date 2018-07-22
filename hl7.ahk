@@ -17,7 +17,7 @@ initHL7() {
 	return
 }
 
-parseHL7(txt) {
+processHL7(txt) {
 	global fldval
 	StringReplace, txt, txt, `r`n, `r														; convert `r`n to `r
 	StringReplace, txt, txt, `n, `r															; convert `n to `r
