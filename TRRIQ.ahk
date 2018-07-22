@@ -658,8 +658,16 @@ readHL7()
 	fldVal := Object()
 	FileRead, fileIn, % hl7Dir . fnam
 	parseHL7(fileIn)
-	;~ mapHL7()
+	type := fldval["OBR_TestCode"]
+	if (type="Holter") {
+		;~ gosub Holter_PR3
+	} else if (type="CEM") {
+		;~ gosub Event_BGH3
+	} else {
+		MsgBox No match!
+	}
 	Gui, phase:Show
+	
 	return
 }
 
