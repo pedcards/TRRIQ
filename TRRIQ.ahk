@@ -654,22 +654,16 @@ readHL7()
 	
 	Gui, phase:Hide
 	
-	global wq, user, fldval, hl7Dir
+	global wq, user, fldval, hl7Dir, newtxt, fileIn, fileNam
 	fldVal := readWQ(wqid)
 	fldval.wqid := wqid
 	
-	processHL7(fnam)
+	progress, 25 , % fnam, Extracting data
+	processHL7(fnam)																	; extract DDE to fldVal, and PDF into hl7Dir
 	
-	type := fldval["OBR_TestCode"]
-	if (type="Holter") {
-		;~ gosub Holter_PR3
-	} else if (type="CEM") {
-		;~ gosub Event_BGH3
-	} else {
-		MsgBox No match!
-	}
-	Gui, phase:Show
-	
+	progress, 50 , % fnam, Processing PDF
+	gosub processHl7PDF
+		
 	return
 }
 
@@ -1688,6 +1682,47 @@ UiFieldFill(fld,val,win) {
 	return
 }
 
+ProcessHl7PDF:
+{
+	blocks := Object()																	; clear all objects
+	fields := Object()
+	labels := Object()
+	blk := Object()
+	blk2 := Object()
+	ptDem := Object()
+	pt := Object()
+	chk := Object()
+	matchProv := Object()
+	fileOut := fileOut1 := fileOut2 := ""
+	summBl := summ := ""
+	fullDisc := ""
+	monType := ""
+	fldOut := Object()
+	
+	fileNam := RegExReplace(fldVal.Filename,"i)\.pdf")									; fileNam is name only without extension, no path
+	fileIn := hl7Dir fldVal.Filename													; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
+	
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
+	FileRead, newtxt, %filenam%.txt														; load into newtxt
+	FileDelete, %filenam%.txt
+	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
+	FileAppend %newtxt%, %filenam%.txt													; create new tempfile with result
+	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1								; move a copy into tempfiles for troubleshooting
+	eventlog("tempfile.txt -> " fileNam ".txt")
+	
+	type := fldval["OBR_TestCode"]
+	if (type="Holter") {
+		gosub Holter_pr3
+	} else if (type="EOS") {
+		;~ gosub Event_BGH3
+	} else {
+		MsgBox No match!
+	}
+	Gui, phase:Show
+	
+	return
+}
+
 ProcessPDF:
 {
 /*	This main loop accepts a %fileIn% filename,
@@ -1899,6 +1934,55 @@ epRead:
 	fileOut1 .= ",""EP_read"",""EP_date"",""MA"",""MA_date"""
 	fileOut2 .= ",""" ymatch """,""" niceDate(dlDate) """,""" user """,""" ma_date """"
 return
+}
+
+Holter_Pr3:
+{
+	eventlog("Holter_Pr3")
+	monType := "PR"
+	fullDisc := "i)60\s+s(ec)?/line"
+	
+	demog := stregX(newtxt,"Name:",1,0,"Conclusions",1)
+	fields[1] := ["Name","\R","Recording Start Date/Time","\R"
+		, "ID","Secondary ID","Admission ID","\R"
+		, "Date Of Birth","Age","Gender","\R"
+		, "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
+		, "Technician|Hookup Tech","Recording Duration","\R"
+		, "Analyst","Recorder (No|Number)","\R"
+		, "Indications","Medications","\R"
+		, "Hookup time","Location","Acct Num"]
+	labels[1] := ["Name","null","Test_date","null"
+		, "null","MRN","null","null"
+		, "DOB","VOID_Age","Sex","null"
+		, "Scan_date","Ordering","null"
+		, "Hookup_tech","VOID_Duration","null"
+		, "Scanned_by","Device_SN","null"
+		, "Indication","VOID_meds","null"
+		, "Hookup_time","Site","Billing"]
+	fieldvals(demog,1,"dem")
+progress, off
+	
+	if (fldval.wqid) {
+		MsgBox % fldval.wqid "`n" fldval.acct
+	}
+
+ExitApp
+	labels[1] := ["dem-Name_L", "dem-Name_F", "dem-Name_M", "dem-MRN", "dem-DOB", "dem-Sex"
+				, "dem-Site", "dem-Billing", "dem-Device_SN", "dem-VOID1", "dem-Hookup_tech"
+				, "dem-VOID2", "dem-Meds", "dem-Ordering", "dem-Ordering_grp", "dem-Ordering_eml"
+				, "dem-Scanned_by", "dem-Reading", "dem-Test_date", "dem-Scan_date", "dem-Hookup_time"
+				, "dem-Recording_time", "dem-Analysis_time", "dem-Indication", "dem-VOID3"
+				, "hrd-Total_beats", "hrd-Min", "hrd-Min_time", "hrd-Avg", "hrd-Max", "hrd-Max_time", "hrd-HRV"
+				, "ve-Total", "ve-Total_per", "ve-Runs", "ve-Beats", "ve-Longest", "ve-Longest_time"
+				, "ve-Fastest", "ve-Fastest_time", "ve-Triplets", "ve-Couplets", "ve-SinglePVC", "ve-InterpPVC"
+				, "ve-R_on_T", "ve-SingleVE", "ve-LateVE", "ve-Bigem", "ve-Trigem", "ve-SVE"
+				, "sve-Total", "sve-Total_per", "sve-Runs", "sve-Beats", "sve-Longest", "sve-Longest_time"
+				, "sve-Fastest", "sve-Fastest_time", "sve-Pairs", "sve-Drop", "sve-Late"
+				, "sve-LongRR", "sve-LongRR_time", "sve-Single", "sve-Bigem", "sve-Trigem", "sve-AF"]
+	
+	fields[1] := ["PID_NameL", "PID_NameF", "PID_NameMI", "PID_PatMRN", "PID_DOB", "PID_Sex"
+				, "site", "prov", "dev", "dem-VOID1"]
+				
 }
 
 mapHL7() {
