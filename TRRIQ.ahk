@@ -1962,8 +1962,15 @@ Holter_Pr3:
 	fieldvals(demog,1,"dem")
 progress, off
 	
-	if (fldval.wqid) {
-		MsgBox % fldval.wqid "`n" fldval.acct
+	if (fldval.acct) {																	; fldval.acct exists if Holter has been processed
+		fldval["dem-Name_L"] := strX(fldval.name,"",1,0,", ",1,2)
+		fldval["dem-Name_F"] := strX(fldval.name,", ",1,2," ",1,1)
+		fldval["dem-MRN"] := fldval.mrn
+		fldval["dem-DOB"] := fldval.dob
+		fldval["dem-Sex"] := fldval.sex
+		
+	} else {																			; has not been processed yet
+		
 	}
 
 ExitApp
