@@ -1947,7 +1947,7 @@ Holter_Pr3:
 		, "ID","Secondary ID","Admission ID","\R"
 		, "Date Of Birth","Age","Gender","\R"
 		, "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
-		, "Technician|Hookup Tech","Recording Duration","\R"
+		, "(Technician|Hookup Tech)","Recording Duration","\R"
 		, "Analyst","Recorder (No|Number)","\R"
 		, "Indications","Medications","\R"
 		, "Hookup time","Location","Acct Num"]
@@ -1968,6 +1968,9 @@ progress, off
 		fldval["dem-MRN"] := fldval.mrn
 		fldval["dem-DOB"] := fldval.dob
 		fldval["dem-Sex"] := fldval.sex
+		fldval["dem-Site"] := fldval.site
+		fldval["dem-Billing"] := fldval.acct
+		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 		
 	} else {																			; has not been processed yet
 		
