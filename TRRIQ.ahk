@@ -1975,9 +1975,9 @@ Holter_Pr3:
 		, "Ordering","Recording_time","Device_SN","null"
 		, "Indications","\R"]
 	fieldvals(demog,1,"dem")
-progress, off
+	progress, off
 	
-	if (fldval.acct) {																	; fldval.acct exists if Holter has been processed
+	if (fldval.ZZZacct) {																	; fldval.acct exists if Holter has been processed
 	;---Get some values from wqid
 		fldval["dem-Name_L"] := strX(fldval.name,"",1,0,", ",1,2)
 		fldval["dem-Name_F"] := strX(fldval.name,", ",1,2," ",1,1)
