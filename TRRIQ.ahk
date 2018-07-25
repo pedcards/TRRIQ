@@ -1998,8 +1998,34 @@ progress, off
 		fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
 		
 	} else {																			; has not been processed yet
+		ptDem["nameL"] := fldOut["dem-Name_L"]											; Placeholder values for fetchGUI from PDF
+		ptDem["nameF"] := fldOut["dem-Name_F"]
+		ptDem["mrn"] := fldOut["dem-MRN"]
+		ptDem["DOB"] := fldOut["dem-DOB"]
+		ptDem["Sex"] := fldOut["dem-Sex"]
+		ptDem["Loc"] := fldOut["dem-Site"]
+		ptDem["Account number"] :=														; If want to force click, don't include Acct Num
+		ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
+		ptDem["EncDate"] := fldOut["dem-Test_date"]
+		ptDem["Indication"] := fldOut["dem-Indications"]
 		
+		eventlog("PDF demog: " ptDem["mrn"] " - " ptDem["nameL"] ", " ptDem["nameF"])
+		Clipboard := ptDem["nameL"] ", " ptDem["nameF"]									; fill clipboard with name, so can just paste into CIS search bar
+		MsgBox, 4096,, % "Extracted data for:`n"
+			. "   " ptDem["nameL"] ", " ptDem["nameF"] "`n   " ptDem["mrn"] "`n   " ptDem["Loc"] "`n   " ptDem["Account number"] "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+			
 	}
+
+		fetchQuit:=false
+		gosub fetchGUI
+		gosub fetchDem
+		if (fetchQuit=true) {
+			return
+		}
+		
+		
+
 
 ExitApp
 	labels[1] := ["dem-Name_L", "dem-Name_F", "dem-Name_M", "dem-MRN", "dem-DOB", "dem-Sex"
