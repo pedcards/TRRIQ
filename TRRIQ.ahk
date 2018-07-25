@@ -1702,7 +1702,8 @@ ProcessHl7PDF:
 	fileNam := RegExReplace(fldVal.Filename,"i)\.pdf")									; fileNam is name only without extension, no path
 	fileIn := hl7Dir fldVal.Filename													; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 	
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
+	;~ RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
+	runwait, pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min							; convert PDF pages 1-2 with no tabular structure
 	FileRead, newtxt, %filenam%.txt														; load into newtxt
 	FileDelete, %filenam%.txt
 	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
@@ -1942,23 +1943,37 @@ Holter_Pr3:
 	monType := "PR"
 	fullDisc := "i)60\s+s(ec)?/line"
 	
-	demog := stregX(newtxt,"Name:",1,0,"Conclusions",1)
-	fields[1] := ["Name","\R","Recording Start Date/Time","\R"
-		, "ID","Secondary ID","Admission ID","\R"
-		, "Date Of Birth","Age","Gender","\R"
-		, "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
-		, "(Technician|Hookup Tech)","Recording Duration","\R"
-		, "Analyst","Recorder (No|Number)","\R"
-		, "Indications","Medications","\R"
-		, "Hookup time","Location","Acct Num"]
-	labels[1] := ["Name","null","Test_date","null"
-		, "null","MRN","null","null"
-		, "DOB","VOID_Age","Sex","null"
-		, "Scan_date","Ordering","null"
-		, "Hookup_tech","VOID_Duration","null"
-		, "Scanned_by","Device_SN","null"
-		, "Indication","VOID_meds","null"
-		, "Hookup_time","Site","Billing"]
+	demog := stregX(newtxt,"Name:",1,0,"Medications:",1)
+	;~ fields[1] := ["Name","\R","Recording Start Date/Time","\R"
+		;~ , "ID","Secondary ID","Admission ID","\R"
+		;~ , "Date Of Birth","Age","Gender","\R"
+		;~ , "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
+		;~ , "(Technician|Hookup Tech)","Recording Duration","\R"
+		;~ , "Analyst","Recorder (No|Number)","\R"
+		;~ , "Indications","Medications","\R"
+		;~ , "Hookup time","Location","Acct Num"]
+	;~ labels[1] := ["Name","null","Test_date","null"
+		;~ , "null","MRN","null","null"
+		;~ , "DOB","VOID_Age","Sex","null"
+		;~ , "Scan_date","Ordering","null"
+		;~ , "Hookup_tech","Recording_time","null"
+		;~ , "Scanned_by","Device_SN","null"
+		;~ , "Indication","VOID_meds","null"
+		;~ , "Hookup_time","Site","Billing"]
+	fields[1] := ["Name","Recording Start Date/Time","\R"
+		, "ID","Date of Birth","\R"
+		, "Date Processed","(Technician|Hookup Tech)","Analyst","\R"
+		, "Secondary ID","Age","\R"
+		, "Admission ID","Gender","\R"
+		, "(Referring|Ordering) Phys(ician)?","Recording Duration","Recorder (No|Number)","\R"
+		, "Indications","\R"]
+	labels[1] := ["Name","Test_date","null"
+		, "null","DOB","null"
+		, "Scan_date","Hookup_tech","Scanned_by","null"
+		, "MRN","VOID_Age","null"
+		, "null","Sex","null"
+		, "Ordering","Recording_time","Device_SN","null"
+		, "Indications","\R"]
 	fieldvals(demog,1,"dem")
 progress, off
 	
