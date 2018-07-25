@@ -1963,14 +1963,24 @@ Holter_Pr3:
 progress, off
 	
 	if (fldval.acct) {																	; fldval.acct exists if Holter has been processed
+	;---Get some values from wqid
 		fldval["dem-Name_L"] := strX(fldval.name,"",1,0,", ",1,2)
 		fldval["dem-Name_F"] := strX(fldval.name,", ",1,2," ",1,1)
 		fldval["dem-MRN"] := fldval.mrn
 		fldval["dem-DOB"] := fldval.dob
 		fldval["dem-Sex"] := fldval.sex
 		fldval["dem-Site"] := fldval.site
-		fldval["dem-Billing"] := fldval.acct
+		fldval["dem-Billing"] := RegExReplace(fldval.acct,"[[:alpha:]]")
 		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
+		
+	;---And some values from parsing demog block
+		fldval["dem-Ordering"] := fldOut["dem-Ordering"]
+		fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
+		fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
+		fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
+		fldval["dem-Test_date"] := fldOut["dem-Test_date"]
+		fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
+		fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
 		
 	} else {																			; has not been processed yet
 		
