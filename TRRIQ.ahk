@@ -2015,16 +2015,40 @@ Holter_Pr3:
 			. "   " ptDem["nameL"] ", " ptDem["nameF"] "`n   " ptDem["mrn"] "`n   " ptDem["Loc"] "`n   " ptDem["Account number"] "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 			
-	}
-
 		fetchQuit:=false
 		gosub fetchGUI
 		gosub fetchDem
 		if (fetchQuit=true) {
 			return
 		}
-		
-		
+		/*	When fetchDem successfully completes,
+		 *	replace the fields in demog with newly acquired values
+		 */
+		fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
+		formatfield("dem","Ordering",ptDem["Provider"])
+		fldval["dem-Name_L"] := ptDem["nameL"]
+		fldval["dem-Name_F"] := ptDem["nameF"]
+		fldval["dem-MRN"] := ptDem["mrn"]
+		fldval["dem-DOB"] := ptDem["DOB"]
+		fldval["dem-Sex"] := ptDem["Sex"]
+		fldval["dem-Site"] := ptDem["Loc"]
+		fldval["dem-Indications"] := ptDem["Indication"]
+		fldval["dem-Billing"] := ptDem["Account number"]
+		fldval["dem-Device_SN"] := fldOut["dem-Device_SN"]
+		fldval["dem-Ordering"] := fldOut["dem-Ordering"]
+		fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
+		fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
+		fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
+		fldval["dem-Test_date"] := fldOut["dem-Test_date"]
+		fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
+		fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
+		fldval[""] := fldOut[""]
+		fldval[""] := fldOut[""]
+		eventlog("Demog replaced.")
+			
+			
+	}
+
 
 
 ExitApp
