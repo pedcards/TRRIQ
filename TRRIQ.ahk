@@ -1988,15 +1988,6 @@ Holter_Pr3:
 		fldval["dem-Billing"] := RegExReplace(fldval.acct,"[[:alpha:]]")
 		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 		
-	;---And some values from parsing demog block
-		fldval["dem-Ordering"] := fldOut["dem-Ordering"]
-		fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
-		fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
-		fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
-		fldval["dem-Test_date"] := fldOut["dem-Test_date"]
-		fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
-		fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
-		
 	} else {																			; has not been processed yet
 		ptDem["nameL"] := fldOut["dem-Name_L"]											; Placeholder values for fetchGUI from PDF
 		ptDem["nameF"] := fldOut["dem-Name_F"]
@@ -2035,19 +2026,16 @@ Holter_Pr3:
 		fldval["dem-Indications"] := ptDem["Indication"]
 		fldval["dem-Billing"] := ptDem["Account number"]
 		fldval["dem-Device_SN"] := fldOut["dem-Device_SN"]
-		fldval["dem-Ordering"] := fldOut["dem-Ordering"]
-		fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
-		fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
-		fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
-		fldval["dem-Test_date"] := fldOut["dem-Test_date"]
-		fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
-		fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
-		fldval[""] := fldOut[""]
-		fldval[""] := fldOut[""]
 		eventlog("Demog replaced.")
-			
-			
 	}
+	;---Replace some common values parsed from demog block
+	fldval["dem-Ordering"] := fldOut["dem-Ordering"]
+	fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
+	fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
+	fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
+	fldval["dem-Test_date"] := fldOut["dem-Test_date"]
+	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
+	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
 
 
 
