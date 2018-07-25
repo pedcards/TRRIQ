@@ -1711,7 +1711,7 @@ ProcessHl7PDF:
 	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1								; move a copy into tempfiles for troubleshooting
 	eventlog("tempfile.txt -> " fileNam ".txt")
 	
-	type := fldval["OBR_TestCode"]
+	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (type="Holter") {
 		gosub Holter_pr3
 	} else if (type="EOS") {
@@ -2008,19 +2008,19 @@ Holter_Pr3:
 		ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
 		ptDem["EncDate"] := fldOut["dem-Test_date"]
 		ptDem["Indication"] := fldOut["dem-Indications"]
-		
 		eventlog("PDF demog: " ptDem["mrn"] " - " ptDem["nameL"] ", " ptDem["nameF"])
+		
 		Clipboard := ptDem["nameL"] ", " ptDem["nameF"]									; fill clipboard with name, so can just paste into CIS search bar
 		MsgBox, 4096,, % "Extracted data for:`n"
 			. "   " ptDem["nameL"] ", " ptDem["nameF"] "`n   " ptDem["mrn"] "`n   " ptDem["Loc"] "`n   " ptDem["Account number"] "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
-			
 		fetchQuit:=false
 		gosub fetchGUI
 		gosub fetchDem
 		if (fetchQuit=true) {
 			return
 		}
+		
 		/*	When fetchDem successfully completes,
 		 *	replace the fields in demog with newly acquired values
 		 */
