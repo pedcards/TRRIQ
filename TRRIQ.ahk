@@ -1981,9 +1981,15 @@ Holter_Pr3:
 		, "Ordering","Recording_time","Device_SN","null"
 		, "Indications","\R"]
 	fieldvals(demog,1,"dem")
+	
+	duration := stregx(newtxt "<<<","(\R)ALL BEATS",1,0,"(\R)HEART RATE EPISODES",1)
+	fields[1] := ["Original Duration","Recording Duration","Analyzed Duration","Artifact Duration","\R"]
+	labels[1] := ["null","Recording_time","Analysis_time","null","null"]
+	fieldvals(duration,1,"dem")
+	
 	progress, off
 	
-	if (fldval.ZZZacct) {																	; fldval.acct exists if Holter has been processed
+	if (fldval.acct) {																	; fldval.acct exists if Holter has been processed
 	;---Get some values from wqid
 		fldval["dem-Name_L"] := strX(fldval.name,"",1,0,", ",1,2)
 		fldval["dem-Name_F"] := strX(fldval.name,", ",1,2," ",1,1)
@@ -1995,7 +2001,8 @@ Holter_Pr3:
 		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 		
 	} else {																			; has not been processed yet
-		ptDem["nameL"] := fldOut["dem-Name_L"]											; Placeholder values for fetchGUI from PDF
+	;---Placeholder values for fetchGUI from PDF
+		ptDem["nameL"] := fldOut["dem-Name_L"]
 		ptDem["nameF"] := fldOut["dem-Name_F"]
 		ptDem["mrn"] := fldOut["dem-MRN"]
 		ptDem["DOB"] := fldOut["dem-DOB"]
@@ -2019,7 +2026,7 @@ Holter_Pr3:
 		}
 		
 		/*	When fetchDem successfully completes,
-		 *	replace the fields in demog with newly acquired values
+		 *	replace the fldval with newly acquired values
 		 */
 		fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
 		formatfield("dem","Ordering",ptDem["Provider"])
@@ -2034,6 +2041,7 @@ Holter_Pr3:
 		fldval["dem-Device_SN"] := fldOut["dem-Device_SN"]
 		eventlog("Demog replaced.")
 	}
+	
 	;---Replace some common values parsed from demog block
 	fldval["dem-Ordering"] := fldOut["dem-Ordering"]
 	fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
@@ -2042,6 +2050,7 @@ Holter_Pr3:
 	fldval["dem-Test_date"] := fldOut["dem-Test_date"]
 	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
 	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
+	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
 
 
 
