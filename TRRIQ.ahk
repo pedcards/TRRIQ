@@ -1720,7 +1720,13 @@ ProcessHl7PDF:
 		MsgBox No match!
 	}
 	Gui, phase:Show
-	
+
+;	Shorten
+
+;	epRead
+
+;	outputFiles
+
 	return
 }
 
