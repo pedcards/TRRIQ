@@ -1996,6 +1996,7 @@ Holter_Pr3:
 		fldval["dem-MRN"] := fldval.mrn
 		fldval["dem-DOB"] := fldval.dob
 		fldval["dem-Sex"] := fldval.sex
+		fldval["dem-Indication"] := fldval.ind
 		fldval["dem-Site"] := fldval.site
 		fldval["dem-Billing"] := RegExReplace(fldval.acct,"[[:alpha:]]")
 		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
@@ -2036,9 +2037,9 @@ Holter_Pr3:
 		fldval["dem-DOB"] := ptDem["DOB"]
 		fldval["dem-Sex"] := ptDem["Sex"]
 		fldval["dem-Site"] := ptDem["Loc"]
-		fldval["dem-Indications"] := ptDem["Indication"]
 		fldval["dem-Billing"] := ptDem["Account number"]
 		fldval["dem-Device_SN"] := fldOut["dem-Device_SN"]
+		fldval["dem-Indication"] := ptDem["Indication"]
 		eventlog("Demog replaced.")
 	}
 	
