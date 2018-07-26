@@ -1979,7 +1979,7 @@ Holter_Pr3:
 		, "MRN","VOID_Age","null"
 		, "null","Sex","null"
 		, "Ordering","Recording_time","Device_SN","null"
-		, "Indications","\R"]
+		, "Indication","\R"]
 	fieldvals(demog,1,"dem")
 	
 	duration := stregx(newtxt "<<<","(\R)ALL BEATS",1,0,"(\R)HEART RATE EPISODES",1)
