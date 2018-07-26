@@ -132,15 +132,14 @@ hl7line(seg) {
 	}
 	if (isOBX) {																		; need to special process OBX[], test result strings
 		if !(res.ED_Filename == "") {
-			fldVal.Filename := res.ED_Filename												; file follows
+			fldVal.Filename := res.ED_Filename											; file follows
 			nBytes := Base64Dec( res.ED_resValue, Bin )
 			File := FileOpen( hl7Dir . res.ED_Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
 		} else {
 			label := res.resCode														; result value
-			result := strQ(res.resValue, "###" strQ(res.resUnits," ###"))
-			fldVal[label] := result
+			result := strQ(res.resValue, "###")
 		}
 	}
 	
