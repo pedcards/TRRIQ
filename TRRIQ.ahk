@@ -440,7 +440,7 @@ WQlist() {
 		LV_ModifyCol(4,"80")
 		LV_ModifyCol(5,"80 Asc")
 		LV_ModifyCol(5,"Sort")
-		LV_ModifyCol(6,"60")
+		LV_ModifyCol(6,"0")
 		LV_ModifyCol(7,"80")
 		LV_ModifyCol(8,"80")
 	
