@@ -2022,13 +2022,12 @@ Holter_Pr3:
 		fetchQuit:=false
 		gosub fetchGUI
 		gosub fetchDem
+		checkFetchDem(fldOut["dem-Name_L"],fldOut["dem-Name_F"],fldOut["dem-MRN"])
 		if (fetchQuit=true) {
 			return
 		}
 		
-		/*	When fetchDem successfully completes,
-		 *	replace the fldval with newly acquired values
-		 */
+		;---When fetchDem successfully completes, replace the fldval with newly acquired values
 		fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
 		formatfield("dem","Ordering",ptDem["Provider"])
 		fldval["dem-Name_L"] := ptDem["nameL"]
@@ -3292,6 +3291,52 @@ checkCrd(x) {
 		}
 	}
 	return {"fuzz":fuzz,"best":best,"group":group}
+}
+
+checkFetchDem(nameL,nameF,mrn) {
+/*	Check if fetchDem NAME and MRN match that parsed from PDF
+	nameL, nameF, mrn all required params
+	If bad match, returns fetchQuit=true
+	If acceptable, returns fetchQuit=false
+*/
+	global ptDem, fetchQuit
+	fullName := nameL ", " nameF
+	fullNameDem := ptDem["nameL"] ", " ptDem["nameF"]
+	fuzz := fuzzysearch(format("{:U}",fullName), format("{:U}",fullNameDem))
+	thresh := 0.15													
+	
+	if (fuzz > thresh) {
+		eventlog("Name fuzz error. "
+			. "Parsed """ mrn """, """ fullName """ "
+			. "Grabbed """ ptDem["mrn"] """, """ fullNameDem """.")
+			
+		if (mrn=ptDem["mrn"]) {															; correct MRN but bad name match
+			MsgBox, 262193, % "Name error (" round((1-tmp)*100,2) "%)"
+				, % "Name does not match!`n`n"
+				.	"	Parsed:	" fullName "`n"
+				.	"	Grabbed:	" fullNameDem "`n`n"
+				.	"OK = use " fullNameDem "`n`n"										; "OK" will accept this fetchDem data
+				.	"Cancel = skip this file"
+			IfMsgBox, Cancel
+			{
+				eventlog("Cancel this file.")
+				fetchQuit:=true															; cancel out of processing file
+				return
+			}
+		} else {																		; just plain doesn't match
+			MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
+				, % "Name does not match!`n`n"
+				.	"	Parsed:	" fullName "`n"
+				.	"	Grabbed:	" fullNameDem "`n`n"
+				.	"Skipping this file."
+				
+			eventlog("Demographics mismatch.")
+			fetchQuit:=true
+			return
+		}
+	}
+	
+	return
 }
 
 filterProv(x) {
