@@ -2111,19 +2111,13 @@ fieldsToCSV(tabs) {
 	field := Object()
 	
 	; Populate lwFields with equivalent named label values
-	lwOut1 :=
-	lwOut2 :=
 	loop, parse, tabs, `t
 	{
 		x := A_LoopField
 		fld := strX(x,"",1,0,"(",1,1)
 		def := strX(x,"(",1,1,")",1,1)
 		val := fldval[fld]
-		lwOut1 .= """" fld ""","
-		lwOut2 .= """" ((val != "") ? val : def) ""","
 	}
-	fileOut1 := lwOut1
-	fileOut2 := lwOut2
 	eventlog("LWify complete.")
 	
 return	
