@@ -2107,16 +2107,21 @@ fieldsToCSV(tabs) {
 	"hrd-Total_beats(0)" -> fldval["hrd-Total_beats"] (default 0 if null)
 	Appends to fileOut
 */
-	global fldval, fileOut1, fileOut2
-	field := Object()
+	global fldval, fileOut1, fileOut2, monType
 	
 	; Populate lwFields with equivalent named label values
+	fileOut1 := ""
+	fileOut2 := ""
 	loop, parse, tabs, `t
 	{
 		x := A_LoopField
 		fld := strX(x,"",1,0,"(",1,1)
+			pre := strX(fld,"",1,0,"-",1,1)
+			lab := strX(fld,"-",1,1,"",0)
 		def := strX(x,"(",1,1,")",1,1)
 		val := fldval[fld]
+		res := (val = "") ? def : val
+		formatfield(pre,lab,res)														; sends formatted results, i.e. recreates fresh fileOut
 	}
 	eventlog("LWify complete.")
 	
