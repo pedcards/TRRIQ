@@ -2088,8 +2088,8 @@ Holter_Pr3:
 	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
 
 	tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
-		. "dem-Hookup_tech	dem-VOID2	dem-Meds(NA)	dem-Ordering	dem-Ordering_grp	dem-Ordering_eml	dem-Scanned_by	"
-		. "dem-Reading	dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
+		. "dem-Hookup_tech	dem-VOID2	dem-Meds(NA)	dem-Ordering	dem-Scanned_by	"
+		. "dem-Reading(NA)	dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
 		. "dem-VOID3	hrd-Total_beats(0)	hrd-Min(0)	hrd-Min_time	hrd-Avg(0)	hrd-Max(0)	hrd-Max_time	hrd-HRV	"
 		. "ve-Total(0)	ve-Total_per(0)	ve-Runs(0)	ve-Beats(0)	ve-Longest(0)	ve-Longest_time	ve-Fastest(0)	ve-Fastest_time	"
 		. "ve-Triplets(0)	ve-Couplets(0)	ve-SinglePVC(0)	ve-InterpPVC(0)	ve-R_on_T(0)	ve-SingleVE(0)	ve-LateVE(0)	"
