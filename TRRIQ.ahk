@@ -1871,6 +1871,22 @@ moveWQ(id) {
 	return
 }
 
+wqSetVal(id,node,val) {
+	global wq
+	
+	newID := "/root/pending/enroll[@id='" id "']"
+	k := wq.selectSingleNode(newID "/" node)
+	
+	if IsObject(k) {
+		wq.setText(newID "/" node,val)
+	} else {
+		wq.addElement(node,newID,val)
+	}
+	
+	return
+}
+
+
 getMD:
 {
 	Gui, fetch:Hide
