@@ -1999,7 +1999,7 @@ Holter_Pr3:
 		, "Indication","\R"]
 	fieldvals(demog,1,"dem")
 	
-	duration := stregx(newtxt "<<<","(\R)ALL BEATS",1,0,"(\R)HEART RATE EPISODES",1)
+	duration := stregx(newtxt "<<<","(\R)ALL BEATS",1,0,"(\R)HEART RATE EPISODES",0)
 	fields[1] := ["Original Duration","Recording Duration","Analyzed Duration","Artifact Duration","\R"]
 	labels[1] := ["null","Recording_time","Analysis_time","null","null"]
 	fieldvals(duration,1,"dem")
