@@ -2034,7 +2034,7 @@ Holter_Pr3:
 		
 		Clipboard := ptDem["nameL"] ", " ptDem["nameF"]									; fill clipboard with name, so can just paste into CIS search bar
 		MsgBox, 4096,, % "Extracted data for:`n"
-			. "   " ptDem["nameL"] ", " ptDem["nameF"] "`n   " ptDem["mrn"] "`n   " ptDem["Loc"] "`n   " ptDem["Account number"] "`n`n"
+			. "   " ptDem["nameL"] ", " ptDem["nameF"] "`n   " ptDem["mrn"] "`n   " ptDem["EncDate"] "`n   " ptDem["Loc"] "`n   " ptDem["Account number"] "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 		fetchQuit:=false
 		gosub fetchGUI
