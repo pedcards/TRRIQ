@@ -2056,7 +2056,25 @@ Holter_Pr3:
 		fldval["dem-Billing"] := ptDem["Account number"]
 		fldval["dem-Device_SN"] := fldOut["dem-Device_SN"]
 		fldval["dem-Indication"] := ptDem["Indication"]
-		eventlog("Demog replaced.")
+		
+		filecheck()
+		FileOpen(".lock", "W")																; Create lock file.
+			id := fldval.wqid
+			newID := "/root/pending/enroll[@id='" id "']"
+			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
+			wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
+			wqSetVal(id,"mrn",ptDem["mrn"])
+			wqSetVal(id,"sex",ptDem["Sex"])
+			wqSetVal(id,"dob",ptDem["dob"])
+			wqSetVal(id,"dev","Mortara H3+ - " fldOut["dem-Device_SN"])
+			wqSetVal(id,"prov",ptDem["Provider"])
+			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
+			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account Number"])
+			wqSetVal(id,"ind",ptDem["Indication"])
+		filedelete, .lock
+		writeOut("/root/pending","enroll[@id='" id "']")
+		
+		eventlog("Demographics updated for WQID " fldval.wqid ".") 
 	}
 	
 	;---Replace some common values parsed from demog block
