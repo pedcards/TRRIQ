@@ -140,7 +140,7 @@ hl7line(seg) {
 		} else {
 			label := res.resCode														; result value
 			result := strQ(res.resValue, "###")
-			maplab := (hl7.flds[label]) ? hl7.flds[label] : label
+			maplab := (hl7.flds[label]) ? hl7.flds[label] : label						; maps label if hl7->lw map exists
 			fldVal[maplab] := result
 		}
 	}
