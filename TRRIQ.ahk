@@ -3088,7 +3088,7 @@ formatField(pre, lab, txt) {
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
 	txt := trim(txt)
 	
-	if (lab~="Referring|Ordering") {
+	if (lab~="^(Referring|Ordering)$") {
 		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))				;	Get Crd, Grp, and Eml via checkCrd() <== shouldn't this already be determined?
 		fieldColAdd(pre,lab,tmpCrd.best)
 		fieldColAdd(pre,lab "_grp",tmpCrd.group)
@@ -3151,6 +3151,11 @@ formatField(pre, lab, txt) {
 				tmp := zDigit(tmp-24)													; subtract 24 hrs
 				txt := RegExReplace(txt,"\d{2}:",tmp ":")
 			}
+			fieldColAdd(pre,lab,txt)
+			return
+		}
+		if (lab ~= "i)_time") {															; Any other _Time field, remove the date
+			txt := parseDate(txt).time
 		}
 		if (txt ~= "^([0-9.]+( BPM( Avg)?)?).+at.+(\d{1,2}:\d{2}:\d{2}).*(AM|PM)?$") {		;	Split timed results "139 at 8:31:47 AM" into two fields
 			tx1 := trim(stregX(txt,"",1,0," at ",1))
