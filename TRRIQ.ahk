@@ -1394,6 +1394,7 @@ MortaraUpload()
 			}
 			ptDem["muphase"] := "upload"
 			muWqSave(SerNum)
+			eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 			wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']"
 		}
 		MorUIfill(mu_UI.TRct,muWinID)
@@ -1465,6 +1466,7 @@ MortaraUpload()
 		wq := new XML("worklist.xml")													; refresh WQ
 		ptDem["muphase"] := "prepare"
 		muWqSave(SerNum)
+		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	}
 	
 	return
@@ -1532,7 +1534,6 @@ muWqSave(sernum) {
 	
 	filedelete, .lock
 	writeOut("/root/pending","enroll[@id='" id "']")
-	eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	
 	return
 }
