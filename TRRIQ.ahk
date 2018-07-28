@@ -2018,7 +2018,8 @@ Holter_Pr3:
 		fldval["dem-Billing"] := RegExReplace(fldval.acct,"[[:alpha:]]")
 		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 		
-	} else {																			; has not been processed yet
+	} 
+	else {																			; has not been processed yet
 	;---Placeholder values for fetchGUI from PDF
 		ptDem["nameL"] := fldOut["dem-Name_L"]
 		ptDem["nameF"] := fldOut["dem-Name_F"]
