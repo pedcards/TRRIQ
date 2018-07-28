@@ -3462,7 +3462,7 @@ ParseDate(x) {
 				: "20" d3
 		date.date := trim(d)
 	}
-	else if RegExMatch(x,"\b(\d{4})(\d{2})(\d{2})\b",d) {								; 20150103
+	else if RegExMatch(x,"\b(\d{4})-?(\d{2})-?(\d{2})\b",d) {								; 20150103 or 2015-01-03
 		date.yyyy := d1
 		date.mm := d2
 		date.mmm := mo[d2]
