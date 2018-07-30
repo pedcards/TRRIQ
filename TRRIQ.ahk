@@ -1718,7 +1718,7 @@ ProcessHl7PDF:
 	
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (type="Holter") {
-		gosub Holter_pr3
+		gosub Holter_Pr3
 	} else if (type="EOS") {
 		;~ gosub Event_BGH3
 	} else {
@@ -1726,11 +1726,6 @@ ProcessHl7PDF:
 	}
 	Gui, phase:Show
 
-;	Shorten
-
-;	epRead
-
-;	outputFiles
 
 	return
 }
