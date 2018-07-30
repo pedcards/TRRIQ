@@ -2098,7 +2098,7 @@ Holter_Pr3:
 		. "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
 	fieldsToCSV(tabs)
 	
-	FileGetSize, fileInSize, % fldval.Filename
+	FileGetSize, fileInSize, % hl7dir fldval.Filename
 	if (fileInSize > 2000000) {															; probably a full disclosure PDF
 		shortenPDF(fullDisc)															; generates .pdf and sh.pdf versions
 	} 
