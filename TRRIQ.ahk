@@ -2119,8 +2119,6 @@ Holter_Pr3:
 			}
 		}
 	}
-	
-	MsgBox Has all files
 return
 }
 
@@ -2236,7 +2234,7 @@ findFullPdf() {
 /*	Scans HolterDir for potential full disclosure PDFs
 	maybe rename if appropriate
 */
-	global holterDir, fldval
+	global holterDir, hl7dir, fldval
 	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(holterDir).Files.Count
 	
 	Loop, files, %holterDir%*.pdf
@@ -2256,19 +2254,28 @@ findFullPdf() {
 		FileRead, newtxt, %fnam%.txt													; load into newtxt
 		FileDelete, %fnam%.txt
 		StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All								; remove double CRLF
-		FileAppend %newtxt%, %fnam%.txt													; create new tempfile with result
 		
 		name := trim(stregX(newtxt,"Name:",1,1,"Recording Start",1))
 			nameL := trim(strX(name,"",1,0,",",1,1))
 			nameF := trim(strX(name,",",1,1,"",0))
 		dt := parseDate(trim(stregX(newtxt,"Start Date/Time:?",1,1,"\R",1)))
 			date := dt.yyyy dt.mm dt.dd
+			time := dt.hr dt.min
+		dobDt := parseDate(trim(stregX(newtxt,"(Date of Birth|DOB):?",1,1,"\R",1)))
+			dob := dobDt.yyyy dobDt.mm dobDt.dd
 		mrn := trim(stregX(newtxt,"Secondary ID:?",1,1,"Age:?",1))
 		ser := trim(stregX(newtxt,"Recorder (No|Number):?",1,1,"\R",1))
 		wqid := findWQid(date,mrn).id
 		
-		MsgBox % nameL "`n" nameF
-
+		newFnam := nameL "_" nameF "_" mrn "_" dob "_" date time 
+		FileMove, %fileIn%, % holterDir newFnam ".pdf", 1								; rename the unprocessed PDF
+		
+		if (wqid == fldval.wqid) {														; wqid matches the hl7 being processed
+			FileMove, % hl7dir fldval.Filename, % hl7dir newFnam "-short.pdf"			; rename the pdf in hl7dir to -short.pdf
+			FileMove, % holterDir newFnam ".pdf", % hl7dir newFnam ".pdf"				; move this full disclosure PDF into hl7dir
+			progress, off
+			return true
+		}
 	}
 	progress, off
 return	
