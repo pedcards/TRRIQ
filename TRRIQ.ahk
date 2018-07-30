@@ -2232,6 +2232,48 @@ shortenPDF(find) {
 return	
 }
 
+findFullPdf() {
+/*	Scans HolterDir for potential full disclosure PDFs
+	maybe rename if appropriate
+*/
+	global holterDir, fldval
+	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(holterDir).Files.Count
+	
+	Loop, files, %holterDir%*.pdf
+	{
+		fname := A_LoopFileName, fileIn := A_LoopFileFullPath, fnam := RegExReplace(fname,"i)\.pdf")
+		progress, % 100*A_index/fileCount, , % fname
+		
+		if (fname~="i)(sh|-short)\.pdf") 
+			continue
+		if FileExist(fname "sh.pdf") 
+			continue
+		if FileExist(fnam "-short.pdf") 
+			continue
+		
+		;---Only unprocessed full disclosure PDF will fall through
+		runwait, pdftotext.exe -l 1 "%fileIn%" "%fnam%.txt",,min						; convert PDF pages 1-2 with no tabular structure
+		FileRead, newtxt, %fnam%.txt													; load into newtxt
+		FileDelete, %fnam%.txt
+		StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All								; remove double CRLF
+		FileAppend %newtxt%, %fnam%.txt													; create new tempfile with result
+		
+		name := trim(stregX(newtxt,"Name:",1,1,"Recording Start",1))
+			nameL := trim(strX(name,"",1,0,",",1,1))
+			nameF := trim(strX(name,",",1,1,"",0))
+		dt := parseDate(trim(stregX(newtxt,"Start Date/Time:?",1,1,"\R",1)))
+			date := dt.yyyy dt.mm dt.dd
+		mrn := trim(stregX(newtxt,"Secondary ID:?",1,1,"Age:?",1))
+		ser := trim(stregX(newtxt,"Recorder (No|Number):?",1,1,"\R",1))
+		wqid := findWQid(date,mrn).id
+		
+		MsgBox % nameL "`n" nameF
+
+	}
+	progress, off
+return	
+}
+
 Holter_Pr2:
 {
 	eventlog("Holter_Pr2")
