@@ -2096,9 +2096,31 @@ Holter_Pr3:
 		. "ve-Bigem(0)	ve-Trigem(0)	ve-SVE(0)	sve-Total(0)	sve-Total_per(0)	sve-Runs(0)	sve-Beats(0)	"
 		. "sve-Longest(0)	sve-Longest_time	sve-Fastest(0)	sve-Fastest_time	sve-Pairs(0)	sve-Drop(0)	sve-Late(0)	"
 		. "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
-	
 	fieldsToCSV(tabs)
 	
+	FileGetSize, fileInSize, % fldval.Filename
+	if (fileInSize > 2000000) {															; probably a full disclosure PDF
+		shortenPDF(fullDisc)															; generates .pdf and sh.pdf versions
+	} 
+	else loop {																			; just a short PDF
+		if (findFullPDF()) {
+			break																		; found matching full disclosure, exit loop
+		} else {
+			MsgBox, 4149
+				, Missing file
+				, % "No full disclosure PDF found for:`n"
+				. fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
+				. "Download PDF from ftp.eCardio.com website to proceed."
+			IfMsgBox, Retry 
+			{
+				continue																; redo the loop
+			} else {
+				Exit																	; either Cancel or X, go back to main GUI
+			}
+		}
+	}
+	
+	MsgBox Has all files
 return
 }
 
