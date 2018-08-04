@@ -2122,6 +2122,10 @@ Holter_Pr3:
 			}
 		}
 	}
+	
+	fieldcoladd("","INTERP","")
+	fieldcoladd("","Mon_type","Holter")
+	
 return
 }
 
