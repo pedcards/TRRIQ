@@ -3298,9 +3298,10 @@ formatField(pre, lab, txt) {
 
 fieldColAdd(pre,lab,txt) {
 	global fileOut1, fileOut2, fldVal, fldOut
-	fileOut1 .= """" pre "-" lab ""","
+	pre := (pre="") ? "" : pre "-"
+	fileOut1 .= """" pre lab ""","
 	fileOut2 .= """" txt ""","
-	fldOut[pre "-" lab] := txt
+	fldOut[pre lab] := txt
 	return
 }
 
