@@ -1787,8 +1787,8 @@ outputfiles:
 {
 	/*	Output the results and move files around
 	*/
-	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"											; make sure that there is only one `n 
-	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"											; on the header and data lines
+	fileOut1 := trim(fileOut1,",`t`r`n") "`n"												; make sure that there is only one `n 
+	fileOut2 := trim(fileOut2,",`t`r`n") "`n"												; on the header and data lines
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["Test_Date"])												; get the study date
 	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
