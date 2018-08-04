@@ -664,10 +664,6 @@ readHL7()
 	progress, 50 , % fnam, Processing PDF
 	gosub processHl7PDF
 	
-	gosub epRead																		; find out which EP is reading today
-	
-	gosub outputfiles																	; generate and save output CSV, rename and move PDFs
-	
 	return
 }
 
@@ -1726,7 +1722,10 @@ ProcessHl7PDF:
 	}
 	Gui, phase:Show
 
-
+	gosub epRead																		; find out which EP is reading today
+	
+	gosub outputfiles																	; generate and save output CSV, rename and move PDFs
+	
 	return
 }
 
