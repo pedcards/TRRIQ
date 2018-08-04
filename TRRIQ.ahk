@@ -2047,6 +2047,7 @@ Holter_Pr3:
 		;---When fetchDem successfully completes, replace the fldval with newly acquired values
 		fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
 		formatfield("dem","Ordering",ptDem["Provider"])
+		fldval.prov := ptDem["Provider"]
 		fldval["dem-Name_L"] := ptDem["nameL"]
 		fldval["dem-Name_F"] := ptDem["nameF"]
 		fldval["dem-MRN"] := ptDem["mrn"]
@@ -2086,6 +2087,9 @@ Holter_Pr3:
 	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
 	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
 	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
+	fldval["Name_L"] := fldval["dem-name_L"]
+	fldval["Name_F"] := fldval["dem-name_F"]
+	chk.Prov := fldval.prov
 
 	tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
 		. "dem-Hookup_tech	dem-VOID2	dem-Meds(NA)	dem-Ordering	dem-Scanned_by	"
