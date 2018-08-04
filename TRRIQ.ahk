@@ -2280,7 +2280,7 @@ findFullPdf() {
 		FileMove, %fileIn%, % holterDir newFnam ".pdf", 1								; rename the unprocessed PDF
 		
 		if (wqid == fldval.wqid) {														; wqid matches the hl7 being processed
-			FileMove, % hl7dir fldval.Filename, % hl7dir newFnam "-short.pdf"			; rename the pdf in hl7dir to -short.pdf
+			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "sh.pdf"		; rename the pdf in hl7dir to -short.pdf
 			FileMove, % holterDir newFnam ".pdf", % hl7dir newFnam ".pdf"				; move this full disclosure PDF into hl7dir
 			progress, off
 			return true
