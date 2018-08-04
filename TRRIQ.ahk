@@ -1953,8 +1953,10 @@ epRead:
 	}
 	
 	FormatTime, ma_date, A_Now, MM/dd/yyyy
-	fileOut1 .= ",""EP_read"",""EP_date"",""MA"",""MA_date"""
-	fileOut2 .= ",""" ymatch """,""" niceDate(dlDate) """,""" user """,""" ma_date """"
+	fieldcoladd("","EP_read",ymatch)
+	fieldcoladd("","EP_date",niceDate(dlDate))
+	fieldcoladd("","MA",user)
+	fieldcoladd("","MA_date",ma_date)
 return
 }
 
