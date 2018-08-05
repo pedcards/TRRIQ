@@ -127,7 +127,6 @@ hl7line(seg) {
 			
 			if !(isOBX) || (isResult) {													; non-OBX results
 				fldVal[x] := val[j]														; populate all fldVal.mapped_name
-				fldval.hl7 .= seg "`n"
 			}
 		}
 	}
@@ -138,14 +137,15 @@ hl7line(seg) {
 			File := FileOpen( hl7Dir . res.ED_Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
+			seg := "OBX|" fld.2 "|ED|PDFReport"
 		} else {
 			label := res.resCode														; result value
 			result := strQ(res.resValue, "###")
 			maplab := (hl7.flds[label]) ? hl7.flds[label] : label						; maps label if hl7->lw map exists
 			fldVal[maplab] := result
-			fldval.hl7 .= seg "`n"
 		}
 	}
+	fldval.hl7 .= seg "`n"
 	
 	return res
 }
