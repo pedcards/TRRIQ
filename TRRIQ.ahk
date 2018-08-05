@@ -665,6 +665,8 @@ readHL7()
 	progress, 50 , % fnam, Processing PDF
 	gosub processHl7PDF																	; process resulting PDF file to complete step
 	
+	gosub PhaseGUI																		; Success! Refresh the worklist
+	
 	return
 }
 
@@ -1722,11 +1724,12 @@ ProcessHl7PDF:
 		MsgBox No match!
 		return
 	}
-	Gui, phase:Show
 
 	gosub epRead																		; find out which EP is reading today
 	
 	gosub outputfiles																	; generate and save output CSV, rename and move PDFs
+	
+	filedelete, % hl7dir fileNam ".hl7"													; Success! We can delete the original HL7
 	
 	return
 }
