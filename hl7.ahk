@@ -61,7 +61,7 @@ initHL7() {
 }
 
 processHL7(fnam) {
-	global hl7Dir
+	global hl7Dir, fldval
 	FileRead, txt, % hl7Dir . fnam
 	StringReplace, txt, txt, `r`n, `r														; convert `r`n to `r
 	StringReplace, txt, txt, `n, `r															; convert `n to `r
@@ -127,6 +127,7 @@ hl7line(seg) {
 			
 			if !(isOBX) || (isResult) {													; non-OBX results
 				fldVal[x] := val[j]														; populate all fldVal.mapped_name
+				fldval.hl7 .= seg "`n"
 			}
 		}
 	}
@@ -142,6 +143,7 @@ hl7line(seg) {
 			result := strQ(res.resValue, "###")
 			maplab := (hl7.flds[label]) ? hl7.flds[label] : label						; maps label if hl7->lw map exists
 			fldVal[maplab] := result
+			fldval.hl7 .= seg "`n"
 		}
 	}
 	
