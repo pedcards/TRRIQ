@@ -658,11 +658,11 @@ readHL7()
 	fldVal := readWQ(wqid)
 	fldval.wqid := wqid
 	
-	progress, 25 , % fnam, Extracting data
+	progress, 25 , % fileIn, Extracting data
 	processHL7(fnam)																	; extract DDE to fldVal, and PDF into hl7Dir
 	eventlog(fnam " HL7 processed.")
 	
-	progress, 50 , % fnam, Processing PDF
+	progress, 50 , % fileIn, Processing PDF
 	gosub processHl7PDF																	; process resulting PDF file to complete step
 	
 	gosub PhaseGUI																		; Success! Refresh the worklist
