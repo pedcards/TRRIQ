@@ -660,9 +660,10 @@ readHL7()
 	
 	progress, 25 , % fnam, Extracting data
 	processHL7(fnam)																	; extract DDE to fldVal, and PDF into hl7Dir
+	eventlog(fnam " HL7 processed.")
 	
 	progress, 50 , % fnam, Processing PDF
-	gosub processHl7PDF
+	gosub processHl7PDF																	; process resulting PDF file to complete step
 	
 	return
 }
@@ -2111,6 +2112,7 @@ Holter_Pr3:
 		if (findFullPDF()) {
 			break																		; found matching full disclosure, exit loop
 		} else {
+			eventlog("Full disclosure PDF not found.")
 			MsgBox, 4149
 				, Missing file
 				, % "No full disclosure PDF found for:`n"
@@ -2278,11 +2280,13 @@ findFullPdf() {
 		
 		newFnam := nameL "_" nameF "_" mrn "_" dob "_" date time 
 		FileMove, %fileIn%, % holterDir newFnam ".pdf", 1								; rename the unprocessed PDF
+		eventlog("Holter PDF: " fileIn " renamed to " newFnam)
 		
 		if (wqid == fldval.wqid) {														; wqid matches the hl7 being processed
 			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "sh.pdf"		; rename the pdf in hl7dir to -short.pdf
 			FileMove, % holterDir newFnam ".pdf", % hl7dir newFnam ".pdf"				; move this full disclosure PDF into hl7dir
 			progress, off
+			eventlog(newFnam " moved to hl7dir.")
 			return true
 		}
 	}
