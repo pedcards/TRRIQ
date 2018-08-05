@@ -2309,7 +2309,20 @@ getPdfID(txt) {
 		res.wqid := findWQid(res.date,res.mrn).id
 	} else if instr(txt,"BodyGuardian Heart") {
 		res.type := "E"
-		name := res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1))
+		name := res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1)," `t`r`n")
+			res.nameF := trim(strX(name,"",1,0," ",1,1))
+			res.nameL := trim(strX(name," ",1,1,"",0))
+		dt := trim(stregX(txt,"Period \(.*?\R",1,1,"Event Counts",1)," `t`r`n")
+			res.date := dt
+		res.mrn := trim(stregX(txt,"Patient ID",1,1,"Gender",1)," `t`r`n")
+		res.wqid := "000"
+	} else if instr(txt,"Zio XT") {
+		res.type := "Z"
+		name := res.name := trim(stregX(txt,"Final Report for",1,1,"Date of Birth",1)," `t`r`n")
+			res.nameL := trim(strX(name,"",1,0,",",1,1))
+			res.nameF := trim(strX(name,",",1,1,"",0))
+		res.mrn := "Zio"
+		res.wqid := "999"
 	}
 	return res
 }
