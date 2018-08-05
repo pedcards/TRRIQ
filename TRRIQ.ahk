@@ -2294,6 +2294,34 @@ findFullPdf() {
 return	
 }
 
+getPdfID(txt) {
+/*	Parses txt for demographics
+	returns type=H,E,Z,M and demographics in an array, and wqid if found
+	or error if no match
+*/
+	global fldval
+	res := Object()
+	
+	if instr(txt,"MORTARA") {															; Mortara Holter
+		res.type := "H"
+		name := res.name := trim(stregX(txt,"Name:",1,1,"Recording Start",1))
+			res.nameL := trim(strX(name,"",1,0,",",1,1))
+			res.nameF := trim(strX(name,",",1,1,"",0))
+		dt := parseDate(trim(stregX(txt,"Start Date/Time:?",1,1,"\R",1)))
+			res.date := dt.yyyy dt.mm dt.dd
+			res.time := dt.hr dt.min
+		dobDt := parseDate(trim(stregX(txt,"(Date of Birth|DOB):?",1,1,"\R",1)))
+			res.dob := dobDt.yyyy dobDt.mm dobDt.dd
+		res.mrn := trim(stregX(txt,"Secondary ID:?",1,1,"Age:?",1))
+		res.ser := trim(stregX(txt,"Recorder (No|Number):?",1,1,"\R",1))
+		res.wqid := findWQid(res.date,res.mrn).id
+	} else if instr(txt,"BodyGuardian Heart") {
+		res.type := "E"
+		name := res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1))
+	}
+	return res
+}
+
 Holter_Pr2:
 {
 	eventlog("Holter_Pr2")
