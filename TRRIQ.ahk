@@ -2259,6 +2259,8 @@ findFullPdf() {
 			continue
 		if FileExist(fnam "-short.pdf") 
 			continue
+		if (fname~="_WQ\d+\.pdf")&&(strX(fname,"_WQ",1,3,".pdf",1,4)!=fldval.wqid)
+			continue
 		
 		;---Only unprocessed full disclosure PDF will fall through
 		runwait, pdftotext.exe -l 1 "%fileIn%" "%fnam%.txt",,min						; convert PDF pages 1-2 with no tabular structure
