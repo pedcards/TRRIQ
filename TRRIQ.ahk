@@ -3477,15 +3477,13 @@ ObjHasValue(aObj, aValue, rx:="") {
     return, false, errorlevel := 1
 }
 
-strQ(var1,txt) {
+strQ(var1,txt,null:="") {
 /*	Print Query - Returns text based on presence of var
 	var1	= var to query
 	txt		= text to return with ### on spot to insert var1 if present
+	null	= text to return if var1="", defaults to ""
 */
-	if (var1="") {
-		return error
-	}
-	return RegExReplace(txt,"###",var1)
+	return (var1="") ? null : RegExReplace(txt,"###",var1)
 }
 
 countlines(hay,n) {
