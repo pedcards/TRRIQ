@@ -2086,6 +2086,7 @@ Holter_Pr3:
 	fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
 	fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
 	fldval["dem-Test_date"] := fldOut["dem-Test_date"]
+	fldval["dem-Test_end"] := fldOut["dem-Recording_time"]
 	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
 	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
 	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
