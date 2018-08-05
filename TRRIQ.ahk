@@ -1709,7 +1709,7 @@ ProcessHl7PDF:
 	FileRead, newtxt, %filenam%.txt														; load into newtxt
 	FileDelete, %filenam%.txt
 	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
-	FileAppend %newtxt%, %filenam%.txt													; create new tempfile with result
+	FileAppend % fldval.hl7, %filenam%.txt												; create new tempfile with result, minus PDF
 	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1								; move a copy into tempfiles for troubleshooting
 	eventlog("tempfile.txt -> " fileNam ".txt")
 	
@@ -1720,6 +1720,7 @@ ProcessHl7PDF:
 		;~ gosub Event_BGH3
 	} else {
 		MsgBox No match!
+		return
 	}
 	Gui, phase:Show
 
