@@ -432,6 +432,8 @@ WQlist() {
 			, e0.name
 			, filenam)
 	}
+	
+	findfullPDF()
 	Gui, ListView, WQlv_in
 		LV_ModifyCol()
 		LV_ModifyCol(1,"0")
