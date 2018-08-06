@@ -2284,10 +2284,9 @@ findFullPdf(wqid:="") {
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
 			FileMove, %fileIn%, % holterDir newFnam ".pdf", 1							; rename the unprocessed PDF
 			eventlog("Holter PDF: " fName " renamed to " newFnam)
-			pdfList.push(newFnam ".pdf")
-		} else {
-			pdfList.push(fName)
-		}
+			fName := newFnam ".pdf"
+		} 
+		pdfList.push(fName)
 		
 		if (wqid = "") {																; this is just a refresh loop
 			continue																	; just build the list
@@ -2295,9 +2294,9 @@ findFullPdf(wqid:="") {
 		
 		if (fnID.1 == wqid) {															; filename WQID matches wqid arg
 			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "sh.pdf"		; rename the pdf in hl7dir to -short.pdf
-			FileMove, % holterDir newFnam ".pdf", % hl7dir fldval.filename 				; move this full disclosure PDF into hl7dir
+			FileMove, % holterDir fName , % hl7dir fldval.filename 						; move this full disclosure PDF into hl7dir
 			progress, off
-			eventlog(newFnam " moved to hl7dir.")
+			eventlog(fName " moved to hl7dir.")
 			return true																	; stop search and return
 		} else {
 			continue
