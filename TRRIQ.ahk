@@ -2114,7 +2114,7 @@ Holter_Pr3:
 		shortenPDF(fullDisc)															; generates .pdf and sh.pdf versions
 	} 
 	else loop {																			; just a short PDF
-		if (findFullPDF()) {
+		if (findFullPDF(fldval.wqid)) {
 			break																		; found matching full disclosure, exit loop
 		} else {
 			eventlog("Full disclosure PDF not found.")
