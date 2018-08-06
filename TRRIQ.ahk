@@ -2246,49 +2246,63 @@ shortenPDF(find) {
 return	
 }
 
-findFullPdf() {
+findFullPdf(wqid:="") {
 /*	Scans HolterDir for potential full disclosure PDFs
 	maybe rename if appropriate
 */
-	global holterDir, hl7dir, fldval
+	global holterDir, hl7dir, fldval, pdfList
+	
+	pdfList := Object()																	; clear list to add to WQlist
+	
 	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(holterDir).Files.Count
 	
 	Loop, files, %holterDir%*.pdf
 	{
 		fname := A_LoopFileName, fileIn := A_LoopFileFullPath, fnam := RegExReplace(fname,"i)\.pdf")
-		progress, % 100*A_index/fileCount, , % fname
+		progress, % 100*A_index/fileCount, % fname, Scanning PDFs folder
 		
+		;---Skip any PDFs that have already been processed or are in the middle of being processed
 		if (fname~="i)(sh|-short)\.pdf") 
 			continue
 		if FileExist(fname "sh.pdf") 
 			continue
 		if FileExist(fnam "-short.pdf") 
 			continue
-		if (fname~="_WQ\d+\.pdf")&&(strX(fname,"_WQ",1,3,".pdf",1,4)!=fldval.wqid)
-			continue
 		
-		;---Only unprocessed full disclosure PDF will fall through
-		runwait, pdftotext.exe -l 1 "%fileIn%" "%fnam%.txt",,min						; convert PDF pages 1-2 with no tabular structure
-		FileRead, newtxt, %fnam%.txt													; load into newtxt
-		FileDelete, %fnam%.txt
-		StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All								; remove double CRLF
+		RegExMatch(fname,"O)_WQ(\d+)(\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
 		
-		flds := getPdfID(newtxt)
+		if (fnID.0 = "") {																; Unprocessed full disclosure PDF
+			runwait, pdftotext.exe -l 1 "%fileIn%" "%fnam%.txt",,min					; convert PDF pages 1-2 with no tabular structure
+			FileRead, newtxt, %fnam%.txt												; load into newtxt
+			FileDelete, %fnam%.txt
+			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
+			
+			flds := getPdfID(newtxt)
+			
+			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
+			FileMove, %fileIn%, % holterDir newFnam ".pdf", 1							; rename the unprocessed PDF
+			eventlog("Holter PDF: " fName " renamed to " newFnam)
+			pdfList.push(newFnam ".pdf")
+		} else {
+			pdfList.push(fName)
+		}
 		
-		newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
-		FileMove, %fileIn%, % holterDir newFnam ".pdf", 1								; rename the unprocessed PDF
-		eventlog("Holter PDF: " fName " renamed to " newFnam)
+		if (wqid = "") {																; this is just a refresh loop
+			continue																	; just build the list
+		}
 		
-		if (flds.wqid == fldval.wqid) {													; wqid matches the hl7 being processed
+		if (fnID.1 == wqid) {															; filename WQID matches wqid arg
 			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "sh.pdf"		; rename the pdf in hl7dir to -short.pdf
 			FileMove, % holterDir newFnam ".pdf", % hl7dir fldval.filename 				; move this full disclosure PDF into hl7dir
 			progress, off
 			eventlog(newFnam " moved to hl7dir.")
-			return true
+			return true																	; stop search and return
+		} else {
+			continue
 		}
 	}
 	progress, off
-return	
+	return false																		; fell through without a match
 }
 
 getPdfID(txt) {
