@@ -391,7 +391,7 @@ maxinput(title, prompt, max) {
 
 WQlist() {
 	global
-	local k, ens, id, e0, now, dt, site
+	local k, ens, id, e0, now, dt, site, wqfiles, fnID
 	
 	Progress,,,Scanning worklist...
 	
@@ -431,9 +431,27 @@ WQlist() {
 			, id
 			, e0.name
 			, filenam)
+		wqfiles.push(id)
 	}
 	
 	findfullPDF()
+	for key in pdfList
+	{
+		RegExMatch(key,"O)_WQ(\d+)(\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
+		if ObjHasKey(wqfiles,fnID.1) {
+			continue																; skip files that area already in list
+		}
+		LV_Add(""
+			, key
+			, strX(key,"",1,0,"_",1)
+			,
+			,
+			,
+			, fnID.1
+			, fnID.2
+			, key)
+		}
+	
 	Gui, ListView, WQlv_in
 		LV_ModifyCol()
 		LV_ModifyCol(1,"0")
