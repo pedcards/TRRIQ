@@ -391,7 +391,7 @@ maxinput(title, prompt, max) {
 
 WQlist() {
 	global
-	local k, ens, id, e0, now, dt, site, fnID
+	local k, ens, id, now, dt, site, fnID, res
 	wqfiles := []
 	
 	Progress,,,Scanning worklist...
@@ -422,7 +422,8 @@ WQlist() {
 		filenam := A_LoopFileName
 		x := StrSplit(filenam,"_")
 		id := findWQid(SubStr(x.5,1,8),x.3).id
-		e0 := readWQ(id)
+		res := readWQ(id)																; wqid should always be present in hl7 downloads
+		
 		LV_Add(""
 			, filenam																	; filename without ext
 			, x.1 ", " x.2																; last, first
