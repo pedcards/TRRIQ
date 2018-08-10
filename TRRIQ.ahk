@@ -449,14 +449,14 @@ WQlist() {
 		LV_Add(""
 			, RegExReplace(val,"i)\.pdf")												; filename without ext
 			, strQ(res.Name,"###",strX(val,"",1,0,"_",1))								; name from wqid or filename
-			, strQ(res.mrn,"###")														; mrn
+			, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))								; mrn
 			, strQ(res.dob,"###")														; dob
 			, strQ(res.date,"###")														; study date
 			, id																		; wqid
 			, id																		; study type
 			, fnID.2)																	; full filename
 		if (id) {
-			wqfiles.push(id)
+			wqfiles.push(id)															; add non-null wqid to wqfiles
 		}
 	}
 	
