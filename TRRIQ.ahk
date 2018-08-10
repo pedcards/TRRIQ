@@ -200,9 +200,9 @@ PhaseGUI:
 	Gui, Add, GroupBox, x640 y0 w220 h60
 	
 	Gui, Font, Bold
-	Gui, Add, Button
-		, Y+20 wp h40 vPDF gPhaseTask
-		, Process PDF folder
+	;~ Gui, Add, Button
+		;~ , Y+20 wp h40 vPDF gPhaseTask
+		;~ , Process PDF folder
 	Gui, Add, Button
 		, Y+20 wp h40 vEnroll gPhaseTask
 		, Grab Preventice enrollments
