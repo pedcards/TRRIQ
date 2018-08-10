@@ -415,7 +415,7 @@ WQlist() {
 	FileDelete, .lock
 	
 	Gui, Tab, INBOX
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadHL7 vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|ID|Extracted|FullDisc
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadData vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|ID|Extracted|FullDisc
 	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
 	{
 		hl7ct := A_Index
@@ -664,7 +664,7 @@ readWQ(idx) {
 	return res
 }
 
-readHL7()
+readData()
 {
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {																; Must be in WQlv listview
