@@ -391,7 +391,8 @@ maxinput(title, prompt, max) {
 
 WQlist() {
 	global
-	local k, ens, id, e0, now, dt, site, wqfiles, fnID
+	local k, ens, id, e0, now, dt, site, fnID
+	wqfiles := []
 	
 	Progress,,,Scanning worklist...
 	
@@ -423,34 +424,34 @@ WQlist() {
 		id := findWQid(SubStr(x.5,1,8),x.3).id
 		e0 := readWQ(id)
 		LV_Add(""
-			, filenam
-			, x.1 ", " x.2
-			, x.3
-			, x.4
-			, SubStr(x.5,1,8)
-			, id
-			, e0.name
-			, filenam)
+			, filenam																	; filename without ext
+			, x.1 ", " x.2																; last, first
+			, x.3																		; mrn
+			, x.4																		; dob
+			, SubStr(x.5,1,8)															; study date
+			, id																		; wqid
+			, id																	; extracted
+			, filenam)																	; fulldisc
 		wqfiles.push(id)
 	}
 	
 	findfullPDF()
-	for key in pdfList
+	for key,val in pdfList
 	{
-		RegExMatch(key,"O)_WQ(\d+)(\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
-		if ObjHasKey(wqfiles,fnID.1) {
+		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
+		if ObjHasValue(wqfiles,fnID.1) {
 			continue																; skip files that area already in list
 		}
 		LV_Add(""
-			, key
-			, strX(key,"",1,0,"_",1)
-			,
-			,
-			,
-			, fnID.1
-			, fnID.2
-			, key)
-		}
+			, val																	; filename without ext
+			, strX(val,"",1,0,"_",1)												; name from filename
+			,																		; mrn
+			,																		; dob
+			,																		; study date
+			, fnID.1																; wqid
+			, fnID.1																; study type
+			, fnID.2)																; full filename
+	}
 	
 	Gui, ListView, WQlv_in
 		LV_ModifyCol()
