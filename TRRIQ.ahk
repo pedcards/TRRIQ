@@ -391,7 +391,7 @@ maxinput(title, prompt, max) {
 
 WQlist() {
 	global
-	local k, ens, id, now, dt, site, fnID, res
+	local k, ens, id, now, dt, site, fnID, res, key,  val
 	wqfiles := []
 	
 	Progress,,,Scanning worklist...
@@ -455,7 +455,9 @@ WQlist() {
 			, id																		; wqid
 			, id																		; study type
 			, fnID.2)																	; full filename
-		wqfiles.push(id)
+		if (id) {
+			wqfiles.push(id)
+		}
 	}
 	
 	Gui, ListView, WQlv_in
