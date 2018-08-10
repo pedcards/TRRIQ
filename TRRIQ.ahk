@@ -2354,14 +2354,14 @@ getPdfID(txt) {
 		dt := trim(stregX(txt,"Period \(.*?\R",1,1,"Event Counts",1)," `t`r`n")
 			res.date := dt
 		res.mrn := trim(stregX(txt,"Patient ID",1,1,"Gender",1)," `t`r`n")
-		res.wqid := "99999E"
+		res.wqid := "00000E"
 	} else if instr(txt,"Zio XT") {
 		res.type := "Z"
 		name := res.name := trim(stregX(txt,"Final Report for",1,1,"Date of Birth",1)," `t`r`n")
 			res.nameL := trim(strX(name,"",1,0,",",1,1))
 			res.nameF := trim(strX(name,",",1,1,"",0))
 		res.mrn := strQ(trim(stregX(txt,"Patient ID",1,1,"Managing Location",1)," `t`r`n"),"###","Zio")
-		res.wqid := "99999Z"
+		res.wqid := "00000Z"
 	}
 	return res
 }
