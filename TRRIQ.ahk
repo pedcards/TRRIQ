@@ -431,7 +431,7 @@ WQlist() {
 			, strQ(res.dob,"###",x.4)													; dob
 			, strQ(res.date,"###",SubStr(x.5,1,8))										; study date
 			, id																		; wqid
-			, id																	; extracted
+			, id																		; extracted
 			, filenam)																	; fulldisc
 		wqfiles.push(id)
 	}
@@ -439,22 +439,22 @@ WQlist() {
 	findfullPDF()
 	for key,val in pdfList
 	{
-		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
+		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)										; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
 		id := fnID.1
 		if ObjHasValue(wqfiles,id) {
-			continue																; skip files that area already in list
+			continue																	; skip files that area already in list
 		}
-		res := readwq(fnID.1)														; get values for wqid if valid, else null
+		res := readwq(fnID.1)															; get values for wqid if valid, else null
 		
 		LV_Add(""
-			, RegExReplace(val,"i)\.pdf")											; filename without ext
-			, strQ(res.Name,"###",strX(val,"",1,0,"_",1))							; name from wqid or filename
-			, strQ(res.mrn,"###")													; mrn
-			, strQ(res.dob,"###")													; dob
-			, strQ(res.date,"###")													; study date
-			, id																	; wqid
-			, id																	; study type
-			, fnID.2)																; full filename
+			, RegExReplace(val,"i)\.pdf")												; filename without ext
+			, strQ(res.Name,"###",strX(val,"",1,0,"_",1))								; name from wqid or filename
+			, strQ(res.mrn,"###")														; mrn
+			, strQ(res.dob,"###")														; dob
+			, strQ(res.date,"###")														; study date
+			, id																		; wqid
+			, id																		; study type
+			, fnID.2)																	; full filename
 		wqfiles.push(id)
 	}
 	
