@@ -391,7 +391,7 @@ maxinput(title, prompt, max) {
 
 WQlist() {
 	global
-	local k, ens, id, now, dt, site, fnID, res, key,  val
+	local k, ens, id, now, dt, site, fnID, res, key, val, full
 	wqfiles := []
 	
 	Progress,,,Scanning worklist...
@@ -415,7 +415,7 @@ WQlist() {
 	FileDelete, .lock
 	
 	Gui, Tab, INBOX
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadData vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|ID|Extracted|FullDisc
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadData vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|wqid|Type|FullDisc
 	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
 	{
 		hl7ct := A_Index
@@ -423,16 +423,17 @@ WQlist() {
 		x := StrSplit(filenam,"_")
 		id := findWQid(SubStr(x.5,1,8),x.3).id
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
+		FileGetSize,full,% hl7Dir filenam,M
 		
 		LV_Add(""
-			, filenam																	; filename without ext
+			, filenam																	; filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
 			, strQ(res.mrn,"###",x.3)													; mrn
 			, strQ(res.dob,"###",x.4)													; dob
 			, strQ(res.date,"###",SubStr(x.5,1,8))										; study date
 			, id																		; wqid
-			, id																		; extracted
-			, filenam)																	; fulldisc
+			, "HOL"																		; extracted
+			, full>2 ? "Y":"")															; fulldisc if filesize >2 Meg
 		wqfiles.push(id)
 	}
 	
