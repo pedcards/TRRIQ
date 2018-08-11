@@ -442,20 +442,30 @@ WQlist() {
 	{
 		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)										; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
 		id := fnID.1
-		if ObjHasValue(wqfiles,id) {
-			continue																	; skip files that area already in list
+		ftype := (fnID.2="H") 															; type of file based on fnID label
+				? "PDF"
+				: (fnID.2="Z")
+				? "ZIO"
+				: (fnID.2="E")
+				? "CEM"
+				: (fnID.2="M")
+				? "MINI"
+				: ""
+		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
+			LV_Modify(k,"Col8","Y")														; change the FullDisc column to "Y"
+			continue																	; skip rest of processing
 		}
 		res := readwq(fnID.1)															; get values for wqid if valid, else null
 		
 		LV_Add(""
-			, RegExReplace(val,"i)\.pdf")												; filename without ext
+			, HolterDir val																; filename and path to HolterDir
 			, strQ(res.Name,"###",strX(val,"",1,0,"_",1))								; name from wqid or filename
 			, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))								; mrn
 			, strQ(res.dob,"###")														; dob
 			, strQ(res.date,"###")														; study date
 			, id																		; wqid
-			, id																		; study type
-			, fnID.2)																	; full filename
+			, ftype																		; study type
+			, "Y")																		; fulldisc
 		if (id) {
 			wqfiles.push(id)															; add non-null wqid to wqfiles
 		}
@@ -469,9 +479,9 @@ WQlist() {
 		LV_ModifyCol(4,"80")
 		LV_ModifyCol(5,"80 Asc")
 		LV_ModifyCol(5,"Sort")
-		LV_ModifyCol(6,"0")
-		LV_ModifyCol(7,"80")
-		LV_ModifyCol(8,"80")
+		;~ LV_ModifyCol(6,"0")
+		LV_ModifyCol(7,"40")
+		LV_ModifyCol(8,"50")
 	
 	Gui, Tab, ALL
 	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
