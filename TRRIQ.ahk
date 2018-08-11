@@ -391,7 +391,7 @@ maxinput(title, prompt, max) {
 
 WQlist() {
 	global
-	local k, ens, id, now, dt, site, fnID, res, key, val, full
+	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full
 	wqfiles := []
 	
 	Progress,,,Scanning worklist...
@@ -473,15 +473,15 @@ WQlist() {
 	
 	Gui, ListView, WQlv_in
 		LV_ModifyCol()
-		LV_ModifyCol(1,"0")
-		LV_ModifyCol(2,"140")
-		LV_ModifyCol(3,"60")
-		LV_ModifyCol(4,"80")
-		LV_ModifyCol(5,"80 Asc")
+		LV_ModifyCol(1,"0")																; filename and path
+		LV_ModifyCol(2,"140")															; name
+		LV_ModifyCol(3,"60")															; mrn
+		LV_ModifyCol(4,"80")															; dob
+		LV_ModifyCol(5,"80 Asc")														; date
 		LV_ModifyCol(5,"Sort")
-		;~ LV_ModifyCol(6,"0")
-		LV_ModifyCol(7,"40")
-		LV_ModifyCol(8,"40")
+		;~ LV_ModifyCol(6,"0")															; wqid
+		LV_ModifyCol(7,"40")															; ftype
+		LV_ModifyCol(8,"40")															; ftp
 	
 	Gui, Tab, ALL
 	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
