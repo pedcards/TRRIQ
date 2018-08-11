@@ -391,7 +391,7 @@ maxinput(title, prompt, max) {
 
 WQlist() {
 	global
-	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full
+	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles
 	wqfiles := []
 	
 	Progress,,,Scanning worklist...
