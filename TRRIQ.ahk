@@ -415,7 +415,7 @@ WQlist() {
 	FileDelete, .lock
 	
 	Gui, Tab, INBOX
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadData vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|wqid|Type|FullDisc
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadData vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|wqid|Type|FTP
 	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
 	{
 		hl7ct := A_Index
@@ -433,7 +433,7 @@ WQlist() {
 			, strQ(res.date,"###",SubStr(x.5,1,8))										; study date
 			, id																		; wqid
 			, "HOL"																		; extracted
-			, full>2 ? "Y":"")															; fulldisc if filesize >2 Meg
+			, full>2 ? "X":"")															; fulldisc if filesize >2 Meg
 		wqfiles.push(id)
 	}
 	
@@ -452,7 +452,7 @@ WQlist() {
 				? "MINI"
 				: ""
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
-			LV_Modify(k,"Col8","Y")														; change the FullDisc column to "Y"
+			LV_Modify(k,"Col8","X")														; change the FullDisc column to "Y"
 			continue																	; skip rest of processing
 		}
 		res := readwq(fnID.1)															; get values for wqid if valid, else null
@@ -465,7 +465,7 @@ WQlist() {
 			, strQ(res.date,"###")														; study date
 			, id																		; wqid
 			, ftype																		; study type
-			, "Y")																		; fulldisc
+			, "X")																		; fulldisc
 		if (id) {
 			wqfiles.push(id)															; add non-null wqid to wqfiles
 		}
@@ -481,7 +481,7 @@ WQlist() {
 		LV_ModifyCol(5,"Sort")
 		;~ LV_ModifyCol(6,"0")
 		LV_ModifyCol(7,"40")
-		LV_ModifyCol(8,"50")
+		LV_ModifyCol(8,"40")
 	
 	Gui, Tab, ALL
 	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
