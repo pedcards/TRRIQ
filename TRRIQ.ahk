@@ -2163,6 +2163,7 @@ Holter_Pr_Hl7:
 	} 
 	else loop {																			; just a short PDF
 		if (findFullPDF(fldval.wqid)) {
+			eventlog("Full disclosure PDF found.")
 			break																		; found matching full disclosure, exit loop
 		} else {
 			eventlog("Full disclosure PDF not found.")
