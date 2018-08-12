@@ -1877,6 +1877,7 @@ outputfiles:
 			. """" monType """" ; ","														; Monitor type
 			. "`n"
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
+	FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
 	
 	wq := new XML("worklist.xml")
 	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
