@@ -1771,14 +1771,12 @@ ProcessHl7PDF:
 	fileNam := RegExReplace(fldVal.Filename,"i)\.pdf")									; fileNam is name only without extension, no path
 	fileIn := hl7Dir fldVal.Filename													; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 	
-	;~ RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
 	runwait, pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min							; convert PDF pages 1-2 with no tabular structure
 	FileRead, newtxt, %filenam%.txt														; load into newtxt
 	FileDelete, %filenam%.txt
 	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
 	FileAppend % fldval.hl7, %filenam%.txt												; create new tempfile with result, minus PDF
 	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1								; move a copy into tempfiles for troubleshooting
-	eventlog("tempfile.txt -> " fileNam ".txt")
 	
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (type="Holter") {
@@ -2031,22 +2029,6 @@ Holter_Pr_Hl7:
 	fullDisc := "i)60\s+s(ec)?/line"
 	
 	demog := stregX(newtxt,"Name:",1,0,"Medications:",1)
-	;~ fields[1] := ["Name","\R","Recording Start Date/Time","\R"
-		;~ , "ID","Secondary ID","Admission ID","\R"
-		;~ , "Date Of Birth","Age","Gender","\R"
-		;~ , "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
-		;~ , "(Technician|Hookup Tech)","Recording Duration","\R"
-		;~ , "Analyst","Recorder (No|Number)","\R"
-		;~ , "Indications","Medications","\R"
-		;~ , "Hookup time","Location","Acct Num"]
-	;~ labels[1] := ["Name","null","Test_date","null"
-		;~ , "null","MRN","null","null"
-		;~ , "DOB","VOID_Age","Sex","null"
-		;~ , "Scan_date","Ordering","null"
-		;~ , "Hookup_tech","Recording_time","null"
-		;~ , "Scanned_by","Device_SN","null"
-		;~ , "Indication","VOID_meds","null"
-		;~ , "Hookup_time","Site","Billing"]
 	fields[1] := ["Name","Recording Start Date/Time","\R"
 		, "ID","Date of Birth","\R"
 		, "Date Processed","(Technician|Hookup Tech)","Analyst","\R"
