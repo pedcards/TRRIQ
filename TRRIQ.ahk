@@ -1756,7 +1756,7 @@ ProcessHl7PDF:
 	
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (type="Holter") {
-		gosub Holter_Pr3
+		gosub Holter_PrHl7
 	} else if (type="EOS") {
 		;~ gosub Event_BGH3
 	} else {
@@ -2004,8 +2004,10 @@ epRead:
 return
 }
 
-Holter_Pr3:
+Holter_PrHl7:
 {
+/*	Process newtxt from pdftotxt from HL7 extract
+*/
 	eventlog("Holter_Pr3")
 	monType := "PR"
 	fullDisc := "i)60\s+s(ec)?/line"
