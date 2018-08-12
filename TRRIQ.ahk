@@ -721,7 +721,18 @@ readWQlv:
 		eventlog(fnam " HL7 processed.")
 		
 		progress, 50 , % fileIn, Processing PDF
-		gosub processHl7PDF																; process resulting PDF file to complete step
+		gosub processHl7PDF																; process resulting PDF file
+	} 
+	else if (ftype="CEM") {																; Event monitor PDF
+		eventlog(fnam " type CEM.")
+	}
+	else if (ftype="ZIO") {																; Zio PDF
+		eventlog(fnam " type ZIO.")
+	}
+	else {
+		eventlog("Filetype cannot be determined from WQlist (somehow).")
+		
+		MsgBox, 16, , Unrecognized filetype (somehow)
 	}
 	
 	gosub PhaseGUI																		; Refresh the worklist
