@@ -150,42 +150,14 @@ MainLoop: ; ===================== This is the main part ========================
 			gosub CheckPrEnroll
 		}
 		
-		if (phase="PDF") {
-			eventlog("Start PDF folder scan.")
-			holterLoops := 0								; Reset counters
-			holtersDone := 
-			loop, %holterDir%*.pdf							; Process all PDF files in holterDir
-			{
-				fileNam := RegExReplace(A_LoopFileName,"i)\.pdf")				; fileNam is name only without extension, no path
-				fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
-				FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
-				if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0000-0359 (already processed)
-					eventlog("Skipping file """ fileNam ".pdf"", already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
-					continue
-				}
-				FileGetSize, fileInSize, %fileIn%
-				eventlog("----------")
-				eventlog("Processing """ fileNam ".pdf"" (" thousandsSep(fileInSize) ").")
-				gosub processPDF												; process the PDF
-				if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
-					continue
-				}
-				if !IsObject(ptDem) {											; bad file, never acquires demographics
-					continue
-				}
-				holterLoops++													; increment counter for processed counter
-				holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
-			}
-			MsgBox % "Monitors processed (" holterLoops ")`n" holtersDone
-			FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
-		}
 		if (phase="Upload") {
 			eventlog("Start Mortara preparation/upload.")
 			MortaraUpload()
 		}
 	}
+	
+	ExitApp
 }
-ExitApp
 
 PhaseGUI:
 {
@@ -200,9 +172,6 @@ PhaseGUI:
 	Gui, Add, GroupBox, x640 y0 w220 h60
 	
 	Gui, Font, Bold
-	;~ Gui, Add, Button
-		;~ , Y+20 wp h40 vPDF gPhaseTask
-		;~ , Process PDF folder
 	Gui, Add, Button
 		, Y+20 wp h40 vEnroll gPhaseTask
 		, Grab Preventice enrollments
