@@ -415,7 +415,7 @@ WQlist() {
 	FileDelete, .lock
 	
 	Gui, Tab, INBOX
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadData vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|wqid|Type|FTP
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadWQlv vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|wqid|Type|FTP
 	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
 	{
 		hl7ct := A_Index
@@ -675,7 +675,7 @@ readWQ(idx) {
 	return res
 }
 
-readData:
+readWQlv:
 {
 /*	Retrieve info from WQlist line
 	Will be for HL7 data, or an additional file in Holter PDFs folder
