@@ -1771,6 +1771,12 @@ ProcessHl7PDF:
 	fileNam := RegExReplace(fldVal.Filename,"i)\.pdf")									; fileNam is name only without extension, no path
 	fileIn := hl7Dir fldVal.Filename													; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 	
+	if (fileNam="") {																	; No PDF extracted
+		eventlog("No PDF extracted.")
+		MsgBox No PDF extracted!
+		return
+	}
+	
 	runwait, pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min							; convert PDF pages 1-2 with no tabular structure
 	FileRead, newtxt, %filenam%.txt														; load into newtxt
 	FileDelete, %filenam%.txt
