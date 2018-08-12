@@ -1770,12 +1770,13 @@ ProcessHl7PDF:
 		MsgBox No match!
 		return
 	}
-
-	gosub epRead																		; find out which EP is reading today
 	
-	gosub outputfiles																	; generate and save output CSV, rename and move PDFs
-	
-	filedelete, % hl7dir fileNam ".hl7"													; Success! We can delete the original HL7
+	if (fldval.done) {
+		gosub epRead																	; find out which EP is reading today
+		gosub outputfiles																; generate and save output CSV, rename and move PDFs
+		
+		filedelete, % hl7dir fileNam ".hl7"												; Success! We can delete the original HL7
+	}
 	
 	return
 }
@@ -2185,6 +2186,8 @@ Holter_Pr_Hl7:
 	
 	fieldcoladd("","INTERP","")
 	fieldcoladd("","Mon_type","Holter")
+	
+	fldval.done := true
 	
 return
 }
