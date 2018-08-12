@@ -1747,7 +1747,8 @@ UiFieldFill(fld,val,win) {
 
 ProcessHl7PDF:
 {
-	
+/*	Get extra metadata from extracted PDF, 
+*/
 	fileNam := RegExReplace(fldVal.Filename,"i)\.pdf")									; fileNam is name only without extension, no path
 	fileIn := hl7Dir fldVal.Filename													; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 	
@@ -1762,9 +1763,9 @@ ProcessHl7PDF:
 	
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (type="Holter") {
-		gosub Holter_PrHl7
+		gosub Holter_Pr_Hl7
 	} else if (type="EOS") {
-		;~ gosub Event_BGH3
+		;~ gosub Event_BGH_HL7
 	} else {
 		MsgBox No match!
 		return
@@ -2010,7 +2011,7 @@ epRead:
 return
 }
 
-Holter_PrHl7:
+Holter_Pr_Hl7:
 {
 /*	Process newtxt from pdftotxt from HL7 extract
 */
