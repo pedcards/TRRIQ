@@ -736,6 +736,13 @@ readWQlv:
 		MsgBox, 16, , Unrecognized filetype (somehow)
 	}
 	
+	if (fldval.done) {
+		gosub epRead																	; find out which EP is reading today
+		gosub outputfiles																; generate and save output CSV, rename and move PDFs
+		
+		filedelete, % hl7dir fileNam ".hl7"												; Success! We can delete the original HL7
+	}
+	
 	gosub PhaseGUI																		; Refresh the worklist
 	
 	return
@@ -1783,13 +1790,6 @@ ProcessHl7PDF:
 		return
 	}
 	
-	if (fldval.done) {
-		gosub epRead																	; find out which EP is reading today
-		gosub outputfiles																; generate and save output CSV, rename and move PDFs
-		
-		filedelete, % hl7dir fileNam ".hl7"												; Success! We can delete the original HL7
-	}
-	
 	return
 }
 
@@ -1841,9 +1841,7 @@ ProcessPDF:
 	if (fetchQuit=true) {																	; exited demographics fetchGUI
 		return																				; so skip processing this file
 	}
-	gosub epRead																			; find out which EP is reading today
-	
-	gosub outputfiles																		; generate and save output CSV, rename and move PDFs
+	fldval.done := true
 return
 }
 
