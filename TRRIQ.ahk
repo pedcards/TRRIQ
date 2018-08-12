@@ -463,7 +463,7 @@ WQlist() {
 		i := A_index
 		site := A_LoopField
 		Gui, Tab, % site
-		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H250 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
 		{
 			k := ens.item(A_Index-1)
