@@ -180,7 +180,7 @@ PhaseGUI:
 		, Prepare/Upload Holter
 	Gui, Font, Normal
 	
-	Gui, Add, Tab3, -Wrap x10 y10 w620 h240 vWQtab, % "INBOX|ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
+	Gui, Add, Tab3, -Wrap x10 y10 w620 h240 vWQtab, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	WQlist()
 	
 	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
@@ -383,14 +383,15 @@ WQlist() {
 	wq.save("worklist.xml")
 	FileDelete, .lock
 	
+	if (wksloc="Main Campus") {
+		
 	Gui, Tab, INBOX
 	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadWQlv vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Date|wqid|Type|FTP
 	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
 	{
-		hl7ct := A_Index
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
-		id := findWQid(SubStr(x.5,1,8),x.3).id
+		id := findWQid(SubStr(x.5,1,8),x.3).id											; get id based on study date and mrn
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
 		FileGetSize,full,% hl7Dir fileIn,M
 		
@@ -406,7 +407,7 @@ WQlist() {
 		wqfiles.push(id)
 	}
 	
-	findfullPDF()
+	findfullPDF()																		; Scan Holter PDFs folder for additional files
 	for key,val in pdfList
 	{
 		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)										; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
@@ -421,7 +422,7 @@ WQlist() {
 				? "MINI"
 				: ""
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
-			LV_Modify(k,"Col8","X")														; change the FullDisc column to "Y"
+			LV_Modify(k,"Col8","X")														; change the FullDisc column to "X"
 			continue																	; skip rest of processing
 		}
 		res := readwq(fnID.1)															; get values for wqid if valid, else null
@@ -451,6 +452,8 @@ WQlist() {
 		;~ LV_ModifyCol(6,"0")															; wqid
 		LV_ModifyCol(7,"40")															; ftype
 		LV_ModifyCol(8,"40")															; ftp
+	
+	}	; <-- finish Main Campus Inbox
 	
 	Gui, Tab, ALL
 	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
