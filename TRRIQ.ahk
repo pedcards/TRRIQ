@@ -1747,7 +1747,7 @@ UiFieldFill(fld,val,win) {
 
 ProcessHl7PDF:
 {
-/*	Get extra metadata from extracted PDF, 
+/*	Associate fldVal data with extra metadata from extracted PDF, complete final CSV report, handle files
 */
 	fileNam := RegExReplace(fldVal.Filename,"i)\.pdf")									; fileNam is name only without extension, no path
 	fileIn := hl7Dir fldVal.Filename													; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
@@ -2175,6 +2175,8 @@ Holter_Pr_Hl7:
 			{
 				continue																; redo the loop
 			} else {
+				FileDelete, % fileIn
+				eventlog("Refused to get full disclosure. Extracted PDF deleted.")
 				Exit																	; either Cancel or X, go back to main GUI
 			}
 		}
