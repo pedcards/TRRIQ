@@ -432,7 +432,7 @@ WQlist() {
 			, strQ(res.dob,"###",x.4)													; dob
 			, strQ(res.date,"###",SubStr(x.5,1,8))										; study date
 			, id																		; wqid
-			, "HOL"																		; extracted
+			, "HL7"																		; extracted
 			, full>2 ? "X":"")															; fulldisc if filesize >2 Meg
 		wqfiles.push(id)
 	}
@@ -675,8 +675,11 @@ readWQ(idx) {
 	return res
 }
 
-readData()
+readData:
 {
+/*	Retrieve info from WQlist line
+	Will be for HL7 data, or an additional file in Holter PDFs folder
+*/
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {																; Must be in WQlv listview
 		return
@@ -690,21 +693,38 @@ readData()
 	}
 	LV_GetText(fnam,x,1)																; hl7 filename
 	LV_GetText(wqid,x,6)																; WQID
+	LV_GetText(ftype,x,7)																; filetype
 	
-	Gui, phase:Hide
+	blocks := Object()																	; clear all objects
+	fields := Object()
+	labels := Object()
+	blk := Object()
+	blk2 := Object()
+	ptDem := Object()
+	pt := Object()
+	chk := Object()
+	matchProv := Object()
+	fldOut := Object()
+	fileOut := fileOut1 := fileOut2 := ""
+	summBl := summ := ""
+	fullDisc := ""
+	monType := ""
 	
-	global wq, user, fldval, hl7Dir, newtxt, fileIn, fileNam, fulldisc
-	fldVal := readWQ(wqid)
-	fldval.wqid := wqid
+	fldVal := readWQ(wqid)																; wqid would have been determined by parsing hl7
+	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
 	
-	progress, 25 , % fileIn, Extracting data
-	processHL7(fnam)																	; extract DDE to fldVal, and PDF into hl7Dir
-	eventlog(fnam " HL7 processed.")
+	if (ftype="HL7") {																	; hl7 file (could still be Holter or CEM)
+		Gui, phase:Hide
+		
+		progress, 25 , % fileIn, Extracting data
+		processHL7(fnam)																; extract DDE to fldVal, and PDF into hl7Dir
+		eventlog(fnam " HL7 processed.")
+		
+		progress, 50 , % fileIn, Processing PDF
+		gosub processHl7PDF																; process resulting PDF file to complete step
+	}
 	
-	progress, 50 , % fileIn, Processing PDF
-	gosub processHl7PDF																	; process resulting PDF file to complete step
-	
-	gosub PhaseGUI																		; Success! Refresh the worklist
+	gosub PhaseGUI																		; Refresh the worklist
 	
 	return
 }
@@ -1727,20 +1747,6 @@ UiFieldFill(fld,val,win) {
 
 ProcessHl7PDF:
 {
-	blocks := Object()																	; clear all objects
-	fields := Object()
-	labels := Object()
-	blk := Object()
-	blk2 := Object()
-	ptDem := Object()
-	pt := Object()
-	chk := Object()
-	matchProv := Object()
-	fileOut := fileOut1 := fileOut2 := ""
-	summBl := summ := ""
-	fullDisc := ""
-	monType := ""
-	fldOut := Object()
 	
 	fileNam := RegExReplace(fldVal.Filename,"i)\.pdf")									; fileNam is name only without extension, no path
 	fileIn := hl7Dir fldVal.Filename													; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
