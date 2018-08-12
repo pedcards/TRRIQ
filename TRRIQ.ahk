@@ -723,14 +723,25 @@ readWQlv:
 		
 		progress, 50 , % fnam, Processing PDF
 		gosub processHl7PDF																; process resulting PDF file
-	} 
-	else if (ftype="CEM") {																; Event monitor PDF
-		eventlog(fnam " type CEM.")
 	}
+	else if (ftype="PDF") {																; Full disclosure PDF (ad hoc)
+		FileGetSize, fileInSize, %fileIn%
+		Gui, phase:Hide
+		eventlog("===> " fnam " manually downloaded PDF (" thousandsSep(fileInSize) ").")
+		gosub processPDF
+	}
+	else if (ftype="CEM") {																; Event monitor PDF
+		Gui, phase:Hide
+		eventlog("===> " fnam " type CEM.")
+		gosub processPDF
+	} 
 	else if (ftype="ZIO") {																; Zio PDF
-		eventlog(fnam " type ZIO.")
+		Gui, phase:Hide
+		eventlog("===> " fnam " type ZIO.")
+		gosub processPDF
 	}
 	else {
+		Gui, phase:Hide
 		eventlog("Filetype cannot be determined from WQlist (somehow).")
 		
 		MsgBox, 16, , Unrecognized filetype (somehow)
@@ -2015,7 +2026,7 @@ Holter_Pr_Hl7:
 {
 /*	Process newtxt from pdftotxt from HL7 extract
 */
-	eventlog("Holter_Pr3")
+	eventlog("Holter_Pr_HL7")
 	monType := "PR"
 	fullDisc := "i)60\s+s(ec)?/line"
 	
