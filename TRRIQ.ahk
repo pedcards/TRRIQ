@@ -419,14 +419,14 @@ WQlist() {
 	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
 	{
 		hl7ct := A_Index
-		filenam := A_LoopFileName
-		x := StrSplit(filenam,"_")
+		fileIn := A_LoopFileName
+		x := StrSplit(fileIn,"_")
 		id := findWQid(SubStr(x.5,1,8),x.3).id
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
-		FileGetSize,full,% hl7Dir filenam,M
+		FileGetSize,full,% hl7Dir fileIn,M
 		
 		LV_Add(""
-			, filenam																	; filename
+			, hl7Dir fileIn																; path and filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
 			, strQ(res.mrn,"###",x.3)													; mrn
 			, strQ(res.dob,"###",x.4)													; dob
@@ -691,9 +691,10 @@ readWQlv:
 	if !(x := LV_GetNext()) {															; Must be on actual row
 		return
 	}
-	LV_GetText(fnam,x,1)																; hl7 filename
+	LV_GetText(fileIn,x,1)																; selection filename
 	LV_GetText(wqid,x,6)																; WQID
 	LV_GetText(ftype,x,7)																; filetype
+	SplitPath,fileIn,fnam,,,fileNam
 	
 	blocks := Object()																	; clear all objects
 	fields := Object()
@@ -714,13 +715,13 @@ readWQlv:
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
 	
 	if (ftype="HL7") {																	; hl7 file (could still be Holter or CEM)
+		eventlog("===> " fnam )
 		Gui, phase:Hide
 		
-		progress, 25 , % fileIn, Extracting data
+		progress, 25 , % fnam, Extracting data
 		processHL7(fnam)																; extract DDE to fldVal, and PDF into hl7Dir
-		eventlog(fnam " HL7 processed.")
 		
-		progress, 50 , % fileIn, Processing PDF
+		progress, 50 , % fnam, Processing PDF
 		gosub processHl7PDF																; process resulting PDF file
 	} 
 	else if (ftype="CEM") {																; Event monitor PDF
