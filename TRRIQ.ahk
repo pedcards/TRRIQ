@@ -1805,45 +1805,29 @@ ProcessPDF:
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
  */
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt"			; convert PDF pages 1-2 to txt file
-	newTxt:=""																		; clear the full txt variable
-	FileRead, maintxt, %filenam%.txt												; load into maintxt
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt"				; convert PDF pages 1-2 to txt file
+	newTxt:=""																			; clear the full txt variable
+	FileRead, maintxt, %filenam%.txt													; load into maintxt
 	FileDelete, %filenam%.txt
 	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
-	FileAppend %newtxt%, %filenam%.txt												; create new tempfile with newtxt result
-	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1							; move a copy into tempfiles for troubleshooting
-	eventlog("tempfile.txt -> " fileNam ".txt")
-	
-	blocks := Object()																; clear all objects
-	fields := Object()
-	fldval := Object()
-	labels := Object()
-	blk := Object()
-	blk2 := Object()
-	ptDem := Object()
-	pt := Object()
-	chk := Object()
-	matchProv := Object()
-	fileOut := fileOut1 := fileOut2 := ""
-	summBl := summ := ""
-	fullDisc := ""
-	monType := ""
-	
-	if (instr(newtxt,"zio xt")) {															; Processing loop based on identifying string in newtxt
+	FileAppend %newtxt%, %filenam%.txt													; create new tempfile with newtxt result
+	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1								; move a copy into tempfiles for troubleshooting
+		
+	if (instr(newtxt,"zio xt")) {														; Processing loop based on identifying string in newtxt
 		gosub Zio
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) 	{					; New Preventice Holter 2017
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) 	{				; New Preventice Holter 2017
 		gosub Holter_Pr2
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {		; Body Guardian Heart CEM
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
 		gosub Event_BGH
-	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {					; Original Preventice Holter
+	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {				; Original Preventice Holter
 		;~ gosub Holter_Pr
 	} else {
 		eventlog(fileNam " bad file.")
 		MsgBox No match!
 		return
 	}
-	if (fetchQuit=true) {																	; exited demographics fetchGUI
-		return																				; so skip processing this file
+	if (fetchQuit=true) {																; exited demographics fetchGUI
+		return																			; so skip processing this file
 	}
 	fldval.done := true
 return
