@@ -698,20 +698,10 @@ readWQlv:
 		progress, 50 , % fnam, Processing PDF
 		gosub processHl7PDF																; process resulting PDF file
 	}
-	else if (ftype="PDF") {																; Full disclosure PDF (ad hoc)
+	else if (ftype) {																	; Full disclosure PDF (ad hoc)
 		FileGetSize, fileInSize, %fileIn%
 		Gui, phase:Hide
-		eventlog("===> " fnam " manually downloaded PDF (" thousandsSep(fileInSize) ").")
-		gosub processPDF
-	}
-	else if (ftype="CEM") {																; Event monitor PDF
-		Gui, phase:Hide
-		eventlog("===> " fnam " type CEM.")
-		gosub processPDF
-	} 
-	else if (ftype="ZIO") {																; Zio PDF
-		Gui, phase:Hide
-		eventlog("===> " fnam " type ZIO.")
+		eventlog("===> " fnam " type " ftype " (" thousandsSep(fileInSize) ").")
 		gosub processPDF
 	}
 	else {
