@@ -2437,95 +2437,60 @@ CheckProcPr2:
 {
 	eventlog("CheckProcPr")
 	fetchQuit := false
-	chk.Name := strVal(demog,"Name","\R")												; Name
-		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")							; Filter out 
-		chk.Last := trim(strX(chk.Name,"",1,1,",",1,1)," `r`n")								; NameL				must be [A-Z]
-		chk.First := trim(strX(chk.Name,",",1,1,"",0)," `r`n")								; NameF				must be [A-Z]
-	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
-	chk.DOB := strVal(demog,"Date of Birth","Age")										; DOB
-	chk.Sex := strVal(demog,"Gender","\R")												; Sex
-	chk.Prov := cleanspace(strVal(demog,"(Ordering|Referring) Phys(ician)?","\R"))		; Ordering MD
-	chk.Ind := strVal(demog,"Indications","Medications")								; Indication
-	chk.Med := strVal(demog,"Medications","\R")											; Meds (contains upload code)
-	chk.Ser := strVal(demog,"Recorder N(o|umber)","\R")									; Ser Num
-	chk.Date := strVal(demog,"Recording Start Date/Time","\R")							; Study date
 	
-	chkDT := parseDate(chk.Date)
-	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
-	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
-		FileDelete, %fileIn%
-		eventlog(chk.MRN " PDF archive exists, deleting '" fileIn "'")
-		fetchQuit := true
-		return
-	}
-	wq := new XML("worklist.xml")
-	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " chk.Ser "'][mrn='" chk.MRN "']"
-	tmpWQ := object()
-	if IsObject(wq.selectSingleNode(wqStr)) {											; perfect match
-		tmpWQ.id := wq.selectSingleNode(wqStr).getAttribute("id")
-		eventlog("Found registration ID " tmpWQ.id)
-	} else {
-		tmpWQ := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
-		if (tmpWQ.node = "done") {
-			MsgBox % fileIn " has been scanned already."
-			eventlog(fileIn " already scanned.")
-			fetchQuit := true
-			return
-		}
-	}
-	fldval["wqid"] := tmpWQ.id
-	pt := readwq(tmpWQ.id)
 	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
 		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
 		MsgBox, 4112, Filesize error!, This file does not appear to be a full-disclosure PDF. Please download the proper file and try again.
 		fetchQuit := true
 		return
 	}
+	if (zzzfldval.node = "done") {
+		MsgBox % fileIn " has been scanned already."
+		eventlog(fileIn " already scanned.")
+		fetchQuit := true
+		return
+	}
 	
-	if (pt.acct) {																		; <acct> exists, has been registered or uploaded through TRRIQ
-		eventlog("Pulled valid data for " pt.name " " pt.mrn " " pt.date)
-		ptDem["mrn"] := pt.mrn															; fill ptDem[] with values
-		ptDem["loc"] := pt.site
-		ptDem["EncDate"] := pt.date
-		ptDem["Account Number"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
-		ptDem["nameL"] := strX(pt.name,"",0,1,",",1,1)
-		ptDem["nameF"] := strX(pt.name,",",1,1,"",0)
-		ptDem["Sex"] := pt.sex
-		ptDem["dob"] := pt.dob
-		ptDem["Provider"] := pt.prov
-		ptDem["Indication"] := pt.ind
-		ptDem["loc"] := z1
+	if (fldval.acct) {																	; <acct> exists, has been registered or uploaded through TRRIQ
+		eventlog("Pulled valid data for " fldval.name " " fldval.mrn " " fldval.date)
 		MsgBox, 4160, Found valid registration, % "" 
-		  . pt.Name "`n" 
-		  . "MRN " pt.MRN "`n" 
-		  . "Acct " pt.Acct "`n" 
-		  . "Ordering: " pt.Prov "`n" 
-		  . "Study date: " pt.Date "`n`n" 
-	} else {																			; no prior TRRIQ data
-		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
-		Clipboard := chk.Last ", " chk.First											; fill clipboard with name, so can just paste into CIS search bar
-		MsgBox, 4096,, % "Extracted data for:`n"
-			. "   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
-			
-		ptDem["nameL"] := chk.Last														; Placeholder values for fetchGUI from PDF
-		ptDem["nameF"] := chk.First
-		ptDem["mrn"] := chk.MRN
-		ptDem["DOB"] := chk.DOB
-		ptDem["Sex"] := chk.Sex
-		ptDem["Loc"] := chk.Loc
-		ptDem["Account number"] := chk.Acct												; If want to force click, don't include Acct Num
-		ptDem["Provider"] := filterProv(chk.Prov).name
-		ptDem["EncDate"] := chk.Date
-		ptDem["Indication"] := chk.Ind
+		  . fldval.name "`n" 
+		  . "MRN " fldval.mrn "`n" 
+		  . "Acct " fldval.acct "`n" 
+		  . "Ordering: " fldval.prov "`n" 
+		  . "Study date: " fldval.date "`n`n" 
+		return
+	} 
+	
+	/*	Did not fail based on filesize or done, 
+	 *	and has not been validated yet so no prior TRRIQ data
+	 *	populate with parsed data in fldOut
+	 */
+	eventlog("PDF demog: " fldOut["dem-name"] " " fldOut["dem-mrn"] " " fldOut["dem-Test_date"])
+	
+	Clipboard := fldOut["dem-Name_L"] ", " fldOut["dem-Name_F"]							; fill clipboard with name, so can just paste into CIS search bar
+	MsgBox, 4096,, % "Extracted data for:`n"
+		. "   " fldOut["dem-Name_L"] ", " fldOut["dem-Name_F"] "`n"
+		. "   " fldOut["dem-mrn"] "`n"
+		. "   " fldOut["dem-Test_date"] "`n`n"
+		. "Paste clipboard into CIS search to select patient and encounter"
 		
-		fetchQuit:=false
-		gosub fetchGUI
-		gosub fetchDem
-		checkFetchDem(chk.Last,chk.First,chk.mrn)
-		if (fetchQuit=true) {
-			return
-		}
+	ptDem["nameL"] := fldOut["dem-Name_L"] 												; Placeholder values for fetchGUI from PDF
+	ptDem["nameF"] := fldOut["dem-Name_F"] 
+	ptDem["mrn"] := fldOut["dem-MRN"] 
+	ptDem["DOB"] := fldOut["dem-DOB"] 
+	ptDem["Sex"] := fldOut["dem-Sex"]
+	ptDem["Loc"] := fldOut["dem-Site"]
+	ptDem["Account number"] := fldOut["dem-Acct"]										; If want to force click, don't include Acct Num
+	ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
+	ptDem["EncDate"] := fldOut["dem-Test_date"]
+	ptDem["Indication"] := fldOut["dem-Indication"]
+	
+	gosub fetchGUI
+	gosub fetchDem
+	checkFetchDem(chk.Last,chk.First,chk.mrn)
+	if (fetchQuit=true) {
+		return
 	}
 	/*	When fetchDem successfully completes,
 	 *	replace the fields in demog with newly acquired values
@@ -2882,7 +2847,7 @@ CheckProcBGH:
 		return
 	}
 	wq := new XML("worklist.xml")
-	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name).id
+	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name).id		; /// This needs to be more like Holter_PR
 
 	eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
 	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
