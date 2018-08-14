@@ -768,7 +768,7 @@ FetchDem:
 					gosub getDemName													; extract patient name, MRN from window title 
 				}																		; (this is why it must be sister or parent VM).
 				if (clk.field = "Account Number") {
-					ptDem["Account Number"] := clk.value
+					ptDem["Account"] := clk.value
 					eventlog("MouseGrab Account Number " clk.value ".")
 					mdCoord.x1 := mouseXpos													; demographics grid[1,3]
 					mdCoord.y3 := mouseYpos
@@ -905,7 +905,7 @@ fetchGUI:
 	fW1 := 80,	fW2 := 190									; width for title and input fields
 	fH := 20												; line heights
 	fY := 10												; y pos to start
-	EncNum := ptDem["Account Number"]						; we need these non-array variables for the Gui statements
+	EncNum := ptDem["Account"]						; we need these non-array variables for the Gui statements
 	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
 	demBits := 0											; clear the error check
 	fTxt := "	To auto-grab demographic info:`n"
@@ -1002,11 +1002,11 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		eventlog(ptDem.Provider " matches " matchProv.Best " (" (1-matchProv.fuzz)*100 ").")
 		ptDem.Provider := matchProv.Best
 	}
-	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
+	ptDem["Account"] := EncNum											; make sure array has submitted EncNum value
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy										; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
 	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 					; valid names
-			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8,}") 						; valid MRN and Acct numbers
+			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account"]~="\d{8,}") 						; valid MRN and Acct numbers
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="^[MF]") 		; valid DOB and Sex
 			&& (ptDem["Loc"]) && (ptDem["Type"])													; Loc and type is not null
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])								; prov any string, encDate not null
@@ -1015,7 +1015,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			. ((ptDem["nameF"]) ? "" : " nameF")
 			. ((ptDem["nameL"]) ? "" : " nameL")
 			. ((ptDem["mrn"]) ? "" : " MRN")
-			. ((ptDem["Account number"]) ? "" : " EncNum")
+			. ((ptDem["Account"]) ? "" : " EncNum")
 			. ((ptDem["DOB"]) ? "" : " DOB")
 			. ((ptDem["Sex"]) ? "" : " Sex")
 			. ((ptDem["Loc"]) ? "" : " Loc")
@@ -1027,7 +1027,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			;~ . ((ptDem["nameF"]) ? "" : "First name`n")
 			;~ . ((ptDem["nameL"]) ? "" : "Last name`n")
 			;~ . ((ptDem["mrn"]) ? "" : "MRN`n")
-			;~ . ((ptDem["Account number"]) ? "" : "Account number`n")
+			;~ . ((ptDem["Account"]) ? "" : "Account number`n")
 			;~ . ((ptDem["DOB"]) ? "" : "DOB`n")
 			;~ . ((ptDem["Sex"]) ? "" : "Sex`n")
 			;~ . ((ptDem["Loc"]) ? "" : "Location`n")
@@ -1038,7 +1038,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			. "First name " ptDem["nameF"] "`n"
 			. "Last name " ptDem["nameL"] "`n"
 			. "MRN " ptDem["mrn"] "`n"
-			. "Account number " ptDem["Account number"] "`n"
+			. "Account number " ptDem["Account"] "`n"
 			. "DOB " ptDem["DOB"] "`n"
 			. "Sex " ptDem["Sex"] "`n"
 			. "Location " ptDem["Loc"] "`n"
@@ -1430,7 +1430,7 @@ MortaraUpload()
 			ptDem["mrn"] := pt.mrn														; fill ptDem[] with values
 			ptDem["loc"] := pt.site
 			ptDem["date"] := pt.date
-			ptDem["Account Number"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
+			ptDem["Account"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
 			ptDem["nameL"] := strX(pt.name,"",0,1,",",1,1)
 			ptDem["nameF"] := strX(pt.name,",",1,1,"",0)
 			ptDem["Sex"] := pt.sex
@@ -1591,7 +1591,7 @@ muWqSave(sernum) {
 	wq.addElement("dev",newID,"Mortara H3+ - " sernum)
 	wq.addElement("prov",newID,ptDem["Provider"])
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
-	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account Number"])
+	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
 	wq.addElement("ind",newID,ptDem["Indication"])
 	wq.addElement(ptDem["muphase"],newID,{user:A_UserName},A_now)
 	
@@ -2046,7 +2046,7 @@ Holter_Pr_Hl7:
 		ptDem["DOB"] := fldOut["dem-DOB"]
 		ptDem["Sex"] := fldOut["dem-Sex"]
 		ptDem["Loc"] := fldOut["dem-Site"]
-		ptDem["Account number"] :=														; If want to force click, don't include Acct Num
+		ptDem["Account"] :=														; If want to force click, don't include Acct Num
 		ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
 		ptDem["EncDate"] := fldOut["dem-Test_date"]
 		ptDem["Indication"] := fldOut["dem-Indications"]
@@ -2054,7 +2054,7 @@ Holter_Pr_Hl7:
 		
 		Clipboard := ptDem["nameL"] ", " ptDem["nameF"]									; fill clipboard with name, so can just paste into CIS search bar
 		MsgBox, 4096,, % "Extracted data for:`n"
-			. "   " ptDem["nameL"] ", " ptDem["nameF"] "`n   " ptDem["mrn"] "`n   " ptDem["EncDate"] "`n   " ptDem["Loc"] "`n   " ptDem["Account number"] "`n`n"
+			. "   " ptDem["nameL"] ", " ptDem["nameF"] "`n   " ptDem["mrn"] "`n   " ptDem["EncDate"] "`n   " ptDem["Loc"] "`n   " ptDem["Account"] "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
 		fetchQuit:=false
 		gosub fetchGUI
@@ -2074,7 +2074,7 @@ Holter_Pr_Hl7:
 		fldval["dem-DOB"] := ptDem["DOB"]
 		fldval["dem-Sex"] := ptDem["Sex"]
 		fldval["dem-Site"] := ptDem["Loc"]
-		fldval["dem-Billing"] := ptDem["Account number"]
+		fldval["dem-Billing"] := ptDem["Account"]
 		fldval["dem-Device_SN"] := fldOut["dem-Device_SN"]
 		fldval["dem-Indication"] := ptDem["Indication"]
 		
@@ -2090,7 +2090,7 @@ Holter_Pr_Hl7:
 			wqSetVal(id,"dev","Mortara H3+ - " fldOut["dem-Device_SN"])
 			wqSetVal(id,"prov",ptDem["Provider"])
 			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
-			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account Number"])
+			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
 			wqSetVal(id,"ind",ptDem["Indication"])
 		filedelete, .lock
 		writeOut("/root/pending","enroll[@id='" id "']")
@@ -2464,7 +2464,7 @@ CheckProcPr2:
 	
 	/*	Did not fail based on filesize or done, 
 	 *	and has not been validated yet so no prior TRRIQ data
-	 *	populate with parsed data in fldOut
+	 *	populate temp object ptDem with parsed data from fldOut
 	 */
 	eventlog("PDF demog: " fldOut["dem-name"] " " fldOut["dem-mrn"] " " fldOut["dem-Test_date"])
 	
@@ -2481,7 +2481,7 @@ CheckProcPr2:
 	ptDem["DOB"] := fldOut["dem-DOB"] 
 	ptDem["Sex"] := fldOut["dem-Sex"]
 	ptDem["Loc"] := fldOut["dem-Site"]
-	ptDem["Account number"] := fldOut["dem-Acct"]										; If want to force click, don't include Acct Num
+	ptDem["Account"] := fldOut["dem-Acct"]										; If want to force click, don't include Acct Num
 	ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
 	ptDem["EncDate"] := fldOut["dem-Test_date"]
 	ptDem["Indication"] := fldOut["dem-Indication"]
@@ -2508,7 +2508,7 @@ CheckProcPr2:
 	demog := RegExReplace(demog,"i`a)Technician: (.*) Recording Duration","Hookup Tech:   $1   Recording Duration")
 	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
 	demog .= "   Location:    " ptDem["Loc"] "`n"
-	demog .= "   Acct Num:    " ptDem["Account number"] "`n"
+	demog .= "   Acct Num:    " ptDem["Account"] "`n"
 	eventlog("Demog replaced.")
 	
 	return
@@ -2731,7 +2731,7 @@ CheckProcZio:
 	ptDem["DOB"] := chk.DOB
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
-	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
+	ptDem["Account"] := chk.Acct													; If want to force click, don't include Acct Num
 	ptDem["Provider"] := filterProv(chk.Prov).name
 	ptDem["EncDate"] := chk.DateStart
 	ptDem["Indication"] := chk.Ind
@@ -2752,7 +2752,7 @@ CheckProcZio:
 	fldval["name_L"] := ptDem["nameL"]
 	fldval["name_F"] := ptDem["nameF"]
 	fldval["MRN"] := ptDem["MRN"]
-	fldval["Acct"] := ptDem["Account Number"]
+	fldval["Acct"] := ptDem["Account"]
 	fldval["dem-Billing"] := fldval["Acct"]
 	fldval["dem-Test_date"] := chk.DateStart
 	fldval["dem-Test_end"] := chk.DateEnd
@@ -2806,7 +2806,7 @@ Event_BGH:
 	fields[2] := ["Date Recorded","Date Ended","\R"]
 	labels[2] := ["Test_date","Test_end","VOID"]
 	fieldvals(enroll,2,"dem")
-	fieldColAdd("dem","Billing",ptDem["Account Number"])
+	fieldColAdd("dem","Billing",ptDem["Account"])
 	
 	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
@@ -2860,7 +2860,7 @@ CheckProcBGH:
 	ptDem["DOB"] := chk.DOB
 	ptDem["Sex"] := chk.Sex
 	ptDem["Loc"] := chk.Loc
-	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
+	ptDem["Account"] := chk.Acct													; If want to force click, don't include Acct Num
 	ptDem["Provider"] := filterProv(chk.Prov).name
 	ptDem["EncDate"] := chk.DateStart
 	ptDem["EndDate"] := chk.DateEnd
@@ -2878,7 +2878,7 @@ CheckProcBGH:
 	 *	replace the fields in demog with newly acquired values
 	 */
 	fldval["dem-Site"] := ptDem["Loc"]
-	fldval["dem-Billing"] := ptDem["Account Number"]
+	fldval["dem-Billing"] := ptDem["Account"]
 	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
 		fldval["name_L"] := ptDem["nameL"]
 		fldval["name_F"] := ptDem["nameF"]
@@ -3423,6 +3423,10 @@ checkFetchDem(nameL,nameF,mrn) {
 }
 
 filterProv(x) {
+/*	Filters out all irregularities and common typos in Provider name from manual entry
+	Returns as {name:"Albers, Erin", site:"CRB"}
+	Provider-Site may be in error
+*/
 	global sites, sites0
 	
 	allsites := sites "|" sites0
