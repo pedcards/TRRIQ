@@ -2379,16 +2379,14 @@ Holter_Pr2:
 		, "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
 		, "Technician|Hookup Tech","Recording Duration","\R"
 		, "Analyst","Recorder (No|Number)","\R"
-		, "Indications","Medications","\R"
-		, "Hookup time","Location","Acct Num"]
+		, "Indications","Medications","\R"]
 	labels[1] := ["Name","null","Test_date","null"
 		, "null","MRN","null","null"
 		, "DOB","VOID_Age","Sex","null"
 		, "Scan_date","Ordering","null"
 		, "Hookup_tech","VOID_Duration","null"
 		, "Scanned_by","Device_SN","null"
-		, "Indication","VOID_meds","null"
-		, "Hookup_time","Site","Billing"]
+		, "Indication","VOID_meds","null"]
 	fieldvals(demog,1,"dem")
 	
 	sumStat := RegExReplace(columns(stregX(newtxt,"\s+Scan Criteria",1,0,"\s+RR Variability\s+\(",0)
