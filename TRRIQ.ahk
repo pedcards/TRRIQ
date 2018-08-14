@@ -3088,7 +3088,7 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 		eventlog("*** strVal fail: ''" n1 "' ... '" n2 "'")								; Note the bad fields
 	}
 
-	return trim(str.value("res")," :`n")
+	return trim(str.value("res")," :`n`r`t")
 }
 
 scanParams(txt,blk,pre:="par",rx:="") {
