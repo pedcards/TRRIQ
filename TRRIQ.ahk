@@ -2378,16 +2378,9 @@ Holter_Pr2:
 	monType := "PR"
 	fullDisc := "i)60\s+s(ec)?/line"
 	
-	demog := stregX(newtxt,"Name:",1,0,"Conclusions",1)
-	
-	gosub checkProcPR2											; check validity of PDF, make demographics valid if not
-	if (fetchQuit=true) {
-		return													; fetchGUI was quit, so skip processing
-	}
-	
-	/* Holter PDF is valid. OK to process.
-	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
+	demog := stregX(newtxt,"Name:",1,0,"Conclusions",1)
 	fields[1] := ["Name","\R","Recording Start Date/Time","\R"
 		, "ID","Secondary ID","Admission ID","\R"
 		, "Date Of Birth","Age","Gender","\R"
@@ -2431,6 +2424,11 @@ Holter_Pr2:
 	fields[3] := ["Supraventricular Beats","Singlets","Pairs","Runs","Fastest Run","Longest Run"]
 	labels[3] := ["Total","Single","Pairs","Runs","Fastest","Longest"]
 	scanParams(rateStat,3,"sve",1)
+	
+	gosub checkProcPR2											; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
 	
 	LWify()
 	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
