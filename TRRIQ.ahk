@@ -1301,10 +1301,17 @@ scanX(txt,fields,labels) {
 	return res
 }
 
-findWQid(DT,MRN,name="") {
+findWQid(DT:="",MRN:="",ser:="",name:="") {
+/*	DT = 20170803
+	MRN = 123456789
+	ser = BodyGuardian Heart - BG12345, or Mortara H3+ - 12345
+	name = LAST, FIRST
+*/
 	global wq
 	
-	if IsObject(x := wq.selectSingleNode("//enroll[date='" DT "'][mrn='" MRN "']")) {		; Perfect match 
+	if IsObject(x := wq.selectSingleNode("//enroll[date='" DT "'][mrn='" MRN "']")) {		; Perfect match DT and MRN
+	} else if IsObject(x := wq.selectSingleNode("//enroll"									; or matches S/N and MRN
+		. "[dev='Mortara H3+ - " DT "'][mrn='" MRN "']")) {
 	} else if IsObject(x := wq.selectSingleNode("//enroll[mrn='" MRN "']")) {				; or matches MRN only 
 	} else if (name) && IsObject(x := wq.selectSingleNode("//enroll[name='" name "']")) {	; or neither, find matching name 
 	}
