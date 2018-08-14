@@ -644,6 +644,8 @@ readWQ(idx) {
 		val := i.text
 		res[node]:=val
 	}
+	res.node := k.parentNode.nodeName 
+	
 	return res
 }
 
