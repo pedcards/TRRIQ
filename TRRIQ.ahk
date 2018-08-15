@@ -2040,18 +2040,12 @@ Holter_Pr_Hl7:
 	} 
 	else {																			; has not been validated yet
 		gosub checkProc																; get valid demographics
+		if (fetchQuit=true) {
+			return
+		}
 	}
 	
-	tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
-		. "dem-Hookup_tech	dem-VOID2	dem-Meds(NA)	dem-Ordering	dem-Scanned_by	"
-		. "dem-Reading(NA)	dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
-		. "dem-VOID3	hrd-Total_beats(0)	hrd-Min(0)	hrd-Min_time	hrd-Avg(0)	hrd-Max(0)	hrd-Max_time	hrd-HRV	"
-		. "ve-Total(0)	ve-Total_per(0)	ve-Runs(0)	ve-Beats(0)	ve-Longest(0)	ve-Longest_time	ve-Fastest(0)	ve-Fastest_time	"
-		. "ve-Triplets(0)	ve-Couplets(0)	ve-SinglePVC(0)	ve-InterpPVC(0)	ve-R_on_T(0)	ve-SingleVE(0)	ve-LateVE(0)	"
-		. "ve-Bigem(0)	ve-Trigem(0)	ve-SVE(0)	sve-Total(0)	sve-Total_per(0)	sve-Runs(0)	sve-Beats(0)	"
-		. "sve-Longest(0)	sve-Longest_time	sve-Fastest(0)	sve-Fastest_time	sve-Pairs(0)	sve-Drop(0)	sve-Late(0)	"
-		. "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
-	fieldsToCSV(tabs)
+	fieldsToCSV()
 	
 	FileGetSize, fileInSize, % hl7dir fldval.Filename
 	if (fileInSize > 2000000) {															; probably a full disclosure PDF
@@ -2093,19 +2087,27 @@ fieldsToCSV(tabs) {
 	Appends to fileOut
 */
 	global fldval, fileOut1, fileOut2, monType
+	tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
+		. "dem-Hookup_tech	dem-VOID2	dem-Meds(NA)	dem-Ordering	dem-Scanned_by	"
+		. "dem-Reading(NA)	dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
+		. "dem-VOID3	hrd-Total_beats(0)	hrd-Min(0)	hrd-Min_time	hrd-Avg(0)	hrd-Max(0)	hrd-Max_time	hrd-HRV	"
+		. "ve-Total(0)	ve-Total_per(0)	ve-Runs(0)	ve-Beats(0)	ve-Longest(0)	ve-Longest_time	ve-Fastest(0)	ve-Fastest_time	"
+		. "ve-Triplets(0)	ve-Couplets(0)	ve-SinglePVC(0)	ve-InterpPVC(0)	ve-R_on_T(0)	ve-SingleVE(0)	ve-LateVE(0)	"
+		. "ve-Bigem(0)	ve-Trigem(0)	ve-SVE(0)	sve-Total(0)	sve-Total_per(0)	sve-Runs(0)	sve-Beats(0)	"
+		. "sve-Longest(0)	sve-Longest_time	sve-Fastest(0)	sve-Fastest_time	sve-Pairs(0)	sve-Drop(0)	sve-Late(0)	"
+		. "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
 	
-	; Populate lwFields with equivalent named label values
 	fileOut1 := ""
 	fileOut2 := ""
 	loop, parse, tabs, `t
 	{
-		x := A_LoopField
-		fld := strX(x,"",1,0,"(",1,1)
-			pre := strX(fld,"",1,0,"-",1,1)
-			lab := strX(fld,"-",1,1,"",0)
-		def := strX(x,"(",1,1,")",1,1)
-		val := fldval[fld]
-		res := (val = "") ? def : val
+		x := A_LoopField																; PRE-LAB(default val)
+		fld := strX(x,"",1,0,"(",1,1)													; field
+			pre := strX(fld,"",1,0,"-",1,1)												; prefix
+			lab := strX(fld,"-",1,1,"",0)												; label
+		def := strX(x,"(",1,1,")",1,1)													; default value
+		val := fldval[fld]																; value in fldval[pre-lab]
+		res := (val = "") ? def : val													; result is value if exists, else default
 		formatfield(pre,lab,res)														; sends formatted results, i.e. recreates fresh fileOut
 	}
 	eventlog("Fields mapping complete.")
@@ -2357,7 +2359,7 @@ Holter_Pr2:
 		return													; fetchGUI was quit, so skip processing
 	}
 	
-	LWify()
+	fieldsToCSV()
 	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
 	StringReplace, tmpstr, tmpstr, `r, `n, ALL
 	fieldcoladd("","INTERP",trim(cleanspace(tempstr)," `n"))
@@ -2584,7 +2586,7 @@ Zio:
 		fieldvals(zve_longest,8,"ve")
 	}
 	
-	LWify()
+	fieldsToCSV()
 	zinterp := cleanspace(columns(newtxt,"Preliminary Findings","SIGNATURE",,"Final Interpretation"))
 	zinterp := trim(StrX(zinterp,"",1,0,"Final Interpretation",1,20))
 	fileout1 .= """INTERP"""
