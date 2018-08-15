@@ -2049,7 +2049,7 @@ Holter_Pr_Hl7:
 		ptDem["Account"] :=														; If want to force click, don't include Acct Num
 		ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
 		ptDem["EncDate"] := fldOut["dem-Test_date"]
-		ptDem["Indication"] := fldOut["dem-Indications"]
+		ptDem["Indication"] := fldOut["dem-Indication"]
 		eventlog("PDF demog: " ptDem["mrn"] " - " ptDem["nameL"] ", " ptDem["nameF"])
 		
 		Clipboard := ptDem["nameL"] ", " ptDem["nameF"]									; fill clipboard with name, so can just paste into CIS search bar
