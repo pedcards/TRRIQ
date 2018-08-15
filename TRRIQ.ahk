@@ -2038,80 +2038,10 @@ Holter_Pr_Hl7:
 		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 		
 	} 
-	else {																			; has not been processed yet
-	;---Placeholder values for fetchGUI from PDF
-		ptDem["nameL"] := fldOut["dem-Name_L"]
-		ptDem["nameF"] := fldOut["dem-Name_F"]
-		ptDem["mrn"] := fldOut["dem-MRN"]
-		ptDem["DOB"] := fldOut["dem-DOB"]
-		ptDem["Sex"] := fldOut["dem-Sex"]
-		ptDem["Loc"] := fldOut["dem-Site"]
-		ptDem["Account"] :=														; If want to force click, don't include Acct Num
-		ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
-		ptDem["EncDate"] := fldOut["dem-Test_date"]
-		ptDem["Indication"] := fldOut["dem-Indication"]
-		eventlog("PDF demog: " ptDem["mrn"] " - " ptDem["nameL"] ", " ptDem["nameF"])
-		
-		Clipboard := ptDem["nameL"] ", " ptDem["nameF"]									; fill clipboard with name, so can just paste into CIS search bar
-		MsgBox, 4096,, % "Extracted data for:`n"
-			. "   " ptDem["nameL"] ", " ptDem["nameF"] "`n   " ptDem["mrn"] "`n   " ptDem["EncDate"] "`n   " ptDem["Loc"] "`n   " ptDem["Account"] "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
-		fetchQuit:=false
-		gosub fetchGUI
-		gosub fetchDem
-		checkFetchDem(fldOut["dem-Name_L"],fldOut["dem-Name_F"],fldOut["dem-MRN"])
-		if (fetchQuit=true) {
-			return
-		}
-		
-		;---When fetchDem successfully completes, replace the fldval with newly acquired values
-		fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
-		formatfield("dem","Ordering",ptDem["Provider"])
-		fldval.prov := ptDem["Provider"]
-		fldval["dem-Name_L"] := ptDem["nameL"]
-		fldval["dem-Name_F"] := ptDem["nameF"]
-		fldval["dem-MRN"] := ptDem["mrn"]
-		fldval["dem-DOB"] := ptDem["DOB"]
-		fldval["dem-Sex"] := ptDem["Sex"]
-		fldval["dem-Site"] := ptDem["Loc"]
-		fldval["dem-Billing"] := ptDem["Account"]
-		fldval["dem-Device_SN"] := fldOut["dem-Device_SN"]
-		fldval["dem-Indication"] := ptDem["Indication"]
-		
-		filecheck()
-		FileOpen(".lock", "W")																; Create lock file.
-			id := fldval.wqid
-			newID := "/root/pending/enroll[@id='" id "']"
-			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
-			wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
-			wqSetVal(id,"mrn",ptDem["mrn"])
-			wqSetVal(id,"sex",ptDem["Sex"])
-			wqSetVal(id,"dob",ptDem["dob"])
-			wqSetVal(id,"dev","Mortara H3+ - " fldOut["dem-Device_SN"])
-			wqSetVal(id,"prov",ptDem["Provider"])
-			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
-			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
-			wqSetVal(id,"ind",ptDem["Indication"])
-		filedelete, .lock
-		writeOut("/root/pending","enroll[@id='" id "']")
-		
-		eventlog("Demographics updated for WQID " fldval.wqid ".") 
+	else {																			; has not been validated yet
+		gosub checkProc																; get valid demographics
 	}
 	
-	;---Replace some common values parsed from demog block
-	fldval["dem-Ordering"] := fldOut["dem-Ordering"]
-	fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
-	fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
-	fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
-	fldval["dem-Test_date"] := fldOut["dem-Test_date"]
-	fldval["dem-Test_end"] := fldOut["dem-Recording_time"]
-	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
-	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
-	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
-	fldval["Name_L"] := fldval["dem-name_L"]
-	fldval["Name_F"] := fldval["dem-name_F"]
-	chk.Prov := fldval.prov
-
 	tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
 		. "dem-Hookup_tech	dem-VOID2	dem-Meds(NA)	dem-Ordering	dem-Scanned_by	"
 		. "dem-Reading(NA)	dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
@@ -2422,7 +2352,7 @@ Holter_Pr2:
 	labels[3] := ["Total","Single","Pairs","Runs","Fastest","Longest"]
 	scanParams(rateStat,3,"sve",1)
 	
-	gosub checkProcPR2											; check validity of PDF, make demographics valid if not
+	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
 	}
@@ -2440,7 +2370,7 @@ Holter_Pr2:
 return
 }
 
-CheckProcPr2:
+CheckProc:
 {
 	eventlog("CheckProcPr")
 	fetchQuit := false
@@ -2495,6 +2425,7 @@ CheckProcPr2:
 	/*	When fetchDem successfully completes,
 	 *	replace fldVal with newly acquired values
 	 */
+	fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
 	fldVal["dem-Name_L"] := ptDem["nameL"]
 	fldVal["dem-Name_F"] := ptDem["nameF"] 
 	fldVal["dem-MRN"] := ptDem["mrn"] 
