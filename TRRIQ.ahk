@@ -2463,56 +2463,82 @@ CheckProcPr2:
 		return
 	} 
 	
-	/*	Did not fail based on filesize or done, 
+	/*	Did not return based on done or valid status, 
 	 *	and has not been validated yet so no prior TRRIQ data
-	 *	populate temp object ptDem with parsed data from fldOut
 	 */
-	eventlog("PDF demog: " fldOut["dem-name"] " " fldOut["dem-mrn"] " " fldOut["dem-Test_date"])
-	
-	Clipboard := fldOut["dem-Name_L"] ", " fldOut["dem-Name_F"]							; fill clipboard with name, so can just paste into CIS search bar
-	MsgBox, 4096,, % "Extracted data for:`n"
-		. "   " fldOut["dem-Name_L"] ", " fldOut["dem-Name_F"] "`n"
-		. "   " fldOut["dem-mrn"] "`n"
-		. "   " fldOut["dem-Test_date"] "`n`n"
-		. "Paste clipboard into CIS search to select patient and encounter"
-		
-	ptDem["nameL"] := fldOut["dem-Name_L"] 												; Placeholder values for fetchGUI from PDF
+	ptDem := Object()																	; Populate temp object ptDem with parsed data from fldOut
+	ptDem["nameL"] := fldOut["dem-Name_L"]
 	ptDem["nameF"] := fldOut["dem-Name_F"] 
 	ptDem["mrn"] := fldOut["dem-MRN"] 
 	ptDem["DOB"] := fldOut["dem-DOB"] 
 	ptDem["Sex"] := fldOut["dem-Sex"]
 	ptDem["Loc"] := fldOut["dem-Site"]
-	ptDem["Account"] := fldOut["dem-Acct"]										; If want to force click, don't include Acct Num
+	ptDem["Account"] := fldOut["dem-Acct"]												; If want to force click, don't include Acct Num
 	ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
 	ptDem["EncDate"] := fldOut["dem-Test_date"]
 	ptDem["Indication"] := fldOut["dem-Indication"]
+	eventlog("PDF demog: " ptDem.nameL ", " ptDem.nameF " " ptDem.mrn " " ptDem.EncDate)
+	
+	Clipboard := ptDem.nameL ", " ptDem.nameF											; fill clipboard with name, so can just paste into CIS search bar
+	MsgBox, 4096,, % "Extracted data for:`n"
+		. "   " ptDem.nameL ", " ptDem.nameF "`n"
+		. "   " ptDem.mrn "`n"
+		. "   " ptDem.EncDate "`n`n"
+		. "Paste clipboard into CIS search to select patient and encounter"
 	
 	gosub fetchGUI
 	gosub fetchDem
-	checkFetchDem(chk.Last,chk.First,chk.mrn)
+	checkFetchDem(fldOut["dem-Name_L"],fldOut["dem-Name_F"],fldOut["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldOut)
 	if (fetchQuit=true) {
 		return
 	}
 	/*	When fetchDem successfully completes,
-	 *	replace the fields in demog with newly acquired values
+	 *	replace fldVal with newly acquired values
 	 */
-	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
-	fldval["name_L"] := ptDem["nameL"]
-	fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk.Name "   `n")
-	demog := RegExReplace(demog,"i)Secondary ID: (.*) Admission ID:","Secondary ID:   " ptDem["mrn"] "                   Admission ID:")
-	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
-	demog := RegExReplace(demog,"i`a)(Ordering|Referring) Phys(ician)?:? (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
-	demog := RegExReplace(demog,"i`a)Indications: (.*) Medications:", "Indications:   " ptDem["Indication"] "   Medications:")	
-	demog := RegExReplace(demog,"i`a)Recording Start Date/Time: (.*)\R", "Recording Start Date/Time:   " chk.Date "`n")
-	demog := RegExReplace(demog,"i`a)Analyst: (.*) Recorder N(o|umber)","Analyst:   $1   Recorder No")
-	demog := RegExReplace(demog,"i`a)Technician: (.*) Recording Duration","Hookup Tech:   $1   Recording Duration")
-	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
-	demog .= "   Location:    " ptDem["Loc"] "`n"
-	demog .= "   Acct Num:    " ptDem["Account"] "`n"
-	eventlog("Demog replaced.")
+	fldVal["dem-Name_L"] := ptDem["nameL"]
+	fldVal["dem-Name_F"] := ptDem["nameF"] 
+	fldVal["dem-MRN"] := ptDem["mrn"] 
+	fldVal["dem-DOB"] := ptDem["DOB"] 
+	fldVal["dem-Sex"] := ptDem["Sex"]
+	fldVal["dem-Site"] := ptDem["Loc"]
+	fldVal["dem-Acct"] := ptDem["Account"]
+	fldVal["dem-Ordering"] := ptDem["Provider"]
+	fldVal["dem-Test_date"] := ptDem["EncDate"]
+	fldVal["dem-Indication"] := ptDem["Indication"]
 	
-	return
+	filecheck()
+	FileOpen(".lock", "W")																; Create lock file.
+		id := fldval.wqid
+		newID := "/root/pending/enroll[@id='" id "']"
+		wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
+		wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
+		wqSetVal(id,"mrn",ptDem["mrn"])
+		wqSetVal(id,"sex",ptDem["Sex"])
+		wqSetVal(id,"dob",ptDem["dob"])
+		wqSetVal(id,"dev","Mortara H3+ - " fldOut["dem-Device_SN"])
+		wqSetVal(id,"prov",ptDem["Provider"])
+		wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
+		wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
+		wqSetVal(id,"ind",ptDem["Indication"])
+	filedelete, .lock
+	writeOut("/root/pending","enroll[@id='" id "']")
+	
+	eventlog("Demographics updated for WQID " fldval.wqid ".") 
+	
+	;---Replace some common values parsed from demog block
+	fldval["dem-Ordering"] := fldOut["dem-Ordering"]
+	fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
+	fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
+	fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
+	fldval["dem-Test_date"] := fldOut["dem-Test_date"]
+	fldval["dem-Test_end"] := fldOut["dem-Recording_time"]
+	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
+	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
+	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
+	fldval["Name_L"] := fldval["dem-name_L"]
+	fldval["Name_F"] := fldval["dem-name_F"]
+
+return
 }
 
 Zio:
