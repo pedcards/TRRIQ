@@ -2108,7 +2108,7 @@ fieldsToCSV(tabs) {
 		res := (val = "") ? def : val
 		formatfield(pre,lab,res)														; sends formatted results, i.e. recreates fresh fileOut
 	}
-	eventlog("LWify complete.")
+	eventlog("Fields mapping complete.")
 	
 return	
 }
