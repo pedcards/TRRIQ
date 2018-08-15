@@ -2081,7 +2081,7 @@ Holter_Pr_Hl7:
 return
 }
 
-fieldsToCSV(tabs) {
+fieldsToCSV() {
 /*	tabs = tab-delim string
 	"hrd-Total_beats(0)" -> fldval["hrd-Total_beats"] (default 0 if null)
 	Appends to fileOut
