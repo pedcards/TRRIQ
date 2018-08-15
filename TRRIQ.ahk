@@ -2430,12 +2430,12 @@ Holter_Pr2:
 	LWify()
 	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
 	StringReplace, tmpstr, tmpstr, `r, `n, ALL
-	fileout1 .= """INTERP"""
-	fileout2 .= """" trim(cleanspace(tmpstr)," `n") """"
-	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Holter"""
+	fieldcoladd("","INTERP",trim(cleanspace(tempstr)," `n"))
+	fieldcoladd("","Mon_type","Holter")
 	
 	ShortenPDF(fullDisc)
+	
+	fldval.done := true
 
 return
 }
