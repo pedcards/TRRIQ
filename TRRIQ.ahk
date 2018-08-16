@@ -2723,77 +2723,7 @@ Event_BGH:
 Return
 }
 
-CheckProcBGH:
-{
-	eventlog("CheckProcBGH")
-	fetchQuit := false
-	chk.Name := strVal(demog,"Patient Name","Patient ID")										; Name
-		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")									; Filter out JR
-		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")									; NameL				must be [A-Z]
-		chk.Last := trim(strX(chk.Name," ",0,1,"",0)," `r`n")										; NameF				must be [A-Z]
-	chk.MRN := strVal(demog,"Patient ID","Physician")											; MRN
-	chk.Prov := strVal(demog,"Physician","Gender")												; Ordering MD
-	chk.Sex := strVal(demog,"Gender","Date of Birth")											; Sex
-	chk.DOB := strVal(demog,"Date of Birth","Practice")											; DOB
-	chk.Ind := strVal(demog,"Diagnosis","\R")													; Indication
-	chk.Ser := 																					; No S/N in PDF!
-	chk.Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
-		chk.DateEnd := trim(strX(chk.Date," - ",0,3,"",0)," `r`n")
-		chk.DateStart := trim(strX(chk.Date,"",1,1," ",1,1)," `r`n")
 	
-	chkDT := parseDate(chk.DateStart)
-	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
-	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
-		FileDelete, %fileIn%
-		eventlog(chk.MRN " PDF archive exists, deleting '" fileIn "'")
-		fetchQuit := true
-		return
-	}
-	wq := new XML("worklist.xml")
-	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name).id		; /// This needs to be more like Holter_PR
-
-	eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
-	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-		. "Paste clipboard into CIS search to select patient and encounter"
-	; Either invalid PDF or want to correct values
-	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
-	ptDem["nameF"] := chk.First
-	ptDem["mrn"] := chk.MRN
-	ptDem["DOB"] := chk.DOB
-	ptDem["Sex"] := chk.Sex
-	ptDem["Loc"] := chk.Loc
-	ptDem["Account"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := filterProv(chk.Prov).name
-	ptDem["EncDate"] := chk.DateStart
-	ptDem["EndDate"] := chk.DateEnd
-	ptDem["Indication"] := chk.Ind
-	
-	fetchQuit:=false
-	gosub fetchGUI
-	gosub fetchDem
-	checkFetchDem(chk.Last,chk.First,chk.mrn)
-	if (fetchQuit=true) {
-		return
-	}
-	
-	/*	When fetchDem successfully completes,
-	 *	replace the fields in demog with newly acquired values
-	 */
-	fldval["dem-Site"] := ptDem["Loc"]
-	fldval["dem-Billing"] := ptDem["Account"]
-	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
-		fldval["name_L"] := ptDem["nameL"]
-		fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i)Patient Name: (.*?)Patient ID","Patient Name:   " chk.Name "`nPatient ID")
-	demog := RegExReplace(demog,"i)Patient ID(.*?)Physician","Patient ID   " ptDem["mrn"] "`nPhysician")
-	demog := RegExReplace(demog,"i)Physician(.*?)Gender", "Physician   " ptDem["Provider"] "`nGender")
-	demog := RegExReplace(demog,"i)Gender(.*?)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
-	demog := RegExReplace(demog,"i)Date of Birth(.*?)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
-	enroll := RegExReplace(enroll,"i)Period(.*?)\R", "$1`nDate Recorded:   " chk.DateStart "`nDate Ended:   " chk.DateEnd "`n") 
-	eventlog("Demog replaced.")
-	
-	return
 }
 
 oneCol(txt) {
