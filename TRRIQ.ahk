@@ -2382,20 +2382,6 @@ CheckProc:
 		return
 	}
 	
-	if (fldval.acct) {																	; <acct> exists, has been registered or uploaded through TRRIQ
-		eventlog("Pulled valid data for " fldval.name " " fldval.mrn " " fldval.date)
-		MsgBox, 4160, Found valid registration, % "" 
-		  . fldval.name "`n" 
-		  . "MRN " fldval.mrn "`n" 
-		  . "Acct " fldval.acct "`n" 
-		  . "Ordering: " fldval.prov "`n" 
-		  . "Study date: " fldval.date "`n`n" 
-		return
-	} 
-	
-	/*	Did not return based on done or valid status, 
-	 *	and has not been validated yet so no prior TRRIQ data
-	 */
 	ptDem := Object()																	; Populate temp object ptDem with parsed data from fldOut
 	ptDem["nameL"] := fldOut["dem-Name_L"]
 	ptDem["nameF"] := fldOut["dem-Name_F"] 
@@ -2409,53 +2395,66 @@ CheckProc:
 	ptDem["Indication"] := fldOut["dem-Indication"]
 	eventlog("PDF demog: " ptDem.nameL ", " ptDem.nameF " " ptDem.mrn " " ptDem.EncDate)
 	
-	Clipboard := ptDem.nameL ", " ptDem.nameF											; fill clipboard with name, so can just paste into CIS search bar
-	MsgBox, 4096,, % "Extracted data for:`n"
-		. "   " ptDem.nameL ", " ptDem.nameF "`n"
-		. "   " ptDem.mrn "`n"
-		. "   " ptDem.EncDate "`n`n"
-		. "Paste clipboard into CIS search to select patient and encounter"
-	
-	gosub fetchGUI
-	gosub fetchDem
-	checkFetchDem(fldOut["dem-Name_L"],fldOut["dem-Name_F"],fldOut["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldOut)
-	if (fetchQuit=true) {
-		return
+	if (fldval.acct) {																	; <acct> exists, has been registered or uploaded through TRRIQ
+		eventlog("Pulled valid data for " fldval.name " " fldval.mrn " " fldval.date)
+		MsgBox, 4160, Found valid registration, % "" 
+		  . fldval.name "`n" 
+		  . "MRN " fldval.mrn "`n" 
+		  . "Acct " fldval.acct "`n" 
+		  . "Ordering: " fldval.prov "`n" 
+		  . "Study date: " fldval.date "`n`n" 
+	} 
+	else {
+		/*	Did not return based on done or valid status, 
+		 *	and has not been validated yet so no prior TRRIQ data
+		 */
+		Clipboard := ptDem.nameL ", " ptDem.nameF											; fill clipboard with name, so can just paste into CIS search bar
+		MsgBox, 4096,, % "Extracted data for:`n"
+			. "   " ptDem.nameL ", " ptDem.nameF "`n"
+			. "   " ptDem.mrn "`n"
+			. "   " ptDem.EncDate "`n`n"
+			. "Paste clipboard into CIS search to select patient and encounter"
+		
+		gosub fetchGUI
+		gosub fetchDem
+		checkFetchDem(fldOut["dem-Name_L"],fldOut["dem-Name_F"],fldOut["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldOut)
+		if (fetchQuit=true) {
+			return
+		}
+		/*	When fetchDem successfully completes,
+		 *	replace fldVal with newly acquired values
+		 */
+		fldOut.Name := ptDem["nameL"] ", " ptDem["nameF"]
+		fldOut["dem-Name_L"] := ptDem["nameL"]
+		fldOut["dem-Name_F"] := ptDem["nameF"] 
+		fldOut["dem-MRN"] := ptDem["mrn"] 
+		fldOut["dem-DOB"] := ptDem["DOB"] 
+		fldOut["dem-Sex"] := ptDem["Sex"]
+		fldOut["dem-Site"] := ptDem["Loc"]
+		fldOut["dem-Acct"] := ptDem["Account"]
+		fldOut["dem-Ordering"] := ptDem["Provider"]
+		fldOut["dem-Test_date"] := ptDem["EncDate"]
+		fldOut["dem-Indication"] := ptDem["Indication"]
+		
+		filecheck()
+		FileOpen(".lock", "W")																; Create lock file.
+			id := fldval.wqid
+			newID := "/root/pending/enroll[@id='" id "']"
+			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
+			wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
+			wqSetVal(id,"mrn",ptDem["mrn"])
+			wqSetVal(id,"sex",ptDem["Sex"])
+			wqSetVal(id,"dob",ptDem["dob"])
+			wqSetVal(id,"dev","Mortara H3+ - " fldOut["dem-Device_SN"])
+			wqSetVal(id,"prov",ptDem["Provider"])
+			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
+			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
+			wqSetVal(id,"ind",ptDem["Indication"])
+		filedelete, .lock
+		writeOut("/root/pending","enroll[@id='" id "']")
+		
+		eventlog("Demographics updated for WQID " fldval.wqid ".") 
 	}
-	/*	When fetchDem successfully completes,
-	 *	replace fldVal with newly acquired values
-	 */
-	fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
-	fldVal["dem-Name_L"] := ptDem["nameL"]
-	fldVal["dem-Name_F"] := ptDem["nameF"] 
-	fldVal["dem-MRN"] := ptDem["mrn"] 
-	fldVal["dem-DOB"] := ptDem["DOB"] 
-	fldVal["dem-Sex"] := ptDem["Sex"]
-	fldVal["dem-Site"] := ptDem["Loc"]
-	fldVal["dem-Acct"] := ptDem["Account"]
-	fldVal["dem-Ordering"] := ptDem["Provider"]
-	fldVal["dem-Test_date"] := ptDem["EncDate"]
-	fldVal["dem-Indication"] := ptDem["Indication"]
-	
-	filecheck()
-	FileOpen(".lock", "W")																; Create lock file.
-		id := fldval.wqid
-		newID := "/root/pending/enroll[@id='" id "']"
-		wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
-		wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
-		wqSetVal(id,"mrn",ptDem["mrn"])
-		wqSetVal(id,"sex",ptDem["Sex"])
-		wqSetVal(id,"dob",ptDem["dob"])
-		wqSetVal(id,"dev","Mortara H3+ - " fldOut["dem-Device_SN"])
-		wqSetVal(id,"prov",ptDem["Provider"])
-		wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
-		wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
-		wqSetVal(id,"ind",ptDem["Indication"])
-	filedelete, .lock
-	writeOut("/root/pending","enroll[@id='" id "']")
-	
-	eventlog("Demographics updated for WQID " fldval.wqid ".") 
-	
 	;---Replace some common values parsed from demog block
 	fldval["dem-Ordering"] := fldOut["dem-Ordering"]
 	fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
@@ -2466,8 +2465,9 @@ CheckProc:
 	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
 	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
 	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
-	fldval["Name_L"] := fldval["dem-name_L"]
-	fldval["Name_F"] := fldval["dem-name_F"]
+	fldval["Name_L"] := fldOut["dem-name_L"]
+	fldval["Name_F"] := fldOut["dem-name_F"]
+	fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
 
 return
 }
