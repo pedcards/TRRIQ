@@ -2714,16 +2714,13 @@ Event_BGH:
 		return													; fetchGUI was quit, so skip processing
 	}
 	
-	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Event"""
+	fieldcoladd("","Mon_type","Event")
 	
 	FileCopy, %fileIn%, %fileIn%sh.pdf
 	
-Return
-}
-
 	fldval.done := true
 	
+Return
 }
 
 oneCol(txt) {
