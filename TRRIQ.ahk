@@ -2696,11 +2696,6 @@ Event_BGH:
 	}
 	demog := demog0
 	
-	gosub checkProcBGH											; check validity of PDF, make demographics valid if not
-	if (fetchQuit=true) {
-		return													; fetchGUI was quit, so skip processing
-	}
-	
 	fields[1] := ["Patient Name", "Patient ID", "Physician", "Gender", "Date of Birth", "Practice", "Diagnosis"]
 	labels[1] := ["Name", "MRN", "Ordering", "Sex", "DOB", "VOID_Practice", "Indication"]
 	fieldvals(demog,1,"dem")
@@ -2714,6 +2709,11 @@ Event_BGH:
 	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
 	fieldvals(enroll,3,"counts")
+	
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
 	
 	fileOut1 .= ",""Mon_type"""
 	fileOut2 .= ",""Event"""
