@@ -2465,10 +2465,10 @@ CheckProc:
 	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
 	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
 	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
-	fldval["Name_L"] := fldOut["dem-name_L"]
-	fldval["Name_F"] := fldOut["dem-name_F"]
+	fldval["dem-Name_L"] := fldval["Name_L"] := fldOut["dem-name_L"]
+	fldval["dem-Name_F"] := fldval["Name_F"] := fldOut["dem-name_F"]
 	fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
-
+	
 return
 }
 
