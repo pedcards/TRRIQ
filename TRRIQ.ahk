@@ -3198,6 +3198,9 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,"Name_F",ptDem["nameF"])
 			return
 		}
+		if (lab="DOB") {
+			txt := strX(txt,"",1,0," (",2)
+		}
 	}
 	
 ;	ZIO patch specific search fixes
