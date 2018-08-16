@@ -1809,7 +1809,6 @@ ProcessPDF:
 	if (fetchQuit=true) {																; exited demographics fetchGUI
 		return																			; so skip processing this file
 	}
-	fldval.done := true
 return
 }
 
@@ -2723,6 +2722,7 @@ Event_BGH:
 Return
 }
 
+	fldval.done := true
 	
 }
 
