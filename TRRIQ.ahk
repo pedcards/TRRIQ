@@ -83,9 +83,7 @@ Loop, Read, %chipDir%outdocs.csv
 		continue
 	}
 	tmpIdx += 1
-	StringSplit, tmpPrv, tmp1, %A_Space%`"
-	;tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2					; F. Last
-	tmpPrv := tmpPrv2 ", " tmpPrv1									; Last, First
+	tmpPrv := RegExReplace(tmp1,"^(.*?) (.*?)$","$2, $1")		; input FIRST LAST NAME ==> LAST NAME, FIRST
 	Docs[tmpGrp,tmpIdx]:=tmpPrv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp4
 }
@@ -3164,6 +3162,7 @@ formatField(pre, lab, txt) {
 	txt := trim(txt)
 	
 	if (lab~="^(Referring|Ordering)$") {
+		StringUpper, txt, txt, T
 		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))				;	Get Crd, Grp, and Eml via checkCrd() <== shouldn't this already be determined?
 		fieldColAdd(pre,lab,tmpCrd.best)
 		fieldColAdd(pre,lab "_grp",tmpCrd.group)
@@ -3318,15 +3317,10 @@ checkCrd(x) {
 	}
 	for rowidx,row in Docs
 	{
-		if (substr(rowIdx,-3)=".eml")
-			continue
 		for colidx,item in row
 		{
-			if (item="") {																; empty field will break fuzzysearch
-				continue
-			}
-			res := fuzzysearch(x,item)
-			if (res<fuzz) {																; less fuzzy, new best match
+			res := fuzzysearch(filterprov(x).name,item)									; ensure name is in proper Last, First format
+			if (res<fuzz) {
 				fuzz := res
 				best:=item
 				group:=rowidx
