@@ -2321,8 +2321,9 @@ CheckProc:
 	fetchQuit := false
 	
 	if (zzzfldval.node = "done") {
-		MsgBox % fileIn " has been scanned already."
-		eventlog(fileIn " already scanned.")
+		MsgBox % fileIn " has been scanned already.`n`nDeleting file."
+		eventlog(fileIn " already scanned. PDF deleted.")
+		FileDelete, % fileIn
 		fetchQuit := true
 		return
 	}
