@@ -2702,8 +2702,8 @@ Event_BGH:
 	fldval["name_L"] := ptDem["nameL"]
 	
 	tmpDT := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
-	fieldcoladd("dem","Test_end",trim(strX(tmpDT," - ",0,3,"",0)," `r`n"))
 	fieldcoladd("dem","Test_date",trim(strX(tmpDT,"",1,1," ",1,1)," `r`n"))
+	fieldcoladd("dem","Test_end",trim(strX(tmpDT," - ",0,3,"",0)," `r`n"))
 	
 	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
