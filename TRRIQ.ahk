@@ -3189,6 +3189,7 @@ filterProv(x) {
 	if !instr(x,", ") {
 		x := strX(x," ",1,1,"",1,0) ", " strX(x,"",1,1," ",1,1)							; convert "DENNIS RUGGERIE" to "RUGGERIE, DENNIS"
 	}
+	x := RegExReplace(x,"^, ")															; remove preceding "(, )Albers" in event this happens
 	if (site1="TRI") {																	; sometimes site improperly registered as "tri"
 		site1 := "TRI-CITIES"
 	}
