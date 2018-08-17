@@ -2402,6 +2402,18 @@ CheckProc:
 		eventlog("Demographics updated for WQID " fldval.wqid ".") 
 	}
 	
+	;---Copy ptDem back to fldVal, whether fetched or not
+	fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
+	fldVal["dem-Name_L"] := fldval["Name_L"] := ptDem["nameL"]
+	fldVal["dem-Name_F"] := fldval["Name_F"] := ptDem["nameF"] 
+	fldVal["dem-MRN"] := ptDem["mrn"] 
+	fldVal["dem-DOB"] := ptDem["DOB"] 
+	fldVal["dem-Sex"] := ptDem["Sex"]
+	fldVal["dem-Site"] := ptDem["Loc"]
+	fldVal["dem-Billing"] ptDem["Account"]
+	fldVal["dem-Ordering"] := ptDem["Provider"]
+	fldVal["dem-Test_date"] := ptDem["EncDate"]
+	fldVal["dem-Indication"] := ptDem["Indication"]
 	;---Replace some common values parsed from demog block
 	fldval["dem-Billing"] := fldOut["dem-Billing"]
 	fldval["dem-Ordering"] := fldOut["dem-Ordering"]
@@ -2413,9 +2425,6 @@ CheckProc:
 	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
 	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
 	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
-	fldval["dem-Name_L"] := fldval["Name_L"] := fldOut["dem-name_L"]
-	fldval["dem-Name_F"] := fldval["Name_F"] := fldOut["dem-name_F"]
-	fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
 	fldval.mrn := fldval["dem-MRN"]
 	
 return
