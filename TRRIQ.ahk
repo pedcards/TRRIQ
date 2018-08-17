@@ -2437,10 +2437,6 @@ Zio:
 	demo2 := onecol(cleanblank(stregX(zcol,"\s+Prescribing Clinician",1,0,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)",1)))
 	demog := RegExReplace(demo1 "`n" demo2,">>>end") ">>>end"
 	
-	gosub checkProcZio											; check validity of PDF, make demographics valid if not
-	if (fetchQuit=true) {
-		return													; fetchGUI was quit, so skip processing
-	}
 	
 	znam := strVal(demog,"Name","Date of Birth")
 	formatField("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
@@ -2527,6 +2523,11 @@ Zio:
 		fields[8] := ["Longest VT Episode","# Beats","Duration","Average","Range","Pt Triggered"]
 		labels[8] := ["Longest_time","Longest","null","null","null","null"]
 		fieldvals(zve_longest,8,"ve")
+	}
+	
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
 	}
 	
 	fieldsToCSV()
