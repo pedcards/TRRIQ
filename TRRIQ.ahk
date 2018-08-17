@@ -2335,7 +2335,7 @@ CheckProc:
 	ptDem["DOB"] := fldOut["dem-DOB"] 
 	ptDem["Sex"] := fldOut["dem-Sex"]
 	ptDem["Loc"] := fldOut["dem-Site"]
-	ptDem["Account"] := fldOut["dem-Acct"]												; If want to force click, don't include Acct Num
+	ptDem["Account"] := fldOut["dem-Billing"]											; If want to force click, don't include Acct Num
 	ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
 	ptDem["EncDate"] := fldOut["dem-Test_date"]
 	ptDem["Indication"] := fldOut["dem-Indication"]
@@ -2377,11 +2377,11 @@ CheckProc:
 		fldVal["dem-DOB"] := fldOut["dem-DOB"] := ptDem["DOB"] 
 		fldVal["dem-Sex"] := fldOut["dem-Sex"] := ptDem["Sex"]
 		fldVal["dem-Site"] := fldOut["dem-Site"] := ptDem["Loc"]
-		fldVal["dem-Acct"] := fldOut["dem-Acct"] := ptDem["Account"]
+		fldVal["dem-Billing"] := fldOut["dem-Billing"] := ptDem["Account"]
 		fldVal["dem-Ordering"] := fldOut["dem-Ordering"] := ptDem["Provider"]
 		fldVal["dem-Test_date"] := fldOut["dem-Test_date"] := ptDem["EncDate"]
 		fldVal["dem-Indication"] := fldOut["dem-Indication"] := ptDem["Indication"]
-		MsgBox % fldval["dem-MRN"]
+		
 		filecheck()
 		FileOpen(".lock", "W")																; Create lock file.
 			id := fldval.wqid
@@ -2403,7 +2403,7 @@ CheckProc:
 	}
 	
 	;---Replace some common values parsed from demog block
-	fldval["dem-Billing"] := fldval["dem-Account"]
+	fldval["dem-Billing"] := fldOut["dem-Billing"]
 	fldval["dem-Ordering"] := fldOut["dem-Ordering"]
 	fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
 	fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
