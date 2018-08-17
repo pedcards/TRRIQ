@@ -2930,9 +2930,21 @@ formatField(pre, lab, txt) {
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
 	txt := trim(txt)
 	
+	if (lab="Name") {
+		txt := RegExReplace(txt,"i),?( JR| III| IV)$")						; Filter out name suffixes
+		if instr(txt,",") {
+			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
+			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
+		}
+		fieldColAdd(pre,"Name",txt)
+		return
+	}
+	if (lab="DOB") {														; remove (age) from DOB
+		txt := strX(txt,"",1,0," (",2)
+	}
+
 	if (lab~="^(Referring|Ordering)$") {
-		StringUpper, txt, txt, T
-		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))				;	Get Crd, Grp, and Eml via checkCrd() <== shouldn't this already be determined?
+		tmpCrd := checkCrd(txt)												; Get Crd, Grp, and Eml via checkCrd()
 		fieldColAdd(pre,lab,tmpCrd.best)
 		fieldColAdd(pre,lab "_grp",tmpCrd.group)
 		fieldColAdd(pre,lab "_eml",Docs[tmpCrd.Group ".eml",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)])
@@ -3021,9 +3033,6 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,"Name_L",ptDem["nameL"])
 			fieldColAdd(pre,"Name_F",ptDem["nameF"])
 			return
-		}
-		if (lab="DOB") {
-			txt := strX(txt,"",1,0," (",2)
 		}
 	}
 	
