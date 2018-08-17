@@ -2369,18 +2369,18 @@ CheckProc:
 		/*	When fetchDem successfully completes,
 		 *	replace fldVal with newly acquired values
 		 */
-		fldOut.Name := ptDem["nameL"] ", " ptDem["nameF"]
-		fldOut["dem-Name_L"] := ptDem["nameL"]
-		fldOut["dem-Name_F"] := ptDem["nameF"] 
-		fldOut["dem-MRN"] := ptDem["mrn"] 
-		fldOut["dem-DOB"] := ptDem["DOB"] 
-		fldOut["dem-Sex"] := ptDem["Sex"]
-		fldOut["dem-Site"] := ptDem["Loc"]
-		fldOut["dem-Acct"] := ptDem["Account"]
-		fldOut["dem-Ordering"] := ptDem["Provider"]
-		fldOut["dem-Test_date"] := ptDem["EncDate"]
-		fldOut["dem-Indication"] := ptDem["Indication"]
-		
+		fldVal.Name := fldOut.Name := ptDem["nameL"] ", " ptDem["nameF"]
+		fldVal["dem-Name_L"] := fldOut["dem-Name_L"] := ptDem["nameL"]
+		fldVal["dem-Name_F"] := fldOut["dem-Name_F"] := ptDem["nameF"] 
+		fldVal["dem-MRN"] := fldOut["dem-MRN"] := ptDem["mrn"] 
+		fldVal["dem-DOB"] := fldOut["dem-DOB"] := ptDem["DOB"] 
+		fldVal["dem-Sex"] := fldOut["dem-Sex"] := ptDem["Sex"]
+		fldVal["dem-Site"] := fldOut["dem-Site"] := ptDem["Loc"]
+		fldVal["dem-Acct"] := fldOut["dem-Acct"] := ptDem["Account"]
+		fldVal["dem-Ordering"] := fldOut["dem-Ordering"] := ptDem["Provider"]
+		fldVal["dem-Test_date"] := fldOut["dem-Test_date"] := ptDem["EncDate"]
+		fldVal["dem-Indication"] := fldOut["dem-Indication"] := ptDem["Indication"]
+		MsgBox % fldval["dem-MRN"]
 		filecheck()
 		FileOpen(".lock", "W")																; Create lock file.
 			id := fldval.wqid
@@ -2400,7 +2400,9 @@ CheckProc:
 		
 		eventlog("Demographics updated for WQID " fldval.wqid ".") 
 	}
+	
 	;---Replace some common values parsed from demog block
+	fldval["dem-Billing"] := fldval["dem-Account"]
 	fldval["dem-Ordering"] := fldOut["dem-Ordering"]
 	fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
 	fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
@@ -2413,6 +2415,7 @@ CheckProc:
 	fldval["dem-Name_L"] := fldval["Name_L"] := fldOut["dem-name_L"]
 	fldval["dem-Name_F"] := fldval["Name_F"] := fldOut["dem-name_F"]
 	fldval.Name := ptDem["nameL"] ", " ptDem["nameF"]
+	fldval.mrn := fldval["dem-MRN"]
 	
 return
 }
