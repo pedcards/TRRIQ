@@ -3099,11 +3099,18 @@ checkCrd(x) {
 	if (x="") {																			; fuzzysearch fails if x = ""
 		return 
 	}
-	for rowidx,row in Docs
+	x := filterprov(x).name
+	for rowidx,row in Docs																; Groups
 	{
-		for colidx,item in row
+		if (substr(rowIdx,-3)=".eml") {
+			continue
+		}
+		for colidx,item in row															; Providers
 		{
-			res := fuzzysearch(filterprov(x).name,item)									; ensure name is in proper Last, First format
+			if (item="") {                                ; empty field will break fuzzysearch 
+				continue 
+			} 
+			res := fuzzysearch(x,item)
 			if (res<fuzz) {
 				fuzz := res
 				best:=item
