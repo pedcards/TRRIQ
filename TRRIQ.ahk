@@ -2370,17 +2370,17 @@ CheckProc:
 		/*	When fetchDem successfully completes,
 		 *	replace fldVal with newly acquired values
 		 */
-		fldVal.Name := fldOut.Name := ptDem["nameL"] ", " ptDem["nameF"]
-		fldVal["dem-Name_L"] := fldOut["dem-Name_L"] := ptDem["nameL"]
-		fldVal["dem-Name_F"] := fldOut["dem-Name_F"] := ptDem["nameF"] 
-		fldVal["dem-MRN"] := fldOut["dem-MRN"] := ptDem["mrn"] 
-		fldVal["dem-DOB"] := fldOut["dem-DOB"] := ptDem["DOB"] 
-		fldVal["dem-Sex"] := fldOut["dem-Sex"] := ptDem["Sex"]
-		fldVal["dem-Site"] := fldOut["dem-Site"] := ptDem["Loc"]
-		fldVal["dem-Billing"] := fldOut["dem-Billing"] := ptDem["Account"]
-		fldVal["dem-Ordering"] := fldOut["dem-Ordering"] := ptDem["Provider"]
-		fldVal["dem-Test_date"] := fldOut["dem-Test_date"] := ptDem["EncDate"]
-		fldVal["dem-Indication"] := fldOut["dem-Indication"] := ptDem["Indication"]
+		fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
+		fldVal["dem-Name_L"] := fldval["Name_L"] := ptDem["nameL"]
+		fldVal["dem-Name_F"] := fldval["Name_F"] := ptDem["nameF"] 
+		fldVal["dem-MRN"] := ptDem["mrn"] 
+		fldVal["dem-DOB"] := ptDem["DOB"] 
+		fldVal["dem-Sex"] := ptDem["Sex"]
+		fldVal["dem-Site"] := ptDem["Loc"]
+		fldVal["dem-Billing"] ptDem["Account"]
+		fldVal["dem-Ordering"] := ptDem["Provider"]
+		fldVal["dem-Test_date"] := ptDem["EncDate"]
+		fldVal["dem-Indication"] := ptDem["Indication"]
 		
 		filecheck()
 		FileOpen(".lock", "W")																; Create lock file.
@@ -2406,7 +2406,7 @@ CheckProc:
 	fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
 	fldVal["dem-Name_L"] := fldval["Name_L"] := ptDem["nameL"]
 	fldVal["dem-Name_F"] := fldval["Name_F"] := ptDem["nameF"] 
-	fldVal["dem-MRN"] := ptDem["mrn"] 
+	fldVal["dem-MRN"] := fldval["MRN"] := ptDem["mrn"] 
 	fldVal["dem-DOB"] := ptDem["DOB"] 
 	fldVal["dem-Sex"] := ptDem["Sex"]
 	fldVal["dem-Site"] := ptDem["Loc"]
@@ -2425,7 +2425,6 @@ CheckProc:
 	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
 	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
 	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
-	fldval.mrn := fldval["dem-MRN"]
 	
 return
 }
