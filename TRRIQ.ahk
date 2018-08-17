@@ -2437,22 +2437,21 @@ Zio:
 	demo2 := onecol(cleanblank(stregX(zcol,"\s+Prescribing Clinician",1,0,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)",1)))
 	demog := RegExReplace(demo1 "`n" demo2,">>>end") ">>>end"
 	
+	znam := strVal(zcol,"Report for","Date of Birth")
+	formatfield("dem","Name",znam)
 	
-	znam := strVal(demog,"Name","Date of Birth")
-	formatField("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
-	formatField("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
-	
-	fields[1] := ["Date of Birth","Patient ID","Gender","Primary Indication","Prescribing Clinician","Managing Location",">>>end"]
+	fields[1] := ["Date of Birth","Patient ID","Gender","Primary Indication","Prescribing Clinician","(Referring Clinician|Managing Location)",">>>end"]
 	labels[1] := ["DOB","MRN","Sex","Indication","Ordering","Site","end"]
 	fieldvals(demog,1,"dem")
 	
-	formatField("dem","Test_date",fldval["Test_date"])
-	formatField("dem","Billing",fldval["Acct"])
-	
+	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
+	enroll := strVal(tmp,"Enrollment Period","Analysis Time")
+	fieldcoladd("dem","Test_date",strVal(enroll,"hours?",","))
+	fieldcoladd("dem","Test_end",strVal(enroll,"to\s",","))
+	fieldcoladd("dem","Analysis_time",strVal(tmp,"Analysis Time","\(after"))
+	fieldcoladd("dem","Recording_time",strVal(tmp,"Enrollment Period","\R\d{1,2}/\d{1,2}"))
+
 	znums := columns(zcol ">>>end","Enrollment Period",">>>end",1)
-	
-	formatField("dem","Recording_time",chk.enroll)
-	formatField("dem","Analysis_time",chk.Analysis)
 	
 	zrate := columns(znums,"Heart Rate","Patient Events",1)
 	fields[3] := ["Max","Min","Avg","\R"]
@@ -2531,14 +2530,16 @@ Zio:
 	}
 	
 	fieldsToCSV()
+	
 	zinterp := cleanspace(columns(newtxt,"Preliminary Findings","SIGNATURE",,"Final Interpretation"))
 	zinterp := trim(StrX(zinterp,"",1,0,"Final Interpretation",1,20))
-	fileout1 .= """INTERP"""
-	fileout2 .= """" . zinterp . """"
-	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Holter"""
+	
+	fieldcoladd("","INTERP",zinterp)
+	fieldcoladd("","Mon_type","Holter")
 	
 	FileCopy, %fileIn%, %fileIn%sh.pdf
+	
+	fldval.done := true
 
 return
 }
