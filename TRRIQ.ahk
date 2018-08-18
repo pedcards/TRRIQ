@@ -677,7 +677,6 @@ readWQlv:
 	pt := Object()
 	chk := Object()
 	matchProv := Object()
-	fldOut := Object()
 	fileOut := fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	fullDisc := ""
@@ -2328,17 +2327,17 @@ CheckProc:
 		return
 	}
 	
-	ptDem := Object()																	; Populate temp object ptDem with parsed data from fldOut
-	ptDem["nameL"] := fldOut["dem-Name_L"]
-	ptDem["nameF"] := fldOut["dem-Name_F"] 
-	ptDem["mrn"] := fldOut["dem-MRN"] 
-	ptDem["DOB"] := fldOut["dem-DOB"] 
-	ptDem["Sex"] := fldOut["dem-Sex"]
-	ptDem["Loc"] := fldOut["dem-Site"]
-	ptDem["Account"] := fldOut["dem-Billing"]											; If want to force click, don't include Acct Num
-	ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
-	ptDem["EncDate"] := fldOut["dem-Test_date"]
-	ptDem["Indication"] := fldOut["dem-Indication"]
+	ptDem := Object()																	; Populate temp object ptDem with parsed data from PDF fldVal
+	ptDem["nameL"] := fldVal["dem-Name_L"]
+	ptDem["nameF"] := fldVal["dem-Name_F"] 
+	ptDem["mrn"] := fldVal["dem-MRN"] 
+	ptDem["DOB"] := fldVal["dem-DOB"] 
+	ptDem["Sex"] := fldVal["dem-Sex"]
+	ptDem["Loc"] := fldVal["dem-Site"]
+	ptDem["Account"] := fldVal["dem-Billing"]											; If want to force click, don't include Acct Num
+	ptDem["Provider"] := filterProv(fldVal["dem-Ordering"]).name
+	ptDem["EncDate"] := fldVal["dem-Test_date"]
+	ptDem["Indication"] := fldVal["dem-Indication"]
 	eventlog("PDF demog: " ptDem.nameL ", " ptDem.nameF " " ptDem.mrn " " ptDem.EncDate)
 	
 	if (fldval.acct) {																	; <acct> exists, has been registered or uploaded through TRRIQ
@@ -2363,7 +2362,7 @@ CheckProc:
 		
 		gosub fetchGUI
 		gosub fetchDem
-		checkFetchDem(fldOut["dem-Name_L"],fldOut["dem-Name_F"],fldOut["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldOut)
+		checkFetchDem(fldVal["dem-Name_L"],fldVal["dem-Name_F"],fldVal["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldVal)
 		if (fetchQuit=true) {
 			return
 		}
@@ -2391,7 +2390,7 @@ CheckProc:
 			wqSetVal(id,"mrn",ptDem["mrn"])
 			wqSetVal(id,"sex",ptDem["Sex"])
 			wqSetVal(id,"dob",ptDem["dob"])
-			wqSetVal(id,"dev","Mortara H3+ - " fldOut["dem-Device_SN"])
+			wqSetVal(id,"dev","Mortara H3+ - " fldVal["dem-Device_SN"])
 			wqSetVal(id,"prov",ptDem["Provider"])
 			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
@@ -2415,16 +2414,16 @@ CheckProc:
 	fldVal["dem-Test_date"] := ptDem["EncDate"]
 	fldVal["dem-Indication"] := ptDem["Indication"]
 	;---Replace some common values parsed from demog block
-	fldval["dem-Billing"] := fldOut["dem-Billing"]
-	fldval["dem-Ordering"] := fldOut["dem-Ordering"]
-	fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
-	fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
-	fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
-	fldval["dem-Test_date"] := fldOut["dem-Test_date"]
-	fldval["dem-Test_end"] := fldOut["dem-Recording_time"]
-	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
-	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
-	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
+	;~ fldval["dem-Billing"] := fldOut["dem-Billing"]
+	;~ fldval["dem-Ordering"] := fldOut["dem-Ordering"]
+	;~ fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
+	;~ fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
+	;~ fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
+	;~ fldval["dem-Test_date"] := fldOut["dem-Test_date"]
+	;~ fldval["dem-Test_end"] := fldVal["dem-Recording_time"]
+	;~ fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
+	;~ fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
+	;~ fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
 	
 return
 }
