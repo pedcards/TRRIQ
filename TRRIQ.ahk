@@ -3090,14 +3090,14 @@ formatField(pre, lab, txt) {
 }
 
 fieldColAdd(pre,lab,txt) {
-	global fileOut1, fileOut2, fldVal, fldOut
+	global fileOut1, fileOut2, fldVal
 	pre := (pre="") ? "" : pre "-"
 	if instr(fileOut1,"""" pre lab """") {
 		return
 	}
 	fileOut1 .= """" pre lab ""","
 	fileOut2 .= """" txt ""","
-	fldOut[pre lab] := txt
+	fldVal[pre lab] := txt
 	return
 }
 
