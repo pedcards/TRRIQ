@@ -2058,7 +2058,7 @@ Holter_Pr_Hl7:
 				, % "No full disclosure PDF found for:`n"
 				. fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
 				. "Download PDF from ftp.eCardio.com website`n"
-				. "and click [Retry] to proceed."
+				. "then click [Retry] to proceed."
 			IfMsgBox, Retry 
 			{
 				continue																; redo the loop
