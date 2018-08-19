@@ -2416,17 +2416,6 @@ CheckProc:
 	fldVal["dem-Ordering"] := ptDem["Provider"]
 	fldVal["dem-Test_date"] := ptDem["EncDate"]
 	fldVal["dem-Indication"] := ptDem["Indication"]
-	;---Replace some common values parsed from demog block
-	;~ fldval["dem-Billing"] := fldOut["dem-Billing"]
-	;~ fldval["dem-Ordering"] := fldOut["dem-Ordering"]
-	;~ fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
-	;~ fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
-	;~ fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
-	;~ fldval["dem-Test_date"] := fldOut["dem-Test_date"]
-	;~ fldval["dem-Test_end"] := fldVal["dem-Recording_time"]
-	;~ fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
-	;~ fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
-	;~ fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
 	
 return
 }
