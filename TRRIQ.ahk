@@ -1844,9 +1844,9 @@ outputfiles:
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
 	fileWQ := ma_date "," user "," 															; date processed and MA user
-			. """" chk.Prov """" ","														; extracted provider
-			. """" fldval["Name_L"] ", " fldval["Name_F"] """" ","							; CIS name
-			. """" fldval["MRN"] """" ","													; CIS MRN
+			. """" fldval["dem-Ordering"] """" ","														; extracted provider
+			. """" fldval["dem-Name_L"] ", " fldval["dem-Name_F"] """" ","							; CIS name
+			. """" fldval["dem-MRN"] """" ","													; CIS MRN
 			. """" fldval["dem-Test_date"] """" ","											; extracted Test date (or CIS encounter date if none)
 			. """" fldval["dem-Test_end"] """" ","											; extracted Test end
 			. """" fldval["dem-Site"] """" ","												; CIS location
@@ -2331,6 +2331,7 @@ CheckProc:
 	ptDem := Object()																	; Populate temp object ptDem with parsed data from PDF fldVal
 	ptDem["nameL"] := fldVal["dem-Name_L"]
 	ptDem["nameF"] := fldVal["dem-Name_F"] 
+	ptDem["Name"] := fldval["dem-Name"]
 	ptDem["mrn"] := fldVal["dem-MRN"] 
 	ptDem["DOB"] := fldVal["dem-DOB"] 
 	ptDem["Sex"] := fldVal["dem-Sex"]
