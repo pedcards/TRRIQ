@@ -2022,7 +2022,7 @@ Holter_Pr_Hl7:
 	fields[1] := ["Original Duration","Recording Duration","Analyzed Duration","Artifact Duration","\R"]
 	labels[1] := ["null","Recording_time","Analysis_time","null","null"]
 	fieldvals(duration,1,"dem")
-	fieldcoladd("dem","Test_end",fldval["dem-Recording_time"])
+	formatfield("dem","Test_end",fldval["dem-Recording_time"])
 	
 	progress, off
 	
