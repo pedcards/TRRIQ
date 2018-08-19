@@ -2962,38 +2962,6 @@ formatField(pre, lab, txt) {
 		return
 	}
 	
-;	Lifewatch Holter specific search fixes
-	if (monType="H") {
-		if txt ~= ("^[0-9]+.*at.*(AM|PM)$") {								;	Split timed results "139 at 8:31:47 AM" into two fields
-			tx1 := trim(strX(txt,,1,1," at",1,3))							;		labels e.g. xxx and xxx_time
-			tx2 := trim(strX(txt," at",1,3,"",1,0))							;		result e.g. "139" and "8:31:47 AM"
-			fieldColAdd(pre,lab,tx1)
-			fieldColAdd(pre,lab "_time",tx2)
-			return
-		}
-		if (lab~="i)(Longest|Fastest)") {
-			fieldColAdd(pre,lab,txt)
-			fieldColAdd(pre,lab "_time","")
-			return
-		}
-		if (txt ~= "^[0-9]+\s\([0-9.]+\%\)$") {								;	Split percents |\(.*%\)
-			tx1 := trim(strX(txt,,1,1,"(",1,1))
-			tx2 := trim(strX(txt,"(",1,1,"%",1,0))
-			fieldColAdd(pre,lab,tx1)
-			fieldColAdd(pre,lab "_per",tx2)
-			return
-		}
-		if (txt ~= "^[0-9,]{1,}\/[0-9,]{1,}$") {							;	Split multiple number value results "5/0" into two fields, ignore date formats (5/1/12)
-			tx1 := strX(txt,,1,1,"/",1,1,n)
-			tx2 := SubStr(txt,n+1)
-			lb1 := strX(lab,,1,1,"_",1,1,n)									;	label[] fields are named "xxx_yyy", split into "xxx" and "yyy"
-			lb2 := SubStr(lab,n+1)
-			fieldColAdd(pre,lb1,tx1)
-			fieldColAdd(pre,lb2,tx2)
-			return
-		}
-	}
-	
 ;	Preventice Holter specific fixes
 	if (monType="PR") {
 		if (lab="Name") {																; Break name into Last and First
