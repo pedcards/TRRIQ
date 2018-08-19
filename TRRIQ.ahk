@@ -677,7 +677,6 @@ readWQlv:
 	pt := Object()
 	chk := Object()
 	matchProv := Object()
-	fldOut := Object()
 	fileOut := fileOut1 := fileOut2 := ""
 	summBl := summ := ""
 	fullDisc := ""
@@ -712,8 +711,6 @@ readWQlv:
 	if (fldval.done) {
 		gosub epRead																	; find out which EP is reading today
 		gosub outputfiles																; generate and save output CSV, rename and move PDFs
-		
-		filedelete, % hl7dir fileNam ".hl7"												; Success! We can delete the original HL7
 	}
 	
 	gosub PhaseGUI																		; Refresh the worklist
@@ -1843,12 +1840,13 @@ outputfiles:
 	FileDelete, %fileIn%sh.pdf																;	was never completing filemove
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
+	FileDelete, % hl7dir fileNam ".hl7"														; We can delete the original HL7, if exists
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
 	fileWQ := ma_date "," user "," 															; date processed and MA user
-			. """" chk.Prov """" ","														; extracted provider
-			. """" fldval["Name_L"] ", " fldval["Name_F"] """" ","							; CIS name
-			. """" fldval["MRN"] """" ","													; CIS MRN
+			. """" fldval["dem-Ordering"] """" ","														; extracted provider
+			. """" fldval["dem-Name_L"] ", " fldval["dem-Name_F"] """" ","							; CIS name
+			. """" fldval["dem-MRN"] """" ","													; CIS MRN
 			. """" fldval["dem-Test_date"] """" ","											; extracted Test date (or CIS encounter date if none)
 			. """" fldval["dem-Test_end"] """" ","											; extracted Test end
 			. """" fldval["dem-Site"] """" ","												; CIS location
@@ -2026,6 +2024,7 @@ Holter_Pr_Hl7:
 	;---Get some values from wqid
 		fldval["dem-Name_L"] := strX(fldval.name,"",1,0,", ",1,2)
 		fldval["dem-Name_F"] := strX(fldval.name,", ",1,2," ",1,1)
+		fldval["dem-Name"] := fldval["dem-Name_L"] ", " fldval["dem-Name_F"]
 		fldval["dem-MRN"] := fldval.mrn
 		fldval["dem-DOB"] := fldval.dob
 		fldval["dem-Sex"] := fldval.sex
@@ -2059,7 +2058,7 @@ Holter_Pr_Hl7:
 				, % "No full disclosure PDF found for:`n"
 				. fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
 				. "Download PDF from ftp.eCardio.com website`n"
-				. "and click [Retry] to proceed."
+				. "then click [Retry] to proceed."
 			IfMsgBox, Retry 
 			{
 				continue																; redo the loop
@@ -2321,6 +2320,7 @@ CheckProc:
 	fetchQuit := false
 	
 	if (fldval.node = "done") {
+	;~ if (zzzfldval.node = "done") {
 		MsgBox % fileIn " has been scanned already.`n`nDeleting file."
 		eventlog(fileIn " already scanned. PDF deleted.")
 		FileDelete, % fileIn
@@ -2328,17 +2328,18 @@ CheckProc:
 		return
 	}
 	
-	ptDem := Object()																	; Populate temp object ptDem with parsed data from fldOut
-	ptDem["nameL"] := fldOut["dem-Name_L"]
-	ptDem["nameF"] := fldOut["dem-Name_F"] 
-	ptDem["mrn"] := fldOut["dem-MRN"] 
-	ptDem["DOB"] := fldOut["dem-DOB"] 
-	ptDem["Sex"] := fldOut["dem-Sex"]
-	ptDem["Loc"] := fldOut["dem-Site"]
-	ptDem["Account"] := fldOut["dem-Billing"]											; If want to force click, don't include Acct Num
-	ptDem["Provider"] := filterProv(fldOut["dem-Ordering"]).name
-	ptDem["EncDate"] := fldOut["dem-Test_date"]
-	ptDem["Indication"] := fldOut["dem-Indication"]
+	ptDem := Object()																	; Populate temp object ptDem with parsed data from PDF fldVal
+	ptDem["nameL"] := fldVal["dem-Name_L"]
+	ptDem["nameF"] := fldVal["dem-Name_F"] 
+	ptDem["Name"] := fldval["dem-Name"]
+	ptDem["mrn"] := fldVal["dem-MRN"] 
+	ptDem["DOB"] := fldVal["dem-DOB"] 
+	ptDem["Sex"] := fldVal["dem-Sex"]
+	ptDem["Loc"] := fldVal["dem-Site"]
+	ptDem["Account"] := fldVal["dem-Billing"]											; If want to force click, don't include Acct Num
+	ptDem["Provider"] := filterProv(fldVal["dem-Ordering"]).name
+	ptDem["EncDate"] := fldVal["dem-Test_date"]
+	ptDem["Indication"] := fldVal["dem-Indication"]
 	eventlog("PDF demog: " ptDem.nameL ", " ptDem.nameF " " ptDem.mrn " " ptDem.EncDate)
 	
 	if (fldval.acct) {																	; <acct> exists, has been registered or uploaded through TRRIQ
@@ -2351,6 +2352,7 @@ CheckProc:
 		  . "Study date: " fldval.date "`n`n" 
 	} 
 	else {
+	;~ else if false {
 		/*	Did not return based on done or valid status, 
 		 *	and has not been validated yet so no prior TRRIQ data
 		 */
@@ -2363,7 +2365,7 @@ CheckProc:
 		
 		gosub fetchGUI
 		gosub fetchDem
-		checkFetchDem(fldOut["dem-Name_L"],fldOut["dem-Name_F"],fldOut["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldOut)
+		checkFetchDem(fldVal["dem-Name_L"],fldVal["dem-Name_F"],fldVal["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldVal)
 		if (fetchQuit=true) {
 			return
 		}
@@ -2391,7 +2393,7 @@ CheckProc:
 			wqSetVal(id,"mrn",ptDem["mrn"])
 			wqSetVal(id,"sex",ptDem["Sex"])
 			wqSetVal(id,"dob",ptDem["dob"])
-			wqSetVal(id,"dev","Mortara H3+ - " fldOut["dem-Device_SN"])
+			wqSetVal(id,"dev","Mortara H3+ - " fldVal["dem-Device_SN"])
 			wqSetVal(id,"prov",ptDem["Provider"])
 			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
@@ -2414,17 +2416,6 @@ CheckProc:
 	fldVal["dem-Ordering"] := ptDem["Provider"]
 	fldVal["dem-Test_date"] := ptDem["EncDate"]
 	fldVal["dem-Indication"] := ptDem["Indication"]
-	;---Replace some common values parsed from demog block
-	fldval["dem-Billing"] := fldOut["dem-Billing"]
-	fldval["dem-Ordering"] := fldOut["dem-Ordering"]
-	fldval["dem-Ordering_grp"] := fldOut["dem-Ordering_grp"]
-	fldval["dem-Ordering_eml"] := fldOut["dem-Ordering_eml"]
-	fldval["dem-Hookup_tech"] := fldOut["dem-Hookup_tech"]
-	fldval["dem-Test_date"] := fldOut["dem-Test_date"]
-	fldval["dem-Test_end"] := fldOut["dem-Recording_time"]
-	fldval["dem-Scan_date"] := fldOut["dem-Scan_date"]
-	fldval["dem-Recording_time"] := fldOut["dem-Recording_time"]
-	fldval["dem-Analysis_time"] := fldOut["dem-Analysis_time"]
 	
 return
 }
@@ -3090,14 +3081,14 @@ formatField(pre, lab, txt) {
 }
 
 fieldColAdd(pre,lab,txt) {
-	global fileOut1, fileOut2, fldVal, fldOut
+	global fileOut1, fileOut2, fldVal
 	pre := (pre="") ? "" : pre "-"
 	if instr(fileOut1,"""" pre lab """") {
 		return
 	}
 	fileOut1 .= """" pre lab ""","
 	fileOut2 .= """" txt ""","
-	fldOut[pre lab] := txt
+	fldVal[pre lab] := txt
 	return
 }
 
