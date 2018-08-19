@@ -181,7 +181,9 @@ PhaseGUI:
 		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
 		, Grab Preventice enrollments
 	
-	Gui, Add, Tab3, -Wrap x10 y10 w620 h240 vWQtab, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
+	Gui, Add, Tab3
+		, -Wrap x10 y10 w620 h240 vWQtab
+		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	WQlist()
 	
 	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
