@@ -2398,7 +2398,11 @@ CheckProc:
 			wqSetVal(id,"mrn",ptDem["mrn"])
 			wqSetVal(id,"sex",ptDem["Sex"])
 			wqSetVal(id,"dob",ptDem["dob"])
-			wqSetVal(id,"dev","Mortara H3+ - " fldVal["dem-Device_SN"])
+			wqSetVal(id,"dev"
+				, (montype="PR" ? "Mortara H3+ - " 
+				: montype="BGH" ? "BodyGuardian Heart - BG"
+				: montype="ZIO" ? "Zio" : "")
+				. fldVal["dem-Device_SN"])
 			wqSetVal(id,"prov",ptDem["Provider"])
 			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
