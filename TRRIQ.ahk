@@ -2319,8 +2319,8 @@ CheckProc:
 	eventlog("CheckProcPr")
 	fetchQuit := false
 	
-	;~ if (fldval.node = "done") {
-	if (zzzfldval.node = "done") {
+	if (fldval.node = "done") {
+	;~ if (zzzfldval.node = "done") {
 		MsgBox % fileIn " has been scanned already.`n`nDeleting file."
 		eventlog(fileIn " already scanned. PDF deleted.")
 		FileDelete, % fileIn
@@ -2351,8 +2351,8 @@ CheckProc:
 		  . "Ordering: " fldval.prov "`n" 
 		  . "Study date: " fldval.date "`n`n" 
 	} 
-	;~ else {
-	else if false {
+	else {
+	;~ else if false {
 		/*	Did not return based on done or valid status, 
 		 *	and has not been validated yet so no prior TRRIQ data
 		 */
