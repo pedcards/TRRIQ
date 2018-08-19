@@ -2025,6 +2025,7 @@ Holter_Pr_Hl7:
 	;---Get some values from wqid
 		fldval["dem-Name_L"] := strX(fldval.name,"",1,0,", ",1,2)
 		fldval["dem-Name_F"] := strX(fldval.name,", ",1,2," ",1,1)
+		fldval["dem-Name"] := fldval["dem-Name_L"] ", " fldval["dem-Name_F"]
 		fldval["dem-MRN"] := fldval.mrn
 		fldval["dem-DOB"] := fldval.dob
 		fldval["dem-Sex"] := fldval.sex
