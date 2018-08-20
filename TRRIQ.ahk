@@ -1025,17 +1025,6 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			. ((ptDem["Provider"]) ? "" : " Provider")
 			. ".")
 		MsgBox,, % "Data incomplete. Try again", % ""
-			;~ . ((ptDem["nameF"]) ? "" : "First name`n")
-			;~ . ((ptDem["nameL"]) ? "" : "Last name`n")
-			;~ . ((ptDem["mrn"]) ? "" : "MRN`n")
-			;~ . ((ptDem["Account"]) ? "" : "Account number`n")
-			;~ . ((ptDem["DOB"]) ? "" : "DOB`n")
-			;~ . ((ptDem["Sex"]) ? "" : "Sex`n")
-			;~ . ((ptDem["Loc"]) ? "" : "Location`n")
-			;~ . ((ptDem["Type"]) ? "" : "Visit type`n")
-			;~ . ((ptDem["EncDate"]) ? "" : "Date Holter placed`n")
-			;~ . ((ptDem["Provider"]) ? "" : "Provider`n")
-			;~ . "`nREQUIRED!"
 			. "First name " ptDem["nameF"] "`n"
 			. "Last name " ptDem["nameL"] "`n"
 			. "MRN " ptDem["mrn"] "`n"
