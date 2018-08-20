@@ -2242,7 +2242,7 @@ Holter_Pr2:
 	monType := "PR"
 	fullDisc := "i)60\s+s(ec)?/line"
 	
-	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
+	if (fileinsize < 2000000) {															; Shortened files are usually < 1-2 Meg
 		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
 		MsgBox, 4112, Filesize error!, This file does not appear to be a full-disclosure PDF. Please download the proper file and try again.
 		fetchQuit := true
