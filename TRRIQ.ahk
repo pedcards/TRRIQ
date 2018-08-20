@@ -406,7 +406,7 @@ WQlist() {
 			, strQ(res.date,"###",SubStr(x.5,1,8))										; study date
 			, id																		; wqid
 			, "HL7"																		; extracted
-			, full>2 ? "X":"")															; fulldisc if filesize >2 Meg
+			, full>2 ? "":"X")															; fulldisc if filesize >2 Meg
 		wqfiles.push(id)
 	}
 	
@@ -423,9 +423,9 @@ WQlist() {
 				? "CEM"
 				: (fnID.2="M")
 				? "MINI"
-				: ""
+				: "???"								
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
-			LV_Modify(k,"Col8","X")														; change the FullDisc column to "X"
+			LV_Modify(k,"Col8","")														; clear the "X" in the FullDisc column
 			continue																	; skip rest of processing
 		}
 		res := readwq(fnID.1)															; get values for wqid if valid, else null
@@ -438,7 +438,7 @@ WQlist() {
 			, strQ(res.date,"###")														; study date
 			, id																		; wqid
 			, ftype																		; study type
-			, "X")																		; fulldisc
+			, "")																		; fulldisc present, make blank
 		if (id) {
 			wqfiles.push(id)															; add non-null wqid to wqfiles
 		}
