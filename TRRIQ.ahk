@@ -2058,6 +2058,7 @@ Holter_Pr_Hl7:
 				. "then click [Retry] to proceed."
 			IfMsgBox, Retry 
 			{
+				findFullPDF()															; rescan holterDir
 				continue																; redo the loop
 			} else {
 				FileDelete, % fileIn
