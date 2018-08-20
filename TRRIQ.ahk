@@ -986,31 +986,31 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		ptDem.Provider := tmpL ", " tmpF
 	}
 	matchProv := checkCrd(ptDem.Provider)
-	if !(ptDem.Provider) {														; no provider? ask!
+	if !(ptDem.Provider) {																; no provider? ask!
 		gosub getMD
 		eventlog("New provider field " ptDem.Provider ".")
-	} else if (matchProv.fuzz > 0.10) {							; Provider not recognized
+	} else if (matchProv.fuzz > 0.10) {													; Provider not recognized
 		eventlog(ptDem.Provider " not recognized (" matchProv.fuzz ").")
 		if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {
 			ptDem.EncDate := substr(A_now,1,8)											; Set date to today
 			gosub assignMD																; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 			eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
 		} else {
-			gosub getMD															; Otherwise, ask for it.
+			gosub getMD																	; Otherwise, ask for it.
 			eventlog("Provider set to " ptDem.Provider ".")
 		}
-	} else {													; Provider recognized
+	} else {																			; Provider recognized
 		eventlog(ptDem.Provider " matches " matchProv.Best " (" (1-matchProv.fuzz)*100 ").")
 		ptDem.Provider := matchProv.Best
 	}
-	ptDem["Account"] := EncNum											; make sure array has submitted EncNum value
-	FormatTime, EncDt, %EncDt%, MM/dd/yyyy										; and the properly formatted date 06/15/2016
+	ptDem["Account"] := EncNum															; make sure array has submitted EncNum value
+	FormatTime, EncDt, %EncDt%, MM/dd/yyyy												; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
-	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 					; valid names
-			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account"]~="\d{8,}") 						; valid MRN and Acct numbers
+	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 		; valid names
+			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account"]~="\d{8,}") 				; valid MRN and Acct numbers
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="^[MF]") 		; valid DOB and Sex
-			&& (ptDem["Loc"]) && (ptDem["Type"])													; Loc and type is not null
-			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])								; prov any string, encDate not null
+			&& (ptDem["Loc"]) && (ptDem["Type"])										; Loc and type is not null
+			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])					; prov any string, encDate not null
 	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
 		eventlog("Data incomplete."
 			. ((ptDem["nameF"]) ? "" : " nameF")
