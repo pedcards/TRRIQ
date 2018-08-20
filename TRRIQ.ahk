@@ -1932,26 +1932,27 @@ getMD:
 
 assignMD:
 {
-	if !(ptDem.EncDate) {														; must have a date to figure it out
+	if !(ptDem.EncDate) {																; must have a date to figure it out
 		return
 	}
 	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
 	inptMD := checkCrd(ptDem.Provider) 
-	if (inptMD.fuzz=0) {														; attg is Crd
-		ptDem.Loc := "Inpatient"												; set Loc so it won't fail
+	if (inptMD.fuzz<0.15) {																; attg is Crd
+		ptDem.Loc := "Inpatient"														; set Loc so it won't fail
 		return
 	} 
-	if (ymatch := y.selectSingleNode("//call[@date='" encDT "']/Ward_A").text) {
-		inptMD := checkCrd(strX(ymatch," ",1,1) ", " strX(ymatch,"",1,0," ",1,1))
-		if (inptMD.fuzz=0) {													; on-call Cards that day 
+	if (ymatch := y.selectSingleNode("//call[@date='" encDT "']/Ward_A").text) {		; found the Ward attg
+		inptMD := checkCrd(strX(ymatch," ",1,1) ", " strX(ymatch,"",1,0," ",1,1))		; put in LAST, FIRST format
+		if (inptMD.fuzz<0.15) {															; close enough match
 			ptDem.Loc := "Inpatient"
 			ptDem.Provider := inptMD.best
 			eventlog("Cardiologist autoselected " ptDem.Provider )
 			return
 		}
+	} else {
+		gosub getMD																		; when all else fails, ask
+		ptDem.Loc := "Inpatient"
 	}
-	gosub getMD																	; when all else fails, ask
-	ptDem.Loc := "Inpatient"
 return
 }
 
