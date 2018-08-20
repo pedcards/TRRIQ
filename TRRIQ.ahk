@@ -992,7 +992,8 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	} else if (matchProv.fuzz > 0.10) {							; Provider not recognized
 		eventlog(ptDem.Provider " not recognized (" matchProv.fuzz ").")
 		if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {
-			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
+			ptDem.EncDate := substr(A_now,1,8)											; Set date to today
+			gosub assignMD																; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
 			eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
 		} else {
 			gosub getMD															; Otherwise, ask for it.
