@@ -2219,6 +2219,7 @@ getPdfID(txt) {
 	} else if instr(txt,"BodyGuardian Heart") {
 		res.type := "E"
 		name := res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1)," `t`r`n")
+			parseName(name)
 			res.nameF := trim(strX(name,"",1,0," ",1,1))
 			res.nameL := trim(strX(name," ",1,1,"",0))
 		dt := parseDate(trim(stregX(txt,"Period \(.*?\R",1,1," - ",1)," `t`r`n"))
@@ -3268,6 +3269,25 @@ FilePrepend( Text, Filename ) {
     file.pos:=0
     File.Write(text)
     File.Close()
+}
+
+ParseName(x) {
+/*	Determine first and last name
+*/
+	x := trim(x)																		; trim edges
+	x := RegExReplace(x," \w ")															; remove middle initial: Troy A Johnson => Troy Johnson
+	x := RegExReplace(x,"i),?( JR| III| IV)$")											; Filter out name suffixes
+	
+	if instr(x,",") 
+	{
+		last := trim(strX(x,"",1,0,",",1,1))
+		first := trim(strX(x,",",1,1,"",0))
+	}
+	;~ else if (RegExReplace()) 
+	;~ {
+		
+	;~ }
+	return
 }
 
 ParseDate(x) {
