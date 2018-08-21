@@ -3277,16 +3277,28 @@ ParseName(x) {
 	x := trim(x)																		; trim edges
 	x := RegExReplace(x," \w ")															; remove middle initial: Troy A Johnson => Troy Johnson
 	x := RegExReplace(x,"i),?( JR| III| IV)$")											; Filter out name suffixes
+	x := RegExReplace(x,"\s+"," ",ct)													; Count " "
 	
-	if instr(x,",") 
+	if instr(x,",") 																	; Last, First
 	{
 		last := trim(strX(x,"",1,0,",",1,1))
 		first := trim(strX(x,",",1,1,"",0))
 	}
-	;~ else if (RegExReplace()) 
-	;~ {
-		
-	;~ }
+	else if (ct=1)																		; First Last
+	{
+		first := strX(x,"",1,0," ",1)
+		last := strX(x," ",1,1,"",0)
+	}
+	else																				; James Jacob Jingleheimer Schmidt
+	{
+		n := 1
+		Loop
+		{
+			p := strX(x," ",n,1,"",0,0,n)
+			MsgBox % p
+		}
+	}
+	
 	return
 }
 
