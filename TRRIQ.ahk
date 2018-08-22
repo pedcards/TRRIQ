@@ -1753,8 +1753,10 @@ ProcessHl7PDF:
 	FileRead, newtxt, %filenam%.txt														; load into newtxt
 	FileDelete, %filenam%.txt
 	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
-	FileAppend % fldval.hl7, %filenam%.txt												; create new tempfile with result, minus PDF
-	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1								; move a copy into tempfiles for troubleshooting
+	FileAppend % newtxt, %filenam%.txt												; create new tempfile with result, minus PDF
+	FileMove %filenam%.txt, .\tempfiles\*, 1								; move a copy into tempfiles for troubleshooting
+	FileAppend % fldval.hl7, %filenam%_hl7.txt												; create new tempfile with result, minus PDF
+	FileMove %filenam%_hl7.txt, .\tempfiles\*, 1								; move a copy into tempfiles for troubleshooting
 	
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (type="Holter") {
@@ -1762,7 +1764,7 @@ ProcessHl7PDF:
 	} else if (type~="CEM|EOS") {
 		gosub Event_BGH_Hl7
 	} else {
-		MsgBox No match!
+		MsgBox % "No match!`n" type
 		return
 	}
 	
