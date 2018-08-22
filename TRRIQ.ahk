@@ -2581,9 +2581,9 @@ Event_BGH_Hl7:
 	monType := "BGH"
 	
 	demog := stregX(newtxt,"Patient: ",1,0,"Summarized Findings",1) "<<<<<"
-;~ demog := RegExReplace(demog,"\R+","`n")
-	fields[1] := ["Patient", "Patient ID", "Gender", "Date of Birth", "Phone", "\(\d", "Physician", "Practice", "Diagnosis"]
-	labels[1] := ["Name", "MRN", "Sex", "VOID", "DOB", "VOID", "Ordering", "Practice", "Indication"]
+	demog := RegExReplace(demog,"\R+","`n")
+	fields[1] := ["Patient", "Patient ID", "Gender", "Date of Birth", "Phone", "\(\d", "Physician", "Practice", "Diagnosis.*?\R", "<<<<<"]
+	labels[1] := ["Name", "MRN", "Sex", "VOID", "DOB", "VOID", "Ordering", "Practice", "Indication", "VOID"]
 	fieldvals(demog,1,"dem")
 	fldval["name_L"] := ptDem["nameL"]
 	
