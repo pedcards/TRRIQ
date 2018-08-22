@@ -2973,11 +2973,10 @@ formatField(pre, lab, txt) {
 	
 	if (lab="Name") {
 		txt := RegExReplace(txt,"i),?( JR| III| IV)$")						; Filter out name suffixes
-		if instr(txt,",") {
-			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
-			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
-		}
-		fieldColAdd(pre,"Name",txt)
+		name := parseName(txt)
+		fieldColAdd(pre,"Name",name.last ", " name.first)
+		fieldColAdd(pre,"Name_L",name.last)
+		fieldColAdd(pre,"Name_F",name.first)
 		return
 	}
 	if (lab="DOB") {														; remove (age) from DOB
