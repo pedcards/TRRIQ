@@ -1759,8 +1759,8 @@ ProcessHl7PDF:
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (type="Holter") {
 		gosub Holter_Pr_Hl7
-	} else if (type="EOS") {
-		;~ gosub Event_BGH_HL7
+	} else if (type~="CEM|EOS") {
+		gosub Event_BGH_Hl7
 	} else {
 		MsgBox No match!
 		return
