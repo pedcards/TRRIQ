@@ -3291,15 +3291,25 @@ ParseName(x) {
 	}
 	else																				; James Jacob Jingleheimer Schmidt
 	{
+		x0 := x																			; make a copy to disassemble
 		n := 1
 		Loop
 		{
-			p := strX(x," ",n,1,"",0,0,n)
-			MsgBox % p
+			x0 := strX(x0," ",n,1,"",0)													; cut from first " " to end
+			if (x0="") {
+				q := trim(q,"|")
+				break
+			}
+			q .= x0 "|"																	; add to button q
 		}
+		last := cmsgbox("Name check","What is the patient's`nLAST NAME?",q)
+		if (last="xClose") {
+			return error
+		}
+		first := RegExReplace(x," " last)
 	}
 	
-	return
+	return {first:first,last:last}
 }
 
 ParseDate(x) {
