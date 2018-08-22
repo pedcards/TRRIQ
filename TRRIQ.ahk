@@ -2207,9 +2207,9 @@ getPdfID(txt) {
 	
 	if instr(txt,"MORTARA") {															; Mortara Holter
 		res.type := "H"
-		name := res.name := trim(stregX(txt,"Name:",1,1,"Recording Start",1))
-			res.nameL := trim(strX(name,"",1,0,",",1,1))
-			res.nameF := trim(strX(name,",",1,1,"",0))
+		name := parseName(res.name := trim(stregX(txt,"Name:",1,1,"Recording Start",1)))
+			res.nameL := name.last
+			res.nameF := name.first
 		dt := parseDate(trim(stregX(txt,"Start Date/Time:?",1,1,"\R",1)))
 			res.date := dt.yyyy dt.mm dt.dd
 			res.time := dt.hr dt.min
@@ -2220,19 +2220,18 @@ getPdfID(txt) {
 		res.wqid := findWQid(res.date,res.mrn).id "H"
 	} else if instr(txt,"BodyGuardian Heart") {
 		res.type := "E"
-		name := res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1)," `t`r`n")
-			parseName(name)
-			res.nameF := trim(strX(name,"",1,0," ",1,1))
-			res.nameL := trim(strX(name," ",1,1,"",0))
+		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1)," `t`r`n"))
+			res.nameL := name.last
+			res.nameF := name.first
 		dt := parseDate(trim(stregX(txt,"Period \(.*?\R",1,1," - ",1)," `t`r`n"))
 			res.date := dt.yyyy dt.mm dt.dd
 		res.mrn := trim(stregX(txt,"Patient ID",1,1,"Gender",1)," `t`r`n")
 		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###E","00000E")
 	} else if instr(txt,"Zio XT") {
 		res.type := "Z"
-		name := res.name := trim(stregX(txt,"Final Report for",1,1,"Date of Birth",1)," `t`r`n")
-			res.nameL := trim(strX(name,"",1,0,",",1,1))
-			res.nameF := trim(strX(name,",",1,1,"",0))
+		name := parseName(res.name := trim(stregX(txt,"Final Report for",1,1,"Date of Birth",1)," `t`r`n"))
+			res.nameL := name.last
+			res.nameF := name.first
 		res.mrn := strQ(trim(stregX(txt,"Patient ID",1,1,"Managing Location",1)," `t`r`n"),"###","Zio")
 		res.wqid := "00000Z"
 	}
