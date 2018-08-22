@@ -2575,6 +2575,40 @@ ZioArrField(txt,fld) {
 	return trim(cleanspace(newStr))
 }
 
+Event_BGH_Hl7:
+{
+	eventlog("Event_BGH_HL7")
+	monType := "BGH"
+	
+	demog := stregX(newtxt,"Patient: ",1,0,"Summarized Findings",1) "<<<<<"
+;~ demog := RegExReplace(demog,"\R+","`n")
+	fields[1] := ["Patient", "Patient ID", "Gender", "Date of Birth", "Phone", "\(\d", "Physician", "Practice", "Diagnosis"]
+	labels[1] := ["Name", "MRN", "Sex", "VOID", "DOB", "VOID", "Ordering", "Practice", "Indication"]
+	fieldvals(demog,1,"dem")
+	fldval["name_L"] := ptDem["nameL"]
+	
+	tmpDT := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
+	fieldcoladd("dem","Test_date",trim(strX(tmpDT,"",1,1," ",1,1)," `r`n"))
+	fieldcoladd("dem","Test_end",trim(strX(tmpDT," - ",0,3,"",0)," `r`n"))
+	
+	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
+	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
+	fieldvals(enroll,3,"counts")
+	
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	fieldcoladd("","Mon_type","Event")
+	
+	FileCopy, %fileIn%, %fileIn%sh.pdf
+	
+	fldval.done := true
+	
+Return
+}
+
 Event_BGH:
 {
 	eventlog("Event_BGH")
