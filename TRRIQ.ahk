@@ -2575,6 +2575,20 @@ ZioArrField(txt,fld) {
 	return trim(cleanspace(newStr))
 }
 
+hl7fld(bl,pre) {
+	global fields, labels, fldval
+	
+	for k, i in fields[bl]																; Step through each val "i" from fields[bl,k]
+	{
+		lbl := labels[bl][k]
+		res := fldval[i]
+		formatField(pre,lbl,res)
+	}
+	return
+}
+	
+
+
 Event_BGH_Hl7:
 {
 	eventlog("Event_BGH_HL7")
