@@ -2594,19 +2594,25 @@ Event_BGH_Hl7:
 	eventlog("Event_BGH_HL7")
 	monType := "BGH"
 	
-	demog := stregX(newtxt,"Patient: ",1,0,"Summarized Findings",1) "<<<<<"
-	demog := RegExReplace(demog,"\R+","`n")
-	fields[1] := ["Patient", "Patient ID", "Gender", "Date of Birth", "Phone", "\(\d", "Physician", "Practice", "Diagnosis.*?\R", "<<<<<"]
-	labels[1] := ["Name", "MRN", "Sex", "VOID", "DOB", "VOID", "Ordering", "Practice", "Indication", "VOID"]
-	fieldvals(demog,1,"dem")
-	fldval["name_L"] := ptDem["nameL"]
+	;~ demog := stregX(newtxt,"Patient: ",1,0,"Summarized Findings",1) "<<<<<"
+	;~ demog := RegExReplace(demog,"\R+","`n")
+	;~ fields[1] := ["Patient", "Patient ID", "Gender", "Date of Birth", "Phone", "\(\d", "Physician", "Practice", "Diagnosis.*?\R", "<<<<<"]
+	;~ labels[1] := ["Name", "MRN", "Sex", "VOID", "DOB", "VOID", "Ordering", "Practice", "Indication", "VOID"]
+	;~ fieldvals(demog,1,"dem")
+	;~ fldval["name_L"] := ptDem["nameL"]
 	
-	tmpDT := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
-	fieldcoladd("dem","Test_date",trim(strX(tmpDT,"",1,1," ",1,1)," `r`n"))
-	fieldcoladd("dem","Test_end",trim(strX(tmpDT," - ",0,3,"",0)," `r`n"))
+	;~ tmpDT := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
+	;~ fieldcoladd("dem","Test_date",trim(strX(tmpDT,"",1,1," ",1,1)," `r`n"))
+	;~ fieldcoladd("dem","Test_end",trim(strX(tmpDT," - ",0,3,"",0)," `r`n"))
+	;~ MsgBox % fldval["Diagnosis"] "`n`n`n"
+	fldVal["PID_Name"] := fldval["PID_NameL"] ", " fldval["PID_NameF"]
+	fields[1] := ["PID_Name","PID_PatMRN","PID_Sex","PID_DOB"]
+	labels[1] := ["Name","MRN","Sex","DOB","Ordering","Practice","Indication"]
+	hl7fld(1,"dem")
 	
-	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
-	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
+	enroll := RegExReplace(stregX(newtxt,"Event Counts",1,0,"Interpreting Physician",1),"\R+","`n") "<<<<<"
+	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger","\R"]
+	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto","VOID"]
 	fieldvals(enroll,3,"counts")
 	
 	gosub checkProc												; check validity of PDF, make demographics valid if not
