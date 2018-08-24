@@ -697,11 +697,12 @@ readWQlv:
 		progress, 25 , % fnam, Extracting data
 		processHL7(fnam)																; extract DDE to fldVal, and PDF into hl7Dir
 		
-		for key,val in fldval
-		{
-			progress hide
-			MsgBox % key " = " val
-		}
+;~ for key,val in fldval
+;~ {
+	;~ progress hide
+	;~ MsgBox % key " = " val
+;~ }
+;~ exitapp
 		
 		progress, 50 , % fnam, Processing PDF
 		gosub processHl7PDF																; process resulting PDF file

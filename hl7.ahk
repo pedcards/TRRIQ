@@ -93,10 +93,8 @@ hl7line(seg) {
 	}
 	
 	isOBX := (segName == "OBX")
-	isResult := (fld.3 ~= "^(CE|NM|ST|TX|ED)$")
 	segMap := hl7[segName]
-	segPre := (isOBX) ? "" : segName "_"
-	segPre .= (isResult) ? fld.3 "_" : ""
+	segPre := segName "_"
 	
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
@@ -125,24 +123,25 @@ hl7line(seg) {
 			
 			res[x] := val[j]															; add each mapped result as subelement, res.mapped_name
 			
-			if !(isOBX) || (isResult) {													; non-OBX results
+			if !(isOBX)  {																; non-OBX results
 				fldVal[x] := val[j]														; populate all fldVal.mapped_name
 			}
 		}
 	}
 	if (isOBX) {																		; need to special process OBX[], test result strings
-		if !(res.ED_Filename == "") {
-			fldVal.Filename := res.ED_Filename											; file follows
-			nBytes := Base64Dec( res.ED_resValue, Bin )
-			File := FileOpen( hl7Dir . res.ED_Filename, "w")
+		if (res.OBX_ObsType == "ED") {
+			fldVal.Filename := res.OBX_Filename											; file follows
+			nBytes := Base64Dec( res.OBX_resValue, Bin )
+			File := FileOpen( hl7Dir . res.OBX_Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
 			seg := "OBX|" fld.2 "|ED|PDFReport"
 		} else {
-			label := res.resCode														; result value
-			result := strQ(res.resValue, "###")
+			label := res.OBX_resCode													; result value
+			result := strQ(res.OBX_resValue, "###")
 			maplab := (hl7.flds[label]) ? hl7.flds[label] : label						; maps label if hl7->lw map exists
-			fldVal[maplab] := result
+			maplab .= (res.OBX_Filename) ? "_" res.OBX_Filename : ""					; add suffix if multiple units in OBX_Filename
+			fldVal[segPre maplab] := result
 		}
 	}
 	fldval.hl7 .= seg "`n"
