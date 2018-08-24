@@ -93,10 +93,8 @@ hl7line(seg) {
 	}
 	
 	isOBX := (segName == "OBX")
-	isResult := (fld.3 ~= "^(CE|NM|ST|TX|ED)$")
 	segMap := hl7[segName]
-	segPre := (isOBX) ? "" : segName "_"
-	segPre .= (isResult) ? fld.3 "_" : ""
+	segPre := segName "_"
 	
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
