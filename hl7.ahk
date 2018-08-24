@@ -129,10 +129,10 @@ hl7line(seg) {
 		}
 	}
 	if (isOBX) {																		; need to special process OBX[], test result strings
-		if !(res.ED_Filename == "") {
-			fldVal.Filename := res.ED_Filename											; file follows
-			nBytes := Base64Dec( res.ED_resValue, Bin )
-			File := FileOpen( hl7Dir . res.ED_Filename, "w")
+		if (res.OBX_ObsType == "ED") {
+			fldVal.Filename := res.OBX_Filename											; file follows
+			nBytes := Base64Dec( res.OBX_resValue, Bin )
+			File := FileOpen( hl7Dir . res.OBX_Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
 			seg := "OBX|" fld.2 "|ED|PDFReport"
