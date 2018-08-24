@@ -137,10 +137,11 @@ hl7line(seg) {
 			File.Close()
 			seg := "OBX|" fld.2 "|ED|PDFReport"
 		} else {
-			label := res.resCode														; result value
-			result := strQ(res.resValue, "###")
+			label := res.OBX_resCode													; result value
+			result := strQ(res.OBX_resValue, "###")
 			maplab := (hl7.flds[label]) ? hl7.flds[label] : label						; maps label if hl7->lw map exists
-			fldVal[maplab] := result
+			maplab .= (res.OBX_Filename) ? "_" res.OBX_Filename : ""					; add suffix if multiple units in OBX_Filename
+			fldVal[segPre maplab] := result
 		}
 	}
 	fldval.hl7 .= seg "`n"
