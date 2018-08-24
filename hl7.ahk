@@ -123,7 +123,7 @@ hl7line(seg) {
 			
 			res[x] := val[j]															; add each mapped result as subelement, res.mapped_name
 			
-			if !(isOBX) || (isResult) {													; non-OBX results
+			if !(isOBX)  {																; non-OBX results
 				fldVal[x] := val[j]														; populate all fldVal.mapped_name
 			}
 		}
