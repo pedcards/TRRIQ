@@ -140,8 +140,8 @@ hl7line(seg) {
 		} else {
 			label := res.resCode													; result value
 			result := strQ(res.resValue, "###")
-			;~ maplab := (hl7.flds[label]) ? hl7.flds[label] : label						; maps label if hl7->lw map exists
-			;~ maplab .= (res.Filename) ? "_" res.Filename : ""					; add suffix if multiple units in OBX_Filename
+			maplab := strQ(hl7.flds[label],"###",label)								; maps label if hl7->lw map exists
+					. strQ(res.Filename,"_###")        								; add suffix if multiple units in OBX_Filename
 			fldVal[segPre maplab] := result
 			obxval[segPre maplab] := result
 		}
