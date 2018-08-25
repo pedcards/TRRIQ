@@ -686,6 +686,7 @@ readWQlv:
 	summBl := summ := ""
 	fullDisc := ""
 	monType := ""
+	obxval := Object()
 	
 	fldVal := readWQ(wqid)																; wqid would have been determined by parsing hl7
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs

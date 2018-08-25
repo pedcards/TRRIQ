@@ -83,7 +83,7 @@ hl7line(seg) {
 	field elements stored in res[i] object
 	attempt to map each field to recognized structure for that field element
 */
-	global hl7, fldVal, hl7Dir
+	global hl7, fldVal, hl7Dir, obxVal
 	res := Object()
 	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
 	segName := fld.1																	; first array element should be NAME
@@ -125,6 +125,7 @@ hl7line(seg) {
 			
 			if !(isOBX)  {																; non-OBX results
 				fldVal[x] := val[j]														; populate all fldVal.mapped_name
+				obxVal[x] := val[j]
 			}
 		}
 	}
@@ -142,6 +143,7 @@ hl7line(seg) {
 			;~ maplab := (hl7.flds[label]) ? hl7.flds[label] : label						; maps label if hl7->lw map exists
 			;~ maplab .= (res.Filename) ? "_" res.Filename : ""					; add suffix if multiple units in OBX_Filename
 			fldVal[segPre maplab] := result
+			obxval[segPre maplab] := result
 		}
 	}
 	fldval.hl7 .= seg "`n"
