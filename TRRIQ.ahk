@@ -2092,19 +2092,25 @@ return
 fieldsToCSV() {
 /*	tabs = tab-delim string
 	"hrd-Total_beats(0)" -> fldval["hrd-Total_beats"] (default 0 if null)
-	Appends to fileOut
+	Regenerates new fileOut
 */
 	global fldval, fileOut1, fileOut2, monType
-	tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
-		. "dem-Hookup_tech	dem-VOID2	dem-Meds(NA)	dem-Ordering	dem-Scanned_by	"
-		. "dem-Reading(NA)	dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
-		. "dem-VOID3	hrd-Total_beats(0)	hrd-Min(0)	hrd-Min_time	hrd-Avg(0)	hrd-Max(0)	hrd-Max_time	hrd-HRV	"
-		. "ve-Total(0)	ve-Total_per(0)	ve-Runs(0)	ve-Beats(0)	ve-Longest(0)	ve-Longest_time	ve-Fastest(0)	ve-Fastest_time	"
-		. "ve-Triplets(0)	ve-Couplets(0)	ve-SinglePVC(0)	ve-InterpPVC(0)	ve-R_on_T(0)	ve-SingleVE(0)	ve-LateVE(0)	"
-		. "ve-Bigem(0)	ve-Trigem(0)	ve-SVE(0)	sve-Total(0)	sve-Total_per(0)	sve-Runs(0)	sve-Beats(0)	"
-		. "sve-Longest(0)	sve-Longest_time	sve-Fastest(0)	sve-Fastest_time	sve-Pairs(0)	sve-Drop(0)	sve-Late(0)	"
-		. "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
 	
+	if (monType="PR") {
+		tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	"
+			. "dem-Hookup_tech	dem-Ordering	dem-Scanned_by	"
+			. "dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
+			. "hrd-Total_beats(0)	hrd-Min(0)	hrd-Min_time	hrd-Avg(0)	hrd-Max(0)	hrd-Max_time	hrd-HRV	"
+			. "ve-Total(0)	ve-Total_per(0)	ve-Runs(0)	ve-Beats(0)	ve-Longest(0)	ve-Longest_time	ve-Fastest(0)	ve-Fastest_time	"
+			. "ve-Triplets(0)	ve-Couplets(0)	ve-SinglePVC(0)	ve-InterpPVC(0)	ve-R_on_T(0)	ve-SingleVE(0)	ve-LateVE(0)	"
+			. "ve-Bigem(0)	ve-Trigem(0)	ve-SVE(0)	sve-Total(0)	sve-Total_per(0)	sve-Runs(0)	sve-Beats(0)	"
+			. "sve-Longest(0)	sve-Longest_time	sve-Fastest(0)	sve-Fastest_time	sve-Pairs(0)	sve-Drop(0)	sve-Late(0)	"
+			. "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
+	} else if (monType="BGH") {
+		tabs := "dem-Name_L	dem-Name_F	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Ordering	dem-Site	dem-Billing	dem-Device_SN	"
+			. "dem-Test_date	dem-Test_end	dem-Indication	"
+			. "counts-Critical	counts-Total	counts-Serious	counts-Manual	counts-Stable	counts-Auto"
+	}
 	fileOut1 := ""
 	fileOut2 := ""
 	loop, parse, tabs, `t
