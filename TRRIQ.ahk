@@ -2096,7 +2096,7 @@ fieldsToCSV() {
 */
 	global fldval, fileOut1, fileOut2, monType
 	
-	if (monType="PR") {
+	if (monType~="PR|ZIO") {
 		tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	"
 			. "dem-Hookup_tech	dem-Ordering	dem-Scanned_by	"
 			. "dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
@@ -2571,7 +2571,6 @@ return
 ZioArrField(txt,fld) {
 	str := stregX(txt,fld,1,0,"#####",1)
 	if instr(str,"Episodes") {
-		;~ str := strX(columns(str,fld,"#####",0,"Episodes"),"Episodes",1,0,"",0)
 		str := columns(str,fld,"#####",0,"Episodes")
 		str := RegExReplace(str,"i)None found")
 	}
