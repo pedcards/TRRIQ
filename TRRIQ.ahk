@@ -389,7 +389,7 @@ WQlist() {
 	if (wksloc="Main Campus") {
 		
 	Gui, Tab, INBOX
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadWQlv vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Study Date|wqid|Type|NeedsFTP
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadWQlv vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Study Date|wqid|Type|FTP
 	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
 	{
 		fileIn := A_LoopFileName
@@ -454,8 +454,9 @@ WQlist() {
 		LV_ModifyCol(5,"Sort")
 		LV_ModifyCol(6,"70")															; wqid
 		LV_ModifyCol(7,"40")															; ftype
-		LV_ModifyCol(8,"60")															; ftp
-	
+		LV_ModifyCol(8,"40")															; ftp
+		LV_ModifyCol(8,"Center")
+		
 	}	; <-- finish Main Campus Inbox
 	
 	Gui, Tab, ALL
