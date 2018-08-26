@@ -402,7 +402,7 @@ WQlist() {
 			, hl7Dir fileIn																; path and filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
 			, strQ(res.mrn,"###",x.3)													; mrn
-			, strQ(res.dob,"###",x.4)													; dob
+			, strQ(res.dob,"###",niceDate(x.4))											; dob
 			, strQ(res.date,"###",SubStr(x.5,1,8))										; study date
 			, id																		; wqid
 			, "HL7"																		; extracted
