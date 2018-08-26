@@ -388,6 +388,11 @@ WQlist() {
 		x := StrSplit(fileIn,"_")
 		id := findWQid(SubStr(x.5,1,8),x.3).id											; get id based on study date and mrn
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
+		if (res.node="done") {															; skip if DONE, might be currently in process 
+			eventlog("WQlist removing " fileIn)
+			FileMove, fileIn, .\tempfiles\%fileIn%, 1
+			continue
+		}
 		FileGetSize,full,% hl7Dir fileIn,M
 		
 		LV_Add(""
