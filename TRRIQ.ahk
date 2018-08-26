@@ -171,8 +171,11 @@ PhaseGUI:
 	
 	Gui, Font, Bold
 	Gui, Add, Button
-		, Y+20 wp h40 vEnroll gPhaseTask
+		, Y+10 wp h40 vEnroll gPhaseTask
 		, Grab Preventice enrollments
+	Gui, Add, Button
+		, Y+20 wp h40 vRegister gPhaseTask Disabled
+		, Register to Preventice
 	Gui, Add, Button
 		, Y+20 wp h40 vUpload gPhaseTask
 		, Prepare/Upload Holter
