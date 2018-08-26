@@ -2250,6 +2250,9 @@ getPdfID(txt) {
 		name := parseName(res.name := trim(stregX(txt,"Final Report for",1,1,"Date of Birth",1)," `t`r`n"))
 			res.nameL := name.last
 			res.nameF := name.first
+		enroll := stregX(txt,"Enrollment Period",1,0,"Analysis Time",1)
+		dt := parseDate(stregX(enroll,"i)\R+.*?(hours|days).*?\R+",1,1,",",1))
+			res.date := dt.yyyy dt.mm dt.dd
 		res.mrn := strQ(trim(stregX(txt,"Patient ID",1,1,"Managing Location",1)," `t`r`n"),"###","Zio")
 		res.wqid := "00000Z"
 	}
