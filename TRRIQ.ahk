@@ -412,15 +412,11 @@ WQlist() {
 	{
 		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)										; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
 		id := fnID.1
-		ftype := (fnID.2="H") 															; type of file based on fnID label
-				? "PDF"
-				: (fnID.2="Z")
-				? "ZIO"
-				: (fnID.2="E")
-				? "CEM"
-				: (fnID.2="M")
-				? "MINI"
-				: "???"								
+		ftype := (fnID.2="H") ? "PDF"													; type of file based on fnID label
+				: (fnID.2="Z") ? "ZIO"
+				: (fnID.2="E") ? "CEM"
+				: (fnID.2="M") ? "MINI"
+				: "???"																	; could condense as ftype := {"H":"PDF","Z":"ZIO","E":"CEM","M":"MINI"}[fnID.2]
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
 			LV_Modify(k,"Col8","")														; clear the "X" in the FullDisc column
 			continue																	; skip rest of processing
