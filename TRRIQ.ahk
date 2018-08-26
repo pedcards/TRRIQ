@@ -1,16 +1,6 @@
 /*	TRRIQ - The Rhythm Recording Interpretation Query
-	Converts file
-		Drag-and-drop onto window
-		Monitor folder for changes
-	Inputs a text file
-		Probably converted from PDF using XPDF's "PDFtoTEXT"
-		Use the -layout or -table option
-		Only need the first 1-2 pages
-	Identifies type of report:
-		ZioPatch Holter
-		LifeWatch (or other) Holter
-	Extracts salient data
-	Generates report using mail merge or template in Word
+	Disassembles HL7 and PDF files into discrete data elements
+	Outputs into a format readable by HolterDB (CSV, PDF, and short PDF)
 	Sends report to HIM
 */
 
@@ -30,7 +20,6 @@ SplitPath, A_ScriptDir,,fileDir
 user := A_UserName
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
-	
 	;~ chip := httpComm("","full")
 	;~ FileDelete, .\Chipotle\currlist.xml
 	;~ FileAppend, % chip, .\Chipotle\currlist.xml
