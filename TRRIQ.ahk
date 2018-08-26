@@ -2044,22 +2044,8 @@ Holter_Pr_Hl7:
 	
 	progress, off
 	
-	if (fldval.acct) {																	; fldval.acct exists if Holter has been processed
-	;---Get some values from wqid
-		fldval["dem-Name_L"] := strX(fldval.name,"",1,0,", ",1,2)
-		fldval["dem-Name_F"] := strX(fldval.name,", ",1,2," ",1,1)
-		fldval["dem-Name"] := fldval["dem-Name_L"] ", " fldval["dem-Name_F"]
-		fldval["dem-MRN"] := fldval.mrn
-		fldval["dem-DOB"] := fldval.dob
-		fldval["dem-Sex"] := fldval.sex
-		fldval["dem-Indication"] := fldval.ind
-		fldval["dem-Site"] := fldval.site
-		fldval["dem-Billing"] := RegExReplace(fldval.acct,"[[:alpha:]]")
-		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
-		
-	} 
-	else {																			; has not been validated yet
-		gosub checkProc																; get valid demographics
+	if !(fldval.acct) {																	; fldval.acct exists if Holter has been processed
+		gosub checkProc																	; get valid demographics
 		if (fetchQuit=true) {
 			return
 		}
