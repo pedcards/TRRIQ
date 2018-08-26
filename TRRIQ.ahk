@@ -697,6 +697,7 @@ readWQlv:
 		
 		progress, 25 , % fnam, Extracting data
 		processHL7(fnam)																; extract DDE to fldVal, and PDF into hl7Dir
+		moveHL7dem()																	; prepopulate the fldval["dem-"] values
 		
 		progress, 50 , % fnam, Processing PDF
 		gosub processHl7PDF																; process resulting PDF file
@@ -1733,6 +1734,37 @@ UiFieldFill(fld,val,win) {
 			cb[A_index] := A_LoopField
 		}
 		Control, Choose, % ObjHasValue(cb,val), % fld, ahk_id %win%
+	}
+	return
+}
+
+moveHL7dem() {
+	global fldVal, obxVal
+	if (fldVal.acct) {	
+		name := parseName(fldval.name)
+		fldVal["dem-Name"] := fldval.Name
+		fldVal["dem-Name_L"] := name.last
+		fldVal["dem-Name_F"] := name.first
+		fldVal["dem-MRN"] := fldval.MRN
+		fldVal["dem-DOB"] := fldval.DOB
+		fldVal["dem-Sex"] := fldval.Sex
+		fldVal["dem-Indication"] := 
+		fldVal["dem-Site"] := fldVal.site
+		fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
+		fldVal["dem-Ordering"] := fldval.prov
+		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
+	} else {
+		fldVal["dem-Name"] := obxVal["PID_NameL"] ", " obxVal["PID_NameF"]
+		fldVal["dem-Name_L"] := obxVal["PID_NameL"]
+		fldVal["dem-Name_F"] := obxVal["PID_NameF"]
+		fldVal["dem-MRN"] := obxVal["PID_PatMRN"]
+		fldVal["dem-DOB"] := niceDate(obxVal["PID_DOB"])
+		fldVal["dem-Sex"] := (obxVal["PID_Sex"]~="F") ? "Female" : "Male"
+		fldVal["dem-Indication"] := obxVal.Diagnosis
+		;~ fldVal["dem-Site"] := fldVal.site
+		;~ fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
+		fldVal["dem-Ordering"] := filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name
+		;~ fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 	}
 	return
 }
