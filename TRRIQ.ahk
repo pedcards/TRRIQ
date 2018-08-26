@@ -421,7 +421,7 @@ WQlist() {
 			LV_Modify(k,"Col8","")														; clear the "X" in the FullDisc column
 			continue																	; skip rest of processing
 		}
-		res := readwq(fnID.1)															; get values for wqid if valid, else null
+		res := readwq(id)																; get values for wqid if valid, else null
 		
 		LV_Add(""
 			, HolterDir val																; filename and path to HolterDir
