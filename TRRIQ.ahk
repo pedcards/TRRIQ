@@ -388,7 +388,7 @@ WQlist() {
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
 		if (res.node="done") {															; skip if DONE, might be currently in process 
 			eventlog("WQlist removing " fileIn)
-			FileMove, fileIn, .\tempfiles\%fileIn%, 1
+			FileMove, % hl7Dir "\" fileIn, .\tempfiles\%fileIn%, 1
 			continue
 		}
 		FileGetSize,full,% hl7Dir fileIn,M
