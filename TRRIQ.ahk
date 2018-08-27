@@ -250,7 +250,7 @@ WQtask() {
 			. "Log UPLOAD to Preventice|"
 			. "Mark record as DONE"
 			, "Q")
-	if (choice="Close") {
+	if (choice="xClose") {
 		return
 	}
 	if instr(choice,"upload") {
@@ -311,7 +311,7 @@ WQtask() {
 				. "Device missing|"
 				. "Other (explain)"
 				, "E")
-		if (reason="Close") {
+		if (reason="xClose") {
 			return
 		}
 		if instr(reason,"Other") {
