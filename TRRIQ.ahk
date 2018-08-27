@@ -1927,7 +1927,7 @@ assignMD:
 		return
 	} 
 	if (ymatch := y.selectSingleNode("//call[@date='" encDT "']/Ward_A").text) {		; found the Ward attg
-		inptMD := checkCrd(strX(ymatch," ",1,1) ", " strX(ymatch,"",1,0," ",1,1))		; put in LAST, FIRST format
+		inptMD := checkCrd(ymatch)														; put in LAST, FIRST format
 		if (inptMD.fuzz<0.15) {															; close enough match
 			ptDem.Loc := "Inpatient"
 			ptDem.Provider := inptMD.best
