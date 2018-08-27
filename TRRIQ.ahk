@@ -1034,7 +1034,11 @@ indGUI:
 }
 
 indClose:
-ExitApp
+{
+	Gui, ind:Destroy
+	fetchQuit := true
+	return
+}
 
 indSubmit:
 {
