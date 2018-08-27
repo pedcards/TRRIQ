@@ -929,11 +929,9 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
 	
-	if (instr(ptDem.Provider," ") && !instr(ptDem.Provider,",")) {				; somehow string passed in wrong order
-		tmp := trim(ptDem.Provider)
-		tmpF := strX(tmp,"",1,0, " ",1,1)
-		tmpL := strX(tmp," ",1,1, "",1,0)
-		ptDem.Provider := tmpL ", " tmpF
+	if !instr(ptDem.Provider,",") {														; somehow string passed in wrong order
+		tmp := parseName(ptDem.Provider)
+		ptDem.Provider := tmp.Last ", " tmp.First
 	}
 	matchProv := checkCrd(ptDem.Provider)
 	if !(ptDem.Provider) {																; no provider? ask!
