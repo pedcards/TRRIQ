@@ -664,7 +664,7 @@ readWQlv:
 	}
 	
 	if (fldval.done) {
-		gosub epRead																	; find out which EP is reading today
+		epRead()																		; find out which EP is reading today
 		gosub outputfiles																; generate and save output CSV, rename and move PDFs
 	}
 	
@@ -1939,9 +1939,9 @@ assignMD:
 return
 }
 
-epRead:
-{
-	FileGetTime, dlDate, %fileIn%
+epRead() {
+	global y, user, ma_date, fldval
+	dlDate := A_Now
 	FormatTime, dlDay, %dlDate%, dddd
 	if (dlDay="Friday") {
 		dlDate += 3, Days
@@ -1949,18 +1949,17 @@ epRead:
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
 	
 	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun|Salerno|Seslar)", ymatch)
-	if !(ymatch := ymatch.value()) {
-		ymatch := epMon ? epMon : cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
-		epMon := ymatch
-		eventlog("Reading EP assigned to " epMon ".")
+	if !(ep := ymatch.value()) {
+		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
+		eventlog("Reading EP assigned to " ep ".")
 	}
 	
-	if (RegExMatch(fldval["ordering"], "Oi)(Chun|Salerno|Seslar)", epOrder))  {
-		ymatch := epOrder.value()
+	if (RegExMatch(fldval["dem-Ordering"], "Oi)(Chun|Salerno|Seslar)", epOrder))  {
+		ep := epOrder.value()
 	}
 	
 	FormatTime, ma_date, A_Now, MM/dd/yyyy
-	fieldcoladd("","EP_read",ymatch)
+	fieldcoladd("","EP_read",ep)
 	fieldcoladd("","EP_date",niceDate(dlDate))
 	fieldcoladd("","MA",user)
 	fieldcoladd("","MA_date",ma_date)
