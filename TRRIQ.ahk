@@ -929,7 +929,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
 	
-	if !instr(ptDem.Provider,",") {														; somehow string passed in wrong order
+	if (instr(ptDem.Provider," ") && !instr(ptDem.Provider,",")) {						; somehow string passed in wrong order
 		tmp := parseName(ptDem.Provider)
 		ptDem.Provider := tmp.Last ", " tmp.First
 	}
