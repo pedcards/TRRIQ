@@ -2188,7 +2188,7 @@ getPdfID(txt) {
 			res.dob := dobDt.yyyy dobDt.mm dobDt.dd
 		res.mrn := trim(stregX(txt,"Secondary ID:?",1,1,"Age:?",1))
 		res.ser := trim(stregX(txt,"Recorder (No|Number):?",1,1,"\R",1))
-		res.wqid := findWQid(res.date,res.mrn).id "H"
+		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "H"
 	} else if instr(txt,"BodyGuardian Heart") {
 		res.type := "E"
 		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1)," `t`r`n"))
