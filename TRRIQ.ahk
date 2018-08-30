@@ -380,7 +380,10 @@ WQlist() {
 		
 	Gui, Tab, INBOX
 	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadWQlv vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Study Date|wqid|Type|FTP
-	loop, Files, % hl7Dir "*.hl7"														; Process each .hl7 file
+	
+/*	Process each .hl7 file
+*/
+	loop, Files, % hl7Dir "*.hl7"
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
@@ -405,7 +408,9 @@ WQlist() {
 		wqfiles.push(id)
 	}
 	
-	findfullPDF()																		; Scan Holter PDFs folder for additional files
+/*	Scan Holter PDFs folder for additional files
+*/
+	findfullPDF()
 	for key,val in pdfList
 	{
 		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)										; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
