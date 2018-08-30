@@ -3291,7 +3291,7 @@ ParseName(x) {
 /*	Determine first and last name
 */
 	x := trim(x)																		; trim edges
-	x := RegExReplace(x," \w ")															; remove middle initial: Troy A Johnson => Troy Johnson
+	x := RegExReplace(x," \w "," ")														; remove middle initial: Troy A Johnson => Troy Johnson
 	x := RegExReplace(x,"i),?( JR| III| IV)$")											; Filter out name suffixes
 	x := RegExReplace(x,"\s+"," ",ct)													; Count " "
 	
