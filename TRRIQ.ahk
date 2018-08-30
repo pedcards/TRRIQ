@@ -404,7 +404,7 @@ WQlist() {
 			, strQ(res.date,"###",SubStr(x.5,1,8))										; study date
 			, id																		; wqid
 			, "HL7"																		; extracted
-			, full>2 ? "":"X")															; fulldisc if filesize >2 Meg
+			, (full>2)||(res.dev~="BG") ? "":"X")										; fulldisc if filesize >2 Meg
 		wqfiles.push(id)
 	}
 	
