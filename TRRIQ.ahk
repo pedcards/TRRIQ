@@ -3318,9 +3318,9 @@ ParseName(x) {
 			}
 			q .= x0 "|"																	; add to button q
 		}
-		last := cmsgbox("Name check","What is the patient's`nLAST NAME?",q)
-		if (last="xClose") {
-			return error
+		last := cmsgbox("Name check",x "`n" RegExReplace(x,".","--") "`nWhat is the patient's`nLAST NAME?",q)
+		if (last~="close|xClose") {
+			return {first:"",last:x}
 		}
 		first := RegExReplace(x," " last)
 	}
