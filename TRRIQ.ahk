@@ -153,25 +153,33 @@ PhaseGUI:
 	Gui, phase:Default
 	Gui, +AlwaysOnTop
 
-	Gui, Add, Text, x650 y20 w200 h110
+	Gui, Add, Text, x650 y15 w200
 		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) 
-	Gui, Add, GroupBox, x640 y0 w220 h60
+		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n"
+		.	"Last Inventory update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("inventory")) 
+	Gui, Add, GroupBox, x640 y0 w220 h65
 	
 	Gui, Font, Bold
 	Gui, Add, Button
 		, Y+10 wp h40 vEnroll gPhaseTask
 		, Grab Preventice enrollments
 	Gui, Add, Button
-		, Y+20 wp h40 vRegister gPhaseTask Disabled
+		, Y+10 wp h40 vInventory gPhaseTask
+		, Grab Preventice inventory
+	Gui, Add, Button
+		, Y+10 wp h40 vRegister gPhaseTask Disabled
 		, Register to Preventice
 	Gui, Add, Button
-		, Y+20 wp h40 vUpload gPhaseTask
+		, Y+10 wp h40 vUpload gPhaseTask
 		, Prepare/Upload Holter
 	Gui, Font, Normal
+	
 	GuiControl
 		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
 		, Grab Preventice enrollments
+	GuiControl
+		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
+		, Grab Preventice inventory
 	
 	Gui, Add, Tab3
 		, -Wrap x10 y10 w620 h240 vWQtab
