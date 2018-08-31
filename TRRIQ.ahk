@@ -134,9 +134,12 @@ MainLoop: ; ===================== This is the main part ========================
 		
 		if (phase="Enroll") {
 			eventlog("Update Preventice enrollments.")
-			gosub CheckPrEnroll
+			CheckPreventiceWeb("Patient Enrollment")
 		}
-		
+		if (phase="Inventory") {
+			eventlog("Update Preventice inventory.")
+			CheckPreventiceWeb("Facilities")
+		}
 		if (phase="Upload") {
 			eventlog("Start Mortara preparation/upload.")
 			MortaraUpload()
@@ -1085,7 +1088,8 @@ getDem:
 	return
 }
 
-CheckPrEnroll:
+CheckPreventiceWeb(win) {
+	global phase
 {
 	while !(WinExist("Patient Enrollment"))
 	{
