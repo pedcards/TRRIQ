@@ -1090,11 +1090,13 @@ getDem:
 
 CheckPreventiceWeb(win) {
 	global phase
-{
-	while !(WinExist("Patient Enrollment"))
+	while !(WinExist(win))																; expected IE window title not present
 	{
-		MsgBox,4161,Update Preventice enrollments
-			, % "Navigate on Preventice website to:`n`nEnrollment / Submitted Patients`n`n"
+		MsgBox,4161,Update Preventice %phase%
+			, % "Navigate on Preventice website to:`n`n"
+			.	strQ(phase="Enroll" ? 1 : "","Enrollment / Submitted Patients")
+			.	strQ(phase="Inventory" ? 1 : "","Facility`nInventory Status`nDevice in Hand (Enrollment not linked)")
+			.	"`n`n"
 			.	"Click OK when ready to proceed"
 		IfMsgBox, Cancel
 		{
