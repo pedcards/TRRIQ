@@ -1090,13 +1090,14 @@ getDem:
 
 CheckPreventiceWeb(win) {
 	global phase
+	dlg := {"Enrollment":"Enrollment / Submitted Patients"
+			, "Inventory":"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"}
+	
 	while !(WinExist(win))																; expected IE window title not present
 	{
 		MsgBox,4161,Update Preventice %phase%
 			, % "Navigate on Preventice website to:`n`n"
-			.	strQ(phase="Enroll" ? 1 : "","Enrollment / Submitted Patients")
-			.	strQ(phase="Inventory" ? 1 : "","Facility`nInventory Status`nDevice in Hand (Enrollment not linked)")
-			.	"`n`n"
+			.	dlg[phase] "`n`n"
 			.	"Click OK when ready to proceed"
 		IfMsgBox, Cancel
 		{
