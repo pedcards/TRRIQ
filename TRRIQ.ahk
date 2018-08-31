@@ -132,7 +132,7 @@ MainLoop: ; ===================== This is the main part ========================
 		Gosub PhaseGUI
 		WinWaitClose, TRRIQ Dashboard
 		
-		if (phase="Enroll") {
+		if (phase="Enrollment") {
 			eventlog("Update Preventice enrollments.")
 			CheckPreventiceWeb("Patient Enrollment")
 		}
@@ -164,7 +164,7 @@ PhaseGUI:
 	
 	Gui, Font, Bold
 	Gui, Add, Button
-		, Y+10 wp h40 vEnroll gPhaseTask
+		, Y+10 wp h40 vEnrollment gPhaseTask
 		, Grab Preventice enrollments
 	Gui, Add, Button
 		, Y+10 wp h40 vInventory gPhaseTask
