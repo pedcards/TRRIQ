@@ -182,7 +182,7 @@ PhaseGUI:
 		, Grab Preventice inventory
 	
 	Gui, Add, Tab3
-		, -Wrap x10 y10 w620 h240 vWQtab
+		, -Wrap x10 y10 w620 h270 vWQtab
 		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	WQlist()
 	
@@ -387,7 +387,7 @@ WQlist() {
 	if (wksloc="Main Campus") {
 		
 	Gui, Tab, INBOX
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 greadWQlv vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Study Date|wqid|Type|FTP
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H235 greadWQlv vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Study Date|wqid|Type|FTP
 	
 /*	Process each .hl7 file
 */
@@ -464,14 +464,14 @@ WQlist() {
 	}	; <-- finish Main Campus Inbox
 	
 	Gui, Tab, ALL
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H235 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
 	Loop, parse, sites, |
 	{
 		i := A_index
 		site := A_LoopField
 		Gui, Tab, % site
-		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H235 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
 		{
 			k := ens.item(A_Index-1)
