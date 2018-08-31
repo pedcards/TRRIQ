@@ -1105,7 +1105,7 @@ CheckPreventiceWeb(win) {
 	}
 	loop																				; Repeat until determine done
 	{
-		clip := grabWebpage("Patient Enrollment")										; Page exists, ask to grab
+		clip := grabWebpage(win)														; Page exists, ask to grab
 		if !(clip) {
 			break																		; Clicked "Cancel", exit out
 		}
@@ -1137,16 +1137,17 @@ grabWebpage(title) {
  *	title = string in window title
  */
 	WinActivate, %title%																; activate the browser window when title matches
+	WinGetPos, winX, winY, winW, winH
 	MsgBox, 4145, "%title%" grab, Ready to grab!`n`n`[OK] to grab this page`n[CANCEL] to exit
 	IfMsgBox, OK
 	{
 		WinActivate, %title%															; activate the browser window when title matches
 		MouseGetPos,mouseX,mouseY														; get mouse coords
-			MouseClick, Left, 0, mouseY													; Click off to far side to clear selection
+			MouseClick, Left, winX, mouseY													; Click off to far side to clear selection
 			Send, ^a^c																	; Select All, Copy
 			sleep 200																	; need to pause to fill clipboard
 			clip := Clipboard
-			MouseClick, Left, 0, mouseY												; Click off to far side to clear selection
+			MouseClick, Left, winX, mouseY												; Click off to far side to clear selection
 		MouseMove, mouseX, mouseY														; move back to original coords
 		return clip
 	} 
