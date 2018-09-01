@@ -140,6 +140,9 @@ MainLoop: ; ===================== This is the main part ========================
 			eventlog("Update Preventice inventory.")
 			CheckPreventiceWeb("Facilities")
 		}
+		if (phase="Register") {
+			
+		}
 		if (phase="Upload") {
 			eventlog("Start Mortara preparation/upload.")
 			MortaraUpload()
@@ -171,7 +174,7 @@ PhaseGUI:
 		, Grab Preventice inventory
 	Gui, Add, Button
 		, Y+10 wp h40 vRegister gPhaseTask Disabled
-		, Register to Preventice
+		, Register BodyGuardian
 	Gui, Add, Button
 		, Y+10 wp h40 vUpload gPhaseTask
 		, Prepare/Upload Holter
