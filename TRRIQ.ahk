@@ -1259,24 +1259,29 @@ parsePreventiceInventory(x) {
 	fileCheck()
 	wq := new XML("worklist.xml")													; refresh WQ
 	FileOpen(".lock", "W")															; Create lock file.
+	
 	wqtime := wq.selectSingleNode("/root/inventory").getAttribute("update")
 	if !(wqTime) {
 		wq.addElement("inventory","/root")
 		eventlog("Created new Inventory node.")
 	}
+	
 	blk := cleanBlank(stregX(x,"Tracking Number",1,1,"Change page",1))
 	Loop, parse, blk, `n, `r
 	{
 		i := A_LoopField
-		if !(i) {
+		if !(i) {																		; skip blank lines
 			break
 		}
-		fld := StrSplit(i,A_tab)
-		ser := fld.2
-		if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" ser "']")) {	; Skip ser if already exists
+		ser := trim(stregX(i,"BodyGuardian Heart",1,1,"Device",1))
+		if !(ser) {																		; no valid ser
+			continue
+		}
+		if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" ser "']")) {		; already exists in Inventory
 			continue
 		}
 		wq.addElement("dev","/root/inventory",{ser:ser})
+		eventlog("Added new Inventory dev " ser)
 		done ++
 	}
 	wq.selectSingleNode("/root/inventory").setAttribute("update",prevGrabTime)		; set pending[@update] attr
