@@ -1247,6 +1247,45 @@ parsePreventiceEnrollment(x) {
  */
 }
 
+parsePreventiceInventory(x) {
+/*	Parse Preventice website for device inventory
+	Add unique ser nums to /root/inventory/dev[@ser]
+	These will be removed when registered
+	
+	Should check <pending> for ser already registered
+*/
+	global wq, prevGrabTime
+	
+	fileCheck()
+	wq := new XML("worklist.xml")													; refresh WQ
+	FileOpen(".lock", "W")															; Create lock file.
+	wqtime := wq.selectSingleNode("/root/inventory").getAttribute("update")
+	if !(wqTime) {
+		wq.addElement("inventory","/root")
+		eventlog("Created new Inventory node.")
+	}
+	blk := cleanBlank(stregX(x,"Tracking Number",1,1,"Change page",1))
+	Loop, parse, blk, `n, `r
+	{
+		i := A_LoopField
+		if !(i) {
+			break
+		}
+		fld := StrSplit(i,A_tab)
+		ser := fld.2
+		if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" ser "']")) {	; Skip ser if already exists
+			continue
+		}
+		wq.addElement("dev","/root/inventory",{ser:ser})
+		done ++
+	}
+	wq.selectSingleNode("/root/inventory").setAttribute("update",prevGrabTime)		; set pending[@update] attr
+	wq.save("worklist.xml")
+	filedelete, .lock
+	
+	return done
+}
+
 scanX(txt,fields,labels) {
 	res := Object()
 	for k, i in fields																	; Step through each val "i" from fields[bl,k]
