@@ -1160,7 +1160,7 @@ grabWebpage(title) {
 	return error
 }
 
-parseEnrollment(x) {
+parsePreventiceEnrollment(x) {
 	global wq
 	
 	fileCheck()
