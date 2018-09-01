@@ -1089,15 +1089,20 @@ getDem:
 }
 
 CheckPreventiceWeb(win) {
-	global phase
-	dlg := {"Enrollment":"Enrollment / Submitted Patients"
-			, "Inventory":"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"}
+	global phase, prevGrabTime:=A_now
+	str := {}
+	str.Enrollment := {dlg:"Enrollment / Submitted Patients"
+		, match:"Enrollment Queue (Submitted)"
+		, fx:"ParsePreventiceEnrollment"}
+	str.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
+		, match:"Device Status"
+		, fx:"ParsePreventiceInventory"}
 	
 	while !(WinExist(win))																; expected IE window title not present
 	{
 		MsgBox,4161,Update Preventice %phase%
 			, % "Navigate on Preventice website to:`n`n"
-			.	dlg[phase] "`n`n"
+			.	str[phase].dlg "`n`n"
 			.	"Click OK when ready to proceed"
 		IfMsgBox, Cancel
 		{
@@ -1119,15 +1124,15 @@ CheckPreventiceWeb(win) {
 				break
 			}
 		}
-		if (instr(clip,"Enrollment Queue (Submitted)")) {
-			list := clip
-			done:=parseEnrollment(list)
+		if (instr(clip,str[phase].match)) {
+			prvFunc := str[phase].fx
+			done := %prvFunc%(clip)		; parsePreventiceEnrollment() or parsePreventiceInventory()
 			if !(done) {
 				MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
 			}
 			clip0 := clip
 		} else {
-			MsgBox,4112,, Wrong page!`nNavigate to:`n`nEnrollment / Submitted Patients
+			MsgBox,4112,, % "Wrong page!`nNavigate to:`n`n" str[phase].dlg
 		}
 	}
 	return
