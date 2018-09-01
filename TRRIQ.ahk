@@ -1284,7 +1284,18 @@ parsePreventiceInventory(x) {
 		eventlog("Added new Inventory dev " ser)
 		done ++
 	}
-	wq.selectSingleNode("/root/inventory").setAttribute("update",prevGrabTime)		; set pending[@update] attr
+	
+	loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
+	{
+		k := devs.item(A_Index-1)
+		ser := k.getAttribute("ser")
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='BodyGuardian Heart - " ser "']")) {	; exists in Pending
+			k.parentNode.removeChild(k)
+			eventlog("Removed inventory ser " ser)
+		}
+	}
+	
+	wq.selectSingleNode("/root/inventory").setAttribute("update",prevGrabTime)			; set pending[@update] attr
 	wq.save("worklist.xml")
 	filedelete, .lock
 	
