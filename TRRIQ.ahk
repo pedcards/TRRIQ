@@ -1798,13 +1798,13 @@ selectDev() {
 	static typed, devs, ser
 	typed := devs := ser :=
 	
-	loop, % (k:=wq.selectNodes("/root/inventory/dev")).length
+	loop, % (k:=wq.selectNodes("/root/inventory/dev")).length							; Add all ser nums to devs string
 	{
 		i := k.item(A_Index-1).getAttribute("ser")
 		if !(i) {
 			continue
 		}
-		devs .= i "|"
+		devs .= i "|"																	; generate listbox menu
 	}
 	devs := trim(devs," |`r`n")
 
@@ -1816,8 +1816,8 @@ selectDev() {
 		. "until there is only one item, or type the full serial number"
 	Gui, Font, s12
 	Gui, Add, Edit, vselEdit gSelDevCount
-	Gui, Add, ListBox, h100 vSelBox -vScroll Disabled, % devs
-	Gui, Add, Button, h30 vSelBut gSelDevSubmit Disabled, Submit
+	Gui, Add, ListBox, h100 vSelBox -vScroll Disabled, % devs							; listbox and button
+	Gui, Add, Button, h30 vSelBut gSelDevSubmit Disabled, Submit						; disabled by default
 	Gui, Show, AutoSize, Select device
 	
 	winwaitclose, Select device
@@ -1827,41 +1827,43 @@ selectDev() {
 	
 	selDevCount:
 	{
-		GuiControlGet, typed, , selEdit
+		GuiControlGet, typed, , selEdit													; get selEdit contents on each char
 		tmpDev := ""
 		ct := 0
 		tmp := []
-		tmp := StrSplit(devs,"|")
+		tmp := StrSplit(devs,"|")														; split all devs into array
 		loop, % tmp.count()
 		{
 			i := tmp[A_index]
-			if instr(i,typed) {
-				tmpDev .= "|" i 
-				ct ++
+			if instr(i,typed) {															; item contains typed string
+				tmpDev .= "|" i 														; add to tmpdev menu
+				ct ++																	; increment counter
 			}
 		}
 		tmpDev:=tmpDev ? tmpDev : "|"
-		GuiControl, , selBox, % tmpDev
+		GuiControl, , selBox, % tmpDev													; update selBox menu
 		
-		if (ct=1) {
-			GuiControl, Enable, SelBut
+		if (ct=1) {																		; only one remaining match
+			GuiControl, Enable, SelBut													; activate Submit button
 			GuiControl, Enable, SelBox
-			GuiControl, Choose, selBox, 1
-		} else if (typed~="i)^(BG)?\d{7}$") {
-			GuiControl, Enable, SelBut
-		} else {
-			GuiControl, Disable, SelBut
-			GuiControl, Disable, SelBox
+			GuiControl, Choose, selBox, 1												; highlight remaining match
+			
+		} else if (typed~="i)^(BG)?\d{7}$") {											; typed full ser num
+			GuiControl, Enable, SelBut													; activate button
+			
+		} else {																		; otherwise
+			GuiControl, Disable, SelBut													; disable button
+			GuiControl, Disable, SelBox													; and listbox
 		}
 		return
 	}
 	
 	selDevSubmit:
 	{
-		GuiControlGet, boxed, , selBox
+		GuiControlGet, boxed, , selBox													; get values from box and edit
 		GuiControlGet, typed, , selEdit
 		choice := (boxed) ? boxed : "BG" RegExReplace(typed,"[[:alpha:]]")
-		if !(choice~="^BG\d{7}$") {
+		if !(choice~="^BG\d{7}$") {														; ignore if doesn't match full ser num
 			return
 		}
 		Gui, dev:Destroy
