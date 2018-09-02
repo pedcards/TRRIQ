@@ -1772,6 +1772,23 @@ UiFieldFill(fld,val,win) {
 	return
 }
 
+registerPreventice(ser) {
+	global ptDem, wq, fetchQuit
+	
+	if (ser="BG") {																		; called from PhaseGUI button
+		fetchQuit := false
+		gosub getDem																	; need to grab CIS demographics
+		if (fetchQuit=true) {
+			eventlog("Cancelled getDem.")
+			return
+		}
+		ser := selectDev()																; need to grab a BGH ser num
+	}
+	
+	getPatInfo()
+}
+
+
 moveHL7dem() {
 	global fldVal, obxVal
 	if (fldVal.acct) {	
