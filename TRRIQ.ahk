@@ -1788,6 +1788,86 @@ registerPreventice(ser) {
 	getPatInfo()
 }
 
+selectDev() {
+/*	User starts typing any number from label
+	and ComboBox offers available devices
+*/
+	global wq, selBox, selEdit, selBut
+	static typed, devs, ser
+	typed := devs := ser :=
+	
+	loop, % (k:=wq.selectNodes("/root/inventory/dev")).length
+	{
+		i := k.item(A_Index-1).getAttribute("ser")
+		if !(i) {
+			continue
+		}
+		devs .= i "|"
+	}
+	devs := trim(devs," |`r`n")
+
+	Gui, dev:Destroy
+	Gui, dev:Default
+	Gui, -MinimizeBox
+	Gui, Add, Text, w180 +Wrap
+		, % "Type some digits from the device serial number "
+		. "until there is only one item, or type the full serial number"
+	Gui, Font, s12
+	Gui, Add, Edit, vselEdit gSelDevCount
+	Gui, Add, ListBox, h100 vSelBox -vScroll Disabled, % devs
+	Gui, Add, Button, h30 vSelBut gSelDevSubmit Disabled, Submit
+	Gui, Show, AutoSize, Select device
+	
+	winwaitclose, Select device
+	Gui, dev:Destroy
+	
+	return choice
+	
+	selDevCount:
+	{
+		GuiControlGet, typed, , selEdit
+		tmpDev := ""
+		ct := 0
+		tmp := []
+		tmp := StrSplit(devs,"|")
+		loop, % tmp.count()
+		{
+			i := tmp[A_index]
+			if instr(i,typed) {
+				tmpDev .= "|" i 
+				ct ++
+			}
+		}
+		tmpDev:=tmpDev ? tmpDev : "|"
+		GuiControl, , selBox, % tmpDev
+		
+		if (ct=1) {
+			GuiControl, Enable, SelBut
+			GuiControl, Enable, SelBox
+			GuiControl, Choose, selBox, 1
+		} else if (typed~="i)^(BG)?\d{7}$") {
+			GuiControl, Enable, SelBut
+		} else {
+			GuiControl, Disable, SelBut
+			GuiControl, Disable, SelBox
+		}
+		return
+	}
+	
+	selDevSubmit:
+	{
+		GuiControlGet, boxed, , selBox
+		GuiControlGet, typed, , selEdit
+		choice := (boxed) ? boxed : "BG" RegExReplace(typed,"[[:alpha:]]")
+		if !(choice~="^BG\d{7}$") {
+			return
+		}
+		Gui, dev:Destroy
+		return
+	}
+
+}
+
 
 moveHL7dem() {
 	global fldVal, obxVal
