@@ -173,7 +173,7 @@ PhaseGUI:
 		, Y+10 wp h40 vInventory gPhaseTask
 		, Grab Preventice inventory
 	Gui, Add, Button
-		, Y+10 wp h40 vRegister gPhaseTask Disabled
+		, Y+10 wp h40 vRegister gPhaseTask
 		, Register BodyGuardian
 	Gui, Add, Button
 		, Y+10 wp h40 vUpload gPhaseTask
@@ -1556,6 +1556,8 @@ MortaraUpload()
 		ptDem["muphase"] := "prepare"
 		muWqSave(SerNum)
 		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
+		
+		;~ registerPreventice(serNum)
 	}
 	
 	return
