@@ -141,7 +141,7 @@ MainLoop: ; ===================== This is the main part ========================
 			CheckPreventiceWeb("Facilities")
 		}
 		if (phase="Register") {
-			
+			RegisterPreventice("BG")
 		}
 		if (phase="Upload") {
 			eventlog("Start Mortara preparation/upload.")
