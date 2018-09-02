@@ -162,7 +162,7 @@ PhaseGUI:
 	Gui, Add, Text, x650 y15 w200
 		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
 		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n"
-		.	"Last Inventory update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("inventory")) 
+		.	"Last Inventory update: " niceDate(wq.selectSingleNode("/root/inventory").getAttribute("update")) 
 	Gui, Add, GroupBox, x640 y0 w220 h65
 	
 	Gui, Font, Bold
