@@ -1829,11 +1829,11 @@ registerPreventice(ser) {
 		, "Insurance Plan ID", "Insurance Company ID", "Insurance Company Name"
 		, "Insurance Company Address", "Insurance Co Contact Person", "Insurance Co Phone Number"
 		, "Group Number", "Group Name"
-		, "Insuredï¿½s Group Emp ID", "Insuredï¿½s Group Emp Name"
+		, "Insured’s Group Emp ID", "Insured’s Group Emp Name"
 		, "Plan Effective Date", "Plan Expiration Date", "Authorization Information", "Plan Type"
 		, ptDem.parentL "^" ptDem.parentF "^"
 		, "Self"
-		, "Insuredï¿½s Date of Birth"
+		, "Insured’s Date of Birth"
 		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
 		, "Assignment of Benefits"
 		, "Coordination of Benefits"
@@ -2065,7 +2065,7 @@ bghWqSave(sernum) {
 	
 	filecheck()
 	FileOpen(".lock", "W")																; Create lock file.
-	wqStr := "/root/pending/enroll[dev='BodyGuardian Heart - " sernum "']"
+	wqStr := "/root/pending/enroll[dev='" ptDem.model " - " ptDem.ser "']"
 	loop, % (ens:=wq.selectNodes(wqStr)).length											; Clear all prior instances of this sernum
 	{																					; don't need for BGH?
 	}
@@ -2075,7 +2075,7 @@ bghWqSave(sernum) {
 	}
 	
 	id := A_TickCount 
-	ptDem["dev"] := "BodyGuardian Heart - " sernum
+	ptDem["dev"] := ptDem.model " - " ptDem.ser
 	ptDem["wqid"] := id
 	
 	wq.addElement("enroll","/root/pending",{id:id})
