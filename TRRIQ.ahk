@@ -1787,13 +1787,14 @@ registerPreventice(ser) {
 			eventlog("Cancelled getDem.")
 			return
 		}
-		ptDem := []																		; need to initialize ptDem
+		ptDem := object()																		; need to initialize ptDem
 		ptDem.ser := selectDev()														; need to grab a BGH ser num
 		if (ptDem.ser="") {
 			eventlog("Cancelled selectDev.")
 			return
 		}
-		ptDem["hookup"] := cMsgBox("Hook-up","Delivery type","Office|Home")
+		i := cMsgBox("Hook-up","Delivery type","Office|Home")
+		ptDem["hookup"] := (i="xClose") ? "Office" : i
 		ptDem["wqid"] := A_tickcount
 		bghWqSave(ptDem.ser)															; write to worklist.xml
 	}
