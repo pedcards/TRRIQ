@@ -1778,7 +1778,7 @@ UiFieldFill(fld,val,win) {
 }
 
 registerPreventice(ser) {
-	global ptDem, wq, fetchQuit
+	global ptDem, wq, fetchQuit, hl7out
 	
 	if (ser="BG") {																		; called from PhaseGUI button
 		fetchQuit := false
@@ -1797,11 +1797,89 @@ registerPreventice(ser) {
 		bghWqSave(ptDem.ser)															; write to worklist.xml
 	}
 	
-	getPatInfo()
+	getPatInfo()																		; grab remaining demographics for Preventice registration
 	if (fetchQuit=true) {
 		eventlog("Cancelled getPatInfo.")
 		return
 	}
+	
+	hl7out := Object()
+	buildHL7("MSH","^~\&","TRRIQ","SCH-GB","","PREVENTICE",A_now,"TECH","ORM^O01",ptDem["wqid"],"T","2.3")
+	buildHL7("PID"
+		, "", ptDem.MRN, ""
+		, ptDem.nameL "^" ptDem.nameF "^" ptDem.nameMI, ""
+		, ptDem.dob
+		, substr(ptDem.sex,1,1), "", ""
+		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
+		, ptDem.phone, ""
+		, "","","", ptDem.account, "")
+	buildHL7("PV1"
+		, ptDem.type, ptDem.loc
+		, "","",""
+		, ptDem.NPI "^" ptDem.prov
+		, ptDem.NPI "^" ptDem.prov
+		, "","","","","","","","","",""
+		, ptDem.account)
+	buildHL7("IN1",
+		, "Insurance Plan ID", "Insurance Company ID", "Insurance Company Name"
+		, "Insurance Company Address", "Insurance Co Contact Person", "Insurance Co Phone Number"
+		, "Group Number", "Group Name"
+		, "Insured�s Group Emp ID", "Insured�s Group Emp Name"
+		, "Plan Effective Date", "Plan Expiration Date", "Authorization Information", "Plan Type"
+		, ptDem.parentL "^" ptDem.parentF "^"
+		, "Self"
+		, "Insured�s Date of Birth"
+		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
+		, "Assignment of Benefits"
+		, "Coordination of Benefits"
+		, "Primary Payor"
+		, "Notice of Admission Code"
+		, "Notice of Admission Date"
+		, "Report of Eligibility Flag"
+		, "Report of Eligibility Date"
+		, "Release Information Code"
+		, "Pre-Admit Cert (PAC)"
+		, "Verification Date/Time"
+		, "Verification By"
+		, "Type of Agreement Code"
+		, "Billing Status"
+		, "Lifetime Reserve Days"
+		, "Delay Before L R Day"
+		, "Company Plan Code"
+		, "Policy Number"
+		, "Bill Type"
+		, "Blank"
+		, "Blank"
+		, "Blank"
+		, "Blank"
+		, "Blank"
+		, "Blank"
+		, "Blank"
+		, "Blank"
+		, "Blank"
+		, "Bill Type")
+	buildHL7("OBR"
+		, "Requisition number", ""
+		, "CEM^CEM"
+		, "", A_now, "","","","","ANCILLARY","","","",""
+		, "NPI^PROV"
+		, "2069872015"
+		, "","","","","","","","","","","")
+	buildHL7("DG1"
+		, ""
+		, "ICD9"
+		, ptDem.indication)
+	buildHL7("OBX"
+		, "ST", "12915^Service Type", "", "CEM")
+	buildHL7("OBX"
+		, "ST", "12916^Device", "", "BodyGuardian Heart")
+	buildHL7("OBX"
+		, "ST", "12919^Serial Number", "", ptDem.ser)
+	buildHL7("OBX"
+		, "ST", "12917^Hookup Location", "", "Office")
+	buildHL7("OBX"
+		, "ST", "12918^Deploy Duration", "", "30")
+
 }
 
 selectDev() {
