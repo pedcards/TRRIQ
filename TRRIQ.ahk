@@ -1609,6 +1609,9 @@ muWqSave(sernum) {
 	}
 	
 	id := A_TickCount 
+	ptDem["dev"] := "Mortara H3+ - " sernum
+	ptDem["wqid"] := id
+	
 	wq.addElement("enroll","/root/pending",{id:id})
 	newID := "/root/pending/enroll[@id='" id "']"
 	wq.addElement("date",newID,(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
@@ -1616,7 +1619,7 @@ muWqSave(sernum) {
 	wq.addElement("mrn",newID,ptDem["mrn"])
 	wq.addElement("sex",newID,ptDem["Sex"])
 	wq.addElement("dob",newID,ptDem["dob"])
-	wq.addElement("dev",newID,"Mortara H3+ - " sernum)
+	wq.addElement("dev",newID,ptDem["dev"])
 	wq.addElement("prov",newID,ptDem["Provider"])
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
