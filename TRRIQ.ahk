@@ -1784,10 +1784,19 @@ registerPreventice(ser) {
 			eventlog("Cancelled getDem.")
 			return
 		}
-		ser := selectDev()																; need to grab a BGH ser num
+		ptDem := []																		; need to initialize ptDem
+		ptDem.ser := selectDev()														; need to grab a BGH ser num
+		if (ptDem.ser="") {
+			eventlog("Cancelled selectDev.")
+			return
+		}
 	}
 	
 	getPatInfo()
+	if (fetchQuit=true) {
+		eventlog("Cancelled getPatInfo.")
+		return
+	}
 }
 
 selectDev() {
