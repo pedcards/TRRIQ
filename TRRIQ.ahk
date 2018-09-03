@@ -1803,7 +1803,7 @@ selectDev() {
 /*	User starts typing any number from label
 	and ComboBox offers available devices
 */
-	global wq, selBox, selEdit, selBut
+	global wq, selBox, selEdit, selBut, fetchQuit
 	static typed, devs, ser
 	typed := devs := ser :=
 	
