@@ -1977,6 +1977,44 @@ getPatInfo() {
 	return
 }
 
+bghWqSave(sernum) {
+	global wq, ptDem, user, sitesLong
+	
+	filecheck()
+	FileOpen(".lock", "W")																; Create lock file.
+	wqStr := "/root/pending/enroll[dev='BodyGuardian Heart - " sernum "']"
+	loop, % (ens:=wq.selectNodes(wqStr)).length											; Clear all prior instances of this sernum
+	{																					; don't need for BGH?
+	}
+	if (ptDem.EncDate) {
+		tmp := parsedate(ptDem.EncDate)
+		ptDem.date := tmp.YYYY tmp.MM tmp.DD
+	}
+	
+	id := A_TickCount 
+	ptDem["dev"] := "BodyGuardian Heart - " sernum
+	ptDem["wqid"] := id
+	
+	wq.addElement("enroll","/root/pending",{id:id})
+	newID := "/root/pending/enroll[@id='" id "']"
+	wq.addElement("date",newID,(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
+	wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
+	wq.addElement("mrn",newID,ptDem["mrn"])
+	wq.addElement("sex",newID,ptDem["Sex"])
+	wq.addElement("dob",newID,ptDem["dob"])
+	wq.addElement("dev",newID,ptDem["dev"])
+	wq.addElement("prov",newID,ptDem["Provider"])
+	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
+	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
+	wq.addElement("ind",newID,ptDem["Indication"])
+	wq.addElement("register",newID,{user:A_UserName},A_now)
+	
+	filedelete, .lock
+	writeOut("/root/pending","enroll[@id='" id "']")
+	
+	return
+}
+
 moveHL7dem() {
 	global fldVal, obxVal
 	if (fldVal.acct) {	
