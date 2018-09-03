@@ -1824,11 +1824,11 @@ registerPreventice(ser) {
 		, "Insurance Plan ID", "Insurance Company ID", "Insurance Company Name"
 		, "Insurance Company Address", "Insurance Co Contact Person", "Insurance Co Phone Number"
 		, "Group Number", "Group Name"
-		, "Insuredï¿½s Group Emp ID", "Insuredï¿½s Group Emp Name"
+		, "Insured’s Group Emp ID", "Insured’s Group Emp Name"
 		, "Plan Effective Date", "Plan Expiration Date", "Authorization Information", "Plan Type"
 		, ptDem.parentL "^" ptDem.parentF "^"
 		, "Self"
-		, "Insuredï¿½s Date of Birth"
+		, "Insured’s Date of Birth"
 		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
 		, "Assignment of Benefits"
 		, "Coordination of Benefits"
@@ -2027,7 +2027,7 @@ getPatInfo() {
 		}
 		if (i~="Home:") {																; grab home phone number
 			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
-			ptDem.phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
+			ptDem.phone := ph.value(1) ph.value(2) ph.value(3)
 			continue
 		}
 		if (i~="i)(Legal guardian|"														; skip lines containing these strings
