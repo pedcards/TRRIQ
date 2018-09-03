@@ -1780,7 +1780,7 @@ UiFieldFill(fld,val,win) {
 }
 
 registerPreventice(ser) {
-	global ptDem, fetchQuit, hl7out
+	global wq, ptDem, fetchQuit, hl7out
 	
 	if (ser="BG") {																		; called from PhaseGUI button
 		fetchQuit := false
@@ -1789,12 +1789,13 @@ registerPreventice(ser) {
 			eventlog("Cancelled getDem.")
 			return
 		}
-		ptDem := object()																		; need to initialize ptDem
+		ptDem := object()																; need to initialize ptDem
 		ptDem.ser := selectDev()														; need to grab a BGH ser num
 		if (ptDem.ser="") {
 			eventlog("Cancelled selectDev.")
 			return
 		}
+		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
 		i := cMsgBox("Hook-up","Delivery type","Office|Home")
 		ptDem["hookup"] := (i="xClose") ? "Office" : i
 		ptDem["wqid"] := A_tickcount
