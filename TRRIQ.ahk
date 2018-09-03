@@ -1793,6 +1793,8 @@ registerPreventice(ser) {
 			eventlog("Cancelled selectDev.")
 			return
 		}
+		ptDem["wqid"] := A_tickcount
+		bghWqSave(ptDem.ser)															; write to worklist.xml
 	}
 	
 	getPatInfo()
