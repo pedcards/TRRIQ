@@ -1793,6 +1793,7 @@ registerPreventice(ser) {
 			eventlog("Cancelled selectDev.")
 			return
 		}
+		ptDem["hookup"] := cMsgBox("Hook-up","Delivery type","Office|Home")
 		ptDem["wqid"] := A_tickcount
 		bghWqSave(ptDem.ser)															; write to worklist.xml
 	}
@@ -1876,7 +1877,7 @@ registerPreventice(ser) {
 	buildHL7("OBX"
 		, "ST", "12919^Serial Number", "", ptDem.ser)
 	buildHL7("OBX"
-		, "ST", "12917^Hookup Location", "", "Office")
+		, "ST", "12917^Hookup Location", "", ptDem.Hookup)
 	buildHL7("OBX"
 		, "ST", "12918^Deploy Duration", "", "30")
 
