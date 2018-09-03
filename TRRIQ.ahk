@@ -1276,14 +1276,16 @@ parsePreventiceInventory(x) {
 		if !(i) {																		; skip blank lines
 			break
 		}
-		ser := trim(stregX(i,"BodyGuardian Heart",1,1,"Device",1))
+		RegExMatch(i,"O)(.*)( .*? )(Device in)",match)
+			model := trim(match.value(1))
+			ser := trim(match.value(2))
 		if !(ser) {																		; no valid ser
 			continue
 		}
 		if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" ser "']")) {		; already exists in Inventory
 			continue
 		}
-		wq.addElement("dev","/root/inventory",{ser:ser})
+		wq.addElement("dev","/root/inventory",{model:model,ser:ser})
 		eventlog("Added new Inventory dev " ser)
 		done ++
 	}
@@ -1826,11 +1828,11 @@ registerPreventice(ser) {
 		, "Insurance Plan ID", "Insurance Company ID", "Insurance Company Name"
 		, "Insurance Company Address", "Insurance Co Contact Person", "Insurance Co Phone Number"
 		, "Group Number", "Group Name"
-		, "Insured’s Group Emp ID", "Insured’s Group Emp Name"
+		, "Insuredï¿½s Group Emp ID", "Insuredï¿½s Group Emp Name"
 		, "Plan Effective Date", "Plan Expiration Date", "Authorization Information", "Plan Type"
 		, ptDem.parentL "^" ptDem.parentF "^"
 		, "Self"
-		, "Insured’s Date of Birth"
+		, "Insuredï¿½s Date of Birth"
 		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
 		, "Assignment of Benefits"
 		, "Coordination of Benefits"
