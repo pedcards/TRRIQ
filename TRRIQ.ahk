@@ -1800,6 +1800,7 @@ registerPreventice(ser) {
 		ptDem["hookup"] := (i="xClose") ? "Office" : i
 		ptDem["wqid"] := A_tickcount
 		bghWqSave(ptDem.ser)															; write to worklist.xml
+		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
 	}
 	
 	getPatInfo()																		; grab remaining demographics for Preventice registration
@@ -1829,11 +1830,11 @@ registerPreventice(ser) {
 		, "Insurance Plan ID", "Insurance Company ID", "Insurance Company Name"
 		, "Insurance Company Address", "Insurance Co Contact Person", "Insurance Co Phone Number"
 		, "Group Number", "Group Name"
-		, "Insured’s Group Emp ID", "Insured’s Group Emp Name"
+		, "Insuredï¿½s Group Emp ID", "Insuredï¿½s Group Emp Name"
 		, "Plan Effective Date", "Plan Expiration Date", "Authorization Information", "Plan Type"
 		, ptDem.parentL "^" ptDem.parentF "^"
 		, "Self"
-		, "Insured’s Date of Birth"
+		, "Insuredï¿½s Date of Birth"
 		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
 		, "Assignment of Benefits"
 		, "Coordination of Benefits"
