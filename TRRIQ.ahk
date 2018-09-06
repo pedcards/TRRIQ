@@ -2030,11 +2030,6 @@ getPatInfo() {
 			return
 		}
 	}
-;	for testing purposes
-	;~ FileRead, txt, .\samples\PatientContacts.txt
-	;~ ptDem.Name := "JOE, KT"
-	;~ ptDem.NameL := "JOE"
-	;~ ptDem.NameF := "KT"
 	
 	ptInfo := cleanBlank(stregX(txt,"i)Patient contact info.*?\R+",1,1,"i)Family contact info",1))
 	nameLine := strX(ptInfo,"",1,0,"`n",1)
