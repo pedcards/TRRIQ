@@ -1559,7 +1559,7 @@ MortaraUpload()
 		muWqSave(SerNum)
 		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 		
-		;~ registerPreventice(serNum)
+		registerPreventice(serNum)
 	}
 	
 	return
