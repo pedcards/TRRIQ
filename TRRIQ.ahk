@@ -2050,13 +2050,13 @@ getPatInfo() {
 		}
 		rel[ct] .= i "`n"																; add lines to each relative info string
 	}
-
+	
 	q := cmsgbox("Parent","Who is the guarantor?",trim(nm,"|"))
 	if (q="xClose") {
 		fetchQuit:=true
 		return
 	}
-	ct := 0
+	addrLine := 0
 	loop, parse, % rel[stregX(q,"",1,1,"\)",1)], `n,`r									; parse selected relative's info string
 	{
 		i := cleanspace(A_LoopField)
@@ -2088,14 +2088,16 @@ getPatInfo() {
 			ptDem.city := trim(stregX(i,"",1,0,", ",1))
 			ptDem.state := trim(stregX(i,", ",1,1," ",1))
 			ptDem.zip := trim(stregX(i "<<<",", [A-Z]{2} ",1,1,"<<<",1))
+			continue
 		} 
 		else 																			; everything else is an addr string
 		{
-			ct ++
-			addr := "addr" ct
+			addrLine ++
+			addr := "addr" addrLine
 			ptDem[addr] := i
 		}
 	}
+	
 	return
 }
 
