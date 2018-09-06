@@ -1810,6 +1810,7 @@ registerPreventice(ser) {
 		ptDem["wqid"] := A_tickcount
 		bghWqSave(ptDem.ser)															; write to worklist.xml
 		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
+		writeOut("/root","inventory")
 	}
 	
 	getPatInfo()																		; grab remaining demographics for Preventice registration
