@@ -1783,13 +1783,13 @@ registerPreventice(ser) {
 	global wq, ptDem, fetchQuit, hl7out
 	
 	if (ser="BG") {																		; called from PhaseGUI button
+		ptDem := object()																; need to initialize ptDem
 		fetchQuit := false
 		gosub getDem																	; need to grab CIS demographics
 		if (fetchQuit=true) {
 			eventlog("Cancelled getDem.")
 			return
 		}
-		ptDem := object()																; need to initialize ptDem
 		ptDem.ser := selectDev()														; need to grab a BGH ser num
 		if (ptDem.ser="") {
 			eventlog("Cancelled selectDev.")
