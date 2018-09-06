@@ -1987,22 +1987,55 @@ getPatInfo() {
 */
 	global wq, ptDem, fetchQuit
 	
-	/*	--------------------------------------------------------------------------------
-		* Check if CIS window is open and matches PtDem.name
+;	Make sure a CIS patient window exists
+	Loop
+	{
+		if (winID := WinExist("Opened by")) {											; break out if so
+			break
+		}
+		MsgBox, 4149, Window error, Must open CIS to proper patient
+		IfMsgBox, Retry
+		{
+			continue																	; try again
+		} else {
+			fetchQuit := true
+			return
+		}
+	}
+	MouseGetPos,mouseX,mouseY															; get original mouse coords
+	WinActivate, ahk_id %winID%															; activate the CIS patient window
+	WinGetActiveStats, winTitle, winW, winH, winX, winY									; and get dimensions
+	
+;	Make sure we are on Patient Summary / Contacts, either inpatient or outpatient
+	Loop
+	{
+		WinActivate, ahk_id %winID%
+		clipboard := 
+		MouseClick, Left, % winX+winW-30, % winY+0.6*winH								; click just inside window
 		
-		* Activate window at H50%, X99%, ctrl-A, ctrl-C
-		
-		* If not matched, give error
-		--------------------------------------------------------------------------------
-	*/
-		FileRead, txt, .\samples\PatientContacts.txt
-		ptDem.Name := "JOE, KT"
-		ptDem.NameL := "JOE"
-		ptDem.NameF := "KT"
-	/*	--------------------------------------------------------------------------------
-		for testing purposes
-		--------------------------------------------------------------------------------
-	*/
+		Send, ^a^c																		; Select All, Copy
+		sleep 200																		; need to pause to fill clipboard
+		txt := Clipboard
+		MouseClick, Left, % winX+winW-30, % winY+0.6*winH								; click again to deselect all
+		MouseMove, mouseX, mouseY														; move back to original coords
+		if instr(txt,"Patient contact info") {
+			break																		; break out of this loop
+		}
+		MsgBox, 4149, Window error, Navigate to:`n   * Patient Summary / Contacts
+		IfMsgBox, Retry
+		{
+			continue
+		} else {
+			fetchQuit := true
+			return
+		}
+	}
+;	for testing purposes
+	;~ FileRead, txt, .\samples\PatientContacts.txt
+	;~ ptDem.Name := "JOE, KT"
+	;~ ptDem.NameL := "JOE"
+	;~ ptDem.NameF := "KT"
+	
 	ptInfo := cleanBlank(stregX(txt,"i)Patient contact info.*?\R+",1,1,"i)Family contact info",1))
 	nameLine := strX(ptInfo,"",1,0,"`n",1)
 	prefName := trim(stregX(nameLine,"i)Pref.*? name:",1,1,"\R+",1))
