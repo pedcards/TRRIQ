@@ -2051,7 +2051,7 @@ getPatInfo() {
 		i := A_LoopField
 		if (i~="\(" relStr) {															; line contains "(Mother"
 			ct ++																		; increment counter
-			nm .= ct ") " i "|"															; add to cmsgbox menu string
+			nm .= ct ") " i "`n|"															; add to cmsgbox menu string
 		}
 		rel[ct] .= i "`n"																; add lines to each relative info string
 	}
