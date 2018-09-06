@@ -1796,6 +1796,15 @@ registerPreventice(ser) {
 			return
 		}
 		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
+		if !(ptDem.model) {
+			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart")
+			if (i="xClose") {
+				fetchQuit:=false
+				return
+			} else {
+				ptDem.model := i
+			}
+		}
 		i := cMsgBox("Hook-up","Delivery type","Office|Home")
 		ptDem["hookup"] := (i="xClose") ? "Office" : i
 		ptDem["wqid"] := A_tickcount
