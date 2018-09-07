@@ -2075,7 +2075,7 @@ getPatInfo() {
 		}
 		if (i~="Home:") {																; grab home phone number
 			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
-			ptDem.phone := ph.value(1) ph.value(2) ph.value(3)
+			ptDem.phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
 			continue
 		}
 		if (i~="i)(Legal guardian|"														; skip lines containing these strings
