@@ -3082,6 +3082,7 @@ Event_BGH:
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
 	}
+	fieldstoCSV()
 	
 	fieldcoladd("","Mon_type","Event")
 	
