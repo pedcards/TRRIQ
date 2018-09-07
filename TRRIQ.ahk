@@ -1819,8 +1819,9 @@ registerPreventice(ser) {
 		return
 	}
 	
+	hl7time := A_Now
 	hl7out := Object()
-	buildHL7("MSH","^~\&","TRRIQ","SCH-GB","","PREVENTICE",A_now,"TECH","ORM^O01",ptDem["wqid"],"T","2.3")
+	buildHL7("MSH","^~\&","TRRIQ","SCH-GB","","PREVENTICE",hl7time,"TECH","ORM^O01",ptDem["wqid"],"T","2.3")
 	buildHL7("PID"
 		, "", ptDem.MRN, ""
 		, ptDem.nameL "^" ptDem.nameF "^" ptDem.nameMI, ""
@@ -1877,7 +1878,7 @@ registerPreventice(ser) {
 	buildHL7("OBR"
 		, "Requisition number", ""
 		, "CEM^CEM"
-		, "", A_now, "","","","","ANCILLARY","","","",""
+		, "", hl7time, "","","","","ANCILLARY","","","",""
 		, "NPI^PROV"
 		, "2069872015"
 		, "","","","","","","","","","","")
@@ -1895,7 +1896,9 @@ registerPreventice(ser) {
 		, "ST", "12917^Hookup Location", "", ptDem.Hookup)
 	buildHL7("OBX"
 		, "ST", "12918^Deploy Duration", "", "30")
-
+	
+	FileAppend, % hl7Out.msg, % ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".hl7"
+	return
 }
 
 selectDev() {
