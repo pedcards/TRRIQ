@@ -2803,7 +2803,7 @@ CheckProc:
 		fldVal["dem-DOB"] := ptDem["DOB"] 
 		fldVal["dem-Sex"] := ptDem["Sex"]
 		fldVal["dem-Site"] := ptDem["Loc"]
-		fldVal["dem-Billing"] ptDem["Account"]
+		fldVal["dem-Billing"] := ptDem["Account"]
 		fldVal["dem-Ordering"] := ptDem["Provider"]
 		fldVal["dem-Test_date"] := ptDem["EncDate"]
 		fldVal["dem-Indication"] := ptDem["Indication"]
