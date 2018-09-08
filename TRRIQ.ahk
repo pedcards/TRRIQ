@@ -2107,7 +2107,7 @@ getPatInfo() {
 		{
 			addrLine ++
 			addr := "addr" addrLine
-			ptDem[addr] := i
+			ptDem[addr] := trim(i)
 		}
 	}
 	
