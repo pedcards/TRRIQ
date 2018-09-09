@@ -1823,19 +1823,41 @@ registerPreventice(ser) {
 	hl7out := Object()
 	buildHL7("MSH","^~\&","TRRIQ","SCH-GB","","PREVENTICE",hl7time,"TECH","ORM^O01",ptDem["wqid"],"T","2.3")
 	buildHL7("PID"
-		, "", ptDem.MRN, ""
-		, ptDem.nameL "^" ptDem.nameF "^" ptDem.nameMI, ""
+		, ""
+		, ptDem.MRN
+		, ""
+		, ptDem.nameL "^" ptDem.nameF "^" ptDem.nameMI
+		, ""
 		, ptDem.dob
-		, substr(ptDem.sex,1,1), "", ""
+		, substr(ptDem.sex,1,1)
+		, ""
+		, ""
 		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
-		, ptDem.phone, ""
-		, "","","", ptDem.account, "")
+		, ptDem.phone
+		, ""
+		, ""
+		, ""
+		, ""
+		, ptDem.account
+		, "")
 	buildHL7("PV1"
-		, ptDem.type, ptDem.loc
-		, "","",""
+		, ptDem.type
+		, ptDem.loc
+		, ""
+		, ""
+		, ""
+		, ptDem.NPI "^" ptDem.provider
 		, ptDem.NPI "^" ptDem.prov
-		, ptDem.NPI "^" ptDem.prov
-		, "","","","","","","","","",""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
 		, ptDem.account)
 	buildHL7("IN1",
 		, "Insurance Plan ID"
@@ -1885,9 +1907,20 @@ registerPreventice(ser) {
 		, ;"Blank"
 		, "Bill Type")
 	buildHL7("OBR"
-		, "Requisition number", ""
+		, "Requisition number"
+		, ""
 		, "CEM^CEM"
-		, "", hl7time, "","","","","ANCILLARY","","","",""
+		, ""
+		, hl7time
+		, ""
+		, ""
+		, ""
+		, ""
+		, "ANCILLARY"
+		, ""
+		, ""
+		, ""
+		, ""
 		, "NPI^PROV"
 		, "2069872015"
 		, "","","","","","","","","","","")
