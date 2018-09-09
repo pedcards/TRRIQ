@@ -52,29 +52,27 @@ Docs := Object()
 tmpChk := false
 Loop, Read, %chipDir%outdocs.csv
 {
-	tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
-	tmpline := A_LoopReadLine
-	StringSplit, tmp, tmpline, `, , `"
-	if ((tmp1="Name") or (tmp1="end") or !(tmp1)) {					; header, end, or blank lines
+	tmp := StrSplit(A_LoopReadLine,",","""")
+	if (tmp.1="Name" or tmp.1="end" or tmp.1="") {				; header, end, or blank lines
 		continue
 	}
-	if (tmp4="group") {												; skip group names
+	if (tmp.4="group") {											; skip group names
 		continue
 	}
-	if (tmp2="" and tmp3="" and tmp4="") {							; Fields 2,3,4 blank = new group
-		tmpGrp := tmp1
+	if (tmp.2="" and tmp.3="" and tmp.4="") {						; Fields 2,3,4 blank = new group
+		tmpGrp := tmp.1
 		tmpIdx := 0
 		tmpIdxG += 1
 		outGrps.Insert(tmpGrp)
 		continue
 	}
-	if !(tmp4~="i)(seattlechildrens.org|washington.edu)") {		; skip non-SCH or non-UW providers
+	if !(tmp.4~="i)(seattlechildrens\.org|washington\.edu)") {		; skip non-SCH or non-UW providers
 		continue
 	}
 	tmpIdx += 1
-	tmpPrv := RegExReplace(tmp1,"^(.*?) (.*?)$","$2, $1")		; input FIRST LAST NAME ==> LAST NAME, FIRST
+	tmpPrv := RegExReplace(tmp.1,"^(.*?) (.*?)$","$2, $1")			; input FIRST LAST NAME ==> LAST NAME, FIRST
 	Docs[tmpGrp,tmpIdx]:=tmpPrv
-	Docs[tmpGrp ".eml",tmpIdx] := tmp4
+	Docs[tmpGrp ".eml",tmpIdx] := tmp.4
 }
 
 y := new XML(chipDir "currlist.xml")
