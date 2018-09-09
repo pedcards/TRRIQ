@@ -73,6 +73,7 @@ Loop, Read, %chipDir%outdocs.csv
 	tmpPrv := RegExReplace(tmp.1,"^(.*?) (.*?)$","$2, $1")			; input FIRST LAST NAME ==> LAST NAME, FIRST
 	Docs[tmpGrp,tmpIdx]:=tmpPrv
 	Docs[tmpGrp ".eml",tmpIdx] := tmp.4
+	Docs[tmpGrp ".npi",tmpIdx] := tmp.5
 }
 
 y := new XML(chipDir "currlist.xml")
