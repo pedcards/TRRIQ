@@ -3462,7 +3462,6 @@ formatField(pre, lab, txt) {
 		fieldColAdd(pre,lab,tmpCrd.best)
 		fieldColAdd(pre,lab "_grp",tmpCrd.group)
 		fieldColAdd(pre,lab "_eml",Docs[tmpCrd.Group ".eml",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)])
-		fieldColAdd("","npi",Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)])
 		if (tmpCrd="") {
 			eventlog("*** Blank Crd value ***")
 		}
