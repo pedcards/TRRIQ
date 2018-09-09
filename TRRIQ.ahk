@@ -1826,13 +1826,14 @@ registerPreventice(ser) {
 	hl7time := A_Now
 	hl7out := Object()
 	buildHL7("MSH","^~\&","TRRIQ","SCH-GB","","PREVENTICE",hl7time,"TECH","ORM^O01",ptDem["wqid"],"T","2.3")
+	tmpDOB := parseDate(ptDem.dob)
 	buildHL7("PID"
 		, ""
 		, ptDem.MRN
 		, ""
-		, ptDem.nameL "^" ptDem.nameF "^" ptDem.nameMI
+		, ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
 		, ""
-		, ptDem.dob
+		, tmpDOB.yyyy . tmpDOB.mm . tmpDOB.dd
 		, substr(ptDem.sex,1,1)
 		, ""
 		, ""
@@ -1844,14 +1845,15 @@ registerPreventice(ser) {
 		, ""
 		, ptDem.account
 		, "")
+	tmpPrv := parseName(ptDem.provider)
 	buildHL7("PV1"
 		, ptDem.type
 		, ptDem.loc
 		, ""
 		, ""
 		, ""
-		, ptDem.NPI "^" ptDem.provider
-		, ptDem.NPI "^" ptDem.prov
+		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
 		, ""
 		, ""
 		, ""
@@ -1864,24 +1866,24 @@ registerPreventice(ser) {
 		, ""
 		, ptDem.account)
 	buildHL7("IN1",
-		, "Insurance Plan ID"
-		, "Insurance Company ID"
-		, "Insurance Company Name"
-		, "Insurance Company Address"
-		, "Insurance Co Contact Person"
-		, "Insurance Co Phone Number"
-		, "Group Number"
-		, "Group Name"
+		, "N/A"
+		, ;"Insurance Company ID"
+		, "Seattle Childrens - GB"
+		, ;"Insurance Company Address"
+		, ;"Insurance Co Contact Person"
+		, ;"Insurance Co Phone Number"
+		, ;"Group Number"
+		, ;"Group Name"
 		, ;"Insureds Group Emp ID"
 		, ;"Insureds Group Emp Name"
 		, ;"Plan Effective Date"
 		, ;"Plan Expiration Date"
 		, ;"Authorization Information"
 		, ;"Plan Type"
-		, ptDem.parentL "^" ptDem.parentF "^"
+		, ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
 		, "Self"
-		, ;"Insureds Date of Birth"
-		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
+		, tmpDOB.yyyy . tmpDOB.mm . tmpDOB.dd
+		, ;ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
 		, ;"Assignment of Benefits"
 		, ;"Coordination of Benefits"
 		, ;"Primary Payor"
@@ -1909,9 +1911,9 @@ registerPreventice(ser) {
 		, ;"Blank"
 		, ;"Blank"
 		, ;"Blank"
-		, "Bill Type")
+		, "")
 	buildHL7("OBR"
-		, "Requisition number"
+		, ;"Requisition number"
 		, ""
 		, "CEM^CEM"
 		, ""
@@ -1925,23 +1927,27 @@ registerPreventice(ser) {
 		, ""
 		, ""
 		, ""
-		, "NPI^PROV"
-		, "2069872015"
+		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, "206-987-2015"
 		, "","","","","","","","","","","")
 	buildHL7("DG1"
 		, ""
 		, "ICD9"
 		, ptDem.indication)
 	buildHL7("OBX"
-		, "ST", "12915^Service Type", "", "CEM")
+		, "ST", "12915^Service Type", ""
+		, strQ((ptDem.model~="Mortara"),"Holter")
+		. strQ((ptDem.model~="BodyGuardian"),"CEM") )
 	buildHL7("OBX"
-		, "ST", "12916^Device", "", "BodyGuardian Heart")
+		, "ST", "12916^Device", "", ptDem.model)
 	buildHL7("OBX"
 		, "ST", "12919^Serial Number", "", ptDem.ser)
 	buildHL7("OBX"
 		, "ST", "12917^Hookup Location", "", ptDem.Hookup)
 	buildHL7("OBX"
-		, "ST", "12918^Deploy Duration", "", "30")
+		, "ST", "12918^Deploy Duration (In Days)", ""
+		, strQ((ptDem.model~="Mortara"),"1")
+		. strQ((ptDem.model~="BodyGuardian"),"30") )
 	
 	FileAppend, % hl7Out.msg, % ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".hl7"
 	return
