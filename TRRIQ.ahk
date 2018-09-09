@@ -1826,6 +1826,7 @@ registerPreventice(ser) {
 	hl7time := A_Now
 	hl7out := Object()
 	buildHL7("MSH","^~\&","TRRIQ","SCH-GB","","PREVENTICE",hl7time,"TECH","ORM^O01",ptDem["wqid"],"T","2.3")
+	
 	tmpDOB := parseDate(ptDem.dob)
 	buildHL7("PID"
 		, ""
@@ -1846,6 +1847,7 @@ registerPreventice(ser) {
 		, ""
 		, ptDem.account
 		, "")
+	
 	tmpPrv := parseName(ptDem.provider)
 	buildHL7("PV1"
 		, ptDem.type
@@ -1866,6 +1868,7 @@ registerPreventice(ser) {
 		, ""
 		, ""
 		, ptDem.account)
+	
 	buildHL7("IN1",
 		, "N/A"
 		, ;"Insurance Company ID"
@@ -1913,6 +1916,7 @@ registerPreventice(ser) {
 		, ;"Blank"
 		, ;"Blank"
 		, "")
+	
 	buildHL7("OBR"
 		, ;"Requisition number"
 		, ""
@@ -1931,20 +1935,26 @@ registerPreventice(ser) {
 		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
 		, "206-987-2015"
 		, "","","","","","","","","","","")
+	
 	buildHL7("DG1"
 		, ""
 		, "ICD9"
 		, ptDem.indication)
+	
 	buildHL7("OBX"
 		, "ST", "12915^Service Type", ""
 		, strQ((ptDem.model~="Mortara"),"Holter")
 		. strQ((ptDem.model~="BodyGuardian"),"CEM") )
+	
 	buildHL7("OBX"
 		, "ST", "12916^Device", "", ptDem.model)
+	
 	buildHL7("OBX"
 		, "ST", "12919^Serial Number", "", ptDem.ser)
+	
 	buildHL7("OBX"
 		, "ST", "12917^Hookup Location", "", ptDem.Hookup)
+	
 	buildHL7("OBX"
 		, "ST", "12918^Deploy Duration (In Days)", ""
 		, strQ((ptDem.model~="Mortara"),"1")
