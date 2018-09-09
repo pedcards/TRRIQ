@@ -1838,6 +1838,7 @@ registerPreventice(ser) {
 		, ""
 		, ""
 		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
+		, ""
 		, ptDem.phone
 		, ""
 		, ""
