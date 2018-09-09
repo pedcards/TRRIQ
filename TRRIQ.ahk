@@ -1558,6 +1558,7 @@ MortaraUpload()
 		
 		wq := new XML("worklist.xml")													; refresh WQ
 		ptDem["muphase"] := "prepare"
+		ptDem["hookup"] := "Office"
 		muWqSave(SerNum)
 		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 		
@@ -1612,8 +1613,9 @@ muWqSave(sernum) {
 		ptDem.date := tmp.YYYY tmp.MM tmp.DD
 	}
 	
-	id := A_TickCount 
-	ptDem["dev"] := "Mortara H3+ - " sernum
+	id := A_TickCount
+	ptDem["model"] := "Mortara H3+"
+	ptDem["dev"] := ptDem.model " - " sernum
 	ptDem["wqid"] := id
 	
 	wq.addElement("enroll","/root/pending",{id:id})
