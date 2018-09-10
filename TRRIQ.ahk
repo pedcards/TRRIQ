@@ -1943,10 +1943,26 @@ registerPreventice(ser) {
 		, "206-987-2015"
 		, "","","","","","","","","","","")
 	
-	buildHL7("DG1"
-		, ""
-		, "ICD9"
-		, ptDem.indication)
+	tmpInd := ptDem.indication
+	loop, parse, tmpInd, |
+	{
+		indIdx := ""
+		indSeg := A_LoopField
+		for key,val in indCodes
+		{
+			indVal := strX(val,"",1,0,":",1)
+			indStr := strX(val,":",1,1,"",0)
+			if (indSeg=indStr) {
+				indIdx := indVal
+				break
+			}
+		}
+		
+		buildHL7("DG1"
+			, ""
+			, indIdx
+			, indSeg)
+	}
 	
 	buildHL7("OBX"
 		, "ST", "12915^Service Type", ""
