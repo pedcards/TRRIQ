@@ -1980,8 +1980,8 @@ registerPreventice(ser) {
 	
 	buildHL7("OBX"
 		, "ST", "12918^Deploy Duration (In Days)", ""
-		, strQ((ptDem.model~="Mortara"),"1")
-		. strQ((ptDem.model~="BodyGuardian"),"30") )
+		, (ptDem.model~="Mortara" ? "1" : "")
+		. (ptDem.model~="BodyGuardian" ? "30" : "") )
 	
 	FileAppend, % hl7Out.msg, % ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".hl7"
 	return
