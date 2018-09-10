@@ -104,6 +104,35 @@ sitesLong := {CRD:"MAIN"
 			, CRDTAC:"TACOMA"
 			, CRDSIL:"SILVERDALE"}
 
+indCodes := ["R94.31:Abnormal Electrocardiogram/Rhythm Strip"
+	, "I47.1:Supraventricular Tachycardia (SVT)"
+	, "I47.2:Ventricular Tachycardia (VT)"
+	, "R00.0:Tachycardia"
+	, "R00.1:Bradycardia"
+	, "R00.2:Palpitations"
+	, "I49.1:Premature Atrial Contractions (PAC's)"
+	, "I49.3:Premature Ventricular Contractions (PVC's)"
+	, "I42.9:Cardiomyopathy"
+	, "R55:Syncope"
+	, "R42:Dizziness"
+	, "R07.9:Chest Pain"
+	, "R06.03:Respiratory Distress"
+	, "R06.02:Shortness of Breath"
+	, "R23.0:Cyanosis"
+	, "E87.8:Electrolyte Disorder"
+	, "R62.51:Failure to thrive"
+	, "R50.9:Fever"
+	, "Z86.79:History of Cardiovascular Disease"
+	, "R03.0:Hypertension"
+	, "M30.3:Kawasaki Disease"
+	, "Z51.81:Medication requiring ECG surveillance" ]
+for key,val in indCodes
+{
+	tmpVal := strX(val,"",1,0,":",1)
+	tmpStr := strX(val,":",1,1,"",0)
+	indOpts .= tmpStr "|"
+}
+
 initHL7()
 
 progress,,,Identifying workstation...
@@ -1022,28 +1051,6 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
 indGUI:
 {
-	indOpts := ""
-		. "R94.31 - Abnormal Electrocardiogram/Rhythm Strip" "|"
-		. "R00.1 - Bradycardia" "|"
-		. "R07.9 - Chest Pain" "|"
-		. "R23.0 - Cyanosis" "|"
-		. "R42 - Dizziness" "|"
-		. "E87.8 - Electrolyte Disorder" "|"
-		. "R62.51 - Failure to thrive" "|"
-		. "R50.9 - Fever" "|"
-		. "Z86.79 - History of Cardiovascular Disease" "|"
-		. "R03.0 - Hypertension" "|"
-		. "M30.3 - Kawasaki Disease" "|"
-		. "Z51.81 - Medication requiring ECG surveillance" "|"
-		. "R00.2 - Palpitations" "|"
-		. "I49.1 - Premature Atrial Contractions (PAC's)" "|"
-		. "I49.3 - Premature Ventricular Contractions (PVC's)" "|"
-		. "R06.03 - Respiratory Distress" "|"
-		. "R06.02 - Shortness of Breath" "|"
-		. "I47.1 - Supraventricular Tachycardia (SVT)" "|"
-		. "R55 - Syncope" "|"
-		. "R00.0 - Tachycardia" "|"
-		. "OTHER"
 	Gui, ind:Destroy
 	Gui, ind:+AlwaysOnTop
 	Gui, ind:font, s12
