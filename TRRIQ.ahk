@@ -1791,7 +1791,7 @@ UiFieldFill(fld,val,win) {
 }
 
 registerPreventice(ser) {
-	global wq, ptDem, fetchQuit, hl7out
+	global wq, ptDem, fetchQuit, hl7out, indCodes
 	
 	if (ser="BG") {																		; called from PhaseGUI button
 		ptDem := object()																; need to initialize ptDem
