@@ -2149,7 +2149,8 @@ getPatInfo() {
 		return
 	}
 	addrLine := 0
-	loop, parse, % rel[stregX(q,"",1,1,"\)",1)], `n,`r									; parse selected relative's info string
+	relChoice := stregX(q,"",1,1,"\)",1)
+	loop, parse, % rel[relChoice], `n,`r												; parse selected relative's info string
 	{
 		i := cleanspace(A_LoopField)
 		if (i="") {
