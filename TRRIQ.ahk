@@ -2135,49 +2135,80 @@ getPatInfo() {
 
 	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
 	relStr := "Father|Mother|Grandmother|Grandfather|Aunt|Uncle|Relative|Step"
-	rel := []
+	rel := Object()
 	loop, parse, famInfo, `n,`r
 	{
 		i := A_LoopField
 		if (i~="\(" relStr) {															; line contains "(Mother"
 			ct ++																		; increment counter
-			nm .= ct ") " i "`n|"															; add to cmsgbox menu string
-		}
-		rel[ct] .= i "`n"																; add lines to each relative info string
-	}
-	
-	q := cmsgbox("Parent","Who is the guarantor?",trim(nm,"|"))
-	if (q="xClose") {
-		fetchQuit:=true
-		return
-	}
-	addrLine := 0
-	relChoice := stregX(q,"",1,1,"\)",1)
-	loop, parse, % rel[relChoice], `n,`r												; parse selected relative's info string
-	{
-		i := cleanspace(A_LoopField)
-		if (i="") {
+			rel[ct] := object()															; create a rel index object
+			rel[ct].name := strX(i,"",1,1,"(",1,1)										; get name string
 			continue
 		}
-		if (i~="\(" relStr) {															; get parent's name
-			ptDem.parent := stregX(i,"",1,0,"\(" relStr,1)
-			ptDem.parentL := trim(strX(ptDem.parent,"",1,0,",",1,1))
-			ptDem.parentF := trim(strX(ptDem.parent,",",1,1,"",0))
+		if (i~="Home:") {
+			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
+			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
 			continue
 		}
-		if (i~="i)("
+		if !(i~="i)("
 			. "Legal guardian|"															; skip lines containing these strings
 			. "Birth certificate|"
 			. "Comment|"
 			. "Lives with|"
 			. "Custody|"
 			. "Mobile:|"
-			. "Home:|"
-			. "Emergency"
-			. ")") 
+			. "Work:|"
+			. "Inpatient|"
+			. "Emergency|"
+			. "^\s*$|"
+			. "^>)")
 		{
-			continue
+			rel[ct].addr .= i "`n"														; add address lines to each relative index string
 		}
+	}
+	loop, % rel.MaxIndex()
+	{
+		i := A_index
+		loop, % rel.MaxIndex()															; compare against all other addresses
+		{
+			j := A_Index
+			if (i=j) {																	; do not compare to self
+				continue
+			}
+			if (rel[j].phone != ptDem.phone) {
+				rel.delete(j)															; remove if doesn't match patient's home phone number
+			}
+			if (rel[i].addr = rel[j].addr) {
+				rel.delete(j)															; remove duplicate addresses
+			}
+		}
+		if (rel[i].addr = "") {
+			rel.Delete(i)																; remove entries with no address
+		}
+	}
+	loop, % rel.MaxIndex()
+	{
+		nm .= A_index ") " rel[A_index].name "|"										; generate parent name menu for cmsgbox
+	}
+	if (rel.MaxIndex() > 1) {
+		q := cmsgbox("Parent","Who is the guarantor?",trim(nm,"|"))
+		if (q="xClose") {
+			fetchQuit:=true
+			return
+		}
+		choice := strX(q,"",1,1,")",1,1)
+	} else {
+		choice := 1
+	}
+	
+	ptDem.parent := rel[choice].Name
+	ptDem.parentL := parseName(ptDem.parent).last
+	ptDem.parentF := parseName(ptDem.parent).first
+	
+	addrLine := 0
+	loop, parse, % rel[choice].addr, `n,`r												; parse selected addr string
+	{
+		i := cleanspace(A_LoopField)
 		if (i~=", [A-Z]{2} \d{5}") {													; matches City, State Zip
 			ptDem.city := trim(stregX(i,"",1,0,", ",1))
 			ptDem.state := trim(stregX(i,", ",1,1," ",1))
@@ -2191,6 +2222,11 @@ getPatInfo() {
 			ptDem[addr] := trim(i)
 		}
 	}
+	
+;=============================================	
+	;~ FileCopy, worklist 0.xml, worklist.xml, 1
+	;~ ExitApp
+;=============================================	
 	
 	return
 }
