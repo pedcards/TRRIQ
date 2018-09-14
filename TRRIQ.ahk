@@ -88,22 +88,6 @@ if fileexist("worklist.xml") {
 scanTempfiles()
 
 demVals := ["MRN","Account Number","DOB","Sex","Legal Sex","Birth Sex","Loc","Provider"]						; valid field names for parseClip()
-sites := "MAIN|BELLEVUE|EVERETT|TRI-CITIES|TRI|WENATCHEE|YAKIMA|GREAT FALLS"			; sites we are tracking
-sites0 := "TACOMA|SILVERDALE|ALASKA"													; sites we are not tracking
-sitesLong := {CRD:"MAIN"
-			, EKG:"MAIN"
-			, INPATIENT:"MAIN"
-			, SURGCNTR:"MAIN"
-			, CRDBEL:"BELLEVUE"
-			, CRDBCSC:"BELLEVUE"
-			, CRDEVT:"EVERETT"
-			, CRDNOR:"EVERETT"
-			, CRDTRI:"TRI-CITIES"
-			, CRDWEN:"WENATCHEE"
-			, CRDYAK:"YAKIMA"
-			, CRDMT:"GREAT FALLS"
-			, CRDTAC:"TACOMA"
-			, CRDSIL:"SILVERDALE"}
 
 indCodes := ["R94.31:Abnormal Electrocardiogram/Rhythm Strip"
 	, "I47.1:Supraventricular Tachycardia (SVT)"
@@ -143,6 +127,23 @@ if !(wksLoc := GetLocation()) {
 	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
 	ExitApp
 }
+
+sites := "MAIN|BELLEVUE|EVERETT|TRI-CITIES|TRI|WENATCHEE|YAKIMA|GREAT FALLS"			; sites we are tracking
+sites0 := "TACOMA|SILVERDALE|ALASKA"													; sites we are not tracking
+sitesLong := {CRD:"MAIN"
+			, EKG:"MAIN"
+			, INPATIENT:"MAIN"
+			, SURGCNTR:"MAIN"
+			, CRDBEL:"BELLEVUE"
+			, CRDBCSC:"BELLEVUE"
+			, CRDEVT:"EVERETT"
+			, CRDNOR:"EVERETT"
+			, CRDTRI:"TRI-CITIES"
+			, CRDWEN:"WENATCHEE"
+			, CRDYAK:"YAKIMA"
+			, CRDMT:"GREAT FALLS"
+			, CRDTAC:"TACOMA"
+			, CRDSIL:"SILVERDALE"}
 
 MainLoop: ; ===================== This is the main part ====================================
 {
