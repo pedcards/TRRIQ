@@ -138,7 +138,7 @@ GetLocations()
 	wksList := locationData.SelectSingleNode(m_strXmlLocationsPath)      ; Retreive Locations node
 	loop, % (wksNodes := wksList.SelectNodes(m_strXmlLocationName)).Length     ; Loop through node and create piped list of locations
 	{
-		location:= wksNodes.item(A_Index - 1).Text                   
+		location:= wksNodes.item(A_Index - 1).selectSingleNode("site").text
 		if (A_Index = 1) {
 			locationList := location                                 ; No pipe symbol before fist location
 		} else {
