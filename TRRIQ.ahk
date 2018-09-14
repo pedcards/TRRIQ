@@ -2203,6 +2203,14 @@ getPatInfo() {
 		}
 	}
 	
+	MsgBox, 4160
+		, Contact information
+		, % "Retrieved info from`n`n"
+		. ptDem.parentL ", " ptDem.parentF "`n"
+		. ptDem.addr1 "`n"
+		. strQ(ptDem.addr2,"###`n")
+		. ptDem.city ", " ptDem.state " " ptDem.zip "`n"
+		. ptDem.phone
 ;=============================================	
 	;~ FileCopy, worklist 0.xml, worklist.xml, 1
 	;~ ExitApp
