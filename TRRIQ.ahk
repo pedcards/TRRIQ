@@ -449,7 +449,7 @@ WQlist() {
 			, id																		; wqid
 			, (res.dev~="BG") ? "BGH"													; extracted
 			: (res.dev~="Mortara") ? "HOL"
-			: ""
+			: "HL7"
 			, (full>2)||(res.dev~="BG") ? "":"X")										; fulldisc if filesize >2 Meg
 		wqfiles.push(id)
 	}
