@@ -128,40 +128,6 @@ if !(wksLoc := GetLocation()) {
 	ExitApp
 }
 
-getSites() {
-	locationList := []
-	locationLong := {}
-	locationCode := {}
-	locationSending := {}
-	locationData := new xml(m_strXmlFilename)
-	wksList := locationData.SelectSingleNode(m_strXmlLocationsPath)
-	loop, % (wksNodes := wksList.SelectNodes(m_strXmlLocationName)).Length
-	{
-		location:= wksNodes.item(A_Index - 1)
-		tracked := !(location.selectSingleNode("tracked").text = "n")
-		tabname := location.selectSingleNode("tabname").text
-		codename := location.selectSingleNode("hl7name").text
-		codenum := location.selectSingleNode("hl7num").text
-		locationList[tracked] .= tabname . "|"
-		locationCode[tabname] := codenum
-		locationSending[tabname] := codename
-	}
-	loop, % (wksNodes := wksList.SelectNodes(m_strXmlLocationName "/cisalias")).Length
-	{
-		node := wksNodes.item(A_Index-1)
-		parent := node.parentNode
-		longName := parent.selectSingleNode("tabname").text
-		aliasName := node.text
-		locationLong[aliasName] := longName
-	}
-	
-	return {  tracked:trim(locationList[1],"|")
-			, ignored:trim(locationList[0],"|")
-			, long:locationLong
-			, code:locationCode
-			, facility:locationSending}
-}	
-
 site := getSites()
 sites := site.tracked																	; sites we are tracking
 sites0 := site.ignored																	; sites we are not tracking <tracked>N</tracked> in wkslocation

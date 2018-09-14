@@ -173,5 +173,45 @@ AddWorkstation(location)
 	locationData.saveXML()
 }
 
+getSites() {
+/*	reads wkslocation.xls and returns:
+		sites (MAIN|BELLEVUE|EVERETT...) and sites0 (TACOMA|ALASKA...) menus
+		sitesLong {EKG:MAIN,INPATIENT:MAIN,CRDBCSC:BELLEVUE,...}
+		facility code {MAIN:7343,...}
+		facility name {MAIN:GB-SCH-MAIN,...}
+*/
+	locationList := []
+	locationLong := {}
+	locationCode := {}
+	locationSending := {}
+	locationData := new xml(m_strXmlFilename)
+	wksList := locationData.SelectSingleNode(m_strXmlLocationsPath)
+	loop, % (wksNodes := wksList.SelectNodes(m_strXmlLocationName)).Length
+	{
+		location:= wksNodes.item(A_Index - 1)
+		tracked := !(location.selectSingleNode("tracked").text = "n")
+		tabname := location.selectSingleNode("tabname").text
+		codename := location.selectSingleNode("hl7name").text
+		codenum := location.selectSingleNode("hl7num").text
+		locationList[tracked] .= tabname . "|"
+		locationCode[tabname] := codenum
+		locationSending[tabname] := codename
+	}
+	loop, % (wksNodes := wksList.SelectNodes(m_strXmlLocationName "/cisalias")).Length
+	{
+		node := wksNodes.item(A_Index-1)
+		parent := node.parentNode
+		longName := parent.selectSingleNode("tabname").text
+		aliasName := node.text
+		locationLong[aliasName] := longName
+	}
+	
+	return {  tracked:trim(locationList[1],"|")
+			, ignored:trim(locationList[0],"|")
+			, long:locationLong
+			, code:locationCode
+			, facility:locationSending}
+}	
+
 
 
