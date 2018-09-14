@@ -2898,7 +2898,12 @@ CheckProc:
 		
 		filecheck()
 		FileOpen(".lock", "W")																; Create lock file.
-			id := fldval.wqid
+			if (fldval.wqid) {
+				id := fldval.wqid
+			} else {
+				id := A_TickCount 															; create wqid record if it doesn't exist somehow
+				wq.addElement("enroll","/root/pending",{id:id})
+			}
 			newID := "/root/pending/enroll[@id='" id "']"
 			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
 			wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
