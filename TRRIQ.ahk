@@ -446,7 +446,9 @@ WQlist() {
 			, strQ(res.dob,"###",niceDate(x.4))											; dob
 			, strQ(res.date,"###",SubStr(x.5,1,8))										; study date
 			, id																		; wqid
-			, "HL7"																		; extracted
+			, (res.dev~="BG") ? "BGH"													; extracted
+			: (res.dev~="Mortara") ? "HOL"
+			: ""
 			, (full>2)||(res.dev~="BG") ? "":"X")										; fulldisc if filesize >2 Meg
 		wqfiles.push(id)
 	}
@@ -687,7 +689,7 @@ readWQlv:
 	fldVal := readWQ(wqid)																; wqid would have been determined by parsing hl7
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
 	
-	if (ftype="HL7") {																	; hl7 file (could still be Holter or CEM)
+	if (ftype~="HL7|HOL|CEM|BGH") {														; hl7 file (could still be Holter or CEM)
 		eventlog("===> " fnam )
 		Gui, phase:Hide
 		
