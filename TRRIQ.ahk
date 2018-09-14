@@ -2129,6 +2129,9 @@ getPatInfo() {
 	if !instr(nameLine, ptDem.Name) {													; fetched ptInfo must contain ptDem.name
 		return
 	}
+	homePhoneLine := stregX(ptInfo,"i)Home Phone:",1,1,"\R+",1)
+	RegExMatch(homePhoneLine,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
+	ptDem.phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
 
 	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
 	relStr := "Father|Mother|Grandmother|Grandfather|Aunt|Uncle|Relative"
@@ -2162,21 +2165,19 @@ getPatInfo() {
 			ptDem.parentF := trim(strX(ptDem.parent,",",1,1,"",0))
 			continue
 		}
-		if (i~="Home:") {																; grab home phone number
-			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
-			ptDem.phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
-			continue
-		}
-		if (i~="i)(Legal guardian|"														; skip lines containing these strings
+		if (i~="i)("
+			. "Legal guardian|"															; skip lines containing these strings
 			. "Birth certificate|"
 			. "Comment|"
 			. "Lives with|"
+			. "Custody|"
 			. "Mobile:|"
-			. "Emergency)") 
+			. "Home:|"
+			. "Emergency"
+			. ")") 
 		{
 			continue
 		}
-		
 		if (i~=", [A-Z]{2} \d{5}") {													; matches City, State Zip
 			ptDem.city := trim(stregX(i,"",1,0,", ",1))
 			ptDem.state := trim(stregX(i,", ",1,1," ",1))
