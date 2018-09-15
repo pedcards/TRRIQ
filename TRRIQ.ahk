@@ -35,7 +35,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 } else {
 	FileGetTime, tmp, TRRIQ.exe
 	isAdmin := false
-	hl7Dir := "..\Holter PDFs\Preventice\"
+	hl7Dir := "..\Holter PDFs\Preventice\prod\"
 	holterDir := "..\Holter PDFs\"
 	importFld := "..\Import\"
 	chipDir := "\\childrens\files\HCChipotle\"
