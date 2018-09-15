@@ -132,8 +132,8 @@ site := getSites()
 sites := site.tracked																	; sites we are tracking
 sites0 := site.ignored																	; sites we are not tracking <tracked>N</tracked> in wkslocation
 sitesLong := site.long																	; {CIS:TAB}
-sitesCodes := site.code																	; {"MAIN":7343} 4 digit code for sending facility
-
+sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
+sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 MainLoop: ; ===================== This is the main part ====================================
 {

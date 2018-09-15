@@ -180,10 +180,9 @@ getSites() {
 		facility code {MAIN:7343,...}
 		facility name {MAIN:GB-SCH-MAIN,...}
 */
+	global wksLoc
 	locationList := []
 	locationLong := {}
-	locationCode := {}
-	locationSending := {}
 	locationData := new xml(m_strXmlFilename)
 	wksList := locationData.SelectSingleNode(m_strXmlLocationsPath)
 	loop, % (wksNodes := wksList.SelectNodes(m_strXmlLocationName)).Length
@@ -191,11 +190,7 @@ getSites() {
 		location:= wksNodes.item(A_Index - 1)
 		tracked := !(location.selectSingleNode("tracked").text = "n")
 		tabname := location.selectSingleNode("tabname").text
-		codename := location.selectSingleNode("hl7name").text
-		codenum := location.selectSingleNode("hl7num").text
 		locationList[tracked] .= tabname . "|"
-		locationCode[tabname] := codenum
-		locationSending[tabname] := codename
 	}
 	loop, % (wksNodes := wksList.SelectNodes(m_strXmlLocationName "/cisalias")).Length
 	{
@@ -205,12 +200,15 @@ getSites() {
 		aliasName := node.text
 		locationLong[aliasName] := longName
 	}
+	wksNode := wksList.selectSingleNode(m_strXmlLocationName "[site='" wksLoc "']")
+	codeName := wksNode.selectSingleNode("hl7name").text
+	codeNum := wksNode.selectSingleNode("hl7num").text
 	
 	return {  tracked:trim(locationList[1],"|")
 			, ignored:trim(locationList[0],"|")
 			, long:locationLong
-			, code:locationCode
-			, facility:locationSending}
+			, code:codeNum
+			, facility:codeName}
 }	
 
 
