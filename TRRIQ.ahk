@@ -1774,7 +1774,7 @@ UiFieldFill(fld,val,win) {
 }
 
 registerPreventice(ser) {
-	global wq, ptDem, fetchQuit, hl7out, indCodes
+	global wq, ptDem, fetchQuit, hl7out, indCodes, sitesCode, sitesFacility
 	
 	if (ser="BG") {																		; called from PhaseGUI button
 		ptDem := object()																; need to initialize ptDem
@@ -1815,7 +1815,18 @@ registerPreventice(ser) {
 	
 	hl7time := A_Now
 	hl7out := Object()
-	buildHL7("MSH","^~\&","TRRIQ","SCH-GB","","PREVENTICE",hl7time,"TECH","ORM^O01",ptDem["wqid"],"T","2.3")
+	buildHL7("MSH"
+		,"^~\&"
+		,"TRRIQ"
+		,sitesCode
+		,sitesFacility
+		,"PREVENTICE"
+		,hl7time
+		,"TECH"
+		,"ORM^O01"
+		,ptDem["wqid"]
+		,"T"
+		,"2.3")
 	
 	tmpDOB := parseDate(ptDem.dob)
 	buildHL7("PID"
@@ -1910,7 +1921,8 @@ registerPreventice(ser) {
 	buildHL7("OBR"
 		, ;"Requisition number"
 		, ""
-		, "CEM^CEM"
+		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter^Holter")
+		. strQ((ptDem.model~="BodyGuardian") ? 1 : "","CEM^CEM")
 		, ""
 		, hl7time
 		, ""
@@ -1925,6 +1937,8 @@ registerPreventice(ser) {
 		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
 		, "206-987-2015"
 		, "","","","","","","","","","","")
+	
+	buildHL7("ORC","")
 	
 	tmpInd := ptDem.indication
 	loop, parse, tmpInd, |
@@ -1949,8 +1963,8 @@ registerPreventice(ser) {
 	
 	buildHL7("OBX"
 		, "ST", "12915^Service Type", ""
-		, strQ((ptDem.model~="Mortara"),"Holter")
-		. strQ((ptDem.model~="BodyGuardian"),"CEM") )
+		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter")
+		. strQ((ptDem.model~="BodyGuardian") ? 1 : "","CEM") )
 	
 	buildHL7("OBX"
 		, "ST", "12916^Device", "", ptDem.model)
