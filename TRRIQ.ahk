@@ -204,6 +204,7 @@ PhaseGUI:
 	
 	;~ Menu, menuSys, Add, Scan tempfiles, scanTempFiles
 	;~ Menu, menuSys, Add, Find returned devices, WQfindlost
+	Menu, menuSys, Add, Change clinic location, changeLoc
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -234,6 +235,23 @@ menuInstr:
 	Gui, phase:hide
 	MsgBox How to...
 	gui, phase:show
+	return
+}
+
+changeLoc:
+{
+	MsgBox, 262193, Change clinic, Current location: %wksLoc%`n`nReally change the clinic location for this PC?`n`nWill restart TRRIQ
+	IfMsgBox, Ok
+	{
+		locationData := new xml(m_strXmlFilename)                               	  ; load xml file
+		wksList := locationData.SelectSingleNode(m_strXmlWorkstationsPath)            ; retreive list of all workstations
+		wksNode := wksList.selectSingleNode(m_strXmlWksNodeName "[" m_strXmlWksName "='" A_ComputerName "']")
+		wksNode.parentNode.removeChild(wksNode)
+		locationData.TransformXML()
+		locationData.saveXML()
+		eventlog("Removed wks node for " A_ComputerName)
+		Reload
+	}
 	return
 }
 
