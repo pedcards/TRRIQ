@@ -195,9 +195,8 @@ getSites() {
 	loop, % (wksNodes := wksList.SelectNodes(m_strXmlLocationName "/cisalias")).Length
 	{
 		node := wksNodes.item(A_Index-1)
-		parent := node.parentNode
-		longName := parent.selectSingleNode("tabname").text
 		aliasName := node.text
+		longName := node.selectSingleNode("../tabname").text
 		locationLong[aliasName] := longName
 	}
 	wksNode := wksList.selectSingleNode(m_strXmlLocationName "[site='" wksLoc "']")
