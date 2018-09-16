@@ -2013,6 +2013,7 @@ selectDev() {
 	Gui, Add, ListBox, h100 vSelBox -vScroll Disabled, % devs							; listbox and button
 	Gui, Add, Button, h30 vSelBut gSelDevSubmit Disabled, Submit						; disabled by default
 	Gui, Show, AutoSize, Select device
+	Gui, +AlwaysOnTop
 	
 	winwaitclose, Select device
 	Gui, dev:Destroy
