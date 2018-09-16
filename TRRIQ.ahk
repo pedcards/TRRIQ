@@ -202,8 +202,8 @@ PhaseGUI:
 		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	WQlist()
 	
-	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
-	Menu, menuSys, Add, Find returned devices, WQfindlost
+	;~ Menu, menuSys, Add, Scan tempfiles, scanTempFiles
+	;~ Menu, menuSys, Add, Find returned devices, WQfindlost
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
