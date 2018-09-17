@@ -4056,7 +4056,7 @@ readIni(section) {
 */
 	global
 	local x, i, key, val
-		, i_res
+		, i_res := object()
 		, i_type := []
 		, i_lines := []
 	i_type.var := i_type.obj := i_type.arr := false
@@ -4083,9 +4083,6 @@ readIni(section) {
 	if ((i_type.obj) + (i_type.arr) + (i_type.var)) > 1 {								; too many types, return error
 		return error
 	}
-	if (i_type.obj)||(i_type.arr) {														; make objects for these types
-		%section% := object()
-	}
 	Loop, parse, x, `n,`r																; now loop through lines
 	{
 		i := A_LoopField
@@ -4097,14 +4094,14 @@ readIni(section) {
 		if (i_type.obj) {
 			key := strX(i,"",1,0,":",1,1)
 			val := strX(i,":",1,1,"",0)
-			%section%[key] := trim(val,"""")
+			i_res[key] := trim(val,"""")
 		}
 		if (i_type.arr) {
 			i := RegExReplace(i,"^=")													; remove preceding =
-			%section%.push(trim(i,""""))
+			i_res.push(trim(i,""""))
 		}
 	}
-	return
+	return i_res
 }
 
 #Include CMsgBox.ahk
