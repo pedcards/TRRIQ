@@ -4107,14 +4107,6 @@ readIni(section) {
 	return
 }
 
-;~ ~LButton::
-;~ {
-	;~ If (A_PriorHotKey = A_ThisHotKey and A_TimeSincePriorHotkey < DllCall("GetDoubleClickTime")) {
-		;~ MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
-	;~ }
-;~ return
-;~ }
-
 #Include CMsgBox.ahk
 #Include xml.ahk
 #Include sift3.ahk
