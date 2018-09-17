@@ -4070,6 +4070,69 @@ filecheck() {
 	return
 }
 
+readIni(section) {
+/*	Reads a set of variables
+	[section]					==	 		var1 := res1, var2 := res2
+	var1=res1
+	var2=res2
+	
+	[array]						==			array := ["ccc","bbb","aaa"]
+	ccc
+	bbb
+	aaa
+	
+	[objet]						==	 		objet := {aaa:10,bbb:27,ccc:31}
+	aaa:10
+	bbb:27
+	ccc:31
+*/
+	global
+	local x, i, key, val
+		, i_res
+		, i_type := []
+		, i_lines := []
+	i_type.var := i_type.obj := i_type.arr := false
+	IniRead,x,trriq.ini,%section%
+	Loop, parse, x, `n,`r																; analyze section struction
+	{
+		i := A_LoopField
+		if RegExMatch(i,"O)(?<!"")[:=]",i_res) {										; find : or = not preceded by "
+			if (i_res.value() = ":") {
+				i_type.obj := true
+			} 
+			if (i_res.value() = "=") {
+				i_type.var := true
+			}
+		} else {
+			i_type.arr := true
+		}
+	}
+	if ((i_type.obj) + (i_type.arr) + (i_type.var)) > 1 {								; too many types, return error
+		return error
+	}
+	if (i_type.obj)||(i_type.arr) {														; make objects for these types
+		%section% := object()
+	}
+	Loop, parse, x, `n,`r																; now loop through lines
+	{
+		i := A_LoopField
+		if (i_type.var) {
+			key := strX(i,"",1,0,"=",1,1)
+			val := strX(i,"=",1,1,"",0)
+			%key% := trim(val,"""")
+		}
+		if (i_type.obj) {
+			key := strX(i,"",1,0,":",1,1)
+			val := strX(i,":",1,1,"",0)
+			%section%[key] := val
+		}
+		if (i_type.arr) {
+			%section%.push(i)
+		}
+	}
+	return
+}
+
 ;~ ~LButton::
 ;~ {
 	;~ If (A_PriorHotKey = A_ThisHotKey and A_TimeSincePriorHotkey < DllCall("GetDoubleClickTime")) {
