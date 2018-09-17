@@ -1,5 +1,5 @@
 initHL7() {
-	global hl7
+	global hl7, preventiceDDE
 	hl7 := Object()
 	IniRead, s0, hl7.ini																	; s0 = Section headers
 	loop, parse, s0, `n, `r																	; parse s0
@@ -15,48 +15,9 @@ initHL7() {
 		}
 	}
 	
-	hl7["flds"] := {"HTRate_TotalQRS":"hrd-Total_beats"										; map hl7 fields to lw fields
-				, "HTRate_MinRate":"hrd-Min"
-				, "HTRate_MinRate_Time":"hrd-Min_time"
-				, "HTRate_MeanRate":"hrd-Avg"
-				, "HTRate_MaxRate":"hrd-Max"
-				, "HTRate_MaxRate_Time":"hrd-Max_time"
-				, "HTRateV_RMS_SD":"hrd-HRV"
-				, "VEctopy_TotalVentBeats":"ve-Total"
-				, "VEctopy_AveragePerHr":"ve-Total_per"
-				, "Vent_Tachycardia":"ve-Runs"
-				, "VEctopy_Singles":"ve-Beats"
-				, "VEctopy_LongestRun":"ve-Longest"
-				, "VEctopy_LongestRun_Time":"ve-Longest_time"
-				, "VEctopy_FastestRun":"ve-Fastest"
-				, "VEctopy_FastestRun_Time":"ve-Fastest_time"
-				, "VEctopy_Triplets":"ve-Triplets"
-				, "VEctopy_Couplets":"ve-Couplets"
-				, "VEctopy_Singles":"ve-SinglePVC"
-				, "VEctopy_InterpolatedBeats":"ve-InterpPVC"
-				, "VEctopy_RonT":"ve-R_on_T"
-				, "VEctopy_Singles":"ve-SingleVE"
-				, "VEctopy_LateVE":"ve-LateVE"
-				, "Vent_BigeminyBeats":"ve-Bigem"
-				, "Vent_TrigeminyBeats":"ve-Trigem"
-				, "Vent_SVE":"ve-SVE"
-				, "SVEctopy_TotalSVBeats":"sve-Total"
-				, "SVEctopy_AveragePerHr":"sve-Total_per"
-				, "SVEctopy_Runs":"sve-Runs"
-				, "SV_Tachycardia":"sve-Beats"
-				, "SVEctopy_LongestRun":"sve-Longest"
-				, "SVEctopy_LongestRun_Time":"sve-Longest_time"
-				, "SVEctopy_FastestRun":"sve-Fastest"
-				, "SVEctopy_FastestRun_Time":"sve-Fastest_time"
-				, "SVEctopy_Couplets":"sve-Pairs"
-				, "SVEctopy_Drop":"sve-Drop"
-				, "SVEctopy_Late":"sve-Late"
-				, "Pauses_Longest_RR":"sve-LongRR"
-				, "Pauses_Longest_RR_Time":"sve-LongRR_time"
-				, "SVEctopy_Singles":"sve-Single"
-				, "SV_BigeminyBeats":"sve-Bigem"
-				, "SV_TrigeminyBeats":"sve-Trigem"
-				, "AtrialF_PercentTime":"sve-AF"}
+	readIni("preventiceDDE")
+	hl7["flds"] := preventiceDDE															; map hl7 fields to lw fields
+	
 	return
 }
 
