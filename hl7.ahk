@@ -15,8 +15,8 @@ initHL7() {
 		}
 	}
 	
-	readIni("preventiceDDE")
-	hl7["flds"] := preventiceDDE															; map hl7 fields to lw fields
+	
+	hl7["flds"] := readIni("preventiceDDE")													; map hl7 fields to lw fields
 	
 	return
 }

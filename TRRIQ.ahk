@@ -76,9 +76,9 @@ if fileexist("worklist.xml") {
 }
 scanTempfiles()
 
-readIni("demVals")																		; valid field names for parseClip()
+demVals := readIni("demVals")																		; valid field names for parseClip()
 
-readIni("indCodes")
+indCodes := readIni("indCodes")
 for key,val in indCodes
 {
 	tmpVal := strX(val,"",1,0,":",1)
