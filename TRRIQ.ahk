@@ -4066,9 +4066,9 @@ readIni(section) {
 	var2=res2
 	
 	[array]						==			array := ["ccc","bbb","aaa"]
-	ccc
+	=ccc
 	bbb
-	aaa
+	=aaa
 	
 	[objet]						==	 		objet := {aaa:10,bbb:27,ccc:31}
 	aaa:10
@@ -4085,15 +4085,20 @@ readIni(section) {
 	Loop, parse, x, `n,`r																; analyze section struction
 	{
 		i := A_LoopField
-		if RegExMatch(i,"O)(?<!"")[:=]",i_res) {										; find : or = not preceded by "
-			if (i_res.value() = ":") {
-				i_type.obj := true
-			} 
-			if (i_res.value() = "=") {
+		if (i~="(?<!"")[=]")															; find = not preceded by "
+		{
+			if (i ~= "^=") {															; starts with "=" is an array list
+				i_type.arr := true
+			} else {																	; "aaa=123" is a var declaration
 				i_type.var := true
 			}
-		} else {
-			i_type.arr := true
+		} else																			; does not contain a quoted =
+		{
+			if (i~="(?<!"")[:]") {														; find : not preceded by " is an object
+				i_type.obj := true
+			} else {																	; contains neither = nor : can be an array list
+				i_type.arr := true
+			}
 		}
 	}
 	if ((i_type.obj) + (i_type.arr) + (i_type.var)) > 1 {								; too many types, return error
@@ -4113,10 +4118,11 @@ readIni(section) {
 		if (i_type.obj) {
 			key := strX(i,"",1,0,":",1,1)
 			val := strX(i,":",1,1,"",0)
-			%section%[key] := val
+			%section%[key] := trim(val,"""")
 		}
 		if (i_type.arr) {
-			%section%.push(i)
+			i := RegExReplace(i,"^=")													; remove preceding =
+			%section%.push(trim(i,""""))
 		}
 	}
 	return
