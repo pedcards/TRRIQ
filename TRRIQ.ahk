@@ -76,30 +76,9 @@ if fileexist("worklist.xml") {
 }
 scanTempfiles()
 
-demVals := ["MRN","Account Number","DOB","Sex","Legal Sex","Birth Sex","Loc","Provider"]						; valid field names for parseClip()
+readIni("demVals")																		; valid field names for parseClip()
 
-indCodes := ["R94.31:Abnormal Electrocardiogram/Rhythm Strip"
-	, "I47.1:Supraventricular Tachycardia (SVT)"
-	, "I47.2:Ventricular Tachycardia (VT)"
-	, "R00.0:Tachycardia"
-	, "R00.1:Bradycardia"
-	, "R00.2:Palpitations"
-	, "I49.1:Premature Atrial Contractions (PAC's)"
-	, "I49.3:Premature Ventricular Contractions (PVC's)"
-	, "I42.9:Cardiomyopathy"
-	, "R55:Syncope"
-	, "R42:Dizziness"
-	, "R07.9:Chest Pain"
-	, "R06.03:Respiratory Distress"
-	, "R06.02:Shortness of Breath"
-	, "R23.0:Cyanosis"
-	, "E87.8:Electrolyte Disorder"
-	, "R62.51:Failure to thrive"
-	, "R50.9:Fever"
-	, "Z86.79:History of Cardiovascular Disease"
-	, "R03.0:Hypertension"
-	, "M30.3:Kawasaki Disease"
-	, "Z51.81:Medication requiring ECG surveillance" ]
+readIni("indCodes")
 for key,val in indCodes
 {
 	tmpVal := strX(val,"",1,0,":",1)
