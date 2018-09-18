@@ -241,7 +241,7 @@ lateReport:
 			str .= e.site ",""" e.prov """," e.date ",""" e.name """," e.mrn "," e.dev "`n"
 		}
 	}
-	tmp := OnBaseDir2 "..\late-" A_now ".csv"
+	tmp := holterDir "late-" A_now ".csv"
 	FileAppend, %str%, %tmp%
 	MsgBox, 262208, Missing devices report, Report saved to:`n%tmp%
 	return
