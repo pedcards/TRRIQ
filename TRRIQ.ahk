@@ -174,6 +174,7 @@ PhaseGUI:
 	;~ Menu, menuSys, Add, Scan tempfiles, scanTempFiles
 	;~ Menu, menuSys, Add, Find returned devices, WQfindlost
 	Menu, menuSys, Add, Change clinic location, changeLoc
+	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -221,6 +222,26 @@ changeLoc:
 		eventlog("Removed wks node for " A_ComputerName)
 		Reload
 	}
+	return
+}
+
+lateReport:
+{
+	str := ""
+	Loop, % (ens:=wq.selectNodes("/root/pending/enroll")).length
+	{
+		k := ens.item(A_Index-1)
+		id	:= k.getAttribute("id")
+		e := readWQ(id)
+		dt := A_now
+		dt -= e.date, Days
+		if (instr(e.dev,"BG") && (dt > 45)) || (instr(e.dev,"Mortara") && (dt > 14))  {
+			str .= e.site ",""" e.prov """," e.date ",""" e.name """," e.mrn "," e.dev "`n"
+		}
+	}
+	tmp := OnBaseDir2 "late-" A_now ".csv"
+	FileAppend, %str%, %tmp%
+	MsgBox, 262208, Missing devices report, Report saved to:`n%tmp%
 	return
 }
 
