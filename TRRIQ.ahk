@@ -503,11 +503,10 @@ WQlist() {
 			k := ens.item(A_Index-1)
 			id	:= k.getAttribute("id")
 			e0 := readWQ(id)
-			now := A_Now
-			dt := e0.date
-			dt -= now, Days
+			dt := A_now
+			dt -= e0.date, Days
 			e0.dev := RegExReplace(e0.dev,"BodyGuardian","BG")
-			if (instr(e0.dev,"BG") && (dt > -30)) {
+			if (instr(e0.dev,"BG") && (dt < 30)) {
 				continue
 			}
 			Gui, ListView, WQlv%i%
