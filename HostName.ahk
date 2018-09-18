@@ -173,14 +173,14 @@ AddWorkstation(location)
 	locationData.saveXML()
 }
 
-getSites() {
+getSites(wksName) {
 /*	reads wkslocation.xls and returns:
 		sites (MAIN|BELLEVUE|EVERETT...) and sites0 (TACOMA|ALASKA...) menus
 		sitesLong {EKG:MAIN,INPATIENT:MAIN,CRDBCSC:BELLEVUE,...}
 		facility code {MAIN:7343,...}
 		facility name {MAIN:GB-SCH-MAIN,...}
+	wksName argument returns the hl7code and hl7name (Preventice facility codes)
 */
-	global wksLoc
 	locationList := []
 	locationLong := {}
 	locationData := new xml(m_strXmlFilename)
@@ -199,7 +199,7 @@ getSites() {
 		longName := node.selectSingleNode("../tabname").text
 		locationLong[aliasName] := longName
 	}
-	wksNode := wksList.selectSingleNode(m_strXmlLocationName "[site='" wksLoc "']")
+	wksNode := wksList.selectSingleNode(m_strXmlLocationName "[site='" wksName "']")
 	codeName := wksNode.selectSingleNode("hl7name").text
 	codeNum := wksNode.selectSingleNode("hl7num").text
 	

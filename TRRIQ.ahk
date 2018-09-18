@@ -96,7 +96,7 @@ if !(wksLoc := GetLocation()) {
 	ExitApp
 }
 
-site := getSites()
+site := getSites(wksLoc)
 sites := site.tracked																	; sites we are tracking
 sites0 := site.ignored																	; sites we are not tracking <tracked>N</tracked> in wkslocation
 sitesLong := site.long																	; {CIS:TAB}
