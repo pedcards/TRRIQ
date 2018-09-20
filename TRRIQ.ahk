@@ -1837,7 +1837,7 @@ registerPreventice(ser) {
 	
 	tmpDOB := parseDate(ptDem.dob)
 	buildHL7("PID"
-		, ""
+		, ptDem.MRN
 		, ptDem.MRN
 		, ""
 		, ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
@@ -1879,60 +1879,62 @@ registerPreventice(ser) {
 	
 	buildHL7("IN1",
 		, "N/A"
-		, ;"Insurance Company ID"
-		, "Seattle Childrens - GB"
-		, ;"Insurance Company Address"
-		, ;"Insurance Co Contact Person"
-		, ;"Insurance Co Phone Number"
-		, ;"Group Number"
-		, ;"Group Name"
-		, ;"Insureds Group Emp ID"
-		, ;"Insureds Group Emp Name"
-		, ;"Plan Effective Date"
-		, ;"Plan Expiration Date"
-		, ;"Authorization Information"
-		, ;"Plan Type"
+		, "" ;"Insurance Company ID"
+		, "Seattle Childrens - GB" ;"Insurance Company Name"
+		, "" ;"Insurance Company Address"
+		, "" ;"Insurance Co Contact Person"
+		, "" ;"Insurance Co Phone Number"
+		, "" ;"Group Number"
+		, "" ;"Group Name"
+		, "" ;"Insureds Group Emp ID"
+		, "" ;"Insureds Group Emp Name"
+		, "" ;"Plan Effective Date"
+		, "" ;"Plan Expiration Date"
+		, "" ;"Authorization Information"
+		, "" ;"Plan Type"
 		, ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
 		, "Self"
 		, tmpDOB.yyyy . tmpDOB.mm . tmpDOB.dd
-		, ;ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
-		, ;"Assignment of Benefits"
-		, ;"Coordination of Benefits"
-		, ;"Primary Payor"
-		, ;"Notice of Admission Code"
-		, ;"Notice of Admission Date"
-		, ;"Report of Eligibility Flag"
-		, ;"Report of Eligibility Date"
-		, ;"Release Information Code"
-		, ;"Pre-Admit Cert (PAC)"
-		, ;"Verification Date/Time"
-		, ;"Verification By"
-		, ;"Type of Agreement Code"
-		, ;"Billing Status"
-		, ;"Lifetime Reserve Days"
-		, ;"Delay Before L R Day"
-		, ;"Company Plan Code"
-		, ;"Policy Number"
-		, ;"Bill Type"
-		, ;"Blank"
-		, ;"Blank"
-		, ;"Blank"
-		, ;"Blank"
-		, ;"Blank"
-		, ;"Blank"
-		, ;"Blank"
-		, ;"Blank"
-		, ;"Blank"
+		, "" ;ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
+		, "" ;"Assignment of Benefits"
+		, "" ;"Coordination of Benefits"
+		, "" ;"Primary Payor"
+		, "" ;"Notice of Admission Code"
+		, "" ;"Notice of Admission Date"
+		, "" ;"Report of Eligibility Flag"
+		, "" ;"Report of Eligibility Date"
+		, "" ;"Release Information Code"
+		, "" ;"Pre-Admit Cert (PAC)"
+		, "" ;"Verification Date/Time"
+		, "" ;"Verification By"
+		, "" ;"Type of Agreement Code"
+		, "" ;"Billing Status"
+		, "" ;"Lifetime Reserve Days"
+		, "" ;"Delay Before L R Day"
+		, "" ;"Company Plan Code"
+		, "" ;"Policy Number"
+		, "" ;"Bill Type"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
 		, "")
 	
+	buildHL7("ORC","")
+	
 	buildHL7("OBR"
-		, ;"Requisition number"
+		, ptDem.account
 		, ""
 		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter^Holter")
 		. strQ((ptDem.model~="BodyGuardian") ? 1 : "","CEM^CEM")
 		, ""
-		, hl7time
 		, ""
+		, hl7time
 		, ""
 		, ""
 		, ""
@@ -1944,8 +1946,6 @@ registerPreventice(ser) {
 		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
 		, "206-987-2015"
 		, "","","","","","","","","","","")
-	
-	buildHL7("ORC","")
 	
 	tmpInd := ptDem.indication
 	loop, parse, tmpInd, |
