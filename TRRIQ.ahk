@@ -120,7 +120,7 @@ MainLoop: ; ===================== This is the main part ========================
 			CheckPreventiceWeb("Facilities")
 		}
 		if (phase="Register") {
-			RegisterPreventice("BG")
+			BGHregister()
 		}
 		if (phase="Upload") {
 			eventlog("Start Mortara preparation/upload.")
@@ -1989,6 +1989,48 @@ registerPreventice(ser) {
 	
 	FileAppend, % hl7Out.msg, % ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".hl7"
 	return
+}
+
+BGHregister() {
+	global wq, ptDem, fetchQuit
+
+	ptDem := object()																; need to initialize ptDem
+	fetchQuit := false
+	gosub getDem																	; need to grab CIS demographics
+	if (fetchQuit=true) {
+		eventlog("Cancelled getDem.")
+		return
+	}
+	getPatInfo()																		; grab remaining demographics for Preventice registration
+	if (fetchQuit=true) {
+		eventlog("Cancelled getPatInfo.")
+		return
+	}
+	
+	ptDem.ser := selectDev()														; need to grab a BGH ser num
+	if (ptDem.ser="") {
+		eventlog("Cancelled selectDev.")
+		return
+	}
+	ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
+	if !(ptDem.model) {
+		i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart")
+		if (i="xClose") {
+			fetchQuit:=false
+			return
+		} else {
+			ptDem.model := i
+		}
+	}
+	i := cMsgBox("Hook-up","Delivery type","Office|Home")
+	ptDem["hookup"] := (i="xClose") ? "Office" : i
+	ptDem["wqid"] := A_tickcount
+	bghWqSave(ptDem.ser)															; write to worklist.xml
+	removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
+	writeOut("/root","inventory")
+	eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
+	
+	registerPreventice()
 }
 
 selectDev() {
