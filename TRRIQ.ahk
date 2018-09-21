@@ -1529,6 +1529,11 @@ MortaraUpload()
 			eventlog("Cancelled getDem.")
 			return
 		}
+		getPatInfo()																		; grab remaining demographics for Preventice registration
+		if (fetchQuit=true) {
+			eventlog("Cancelled getPatInfo.")
+			return
+		}
 		
 		WinActivate, ahk_id %muWinID%
 		sleep 500
@@ -1812,12 +1817,6 @@ registerPreventice(ser) {
 		bghWqSave(ptDem.ser)															; write to worklist.xml
 		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
 		writeOut("/root","inventory")
-	}
-	
-	getPatInfo()																		; grab remaining demographics for Preventice registration
-	if (fetchQuit=true) {
-		eventlog("Cancelled getPatInfo.")
-		return
 	}
 	
 	hl7time := A_Now
