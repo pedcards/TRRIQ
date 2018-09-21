@@ -1564,7 +1564,7 @@ MortaraUpload()
 		muWqSave(SerNum)
 		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 		
-		registerPreventice(serNum)
+		registerPreventice()
 	}
 	
 	return
@@ -1617,6 +1617,7 @@ muWqSave(sernum) {
 	
 	id := A_TickCount
 	ptDem["model"] := "Mortara H3+"
+	ptDem["ser"] := sernum
 	ptDem["dev"] := ptDem.model " - " sernum
 	ptDem["wqid"] := id
 	
@@ -1785,39 +1786,8 @@ UiFieldFill(fld,val,win) {
 	return
 }
 
-registerPreventice(ser) {
+registerPreventice() {
 	global wq, ptDem, fetchQuit, hl7out, indCodes, sitesCode, sitesFacility
-	
-	if (ser="BG") {																		; called from PhaseGUI button
-		ptDem := object()																; need to initialize ptDem
-		fetchQuit := false
-		gosub getDem																	; need to grab CIS demographics
-		if (fetchQuit=true) {
-			eventlog("Cancelled getDem.")
-			return
-		}
-		ptDem.ser := selectDev()														; need to grab a BGH ser num
-		if (ptDem.ser="") {
-			eventlog("Cancelled selectDev.")
-			return
-		}
-		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
-		if !(ptDem.model) {
-			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart")
-			if (i="xClose") {
-				fetchQuit:=false
-				return
-			} else {
-				ptDem.model := i
-			}
-		}
-		i := cMsgBox("Hook-up","Delivery type","Office|Home")
-		ptDem["hookup"] := (i="xClose") ? "Office" : i
-		ptDem["wqid"] := A_tickcount
-		bghWqSave(ptDem.ser)															; write to worklist.xml
-		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
-		writeOut("/root","inventory")
-	}
 	
 	hl7time := A_Now
 	hl7out := Object()
