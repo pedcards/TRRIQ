@@ -1959,7 +1959,7 @@ registerPreventice() {
 		, (ptDem.model~="Mortara" ? "1" : "")
 		. (ptDem.model~="BodyGuardian" ? "30" : "") )
 	
-	FileAppend, % hl7Out.msg, % ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".hl7"
+	FileAppend, % hl7Out.msg, % hl7OutDir . ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	return
 }
 
