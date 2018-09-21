@@ -120,6 +120,7 @@ MainLoop: ; ===================== This is the main part ========================
 			CheckPreventiceWeb("Facilities")
 		}
 		if (phase="Register") {
+			eventlog("Start BGH registration.")
 			BGHregister()
 		}
 		if (phase="Upload") {
