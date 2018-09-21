@@ -991,6 +991,8 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		eventlog(ptDem.Provider " matches " matchProv.Best " (" (1-matchProv.fuzz)*100 ").")
 		ptDem.Provider := matchProv.Best
 	}
+	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
+	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
 	ptDem["Account"] := EncNum															; make sure array has submitted EncNum value
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy												; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
