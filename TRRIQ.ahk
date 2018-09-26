@@ -2238,6 +2238,16 @@ getPatInfo() {
 			ptDem[addr] := trim(i)
 		}
 	}
+	if (ptDem.addr1~="i)P[\. ]+O[\. ]+Box") {
+		InputBox, addr1, Cannot use P.O. Box,`n`nEnter valid street address
+		InputBox, addr2, Cannot use P.O. Box,`n`nEnter city,,,,,,,,% ptDem.city
+		if (addr1) {
+			ptDem.addr1 := addr1
+		} else {
+			fetchQuit := true
+			return
+		}
+	}
 	
 	MsgBox, 4164
 		, Patient contact information
