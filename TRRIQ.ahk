@@ -2251,8 +2251,8 @@ getPatInfo() {
 		. strQ(ptDem.addr2,"   ###`n")
 		. "   " ptDem.city ", " ptDem.state " " ptDem.zip "`n"
 		. "Phone: " ptDem.phone "`n`n"
-		. "Provider: " ptDem.provider
-		. "Encounter date: " ptDem.encDate
+		. "Provider: " ptDem.provider "`n"
+		. "Encounter date: " ptDem.encDate "`n"
 		. "Site: " ptDem.site
 	IfMsgBox, Yes
 	{
