@@ -29,10 +29,10 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	readIni("adminpaths")
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
-	FileGetTime, tmp, TRRIQ.exe
+	FileGetTime, tmp, % A_ScriptName
 	isAdmin := false
 	readIni("paths")
-	eventlog(">>>>> Started in PROD mode. Exe ver " substr(tmp,1,12))
+	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
 }
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
