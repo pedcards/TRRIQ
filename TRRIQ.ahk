@@ -2150,7 +2150,7 @@ getPatInfo() {
 	ptDem.phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
 
 	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
-	relStr := "Father|Mother|Grand|Aunt|Uncle|Sibling|Cousin|Relative|Step|Adult"
+	relStr := "Father|Mother|Grand|Aunt|Uncle|Foster|Parent|Sibling|Cousin|Relative|Step|Adult"
 	rel := Object()
 	loop, parse, famInfo, `n,`r
 	{
@@ -2263,7 +2263,7 @@ getPatInfo() {
 		. "Phone: " ptDem.phone "`n`n"
 		. "Provider: " ptDem.provider "`n"
 		. "Encounter date: " ptDem.encDate "`n"
-		. "Site: " ptDem.site
+		. "Site: " ptDem.loc
 	IfMsgBox, Yes
 	{
 		fetchQuit := false
