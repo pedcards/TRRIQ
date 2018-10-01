@@ -253,6 +253,30 @@ PhaseTask:
 	return
 }
 
+checkCitrix() {
+/*	TRRIQ must be run from local machine
+	local machine names begin with EWCS and Citrix machines start with PPWC
+*/
+	if (A_ComputerName~="EWCS") {														; running on a local machine
+		return																			; return successfully
+	}
+	else if (A_ComputerName~="PPWC") {
+		MsgBox, 4112, Environment error, TRRIQ cannot be run from Citrix/VDI`nWill now exit...
+		IfMsgBox, OK
+		{
+			eventlog("Exiting due to Citrix environment.")
+			ExitApp
+		} else {
+			eventlog("User ignores Citrix environment error.")
+			return
+		}
+	}
+	else {
+		eventlog("Unique machine name.")
+		return
+	}
+}
+
 WQtask() {
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {
