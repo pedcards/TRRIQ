@@ -134,7 +134,6 @@ MainLoop: ; ===================== This is the main part ========================
 
 PhaseGUI:
 {
-	checkCitrix()
 	phase :=
 	Gui, phase:Destroy
 	Gui, phase:Default
