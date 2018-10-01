@@ -196,8 +196,8 @@ PhaseGUIclose:
 menuTrriq:
 {
 	Gui, phase:hide
-	FileGetTime, tmp, TRRIQ.exe
-	MsgBox, 64, About..., % "TRRIQ version " substr(tmp,1,12) "`nTerrence Chun, MD"
+	FileGetTime, tmp, % A_ScriptName
+	MsgBox, 64, About..., % A_ScriptName " version " substr(tmp,1,12) "`nTerrence Chun, MD"
 	Gui, phase:show
 	return
 }
