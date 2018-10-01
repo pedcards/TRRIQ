@@ -1987,7 +1987,9 @@ registerPreventice() {
 		, (ptDem.model~="Mortara" ? "1" : "")
 		. (ptDem.model~="BodyGuardian" ? "30" : "") )
 	
-	FileAppend, % hl7Out.msg, % hl7OutDir . ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
+	fileNm := hl7OutDir . ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
+	FileAppend, % hl7Out.msg, % fileNm
+	eventlog("Preventice registration completed: " fileNm)
 	return
 }
 
@@ -2172,6 +2174,8 @@ getPatInfo() {
 	nameLine := strX(ptInfo,"",1,0,"`n",1)
 	prefName := trim(stregX(nameLine,"i)Pref.*? name:",1,1,"\R+",1))
 	if !instr(nameLine, ptDem.Name) {													; fetched ptInfo must contain ptDem.name
+		fetchQuit := true
+		eventlog("Fetched info does not match " ptDem.Name)
 		return
 	}
 	homePhoneLine := stregX(ptInfo,"i)Home Phone:",1,1,"\R+",1)
@@ -2236,6 +2240,7 @@ getPatInfo() {
 		nm .= A_index ") " rel[A_index].name "|"										; generate parent name menu for cmsgbox
 	}
 	if (rel.MaxIndex() > 1) {
+		eventlog("Multiple potential parent matches (" rel.MaxIndex() ").")
 		q := cmsgbox("Parent","Who is the guarantor?",trim(nm,"|"))
 		if (q="xClose") {
 			fetchQuit:=true
@@ -2272,6 +2277,7 @@ getPatInfo() {
 		InputBox, addr2, Cannot use P.O. Box,`n`nEnter city,,,,,,,,% ptDem.city
 		if (addr1) {
 			ptDem.addr1 := addr1
+			eventlog("Replaced PO box with valid address.")
 		} else {
 			fetchQuit := true
 			return
@@ -2295,6 +2301,7 @@ getPatInfo() {
 		. "Site: " ptDem.loc
 	IfMsgBox, Yes
 	{
+		eventlog("Accepted patient address info.")
 		fetchQuit := false
 	} else {
 		fetchQuit := true
