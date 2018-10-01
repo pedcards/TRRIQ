@@ -134,6 +134,7 @@ MainLoop: ; ===================== This is the main part ========================
 
 PhaseGUI:
 {
+	checkCitrix()
 	phase :=
 	Gui, phase:Destroy
 	Gui, phase:Default
@@ -1119,6 +1120,8 @@ getDem:
 
 CheckPreventiceWeb(win) {
 	global phase, prevGrabTime:=A_now
+	checkCitrix()
+	
 	str := {}
 	str.Enrollment := {dlg:"Enrollment / Submitted Patients"
 		, match:"Enrollment Queue (Submitted)"
@@ -1409,6 +1412,8 @@ return "Scanned " files " files, " count " DONE records added."
 MortaraUpload()
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
+	checkCitrix()
+	
 	ptDem := Object()
 	mu_UI := Object()
 	fetchQuit := false
@@ -1989,6 +1994,7 @@ registerPreventice() {
 
 BGHregister() {
 	global wq, ptDem, fetchQuit
+	checkCitrix()
 
 	ptDem := object()																; need to initialize ptDem
 	fetchQuit := false
