@@ -257,6 +257,7 @@ checkCitrix() {
 /*	TRRIQ must be run from local machine
 	local machine names begin with EWCS and Citrix machines start with PPWC
 */
+	global isAdmin
 	if (A_ComputerName~="EWCS") {														; running on a local machine
 		return																			; return successfully
 	}
