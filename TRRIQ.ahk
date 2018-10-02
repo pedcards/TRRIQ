@@ -3229,7 +3229,7 @@ Event_BGH_Hl7:
 	fieldcoladd("dem","Test_date",niceDate(obxVal["Enroll_Start_Dt"]))
 	fieldcoladd("dem","Test_end",niceDate(obxVal["Enroll_End_Dt"]))
 	
-	enroll := RegExReplace(stregX(newtxt,"Event Counts",1,0,"Interpreting Physician",1),"\R+","`n") "<<<<<"
+	enroll := RegExReplace(stregX(newtxt,"Event Counts",1,0,"(Summarized Findings|Rhythm Summary)",1),"\R+","`n") "<<<<<"
 	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger","\R"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto","VOID"]
 	fieldvals(enroll,3,"counts")
@@ -3256,7 +3256,7 @@ Event_BGH:
 	monType := "BGH"
 	
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
-	demog := columns(newtxt,"","(Summarized Findings|Event Summary)",,"Enrollment Info")
+	demog := columns(newtxt,"","(Summarized Findings|Event Summary|Rhythm Summary)",,"Enrollment Info")
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
 	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice|Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
