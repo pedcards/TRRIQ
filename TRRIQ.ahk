@@ -262,14 +262,15 @@ checkCitrix() {
 	}
 	else if (A_ComputerName~="PPWC") {
 		MsgBox, 4112, Environment error, TRRIQ cannot be run from Citrix/VDI`nWill now exit...
+		if (isAdmin) {
+			eventlog("Detects admin user in Citrix environment. Returning.")
+			return
+		}
 		IfMsgBox, OK
 		{
 			eventlog("Exiting due to Citrix environment.")
 			ExitApp
-		} else {
-			eventlog("User ignores Citrix environment error.")
-			return
-		}
+		} 
 	}
 	else {
 		eventlog("Unique machine name.")
