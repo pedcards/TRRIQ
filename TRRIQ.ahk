@@ -3218,8 +3218,6 @@ hl7fld(bl,pre) {
 	}
 	return
 }
-	
-
 
 Event_BGH_Hl7:
 {
