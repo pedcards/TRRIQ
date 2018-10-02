@@ -1815,7 +1815,7 @@ UiFieldFill(fld,val,win) {
 }
 
 registerPreventice() {
-	global wq, ptDem, fetchQuit, hl7out, indCodes, sitesCode, sitesFacility
+	global wq, ptDem, fetchQuit, hl7out, hl7OutDir, indCodes, sitesCode, sitesFacility
 	
 	hl7time := A_Now
 	hl7out := Object()
@@ -1984,8 +1984,9 @@ registerPreventice() {
 		, (ptDem.model~="Mortara" ? "1" : "")
 		. (ptDem.model~="BodyGuardian" ? "30" : "") )
 	
-	fileNm := hl7OutDir . ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
-	FileAppend, % hl7Out.msg, % fileNm
+	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
+	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
+	FileCopy, % ".\tempfiles\" fileNm , % hl7OutDir . fileNm
 	eventlog("Preventice registration completed: " fileNm)
 	return
 }
