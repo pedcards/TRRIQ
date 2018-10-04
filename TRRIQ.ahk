@@ -440,7 +440,7 @@ WQlist() {
 	Gui, Tab, INBOX
 	Gui, Add, Listview
 		, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
-		, filename|Name|MRN|DOB|Study Date|wqid|Type|FTP
+		, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|FTP
 	
 /*	Process each .hl7 file
 */
@@ -461,8 +461,9 @@ WQlist() {
 			, hl7Dir fileIn																; path and filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
 			, strQ(res.mrn,"###",x.3)													; mrn
-			, strQ(res.dob,"###",niceDate(x.4))											; dob
-			, strQ(res.date,"###",SubStr(x.5,1,8))										; study date
+			, strQ(niceDate(res.dob),"###",niceDate(x.4))								; dob
+			, strQ(res.site,"###","???")												; site
+			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, (res.dev~="BG") ? "BGH"													; extracted
 			: (res.dev~="Mortara") ? "HOL"
@@ -494,6 +495,7 @@ WQlist() {
 			, strQ(res.Name,"###",strX(val,"",1,0,"_",1))								; name from wqid or filename
 			, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))								; mrn
 			, strQ(res.dob,"###")														; dob
+			, strQ(res.site,"###","???")												; site
 			, strQ(res.date,"###")														; study date
 			, id																		; wqid
 			, ftype																		; study type
@@ -509,12 +511,11 @@ WQlist() {
 		LV_ModifyCol(2,"140")															; name
 		LV_ModifyCol(3,"60")															; mrn
 		LV_ModifyCol(4,"80")															; dob
-		LV_ModifyCol(5,"80 Asc")														; date
-		LV_ModifyCol(5,"Sort")
-		LV_ModifyCol(6,"70")															; wqid
-		LV_ModifyCol(7,"40")															; ftype
-		LV_ModifyCol(8,"40")															; ftp
-		LV_ModifyCol(8,"Center")
+		LV_ModifyCol(5,"60")															; site
+		LV_ModifyCol(6,"80 Sort")														; date
+		LV_ModifyCol(7,"2")																; wqid
+		LV_ModifyCol(8,"40")															; ftype
+		LV_ModifyCol(9,"40 Center")														; ftp
 		
 	}	; <-- finish Main Campus Inbox
 	
@@ -688,8 +689,8 @@ readWQlv:
 		return
 	}
 	LV_GetText(fileIn,x,1)																; selection filename
-	LV_GetText(wqid,x,6)																; WQID
-	LV_GetText(ftype,x,7)																; filetype
+	LV_GetText(wqid,x,7)																; WQID
+	LV_GetText(ftype,x,8)																; filetype
 	SplitPath,fileIn,fnam,,,fileNam
 	
 	blocks := Object()																	; clear all objects
