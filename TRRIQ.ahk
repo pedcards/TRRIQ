@@ -437,7 +437,9 @@ WQlist() {
 	if (wksloc="Main Campus") {
 		
 	Gui, Tab, INBOX
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H285 greadWQlv vWQlv_in hwndHLV_in, filename|Name|MRN|DOB|Study Date|wqid|Type|FTP
+	Gui, Add, Listview
+		, % "-Multi Grid BackgroundSilver W" wqDimW-20 " H" wqDimH-35 " greadWQlv vWQlv_in hwndHLV_in"
+		, filename|Name|MRN|DOB|Study Date|wqid|Type|FTP
 	
 /*	Process each .hl7 file
 */
@@ -516,14 +518,18 @@ WQlist() {
 	}	; <-- finish Main Campus Inbox
 	
 	Gui, Tab, ALL
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H285 gWQtask vWQlv_all hwndHLV_all, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, Add, Listview
+		, % "-Multi Grid BackgroundSilver W" wqDimW-20 " H" wqDimH-35 " gWQtask vWQlv_all hwndHLV_all"
+		, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
 	Loop, parse, sites, |
 	{
 		i := A_index
 		site := A_LoopField
 		Gui, Tab, % site
-		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H285 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, Add, Listview
+			, % "-Multi Grid BackgroundSilver W" wqDimW-20 " H" wqDimH-35 " gWQtask vWQlv"i " hwndHLV"i
+			, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
 		{
 			k := ens.item(A_Index-1)
