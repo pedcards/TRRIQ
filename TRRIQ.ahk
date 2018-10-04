@@ -171,7 +171,7 @@ PhaseGUI:
 		, Grab Preventice inventory
 	
 	Gui, Add, Tab3
-		, -Wrap x10 y10 w620 h320 vWQtab
+		, -Wrap x10 y10 w620 h320 vWQtab +HwndWQtab
 		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	WQlist()
 	
@@ -412,6 +412,7 @@ WQlist() {
 	global
 	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles
 	wqfiles := []
+	GuiControlGet, wqDim, Pos, WQtab
 	
 	Progress,,,Scanning worklist...
 	
