@@ -1177,12 +1177,12 @@ grabWebpage(title) {
 	{
 		WinActivate, %title%															; activate the browser window when title matches
 		MouseGetPos,mouseX,mouseY														; get mouse coords
-			MouseClick, Left, % winX+winW-30, % mouseY													; Click off to far side to clear selection
+			MouseClick, Left, % winX+winW-40, % mouseY									; Click off to far side to clear selection
 			Send, ^a^c																	; Select All, Copy
 			sleep 200																	; need to pause to fill clipboard
 			clip := Clipboard
-			MouseClick, Left, % winX+winW-30, % mouseY												; Click off to far side to clear selection
-		MouseMove, % mouseX, % mouseY														; move back to original coords
+			MouseClick, Left, % winX+winW-40, % mouseY									; Click off to far side to clear selection
+		MouseMove, % mouseX, % mouseY													; move back to original coords
 		return clip
 	} 
 	return error
