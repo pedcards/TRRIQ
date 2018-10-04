@@ -147,6 +147,9 @@ PhaseGUI:
 	
 	Gui, Font, Bold
 	Gui, Add, Button
+		, Y+10 wp h40 gPhaseTask
+		, Refresh files
+	Gui, Add, Button
 		, Y+10 wp h40 vEnrollment gPhaseTask
 		, Grab Preventice enrollments
 	Gui, Add, Button
