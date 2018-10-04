@@ -410,9 +410,10 @@ maxinput(title, prompt, max) {
 
 WQlist() {
 	global
-	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles
+	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim
 	wqfiles := []
 	GuiControlGet, wqDim, Pos, WQtab
+	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
 	Progress,,,Scanning worklist...
 	
@@ -438,7 +439,7 @@ WQlist() {
 		
 	Gui, Tab, INBOX
 	Gui, Add, Listview
-		, % "-Multi Grid BackgroundSilver W" wqDimW-20 " H" wqDimH-35 " greadWQlv vWQlv_in hwndHLV_in"
+		, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
 		, filename|Name|MRN|DOB|Study Date|wqid|Type|FTP
 	
 /*	Process each .hl7 file
@@ -519,7 +520,7 @@ WQlist() {
 	
 	Gui, Tab, ALL
 	Gui, Add, Listview
-		, % "-Multi Grid BackgroundSilver W" wqDimW-20 " H" wqDimH-35 " gWQtask vWQlv_all hwndHLV_all"
+		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
 		, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
 	Loop, parse, sites, |
@@ -528,7 +529,7 @@ WQlist() {
 		site := A_LoopField
 		Gui, Tab, % site
 		Gui, Add, Listview
-			, % "-Multi Grid BackgroundSilver W" wqDimW-20 " H" wqDimH-35 " gWQtask vWQlv"i " hwndHLV"i
+			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
 			, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
 		{
