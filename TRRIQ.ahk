@@ -2648,10 +2648,12 @@ Holter_Pr_Hl7:
 	demog := stregX(newtxt,"Name:",1,0,"Medications:",1)
 	fields[1] := ["Recording Start Date/Time","\R"
 		, "Date Processed","(Technician|Hookup Tech)","Analyst","\R"
-		, "Recording Duration","Recorder (No|Number)","\R"]
+		, "Recording Duration","Recorder (No|Number)","\R"
+		, "Indications","\R"]
 	labels[1] := ["Test_date","null"
 		, "Scan_date","Hookup_tech","Scanned_by","null"
-		, "Recording_time","Device_SN","null"]
+		, "Recording_time","Device_SN","null"
+		, "Indication","null"]
 	fieldvals(demog,1,"dem")
 	
 	duration := stregx(newtxt "<<<","(\R)ALL BEATS",1,0,"(\R)HEART RATE EPISODES",0)
