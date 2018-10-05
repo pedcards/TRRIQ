@@ -2000,6 +2000,7 @@ registerPreventice() {
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
 	FileCopy, % ".\tempfiles\" fileNm , % hl7OutDir . fileNm
 	eventlog("Preventice registration completed: " fileNm)
+	MsgBox, 262208, Preventice registration, Successful device registration!
 	return
 }
 
