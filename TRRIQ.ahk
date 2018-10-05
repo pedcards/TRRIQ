@@ -2007,9 +2007,9 @@ BGHregister() {
 	global wq, ptDem, fetchQuit
 	checkCitrix()
 
-	ptDem := object()																; need to initialize ptDem
+	ptDem := object()																	; need to initialize ptDem
 	fetchQuit := false
-	gosub getDem																	; need to grab CIS demographics
+	gosub getDem																		; need to grab CIS demographics
 	if (fetchQuit=true) {
 		eventlog("Cancelled getDem.")
 		return
@@ -2020,28 +2020,32 @@ BGHregister() {
 		return
 	}
 	
-	ptDem.ser := selectDev()														; need to grab a BGH ser num
-	if (ptDem.ser="") {
-		eventlog("Cancelled selectDev.")
-		return
-	}
-	ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
-	if !(ptDem.model) {
-		i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart")
-		if (i="xClose") {
-			fetchQuit:=false
-			return
-		} else {
-			ptDem.model := i
-		}
-	}
 	i := cMsgBox("Hook-up","Delivery type","Office|Home")
-	ptDem["hookup"] := (i="xClose") ? "Office" : i
-	ptDem["wqid"] := A_tickcount
-	bghWqSave(ptDem.ser)															; write to worklist.xml
-	removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
-	writeOut("/root","inventory")
-	eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
+	if (i="Home") {
+		ptDem["hookup"] := "Home"
+		ptDem["model"] := "BodyGuardian Heart"
+		eventlog("BGH home registration for " ptDem["mrn"] " " ptDem["nameL"] ".") 
+	} else {																			; either Office or [X]
+		ptDem["hookup"] := "Office"
+		ptDem.ser := selectDev()														; need to grab a BGH ser num
+		if (ptDem.ser="") {
+			eventlog("Cancelled selectDev.")
+			return
+		}
+		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
+		if !(ptDem.model) {
+			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart")
+			if (i="xClose") {
+				return
+			} else {
+				ptDem.model := i
+			}
+		}
+		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
+		writeOut("/root","inventory")
+		eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
+	}
+	bghWqSave(ptDem.ser)																; write to worklist.xml
 	
 	registerPreventice()
 }
