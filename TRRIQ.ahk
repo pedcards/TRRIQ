@@ -1081,7 +1081,7 @@ indGUI:
 	Gui, ind:+AlwaysOnTop
 	Gui, ind:font, s12
 	Gui, ind:Add, Text, , % "Enter indications: " ptDem["Indication"]
-	Gui, ind:Add, ListBox, r12 vIndChoices 8, %indOpts%
+	Gui, ind:Add, ListBox, w360 r12 vIndChoices 8, %indOpts%
 	Gui, ind:Add, Button, gindSubmit, Submit
 	Gui, ind:Show, Autosize, Enter indications
 	return
