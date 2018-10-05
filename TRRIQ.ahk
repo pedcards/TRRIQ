@@ -2327,18 +2327,9 @@ getPatInfo() {
 bghWqSave(sernum) {
 	global wq, ptDem, user, sitesLong
 	
-	filecheck()
-	FileOpen(".lock", "W")																; Create lock file.
-	wqStr := "/root/pending/enroll[dev='" ptDem.model " - " ptDem.ser "']"
-	loop, % (ens:=wq.selectNodes(wqStr)).length											; Clear all prior instances of this sernum
-	{																					; don't need for BGH?
-	}
-	if (ptDem.EncDate) {
-		tmp := parsedate(ptDem.EncDate)
-		ptDem.date := tmp.YYYY tmp.MM tmp.DD
-	}
-	
 	id := A_TickCount 
+	tmpDT := parsedate(ptDem.EncDate)
+	ptDem["date"] := tmpDT.YYYY tmpDT.MM tmpDT.DD
 	ptDem["dev"] := ptDem.model " - " ptDem.ser
 	ptDem["wqid"] := id
 	
@@ -2356,7 +2347,6 @@ bghWqSave(sernum) {
 	wq.addElement("ind",newID,ptDem["Indication"])
 	wq.addElement("register",newID,{user:A_UserName},A_now)
 	
-	filedelete, .lock
 	writeOut("/root/pending","enroll[@id='" id "']")
 	
 	return
