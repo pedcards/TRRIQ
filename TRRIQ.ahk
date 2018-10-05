@@ -485,7 +485,7 @@ WQlist() {
 				: (fnID.2="M") ? "MINI"
 				: "???"																	; could condense as ftype := {"H":"PDF","Z":"ZIO","E":"CEM","M":"MINI"}[fnID.2]
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
-			LV_Modify(k,"Col8","")														; clear the "X" in the FullDisc column
+			LV_Modify(k,"Col9","")														; clear the "X" in the FullDisc column
 			continue																	; skip rest of processing
 		}
 		res := readwq(id)																; get values for wqid if valid, else null
