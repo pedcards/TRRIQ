@@ -2367,7 +2367,7 @@ moveHL7dem() {
 		fldVal["dem-MRN"] := fldval.MRN
 		fldVal["dem-DOB"] := fldval.DOB
 		fldVal["dem-Sex"] := fldval.Sex
-		fldVal["dem-Indication"] := 
+		fldVal["dem-Indication"] := fldVal.ind
 		fldVal["dem-Site"] := fldVal.site
 		fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
 		fldVal["dem-Ordering"] := fldval.prov
