@@ -2223,6 +2223,7 @@ getPatInfo() {
 			. "Work:|"
 			. "Inpatient|"
 			. "Emergency|"
+			. "Adoption|"
 			. "^\s*$|"
 			. "^>)")
 		{
