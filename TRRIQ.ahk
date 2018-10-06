@@ -1203,6 +1203,7 @@ grabWebpage(title) {
 parsePreventiceEnrollment(x) {
 	global wq
 	
+	done := 0
 	fileCheck()
 	wq := new XML("worklist.xml")													; refresh WQ
 	FileOpen(".lock", "W")															; Create lock file.
@@ -1306,6 +1307,7 @@ parsePreventiceInventory(x) {
 		eventlog("Created new Inventory node.")
 	}
 	
+	done := 0
 	blk := cleanBlank(stregX(x,"Tracking Number",1,1,"Change page",1))
 	Loop, parse, blk, `n, `r
 	{
@@ -1557,6 +1559,7 @@ MortaraUpload()
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']")
 		eventlog(ptDem.MRN " " ptDem.Name " study " ptDem.Date " uploaded to Preventice.")
+		MsgBox, 262208, Transfer, Successful data upload to Preventice.
 	}
 	
 	if (Tabnum=2) {																		; PREPARE MEDIA TAB
