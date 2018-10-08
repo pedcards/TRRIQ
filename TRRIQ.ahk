@@ -157,10 +157,10 @@ PhaseGUI:
 		, Grab Preventice inventory
 	Gui, Add, Button
 		, Y+10 wp h40 vRegister gPhaseTask
-		, Register BodyGuardian
+		, Register BGH EVENT RECORDER
 	Gui, Add, Button
 		, Y+10 wp h40 vUpload gPhaseTask
-		, Prepare/Upload Holter
+		, Prepare/Upload MORTARA HOLTER
 	Gui, Font, Normal
 	
 	GuiControl
