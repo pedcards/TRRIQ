@@ -2010,7 +2010,13 @@ registerPreventice() {
 BGHregister() {
 	global wq, ptDem, fetchQuit
 	checkCitrix()
-
+	
+	MsgBox, 262177, Event recorder, Start BGH event recorder registration?
+	IfMsgBox, Cancel
+	{
+		return
+	}
+	
 	ptDem := object()																	; need to initialize ptDem
 	fetchQuit := false
 	gosub getDem																		; need to grab CIS demographics
