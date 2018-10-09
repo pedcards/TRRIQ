@@ -2824,6 +2824,12 @@ findFullPdf(wqid:="") {
 		
 		RegExMatch(fname,"O)_WQ(\d+)(\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
 		
+		if (readWQ(fnID.1).node = "done") {
+			eventlog("Leftover PDF: " fnam ", moved to archive.")
+			FileMove, % fileIn, % holterDir "archive\" fname
+			continue
+		}
+		
 		if (fnID.0 = "") {																; Unprocessed full disclosure PDF
 			runwait, pdftotext.exe -l 1 "%fileIn%" "%fnam%.txt",,min					; convert PDF pages 1-2 with no tabular structure
 			FileRead, newtxt, %fnam%.txt												; load into newtxt
