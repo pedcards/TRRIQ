@@ -3910,6 +3910,17 @@ filterProv(x) {
 	return {name:x, site:site1}
 }
 
+IEGet(name="") {
+/*	from the very helpful post by jethrow
+	https://autohotkey.com/board/topic/47052-basic-webpage-controls-with-javascript-com-tutorial/
+*/
+	IfEqual, Name,, WinGetTitle, Name, ahk_class IEFrame     ;// Get active window if no parameter
+	Name := (Name="New Tab - Windows Internet Explorer")? "about:Tabs":RegExReplace(Name, " - (Windows|Microsoft)? ?Internet Explorer$")
+	for wb in ComObjCreate("Shell.Application").Windows()
+		if wb.LocationName=Name and InStr(wb.FullName, "iexplore.exe")
+			return wb
+}
+
 httpComm(url:="",verb:="") {
 	global servFold
 	if (url="") {
