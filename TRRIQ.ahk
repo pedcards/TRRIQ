@@ -1149,6 +1149,44 @@ CheckPreventiceWeb(win) {
 			return
 		}
 	}
+	wb := IEGet("Patient Enrollment")
+	
+	tbls := wb.document.getElementsByTagName("tbody")
+	
+	;~ Loop																				; repeat until done
+	;~ {
+		;~ MsgBox, 4145, "%title%" grab, Ready to grab!`n`n`[OK] to grab this page`n[CANCEL] to exit
+		;~ IfMsgBox, OK
+		;~ {
+			;~ clip := grabWebpage(win)
+			;~ tbls := wb.document.tags("tbody")
+		;~ }
+		loop % (tbls := wb.document.getElementsByTagName("tbody")).length
+		{
+			n := A_index-1
+			tbody := tbls[n]
+			tid := tbody.parentNode.id
+			if (tid~="RadGridPatients_ctl010") {
+				tlist := tid
+				break
+			}
+		}
+		MsgBox % tlist
+	;~ }
+	
+	
+	return
+}
+
+
+
+
+
+
+
+
+
+null(){
 	loop																				; Repeat until determine done
 	{
 		clip := grabWebpage(win)														; Page exists, ask to grab
@@ -1184,10 +1222,10 @@ grabWebpage(title) {
  */
 	WinActivate, %title%																; activate the browser window when title matches
 	WinGetPos, winX, winY, winW, winH
-	MsgBox, 4145, "%title%" grab, Ready to grab!`n`n`[OK] to grab this page`n[CANCEL] to exit
-	IfMsgBox, OK
-	{
-		WinActivate, %title%															; activate the browser window when title matches
+	;~ MsgBox, 4145, "%title%" grab, Ready to grab!`n`n`[OK] to grab this page`n[CANCEL] to exit
+	;~ IfMsgBox, OK
+	;~ {
+		;~ WinActivate, %title%															; activate the browser window when title matches
 		MouseGetPos,mouseX,mouseY														; get mouse coords
 			MouseClick, Left, % winX+winW-40, % mouseY									; Click off to far side to clear selection
 			Send, ^a^c																	; Select All, Copy
@@ -1196,8 +1234,8 @@ grabWebpage(title) {
 			MouseClick, Left, % winX+winW-40, % mouseY+20								; Click off to far side to clear selection
 		MouseMove, % mouseX, % mouseY													; move back to original coords
 		return clip
-	} 
-	return error
+	;~ } 
+	;~ return error
 }
 
 parsePreventiceEnrollment(x) {
