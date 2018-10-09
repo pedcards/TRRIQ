@@ -1151,27 +1151,21 @@ CheckPreventiceWeb(win) {
 	}
 	wb := IEGet(win)
 	
-	;~ Loop																				; repeat until done
-	;~ {
-		;~ MsgBox, 4145, "%title%" grab, Ready to grab!`n`n`[OK] to grab this page`n[CANCEL] to exit
-		;~ IfMsgBox, OK
-		;~ {
-			;~ clip := grabWebpage(win)
-			;~ tbls := wb.document.tags("tbody")
-		;~ }
-		loop % (tbls := wb.document.getElementsByTagName("tbody")).length
-		{
-			n := A_index-1
-			tbody := tbls[n]
-			tid := tbody.parentNode.id
-			if (tid~="RadGridPatients_ctl010") {
-				tlist := tid
-				break
-			}
+	loop % (tbls := wb.document.getElementsByTagName("table")).length
+	{
+		n := A_index-1
+		tbl := tbls[n]
+		tid := tbl.id
+		if (tid~="RadGridPatients_ctl00") {
+			tlist := tbl
+			break
 		}
-		MsgBox % tlist
-	;~ }
-	
+	}
+	tb1 := tlist
+		.getElementsByTagName("tbody")[0]
+		.getElementsByTagName("tr")[0]
+		.getElementsByTagName("td")
+	MsgBox % tb1.length
 	
 	return
 }
