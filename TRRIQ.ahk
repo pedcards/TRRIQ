@@ -2694,6 +2694,16 @@ Holter_Pr_Hl7:
 			break																		; found matching full disclosure, exit loop
 		} else {
 			eventlog("Full disclosure PDF not found.")
+			
+			MsgBox, 262164
+				, Missing PDF
+				, Full disclosure not found.`n`nSend request to Preventice?
+			IfMsgBox, Yes
+			{
+				; send email
+				return
+			}
+			
 			MsgBox, 4149
 				, Missing file
 				, % "No full disclosure PDF found for:`n"
