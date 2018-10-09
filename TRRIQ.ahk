@@ -1149,9 +1149,7 @@ CheckPreventiceWeb(win) {
 			return
 		}
 	}
-	wb := IEGet("Patient Enrollment")
-	
-	tbls := wb.document.getElementsByTagName("tbody")
+	wb := IEGet(win)
 	
 	;~ Loop																				; repeat until done
 	;~ {
