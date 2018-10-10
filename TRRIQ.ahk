@@ -1167,27 +1167,27 @@ CheckPreventiceWeb(win) {
 		}
 		tbl := tbl.getElementsByTagName("tbody")[0]
 		clip := tbl.innertext
+		if (clip = clip0) {																; Check if this is the same as the last page
+			MsgBox,4144,, % "Done already!`n`nClick on 'Next Page'`nbefore proceding."
+			IfMsgBox, OK
+			{
+				continue
+			} else {
+				break
+		}
+		}
 		
 		done := %prvFunc%(tbl)		; parsePreventiceEnrollment() or parsePreventiceInventory()
-		if !(done) {
+		if (done=0) {
 			MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
 			break
 		}
-		clip0 := clip
+		clip0 := clip																	; set the check for repeat copy
 
-	
-	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
-	{
-		r_idx := A_index-1
-		trow := trows[r_idx]
-		val := []
-		loop % (tcols := trow.getElementsByTagName("td")).length
-		{
-			c_idx := A_Index-1
-			val[lbl[A_index]] := trim(tcols[c_idx].innertext)
+		PreventiceWebPager(wb,str[phase].changed,str[phase].btn)
 		}
-	}
 	
+	ComObjConnect(wb)																	; release wb object
 	return
 }
 
