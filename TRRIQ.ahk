@@ -1134,8 +1134,11 @@ CheckPreventiceWeb(win) {
 	str.Enrollment := {dlg:"Enrollment / Submitted Patients"
 		, url:"https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
 		, tbl:"ctl00_mainContent_PatientListSubmittedCtrl1_RadGridPatients_ctl00"
+		, changed:"ctl00_mainContent_PatientListSubmittedCtrl1_lblTotalCountMessage"
+		, btn:"ctl00_mainContent_PatientListSubmittedCtrl1_btnNextPage"
 		, fx:"ParsePreventiceEnrollment"}
 	str.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
+		, url:"https://secure.preventice.com/Facilities/"
 		, match:"Device Status"
 		, fx:"ParsePreventiceInventory"}
 	
