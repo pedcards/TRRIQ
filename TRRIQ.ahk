@@ -1139,7 +1139,9 @@ CheckPreventiceWeb(win) {
 		, fx:"ParsePreventiceEnrollment"}
 	str.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
 		, url:"https://secure.preventice.com/Facilities/"
-		, match:"Device Status"
+		, tbl:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00"
+		, changed:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00_Pager"
+		, btn:"ctl00$mainContent$InventoryStatus_userControl$gvInventoryStatus$ctl00$ctl03$ctl01$ctl08"
 		, fx:"ParsePreventiceInventory"}
 	
 	while !(WinExist(win))																; expected IE window title not present
