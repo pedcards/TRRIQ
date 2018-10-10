@@ -1253,38 +1253,23 @@ grabWebpage(title) {
 
 parsePreventiceEnrollment(tbl) {
 	global wq
+	
 	lbl := ["name","mrn","date","dev","prov"]
-	
-return	
-}
-
-old_parsePreventiceEnrollment(x) {
-	global wq
-	
 	done := 0
 	fileCheck()
-	wq := new XML("worklist.xml")													; refresh WQ
-	FileOpen(".lock", "W")															; Create lock file.
-	Loop
+	wq := new XML("worklist.xml")														; refresh WQ
+	FileOpen(".lock", "W")																; Create lock file.
+	
+	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
 	{
-		blk := stregX(x,"Patient Enrollment",n,1,"Dr\..*?[\r\n]",0,n)
-		if !(blk) {
-			break
+		r_idx := A_index-1
+		trow := trows[r_idx]
+		res := []
+		loop % (tcols := trow.getElementsByTagName("td")).length						; loop through cols
+		{
+			c_idx := A_Index-1
+			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
-		blk := trim(RegExReplace(blk,"[\r\n]+")," `r`n")
-		fields := ["^"
-				,"\d{6,7}"
-				,"\d{1,2}/\d{1,2}/\d{2,4}"
-				,"\w"
-				,"Dr. "
-				,"$"]
-		labels := ["name"
-				,"mrn"
-				,"date"
-				,"dev"
-				,"prov"
-				,"end"]
-		res:=scanX(blk,fields,labels)
 		tmp := parseDate(res.date)
 		date := tmp.YYYY tmp.MM tmp.DD
 		count ++
@@ -1340,10 +1325,7 @@ old_parsePreventiceEnrollment(x) {
 	wq.save("worklist.xml")
 	filedelete, .lock
 	
-	return done
-/*		value = records added
- *		null  = no records added (no unique)
- */
+	return done																			; returns number of matches, or 0 (error) if no matches
 }
 
 parsePreventiceInventory(x) {
@@ -1402,20 +1384,6 @@ parsePreventiceInventory(x) {
 	filedelete, .lock
 	
 	return done
-}
-
-scanX(txt,fields,labels) {
-	res := Object()
-	for k, i in fields																	; Step through each val "i" from fields[bl,k]
-	{
-		x := fields[k]
-		y := fields[k+1]
-		
-		val := stregX(txt,x,n,0,y,1,n)
-		
-		res[labels[k]]:=trim(val)
-	}
-	return res
 }
 
 findWQid(DT:="",MRN:="",ser:="",name:="") {
