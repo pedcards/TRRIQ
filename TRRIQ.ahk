@@ -1141,7 +1141,7 @@ CheckPreventiceWeb(win) {
 		, url:"https://secure.preventice.com/Facilities/"
 		, tbl:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00"
 		, changed:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00_Pager"
-		, btn:"ctl00$mainContent$InventoryStatus_userControl$gvInventoryStatus$ctl00$ctl03$ctl01$ctl08"
+		, btn:"rgPageNext"
 		, fx:"ParsePreventiceInventory"}
 	
 	while !(WinExist(win))																; expected IE window title not present
