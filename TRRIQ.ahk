@@ -1282,7 +1282,7 @@ parsePreventiceEnrollment(tbl) {
 	return done																			; returns number of matches, or 0 (error) if no matches
 }
 
-parsePreventiceInventory(x) {
+parsePreventiceInventory(tbl) {
 /*	Parse Preventice website for device inventory
 	Add unique ser nums to /root/inventory/dev[@ser]
 	These will be removed when registered
