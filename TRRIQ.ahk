@@ -1156,7 +1156,7 @@ CheckPreventiceWeb(win) {
 	
 	prvFunc := str[phase].fx
 	wb := IEGet(win)
-	wb.navigate(str[phase].url)
+	;~ wb.navigate(str[phase].url)
 	
 	loop
 	{
@@ -1167,15 +1167,6 @@ CheckPreventiceWeb(win) {
 		}
 		tbl := tbl.getElementsByTagName("tbody")[0]
 		clip := tbl.innertext
-		if (clip = clip0) {																; Check if this is the same as the last page
-			MsgBox,4144,, % "Done already!`n`nClick on 'Next Page'`nbefore proceding."
-			IfMsgBox, OK
-			{
-				continue
-			} else {
-				break
-			}
-		}
 		
 		done := %prvFunc%(tbl)		; parsePreventiceEnrollment() or parsePreventiceInventory()
 		if (done=0) {
