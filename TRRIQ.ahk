@@ -2175,12 +2175,12 @@ getPatInfo() {
 	{
 		WinActivate, ahk_id %winID%
 		clipboard := 
-		MouseClick, Left, % winX+winW-40, % winY+0.6*winH								; click just inside window
+		MouseClick, Left, % winW-40, % 0.6*winH											; click just inside window
 		
 		Send, ^a^c																		; Select All, Copy
 		sleep 200																		; need to pause to fill clipboard
 		txt := Clipboard
-		MouseClick, Left, % winX+winW-40, % winY+0.6*winH+10							; click again to deselect all
+		MouseClick, Left, % winW-40, % 0.6*winH+10										; click again to deselect all
 		MouseMove, mouseX, mouseY														; move back to original coords
 		if instr(txt,"Patient contact info") {
 			break																		; break out of this loop
