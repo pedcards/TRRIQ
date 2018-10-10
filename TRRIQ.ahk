@@ -1230,7 +1230,14 @@ grabWebpage(title) {
 	;~ return error
 }
 
-parsePreventiceEnrollment(x) {
+parsePreventiceEnrollment(tbl) {
+	global wq
+	lbl := ["name","mrn","date","dev","prov"]
+	
+return	
+}
+
+old_parsePreventiceEnrollment(x) {
 	global wq
 	
 	done := 0
