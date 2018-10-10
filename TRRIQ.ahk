@@ -1158,7 +1158,6 @@ CheckPreventiceWeb(win) {
 	
 	prvFunc := str[phase].fx
 	wb := IEGet(win)
-	;~ wb.navigate(str[phase].url)
 	
 	loop
 	{
@@ -1184,6 +1183,7 @@ CheckPreventiceWeb(win) {
 		PreventiceWebPager(wb,str[phase].changed,str[phase].btn)
 	}
 	
+	wb.navigate(str[phase].url)															; refresh first page
 	ComObjConnect(wb)																	; release wb object
 	return
 }
