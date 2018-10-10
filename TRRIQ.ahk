@@ -1132,6 +1132,7 @@ CheckPreventiceWeb(win) {
 	
 	str := {}
 	str.Enrollment := {dlg:"Enrollment / Submitted Patients"
+		, url:"https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
 		, tbl:"ctl00_mainContent_PatientListSubmittedCtrl1_RadGridPatients_ctl00"
 		, fx:"ParsePreventiceEnrollment"}
 	str.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
@@ -1152,6 +1153,7 @@ CheckPreventiceWeb(win) {
 	
 	prvFunc := str[phase].fx
 	wb := IEGet(win)
+	wb.navigate(str[phase].url)
 	
 	loop
 	{
