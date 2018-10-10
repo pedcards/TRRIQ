@@ -1299,7 +1299,6 @@ parsePreventiceInventory(tbl) {
 	global wq
 	
 	lbl := ["button","model","ser"]
-	done := 0
 	fileCheck()
 	wq := new XML("worklist.xml")														; refresh WQ
 	FileOpen(".lock", "W")																; Create lock file.
@@ -1312,7 +1311,6 @@ parsePreventiceInventory(tbl) {
 	
 	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
 	{
-		done ++
 		r_idx := A_index-1
 		trow := trows[r_idx]
 		tcols := trow.getElementsByTagName("td")
@@ -1343,7 +1341,7 @@ parsePreventiceInventory(tbl) {
 	wq.save("worklist.xml")
 	filedelete, .lock
 	
-	return done
+	return true
 }
 
 findWQid(DT:="",MRN:="",ser:="",name:="") {
