@@ -1565,10 +1565,15 @@ MortaraUpload()
 			eventlog("Cancelled getDem.")
 			return
 		}
-		getPatInfo()																		; grab remaining demographics for Preventice registration
+		getPatInfo()																	; grab remaining demographics for Preventice registration
 		if (fetchQuit=true) {
 			eventlog("Cancelled getPatInfo.")
 			return
+		}
+		InputBox, note, Fedex, `n`n`n`n Enter FedEx return sticker number
+		if (RegExMatch(note,"((\d\s*){12})",fedex)) {
+			fedex := RegExReplace(fedex1," ")
+			ptDem["fedex"] := fedex
 		}
 		
 		WinActivate, ahk_id %muWinID%
@@ -1669,6 +1674,9 @@ muWqSave(sernum) {
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
 	wq.addElement("ind",newID,ptDem["Indication"])
+	if (ptDem.fedex) {
+		wq.addElement("fedex",newID,ptDem["fedex"])
+	}
 	wq.addElement(ptDem["muphase"],newID,{user:A_UserName},A_now)
 	
 	filedelete, .lock
