@@ -1219,8 +1219,9 @@ parsePreventiceEnrollment(tbl) {
 	{
 		r_idx := A_index-1
 		trow := trows[r_idx]
+		tcols := trow.getElementsByTagName("td")
 		res := []
-		loop % (tcols := trow.getElementsByTagName("td")).length						; loop through cols
+		loop % lbl.length()																; loop through cols
 		{
 			c_idx := A_Index-1
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
