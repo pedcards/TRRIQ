@@ -1149,6 +1149,8 @@ CheckPreventiceWeb(win) {
 			return
 		}
 	}
+	
+	prvFunc := str[phase].fx
 	wb := IEGet(win)
 	
 	loop
@@ -1158,14 +1160,28 @@ CheckPreventiceWeb(win) {
 			MsgBox No match
 			return
 		}
+		tbl := tbl.getElementsByTagName("tbody")[0]
+		clip := tbl.innertext
+		
+		done := %prvFunc%(tbl)		; parsePreventiceEnrollment() or parsePreventiceInventory()
+		if !(done) {
+			MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
 			break
 		}
+		clip0 := clip
+
+	
+	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
+	{
+		r_idx := A_index-1
+		trow := trows[r_idx]
+		val := []
+		loop % (tcols := trow.getElementsByTagName("td")).length
+		{
+			c_idx := A_Index-1
+			val[lbl[A_index]] := trim(tcols[c_idx].innertext)
+		}
 	}
-	tb1 := tlist
-		.getElementsByTagName("tbody")[0]
-		.getElementsByTagName("tr")[0]
-		.getElementsByTagName("td")
-	MsgBox % tb1.length
 	
 	return
 }
