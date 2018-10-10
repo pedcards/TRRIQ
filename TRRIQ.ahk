@@ -1259,7 +1259,7 @@ parsePreventiceEnrollment(tbl) {
 			e0.mrn	:= k.selectSingleNode("mrn").text
 			e0.fuzzName := 100*(1-fuzzysearch(e0.name,res.name))						; percent match
 			e0.fuzzMRN	:= 100*(1-fuzzysearch(e0.mrn,res.mrn))
-			if ((e0.fuzzName>85)||(e0.fuzzMRN>85)) {									; close match for either NAME or MRN
+			if ((e0.fuzzName>85)||(e0.fuzzMRN>90)) {									; close match for either NAME or MRN
 				e0.match := k.parentNode.nodeName 
 				break
 			}
