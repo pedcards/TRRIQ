@@ -1127,15 +1127,21 @@ getDem:
 }
 
 CheckPreventiceWeb(win) {
-	global phase, prevGrabTime:=A_now
+	global phase
 	checkCitrix()
 	
 	str := {}
 	str.Enrollment := {dlg:"Enrollment / Submitted Patients"
-		, match:"Enrollment Queue (Submitted)"
+		, url:"https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
+		, tbl:"ctl00_mainContent_PatientListSubmittedCtrl1_RadGridPatients_ctl00"
+		, changed:"ctl00_mainContent_PatientListSubmittedCtrl1_lblTotalCountMessage"
+		, btn:"ctl00_mainContent_PatientListSubmittedCtrl1_btnNextPage"
 		, fx:"ParsePreventiceEnrollment"}
 	str.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
-		, match:"Device Status"
+		, url:"https://secure.preventice.com/Facilities/"
+		, tbl:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00"
+		, changed:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00_Pager"
+		, btn:"rgPageNext"
 		, fx:"ParsePreventiceInventory"}
 	
 	while !(WinExist(win))																; expected IE window title not present
@@ -1149,84 +1155,88 @@ CheckPreventiceWeb(win) {
 			return
 		}
 	}
-	loop																				; Repeat until determine done
+	
+	prvFunc := str[phase].fx
+	wb := IEGet(win)
+	
+	loop
 	{
-		clip := grabWebpage(win)														; Page exists, ask to grab
-		if !(clip) {
-			break																		; Clicked "Cancel", exit out
+		tbl := wb.document.getElementById(str[phase].tbl)
+		if !IsObject(tbl) {
+			progress, off
+			MsgBox No match
+			return
 		}
-		if (clip = clip0) {																; Check if this is the same as the last page
-			MsgBox,4144,, % "Done already!`n`nClick on 'Next Page'`nbefore proceding."
-			IfMsgBox, OK
-			{
-				continue
-			} else {
-				break
-			}
+		progress,,,Scanning page %A_index% ...
+		
+		tbl := tbl.getElementsByTagName("tbody")[0]
+		clip := tbl.innertext
+		if (clip=clip0) {
+			progress, off
+			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
+			break
 		}
-		if (instr(clip,str[phase].match)) {
-			prvFunc := str[phase].fx
-			done := %prvFunc%(clip)		; parsePreventiceEnrollment() or parsePreventiceInventory()
-			if !(done) {
-				MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
-			}
-			clip0 := clip
-		} else {
-			MsgBox,4112,, % "Wrong page!`nNavigate to:`n`n" str[phase].dlg
+		
+		done := %prvFunc%(tbl)		; parsePreventiceEnrollment() or parsePreventiceInventory()
+		if (done=0) {
+			progress, off
+			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
+			break
 		}
+		clip0 := clip																	; set the check for repeat copy
+		
+		PreventiceWebPager(wb,str[phase].changed,str[phase].btn)
 	}
+	
+	wb.navigate(str[phase].url)															; refresh first page
+	ComObjConnect(wb)																	; release wb object
 	return
 }
 
-grabWebpage(title) {
-/*	Copy text of an open webpage
- *	title = string in window title
- */
-	WinActivate, %title%																; activate the browser window when title matches
-	WinGetPos, winX, winY, winW, winH
-	MsgBox, 4145, "%title%" grab, Ready to grab!`n`n`[OK] to grab this page`n[CANCEL] to exit
-	IfMsgBox, OK
-	{
-		WinActivate, %title%															; activate the browser window when title matches
-		MouseGetPos,mouseX,mouseY														; get mouse coords
-			MouseClick, Left, % winX+winW-40, % mouseY									; Click off to far side to clear selection
-			Send, ^a^c																	; Select All, Copy
-			sleep 200																	; need to pause to fill clipboard
-			clip := Clipboard
-			MouseClick, Left, % winX+winW-40, % mouseY+20								; Click off to far side to clear selection
-		MouseMove, % mouseX, % mouseY													; move back to original coords
-		return clip
-	} 
-	return error
-}
-
-parsePreventiceEnrollment(x) {
-	global wq
+PreventiceWebPager(wb,chgStr,btnStr) {
+	global phase
 	
-	done := 0
-	fileCheck()
-	wq := new XML("worklist.xml")													; refresh WQ
-	FileOpen(".lock", "W")															; Create lock file.
-	Loop
+	if (phase="Enrollment") {
+		wb.document.getElementById(btnStr).click() 										; click when id=btnStr
+	}
+	if (phase="Inventory") {
+		wb.document.getElementsByClassName(btnStr)[0].click() 							; click when class=btnstr
+	}
+	pg0 := wb.document.getElementById(chgStr).innerText
+	
+	loop, 100																			; wait up to 100*0.05 = 5 sec
 	{
-		blk := stregX(x,"Patient Enrollment",n,1,"Dr\..*?[\r\n]",0,n)
-		if !(blk) {
+		pg := wb.document.getElementById(chgStr).innerText
+		progress,% A_index
+		if (pg != pg0) {
 			break
 		}
-		blk := trim(RegExReplace(blk,"[\r\n]+")," `r`n")
-		fields := ["^"
-				,"\d{6,7}"
-				,"\d{1,2}/\d{1,2}/\d{2,4}"
-				,"\w"
-				,"Dr. "
-				,"$"]
-		labels := ["name"
-				,"mrn"
-				,"date"
-				,"dev"
-				,"prov"
-				,"end"]
-		res:=scanX(blk,fields,labels)
+		sleep 50
+	}
+
+	return
+}
+
+parsePreventiceEnrollment(tbl) {
+	global wq
+	
+	lbl := ["name","mrn","date","dev","prov"]
+	done := 0
+	fileCheck()
+	wq := new XML("worklist.xml")														; refresh WQ
+	FileOpen(".lock", "W")																; Create lock file.
+	
+	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
+	{
+		r_idx := A_index-1
+		trow := trows[r_idx]
+		tcols := trow.getElementsByTagName("td")
+		res := []
+		loop % lbl.length()																; loop through cols
+		{
+			c_idx := A_Index-1
+			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
+		}
 		tmp := parseDate(res.date)
 		date := tmp.YYYY tmp.MM tmp.DD
 		count ++
@@ -1282,24 +1292,20 @@ parsePreventiceEnrollment(x) {
 	wq.save("worklist.xml")
 	filedelete, .lock
 	
-	return done
-/*		value = records added
- *		null  = no records added (no unique)
- */
+	return done																			; returns number of matches, or 0 (error) if no matches
 }
 
-parsePreventiceInventory(x) {
+parsePreventiceInventory(tbl) {
 /*	Parse Preventice website for device inventory
 	Add unique ser nums to /root/inventory/dev[@ser]
 	These will be removed when registered
-	
-	Should check <pending> for ser already registered
 */
-	global wq, prevGrabTime
+	global wq
 	
+	lbl := ["button","model","ser"]
 	fileCheck()
-	wq := new XML("worklist.xml")													; refresh WQ
-	FileOpen(".lock", "W")															; Create lock file.
+	wq := new XML("worklist.xml")														; refresh WQ
+	FileOpen(".lock", "W")																; Create lock file.
 	
 	wqtime := wq.selectSingleNode("/root/inventory").getAttribute("update")
 	if !(wqTime) {
@@ -1307,28 +1313,24 @@ parsePreventiceInventory(x) {
 		eventlog("Created new Inventory node.")
 	}
 	
-	done := 0
-	blk := cleanBlank(stregX(x,"Tracking Number",1,1,"Change page",1))
-	Loop, parse, blk, `n, `r
+	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
 	{
-		i := A_LoopField
-		if !(i) {																		; skip blank lines
-			break
+		r_idx := A_index-1
+		trow := trows[r_idx]
+		tcols := trow.getElementsByTagName("td")
+		res := []
+		loop % lbl.length()																; loop through cols
+		{
+			c_idx := A_Index-1
+			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
-		RegExMatch(i,"O)(.*)( .*? )(Device in)",match)
-			model := trim(match.value(1))
-			ser := trim(match.value(2))
-		if !(ser) {																		; no valid ser
+		if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" res.ser "']")) {	; already exists in Inventory
 			continue
 		}
-		if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" ser "']")) {		; already exists in Inventory
-			continue
-		}
-		wq.addElement("dev","/root/inventory",{model:model,ser:ser})
-		eventlog("Added new Inventory dev " ser)
-		done ++
+		wq.addElement("dev","/root/inventory",{model:res.model,ser:res.ser})
+		eventlog("Added new Inventory dev " res.ser)
 	}
-	
+
 	loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
 	{
 		k := devs.item(A_Index-1)
@@ -1339,25 +1341,11 @@ parsePreventiceInventory(x) {
 		}
 	}
 	
-	wq.selectSingleNode("/root/inventory").setAttribute("update",prevGrabTime)			; set pending[@update] attr
+	wq.selectSingleNode("/root/inventory").setAttribute("update",A_now)					; set pending[@update] attr
 	wq.save("worklist.xml")
 	filedelete, .lock
 	
-	return done
-}
-
-scanX(txt,fields,labels) {
-	res := Object()
-	for k, i in fields																	; Step through each val "i" from fields[bl,k]
-	{
-		x := fields[k]
-		y := fields[k+1]
-		
-		val := stregX(txt,x,n,0,y,1,n)
-		
-		res[labels[k]]:=trim(val)
-	}
-	return res
+	return true
 }
 
 findWQid(DT:="",MRN:="",ser:="",name:="") {
@@ -2186,7 +2174,7 @@ getPatInfo() {
 		Send, ^a^c																		; Select All, Copy
 		sleep 200																		; need to pause to fill clipboard
 		txt := Clipboard
-		MouseClick, Left, % winX+winW-40, % winY+0.6*winH								; click again to deselect all
+		MouseClick, Left, % winX+winW-40, % winY+0.6*winH+10							; click again to deselect all
 		MouseMove, mouseX, mouseY														; move back to original coords
 		if instr(txt,"Patient contact info") {
 			break																		; break out of this loop
