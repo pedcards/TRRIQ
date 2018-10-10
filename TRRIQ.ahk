@@ -2403,6 +2403,7 @@ ProcessHl7PDF:
 	
 	if (fileNam="") {																	; No PDF extracted
 		eventlog("No PDF extracted.")
+		progress, off
 		MsgBox No PDF extracted!
 		return
 	}
@@ -2416,6 +2417,7 @@ ProcessHl7PDF:
 	FileAppend % fldval.hl7, %filenam%_hl7.txt											; create new tempfile with result, minus PDF
 	FileMove %filenam%_hl7.txt, .\tempfiles\*, 1										; move a copy into tempfiles for troubleshooting
 	
+	progress, off
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (type="Holter") {
 		gosub Holter_Pr_Hl7
@@ -2667,8 +2669,6 @@ Holter_Pr_Hl7:
 	labels[1] := ["null","Recording_time","Analysis_time","null","null"]
 	fieldvals(duration,1,"dem")
 	formatfield("dem","Test_end",fldval["dem-Recording_time"])
-	
-	progress, off
 	
 	if !(fldval.acct) {																	; fldval.acct exists if Holter has been processed
 		gosub checkProc																	; get valid demographics
