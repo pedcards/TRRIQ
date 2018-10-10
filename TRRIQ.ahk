@@ -1169,6 +1169,10 @@ CheckPreventiceWeb(win) {
 		}
 		tbl := tbl.getElementsByTagName("tbody")[0]
 		clip := tbl.innertext
+		if (clip=clip0) {
+			MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
+			break
+		}
 		
 		done := %prvFunc%(tbl)		; parsePreventiceEnrollment() or parsePreventiceInventory()
 		if (done=0) {
