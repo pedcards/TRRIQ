@@ -1187,7 +1187,8 @@ CheckPreventiceWeb(win) {
 PreventiceWebPager(wb,chgStr,btnStr) {
 	global phase
 	
-	wb.document.getElementById(btnStr).click()
+	wb.document.getElementById(btnStr).click()											; click when id=btnStr
+	wb.document.getElementsByClassName(btnStr)[0].click()								; click when class=btnstr
 	pg0 := wb.document.getElementById(chgStr).innerText
 
 	loop, 100
