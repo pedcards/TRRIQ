@@ -1190,15 +1190,15 @@ PreventiceWebPager(wb,chgStr,btnStr) {
 	wb.document.getElementById(btnStr).click()											; click when id=btnStr
 	wb.document.getElementsByClassName(btnStr)[0].click()								; click when class=btnstr
 	pg0 := wb.document.getElementById(chgStr).innerText
-
-	loop, 100
+	
+	loop, 100																			; wait up to 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
 		progress,% A_index,, Scanning %phase%
 		if (pg != pg0) {
 			break
 		}
-		sleep 10
+		sleep 50
 	}
 
 	progress, off
