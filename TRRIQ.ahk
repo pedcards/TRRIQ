@@ -1163,19 +1163,24 @@ CheckPreventiceWeb(win) {
 	{
 		tbl := wb.document.getElementById(str[phase].tbl)
 		if !IsObject(tbl) {
+			progress, off
 			MsgBox No match
 			return
 		}
+		progress,,,Scanning page %A_index% ...
+		
 		tbl := tbl.getElementsByTagName("tbody")[0]
 		clip := tbl.innertext
 		if (clip=clip0) {
-			MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
+			progress, off
+			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
 			break
 		}
 		
 		done := %prvFunc%(tbl)		; parsePreventiceEnrollment() or parsePreventiceInventory()
 		if (done=0) {
-			MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
+			progress, off
+			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
 			break
 		}
 		clip0 := clip																	; set the check for repeat copy
@@ -1198,14 +1203,12 @@ PreventiceWebPager(wb,chgStr,btnStr) {
 	loop, 100																			; wait up to 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
-		progress,% A_index,, Scanning %phase%
+		progress,% A_index
 		if (pg != pg0) {
 			break
 		}
 		sleep 50
 	}
-
-	progress, off
 
 	return
 }
