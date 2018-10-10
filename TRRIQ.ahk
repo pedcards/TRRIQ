@@ -1127,7 +1127,7 @@ getDem:
 }
 
 CheckPreventiceWeb(win) {
-	global phase, prevGrabTime:=A_now
+	global phase
 	checkCitrix()
 	
 	str := {}
@@ -1287,7 +1287,7 @@ parsePreventiceInventory(x) {
 	
 	Should check <pending> for ser already registered
 */
-	global wq, prevGrabTime
+	global wq
 	
 	fileCheck()
 	wq := new XML("worklist.xml")													; refresh WQ
@@ -1331,7 +1331,7 @@ parsePreventiceInventory(x) {
 		}
 	}
 	
-	wq.selectSingleNode("/root/inventory").setAttribute("update",prevGrabTime)			; set pending[@update] attr
+	wq.selectSingleNode("/root/inventory").setAttribute("update",A_now)					; set pending[@update] attr
 	wq.save("worklist.xml")
 	filedelete, .lock
 	
