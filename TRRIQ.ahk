@@ -1132,7 +1132,7 @@ CheckPreventiceWeb(win) {
 	
 	str := {}
 	str.Enrollment := {dlg:"Enrollment / Submitted Patients"
-		, match:"Enrollment Queue (Submitted)"
+		, tbl:"ctl00_mainContent_PatientListSubmittedCtrl1_RadGridPatients_ctl00"
 		, fx:"ParsePreventiceEnrollment"}
 	str.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
 		, match:"Device Status"
@@ -1151,13 +1151,13 @@ CheckPreventiceWeb(win) {
 	}
 	wb := IEGet(win)
 	
-	loop % (tbls := wb.document.getElementsByTagName("table")).length
+	loop
 	{
-		n := A_index-1
-		tbl := tbls[n]
-		tid := tbl.id
-		if (tid~="RadGridPatients_ctl00") {
-			tlist := tbl
+		tbl := wb.document.getElementById(str[phase].tbl)
+		if !IsObject(tbl) {
+			MsgBox No match
+			return
+		}
 			break
 		}
 	}
