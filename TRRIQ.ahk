@@ -1303,9 +1303,7 @@ parsePreventiceInventory(tbl) {
 	global wq
 	
 	lbl := ["button","model","ser"]
-	fileCheck()
 	wq := new XML("worklist.xml")														; refresh WQ
-	FileOpen(".lock", "W")																; Create lock file.
 	
 	wqtime := wq.selectSingleNode("/root/inventory").getAttribute("update")
 	if !(wqTime) {
@@ -1342,8 +1340,8 @@ parsePreventiceInventory(tbl) {
 	}
 	
 	wq.selectSingleNode("/root/inventory").setAttribute("update",A_now)					; set pending[@update] attr
-	wq.save("worklist.xml")
-	filedelete, .lock
+	
+	writeout("/root","inventory")
 	
 	return true
 }
