@@ -1212,28 +1212,6 @@ PreventiceWebPager(wb,chgStr,btnStr) {
 	return
 }
 
-grabWebpage(title) {
-/*	Copy text of an open webpage
- *	title = string in window title
- */
-	WinActivate, %title%																; activate the browser window when title matches
-	WinGetPos, winX, winY, winW, winH
-	;~ MsgBox, 4145, "%title%" grab, Ready to grab!`n`n`[OK] to grab this page`n[CANCEL] to exit
-	;~ IfMsgBox, OK
-	;~ {
-		;~ WinActivate, %title%															; activate the browser window when title matches
-		MouseGetPos,mouseX,mouseY														; get mouse coords
-			MouseClick, Left, % winX+winW-40, % mouseY									; Click off to far side to clear selection
-			Send, ^a^c																	; Select All, Copy
-			sleep 200																	; need to pause to fill clipboard
-			clip := Clipboard
-			MouseClick, Left, % winX+winW-40, % mouseY+20								; Click off to far side to clear selection
-		MouseMove, % mouseX, % mouseY													; move back to original coords
-		return clip
-	;~ } 
-	;~ return error
-}
-
 parsePreventiceEnrollment(tbl) {
 	global wq
 	
@@ -2195,7 +2173,7 @@ getPatInfo() {
 		Send, ^a^c																		; Select All, Copy
 		sleep 200																		; need to pause to fill clipboard
 		txt := Clipboard
-		MouseClick, Left, % winX+winW-40, % winY+0.6*winH								; click again to deselect all
+		MouseClick, Left, % winX+winW-40, % winY+0.6*winH+10							; click again to deselect all
 		MouseMove, mouseX, mouseY														; move back to original coords
 		if instr(txt,"Patient contact info") {
 			break																		; break out of this loop
