@@ -1288,14 +1288,14 @@ parsePreventiceInventory(tbl) {
 /*	Parse Preventice website for device inventory
 	Add unique ser nums to /root/inventory/dev[@ser]
 	These will be removed when registered
-	
-	Should check <pending> for ser already registered
 */
 	global wq
 	
+	lbl := ["button","model","ser"]
+	done := 0
 	fileCheck()
-	wq := new XML("worklist.xml")													; refresh WQ
-	FileOpen(".lock", "W")															; Create lock file.
+	wq := new XML("worklist.xml")														; refresh WQ
+	FileOpen(".lock", "W")																; Create lock file.
 	
 	wqtime := wq.selectSingleNode("/root/inventory").getAttribute("update")
 	if !(wqTime) {
@@ -1303,28 +1303,25 @@ parsePreventiceInventory(tbl) {
 		eventlog("Created new Inventory node.")
 	}
 	
-	done := 0
-	blk := cleanBlank(stregX(x,"Tracking Number",1,1,"Change page",1))
-	Loop, parse, blk, `n, `r
+	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
 	{
-		i := A_LoopField
-		if !(i) {																		; skip blank lines
-			break
-		}
-		RegExMatch(i,"O)(.*)( .*? )(Device in)",match)
-			model := trim(match.value(1))
-			ser := trim(match.value(2))
-		if !(ser) {																		; no valid ser
-			continue
-		}
-		if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" ser "']")) {		; already exists in Inventory
-			continue
-		}
-		wq.addElement("dev","/root/inventory",{model:model,ser:ser})
-		eventlog("Added new Inventory dev " ser)
 		done ++
+		r_idx := A_index-1
+		trow := trows[r_idx]
+		tcols := trow.getElementsByTagName("td")
+		res := []
+		loop % lbl.length()																; loop through cols
+		{
+			c_idx := A_Index-1
+			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
+		}
+		if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" res.ser "']")) {	; already exists in Inventory
+			continue
+		}
+		wq.addElement("dev","/root/inventory",{model:res.model,ser:res.ser})
+		eventlog("Added new Inventory dev " res.ser)
 	}
-	
+
 	loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
 	{
 		k := devs.item(A_Index-1)
