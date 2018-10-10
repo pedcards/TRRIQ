@@ -1174,7 +1174,7 @@ CheckPreventiceWeb(win) {
 				continue
 			} else {
 				break
-		}
+			}
 		}
 		
 		done := %prvFunc%(tbl)		; parsePreventiceEnrollment() or parsePreventiceInventory()
@@ -1183,49 +1183,32 @@ CheckPreventiceWeb(win) {
 			break
 		}
 		clip0 := clip																	; set the check for repeat copy
-
+		
 		PreventiceWebPager(wb,str[phase].changed,str[phase].btn)
-		}
+	}
 	
 	ComObjConnect(wb)																	; release wb object
 	return
 }
 
+PreventiceWebPager(wb,chgStr,btnStr) {
+	global phase
+	
+	wb.document.getElementById(btnStr).click()
+	pg0 := wb.document.getElementById(chgStr).innerText
 
-
-
-
-
-
-
-
-null(){
-	loop																				; Repeat until determine done
+	loop, 100
 	{
-		clip := grabWebpage(win)														; Page exists, ask to grab
-		if !(clip) {
-			break																		; Clicked "Cancel", exit out
+		pg := wb.document.getElementById(chgStr).innerText
+		progress,% A_index,, Scanning %phase%
+		if (pg != pg0) {
+			break
 		}
-		if (clip = clip0) {																; Check if this is the same as the last page
-			MsgBox,4144,, % "Done already!`n`nClick on 'Next Page'`nbefore proceding."
-			IfMsgBox, OK
-			{
-				continue
-			} else {
-				break
-			}
-		}
-		if (instr(clip,str[phase].match)) {
-			prvFunc := str[phase].fx
-			done := %prvFunc%(clip)		; parsePreventiceEnrollment() or parsePreventiceInventory()
-			if !(done) {
-				MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
-			}
-			clip0 := clip
-		} else {
-			MsgBox,4112,, % "Wrong page!`nNavigate to:`n`n" str[phase].dlg
-		}
+		sleep 10
 	}
+
+	progress, off
+
 	return
 }
 
