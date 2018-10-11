@@ -1573,6 +1573,9 @@ MortaraUpload()
 		if (RegExMatch(note,"((\d\s*){12})",fedex)) {
 			fedex := RegExReplace(fedex1," ")
 			ptDem["fedex"] := fedex
+			eventlog("Fedex number entered.")
+		} else {
+			eventlog("Fedex ignored.")
 		}
 		
 		WinActivate, ahk_id %muWinID%
