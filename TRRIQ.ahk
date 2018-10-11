@@ -2539,11 +2539,11 @@ moveWQ(id) {
 		wq.selectSingleNode("/root/done").appendChild(clone)							; copy x.clone to DONE
 		x.parentNode.removeChild(x)														; remove x
 		eventlog("wqid " id " (" mrn " from " date ") moved to DONE list.")
-	} else {
-		id := A_TickCount
-		wq.addElement("enroll","/root/done",{id:id})
-		newID := "/root/pending/enroll[@id='" id "']"
-		wq.addElement("date",newID,fldval["dem-Test_date"])
+	} else {																			; no record exists (enrollment never captured, or Zio)
+		id := A_TickCount																; create an id
+		wq.addElement("enroll","/root/done",{id:id})									; in </root/done>
+		newID := "/root/done/enroll[@id='" id "']"
+		wq.addElement("date",newID,fldval["dem-Test_date"])								; add these to the new done node
 		wq.addElement("name",newID,fldval["dem-Name"])
 		wq.addElement("mrn",newID,fldval["dem-MRN"])
 		wq.addElement("done",newID,{user:A_UserName},A_Now)
