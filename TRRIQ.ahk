@@ -2693,18 +2693,18 @@ Holter_Pr_Hl7:
 			eventlog("Full disclosure PDF not found.")
 			
 			msg := cmsgbox("Missing full disclosure PDF"
-				. fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
+				, fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
 				. "Download from ftp.eCardio.com site`n"
 				. "then click [Retry].`n`n"
 				. "If full disclosure PDF not available,`n"
 				. "click [Email] to send a message to Preventice."
-				, "Retry|Email"
+				, "Retry|Email|Cancel"
 				, "E", "V")
 			if (msg="Retry") {
 				findFullPDF()
 				continue
 			}
-			if (msg~="xClose") {
+			if (msg~="Cancel|Close") {
 				FileDelete, % fileIn
 				eventlog("Refused to get full disclosure. Extracted PDF deleted.")
 				Exit																	; either Cancel or X, go back to main GUI
