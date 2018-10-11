@@ -2690,29 +2690,38 @@ Holter_Pr_Hl7:
 		} else {
 			eventlog("Full disclosure PDF not found.")
 			
-			MsgBox, 262164
-				, Missing PDF
-				, Full disclosure not found.`n`nSend request to Preventice?
-			IfMsgBox, Yes
-			{
-				; send email
-				return
-			}
-			
-			MsgBox, 4149
-				, Missing file
-				, % "No full disclosure PDF found for:`n"
+			msg := cmsgbox("Missing full disclosure PDF"
 				. fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
-				. "Download PDF from ftp.eCardio.com website`n"
-				. "then click [Retry] to proceed."
-			IfMsgBox, Retry 
-			{
-				findFullPDF()															; rescan holterDir
-				continue																; redo the loop
-			} else {
+				. "Download from ftp.eCardio.com site`n"
+				. "then click [Retry].`n`n"
+				. "If full disclosure PDF not available,`n"
+				. "click [Email] to send a message to Preventice."
+				, "Retry|Email"
+				, "E", "V")
+			if (msg="Retry") {
+				findFullPDF()
+				continue
+			}
+			if (msg~="xClose") {
 				FileDelete, % fileIn
 				eventlog("Refused to get full disclosure. Extracted PDF deleted.")
 				Exit																	; either Cancel or X, go back to main GUI
+			}
+			if (msg="Email") {
+				progress,100 ,,Generating email...
+				Eml := ComObjCreate("Outlook.Application").CreateItem(0)				; Create item [0]
+				Eml.BodyFormat := 2														; HTML format
+				
+				Eml.To := "HolterNotificationGroup@preventice.com"
+				Eml.cc := "EkgMaInbox@seattlechildrens.org"
+				Eml.Subject := "Missing full disclosure PDF"
+				Eml.Display																; Display first to get default signature
+				Eml.HTMLBody := "Please upload the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
+					. " MRN#" fldval["dem-MRN"] " study date " fldval["dem-Test_date"]
+					. " to the eCardio FTP site.<br><br>Thank you!<br>"
+					. Eml.HTMLBody														; Prepend to existing default message
+				progress, off
+				eventlog("Email sent to Preventice.")
 			}
 		}
 	}
