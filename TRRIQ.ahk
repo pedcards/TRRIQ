@@ -75,7 +75,6 @@ if fileexist("worklist.xml") {
 	wq.addElement("done","/root")
 	wq.save("worklist.xml")
 }
-scanTempfiles()
 
 demVals := readIni("demVals")																		; valid field names for parseClip()
 
