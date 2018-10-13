@@ -35,6 +35,23 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
 }
 
+/*	Get location info
+*/
+#Include HostName.ahk
+progress,,,Identifying workstation...
+if !(wksLoc := GetLocation()) {
+	progress, off
+	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
+	ExitApp
+}
+
+site := getSites(wksLoc)
+sites := site.tracked																	; sites we are tracking
+sites0 := site.ignored																	; sites we are not tracking <tracked>N</tracked> in wkslocation
+sitesLong := site.long																	; {CIS:TAB}
+sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
+sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
+
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
 progress,,,Scanning providers...
@@ -87,21 +104,6 @@ for key,val in indCodes
 }
 
 initHL7()
-
-#Include HostName.ahk
-progress,,,Identifying workstation...
-if !(wksLoc := GetLocation()) {
-	progress, off
-	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
-	ExitApp
-}
-
-site := getSites(wksLoc)
-sites := site.tracked																	; sites we are tracking
-sites0 := site.ignored																	; sites we are not tracking <tracked>N</tracked> in wkslocation
-sitesLong := site.long																	; {CIS:TAB}
-sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
-sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 MainLoop: ; ===================== This is the main part ====================================
 {
