@@ -695,6 +695,7 @@ readWQlv:
 	LV_GetText(ftype,x,8)																; filetype
 	SplitPath,fileIn,fnam,,,fileNam
 	
+	wq := new XML("worklist.xml")														; refresh WQ
 	blocks := Object()																	; clear all objects
 	fields := Object()
 	labels := Object()
@@ -712,6 +713,11 @@ readWQlv:
 	
 	fldVal := readWQ(wqid)																; wqid would have been determined by parsing hl7
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
+	if (fldval.node = "done") {															; task has been done already by another user
+		MsgBox, 262208, Completed, File has already been processed!
+		gosub PhaseGUI																	; refresh list and return
+		return
+	}
 	
 	if (ftype~="HL7|HOL|CEM|BGH") {														; hl7 file (could still be Holter or CEM)
 		eventlog("===> " fnam )
