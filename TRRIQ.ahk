@@ -33,6 +33,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	isAdmin := false
 	readIni("paths")
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
+	checkcitrix()
 }
 
 /*	Get location info
