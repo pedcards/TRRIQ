@@ -625,7 +625,11 @@ WQlist() {
 				,e0.prov
 				,e0.site)
 		}
+		Gui, ListView, WQlv%i%
+		LV_ModifyCol(2,"Sort")
 	}
+	Gui, ListView, WQlv_all														
+	LV_ModifyCol(2,"Sort")
 	
 	progress, off
 	return
