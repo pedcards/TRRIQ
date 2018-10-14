@@ -241,6 +241,8 @@ PhaseGUI:
 	
 	Gui, Menu, menuBar
 	Gui, Show,, TRRIQ Dashboard
+	
+	SetTimer, checkWQfile, 1000
 	return
 }
 
@@ -307,6 +309,17 @@ PhaseTask:
 {
 	phase := A_GuiControl
 	Gui, phase:Hide
+	return
+}
+
+checkWQfile()
+{
+	global wqfileDT
+	FileGetTime, tmpdt, wqupdate														; get mod dt for "wqupdate"
+	if (tmpdt > wqfileDT) {																; file is more recent than internal var
+		wqfileDT := tmpdt																; set var to this date
+		WQlist()																		; refresh list
+	}
 	return
 }
 
