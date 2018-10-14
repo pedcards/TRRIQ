@@ -202,7 +202,7 @@ PhaseGUI:
 	Gui, ListView, WQlv_all
 	LV_ModifyCol(1,"0")																	; wqid (hidden)
 	LV_ModifyCol(2,"60")																; date
-	LV_ModifyCol(3,"40")																; FedEx
+	LV_ModifyCol(3,"40 Center")															; FedEx
 	LV_ModifyCol(4,"60")																; uploaded
 	LV_ModifyCol(5,"60")																; MRN
 	LV_ModifyCol(6,"140")																; Name
@@ -221,7 +221,7 @@ PhaseGUI:
 		Gui, ListView, WQlv%i%
 		LV_ModifyCol(1,"0")																	; wqid (hidden)
 		LV_ModifyCol(2,"60")																; date
-		LV_ModifyCol(3,"40")																; FedEx
+		LV_ModifyCol(3,"40 Center")															; FedEx
 		LV_ModifyCol(4,"60")																; uploaded
 		LV_ModifyCol(5,"60")																; MRN
 		LV_ModifyCol(6,"140")																; Name
