@@ -175,6 +175,58 @@ PhaseGUI:
 	Gui, Add, Tab3
 		, -Wrap x10 y10 w640 h320 vWQtab +HwndWQtab
 		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
+	GuiControlGet, wqDim, Pos, WQtab
+	lvDim := "W" wqDimW-25 " H" wqDimH-35
+	
+	if (wksloc="Main Campus") {
+		Gui, Tab, INBOX
+		Gui, Add, Listview
+			, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
+			, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|FTP
+		Gui, ListView, WQlv_in
+		LV_ModifyCol(1,"0")																; filename and path, "0" = hidden
+		LV_ModifyCol(2,"140")															; name
+		LV_ModifyCol(3,"60")															; mrn
+		LV_ModifyCol(4,"80")															; dob
+		LV_ModifyCol(5,"60")															; site
+		LV_ModifyCol(6,"80 Sort")														; date
+		LV_ModifyCol(7,"2")																; wqid
+		LV_ModifyCol(8,"40")															; ftype
+		LV_ModifyCol(9,"40 Center")														; ftp
+	}
+	Gui, Tab, ALL
+	Gui, Add, Listview
+		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
+		, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, ListView, WQlv_all
+	LV_ModifyCol(1,"0")																	; wqid (hidden)
+	LV_ModifyCol(2,"60")																; date
+	LV_ModifyCol(3,"40")																; FedEx
+	LV_ModifyCol(4,"60")																; uploaded
+	LV_ModifyCol(5,"60")																; MRN
+	LV_ModifyCol(6,"140")																; Name
+	LV_ModifyCol(7,"130")																; Ser Num
+	LV_ModifyCol(8,"100")																; Prov
+	LV_ModifyCol(9,"80")																; Site
+	
+	Loop, parse, sites, |
+	{
+		i := A_index
+		site := A_LoopField
+		Gui, Tab, % site
+		Gui, Add, Listview
+			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
+			, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, ListView, WQlv%i%
+		LV_ModifyCol(1,"0")																	; wqid (hidden)
+		LV_ModifyCol(2,"60")																; date
+		LV_ModifyCol(3,"40")																; FedEx
+		LV_ModifyCol(4,"60")																; uploaded
+		LV_ModifyCol(5,"60")																; MRN
+		LV_ModifyCol(6,"140")																; Name
+		LV_ModifyCol(7,"130")																; Ser Num
+		LV_ModifyCol(8,"100")																; Prov
+	}
 	WQlist()
 	
 	;~ Menu, menuSys, Add, Scan tempfiles, scanTempFiles
@@ -439,10 +491,7 @@ WQlist() {
 	
 	if (wksloc="Main Campus") {
 		
-	Gui, Tab, INBOX
-	Gui, Add, Listview
-		, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
-		, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|FTP
+	Gui, ListView, WQlv_in
 	LV_Delete()																			; clear the INBOX entries
 	
 /*	Process each .hl7 file
@@ -508,34 +557,16 @@ WQlist() {
 		}
 	}
 	
-	Gui, ListView, WQlv_in
-		LV_ModifyCol()
-		LV_ModifyCol(1,"0")																; filename and path
-		LV_ModifyCol(2,"140")															; name
-		LV_ModifyCol(3,"60")															; mrn
-		LV_ModifyCol(4,"80")															; dob
-		LV_ModifyCol(5,"60")															; site
-		LV_ModifyCol(6,"80 Sort")														; date
-		LV_ModifyCol(7,"2")																; wqid
-		LV_ModifyCol(8,"40")															; ftype
-		LV_ModifyCol(9,"40 Center")														; ftp
-		
 	}	; <-- finish Main Campus Inbox
 	
-	Gui, Tab, ALL
-	Gui, Add, Listview
-		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
-		, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, ListView, WQlv_all
 	LV_Delete()
 	
 	Loop, parse, sites, |
 	{
 		i := A_index
 		site := A_LoopField
-		Gui, Tab, % site
-		Gui, Add, Listview
-			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
-			, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, ListView, WQlv%i%
 		LV_Delete()																		; refresh each respective LV
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
 		{
@@ -570,28 +601,8 @@ WQlist() {
 				,e0.dev
 				,e0.prov
 				,e0.site)
-			
 		}
-		Gui, ListView, WQlv%i%
-			LV_ModifyCol()
-			LV_ModifyCol(1,"0")
-			LV_ModifyCol(2,"60 Desc")
-			LV_ModifyCol(2,"Sort")
-			LV_ModifyCol(3,"40")
-			LV_ModifyCol(4,"60")
-			LV_ModifyCol(6,140)
-			LV_ModifyCol(8,130)
 	}
-	
-	Gui, ListView, WQlv_all
-		LV_ModifyCol()
-		LV_ModifyCol(1,"0")
-		LV_ModifyCol(2,"60 Desc")
-		LV_ModifyCol(2,"Sort")
-		LV_ModifyCol(3,"40")
-		LV_ModifyCol(4,"60")
-		LV_ModifyCol(6,140)
-		LV_ModifyCol(8,130)
 	
 	progress, off
 	return
