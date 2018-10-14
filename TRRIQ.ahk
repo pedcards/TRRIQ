@@ -1945,8 +1945,9 @@ registerPreventice() {
 		, "" ;"Plan Expiration Date"
 		, "" ;"Authorization Information"
 		, "" ;"Plan Type"
-		, ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
-		, "Self"
+		;~ , ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
+		, ptDem.parentL "^" ptDem.parentF
+		, "Legal Guardian"
 		, tmpDOB.yyyy . tmpDOB.mm . tmpDOB.dd
 		, "" ;ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
 		, "" ;"Assignment of Benefits"
