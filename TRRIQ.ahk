@@ -1285,7 +1285,6 @@ parsePreventiceEnrollment(tbl) {
 		}
 		tmp := parseDate(res.date)
 		date := tmp.YYYY tmp.MM tmp.DD
-		count ++
 		
 		if IsObject(ens := wq.selectSingleNode("//enroll[mrn='" res.mrn "'][dev='" res.dev "']")) {			; S/N is currently in use
 			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in " ens.parentNode.nodeName ".")
@@ -1296,23 +1295,6 @@ parsePreventiceEnrollment(tbl) {
 			continue
 		} 
 		
-		loop, % (ens := wq.selectNodes("//enroll[date='" date "']")).length				; all items matching [date]
-		{
-			k := ens.item(A_index-1)
-			e0 := []
-			e0.id := k.getAttribute("id")
-			e0.name	:= k.selectSingleNode("name").text
-			e0.mrn	:= k.selectSingleNode("mrn").text
-			e0.fuzzName := 100*(1-fuzzysearch(e0.name,res.name))						; percent match
-			e0.fuzzMRN	:= 100*(1-fuzzysearch(e0.mrn,res.mrn))
-			if ((e0.fuzzName>85)||(e0.fuzzMRN>90)) {									; close match for either NAME or MRN
-				e0.match := k.parentNode.nodeName 
-				break
-			}
-		}
-		if (e0.match) {
-			eventlog("Enrollment close match (" res.mrn "/" e0.mrn ") and (" res.name "/" e0.name ") found in " e0.match "[" date "].")
-			e0.match := ""
 			continue
 		}
 		
