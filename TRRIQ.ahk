@@ -370,7 +370,7 @@ WQtask() {
 	}
 	global wq, user
 	
-	Gui, phase:Hide
+	;~ Gui, phase:Hide
 	pt := readWQ(idx)
 	idstr := "/root/pending/enroll[@id='" idx "']"
 	
