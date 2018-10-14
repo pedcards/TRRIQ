@@ -17,6 +17,7 @@ FileInstall, pdftk.exe, pdftk.exe
 FileInstall, libiconv2.dll, libiconv2.dll
 FileInstall, trriq.ini, trriq.ini
 FileInstall, hl7.ini, hl7.ini
+FileGetTime, wqfileDT, wqupdate
 
 SplitPath, A_ScriptDir,,fileDir
 user := A_UserName
@@ -312,8 +313,7 @@ PhaseTask:
 	return
 }
 
-checkWQfile()
-{
+checkWQfile() {
 	global wqfileDT
 	FileGetTime, tmpdt, wqupdate														; get mod dt for "wqupdate"
 	if (tmpdt > wqfileDT) {																; file is more recent than internal var
