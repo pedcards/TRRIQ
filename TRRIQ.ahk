@@ -405,6 +405,7 @@ WQtask() {
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
 		MsgBox, 4160, Logged, % pt.Name "`nUpload date logged!"
 		setwqupdate()
+		WQlist()
 		return
 	}
 	if instr(choice,"note") {
@@ -439,6 +440,7 @@ WQtask() {
 		WriteOut("/root/pending","enroll[@id='" idx "']")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
 		setwqupdate()
+		WQlist()
 		return
 	}
 	if instr(choice,"done") {
@@ -465,6 +467,7 @@ WQtask() {
 		moveWQ(idx)
 		eventlog(idx " Move from WQ: " reason)
 		setwqupdate()
+		WQlist()
 	}
 return	
 }
