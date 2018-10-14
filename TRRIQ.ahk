@@ -1299,8 +1299,8 @@ parsePreventiceEnrollment(tbl) {
 		date := tmp.YYYY tmp.MM tmp.DD
 		count ++
 		
-		if IsObject(wq.selectSingleNode("/root/pending/enroll[mrn='" res.mrn "'][dev='" res.dev "']")) {	; S/N is currently in use
-			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in Pending.")
+		if IsObject(ens := wq.selectSingleNode("//enroll[mrn='" res.mrn "'][dev='" res.dev "']")) {			; S/N is currently in use
+			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in " ens.parentNode.nodeName ".")
 			continue
 		}
 		if IsObject(ens := wq.selectSingleNode("//enroll[date='" date "'][mrn='" res.mrn "']")) {			; exists in PENDING or DONE
