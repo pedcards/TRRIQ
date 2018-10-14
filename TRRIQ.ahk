@@ -17,6 +17,7 @@ FileInstall, pdftk.exe, pdftk.exe
 FileInstall, libiconv2.dll, libiconv2.dll
 FileInstall, trriq.ini, trriq.ini
 FileInstall, hl7.ini, hl7.ini
+FileGetTime, wqfileDT, wqupdate
 
 SplitPath, A_ScriptDir,,fileDir
 user := A_UserName
@@ -33,7 +34,25 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	isAdmin := false
 	readIni("paths")
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
+	checkcitrix()
 }
+
+/*	Get location info
+*/
+#Include HostName.ahk
+progress,,,Identifying workstation...
+if !(wksLoc := GetLocation()) {
+	progress, off
+	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
+	ExitApp
+}
+
+site := getSites(wksLoc)
+sites := site.tracked																	; sites we are tracking
+sites0 := site.ignored																	; sites we are not tracking <tracked>N</tracked> in wkslocation
+sitesLong := site.long																	; {CIS:TAB}
+sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
+sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -88,21 +107,6 @@ for key,val in indCodes
 
 initHL7()
 
-#Include HostName.ahk
-progress,,,Identifying workstation...
-if !(wksLoc := GetLocation()) {
-	progress, off
-	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
-	ExitApp
-}
-
-site := getSites(wksLoc)
-sites := site.tracked																	; sites we are tracking
-sites0 := site.ignored																	; sites we are not tracking <tracked>N</tracked> in wkslocation
-sitesLong := site.long																	; {CIS:TAB}
-sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
-sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
-
 MainLoop: ; ===================== This is the main part ====================================
 {
 	Loop
@@ -138,15 +142,15 @@ PhaseGUI:
 	Gui, phase:Default
 	Gui, +AlwaysOnTop
 
-	Gui, Add, Text, x650 y15 w200
+	Gui, Add, Text, x670 y15 w200
 		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
 		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n"
 		.	"Last Inventory update: " niceDate(wq.selectSingleNode("/root/inventory").getAttribute("update")) 
-	Gui, Add, GroupBox, x640 y0 w220 h65
+	Gui, Add, GroupBox, x660 y0 w220 h65
 	
 	Gui, Font, Bold
 	Gui, Add, Button
-		, Y+10 wp h40 gPhaseTask
+		, Y+10 wp h40 gWQlist
 		, Refresh files
 	Gui, Add, Button
 		, Y+10 wp h40 vEnrollment gPhaseTask
@@ -170,8 +174,60 @@ PhaseGUI:
 		, Grab Preventice inventory
 	
 	Gui, Add, Tab3
-		, -Wrap x10 y10 w620 h320 vWQtab +HwndWQtab
+		, -Wrap x10 y10 w640 h320 vWQtab +HwndWQtab
 		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
+	GuiControlGet, wqDim, Pos, WQtab
+	lvDim := "W" wqDimW-25 " H" wqDimH-35
+	
+	if (wksloc="Main Campus") {
+		Gui, Tab, INBOX
+		Gui, Add, Listview
+			, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
+			, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|FTP
+		Gui, ListView, WQlv_in
+		LV_ModifyCol(1,"0")																; filename and path, "0" = hidden
+		LV_ModifyCol(2,"140")															; name
+		LV_ModifyCol(3,"60")															; mrn
+		LV_ModifyCol(4,"80")															; dob
+		LV_ModifyCol(5,"60")															; site
+		LV_ModifyCol(6,"80 Sort")														; date
+		LV_ModifyCol(7,"2")																; wqid
+		LV_ModifyCol(8,"40")															; ftype
+		LV_ModifyCol(9,"40 Center")														; ftp
+	}
+	Gui, Tab, ALL
+	Gui, Add, Listview
+		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
+		, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, ListView, WQlv_all
+	LV_ModifyCol(1,"0")																	; wqid (hidden)
+	LV_ModifyCol(2,"60")																; date
+	LV_ModifyCol(3,"40")																; FedEx
+	LV_ModifyCol(4,"60")																; uploaded
+	LV_ModifyCol(5,"60")																; MRN
+	LV_ModifyCol(6,"140")																; Name
+	LV_ModifyCol(7,"130")																; Ser Num
+	LV_ModifyCol(8,"100")																; Prov
+	LV_ModifyCol(9,"80")																; Site
+	
+	Loop, parse, sites, |
+	{
+		i := A_index
+		site := A_LoopField
+		Gui, Tab, % site
+		Gui, Add, Listview
+			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
+			, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, ListView, WQlv%i%
+		LV_ModifyCol(1,"0")																	; wqid (hidden)
+		LV_ModifyCol(2,"60")																; date
+		LV_ModifyCol(3,"40")																; FedEx
+		LV_ModifyCol(4,"60")																; uploaded
+		LV_ModifyCol(5,"60")																; MRN
+		LV_ModifyCol(6,"140")																; Name
+		LV_ModifyCol(7,"130")																; Ser Num
+		LV_ModifyCol(8,"100")																; Prov
+	}
 	WQlist()
 	
 	;~ Menu, menuSys, Add, Scan tempfiles, scanTempFiles
@@ -186,6 +242,8 @@ PhaseGUI:
 	
 	Gui, Menu, menuBar
 	Gui, Show,, TRRIQ Dashboard
+	
+	SetTimer, checkWQfile, 1000
 	return
 }
 
@@ -253,6 +311,23 @@ PhaseTask:
 	phase := A_GuiControl
 	Gui, phase:Hide
 	return
+}
+
+checkWQfile() {
+	global wqfileDT
+	FileGetTime, tmpdt, wqupdate														; get mod dt for "wqupdate"
+	if (tmpdt > wqfileDT) {																; file is more recent than internal var
+		wqfileDT := tmpdt																; set var to this date
+		WQlist()																		; refresh list
+	}
+	return
+}
+
+setwqupdate() {
+	global wqfileDT
+	FileDelete, wqupdate
+	FileAppend,,wqupdate
+	wqfileDT := A_now
 }
 
 checkCitrix() {
@@ -325,6 +400,7 @@ WQtask() {
 		wq.save("worklist.xml")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
 		MsgBox, 4160, Logged, % pt.Name "`nUpload date logged!"
+		setwqupdate()
 		return
 	}
 	if instr(choice,"note") {
@@ -358,6 +434,7 @@ WQtask() {
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
 		WriteOut("/root/pending","enroll[@id='" idx "']")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
+		setwqupdate()
 		return
 	}
 	if instr(choice,"done") {
@@ -383,6 +460,7 @@ WQtask() {
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},"MOVED: " reason)
 		moveWQ(idx)
 		eventlog(idx " Move from WQ: " reason)
+		setwqupdate()
 	}
 return	
 }
@@ -436,10 +514,8 @@ WQlist() {
 	
 	if (wksloc="Main Campus") {
 		
-	Gui, Tab, INBOX
-	Gui, Add, Listview
-		, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
-		, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|FTP
+	Gui, ListView, WQlv_in
+	LV_Delete()																			; clear the INBOX entries
 	
 /*	Process each .hl7 file
 */
@@ -504,33 +580,17 @@ WQlist() {
 		}
 	}
 	
-	Gui, ListView, WQlv_in
-		LV_ModifyCol()
-		LV_ModifyCol(1,"0")																; filename and path
-		LV_ModifyCol(2,"140")															; name
-		LV_ModifyCol(3,"60")															; mrn
-		LV_ModifyCol(4,"80")															; dob
-		LV_ModifyCol(5,"60")															; site
-		LV_ModifyCol(6,"80 Sort")														; date
-		LV_ModifyCol(7,"2")																; wqid
-		LV_ModifyCol(8,"40")															; ftype
-		LV_ModifyCol(9,"40 Center")														; ftp
-		
 	}	; <-- finish Main Campus Inbox
 	
-	Gui, Tab, ALL
-	Gui, Add, Listview
-		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
-		, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, ListView, WQlv_all
+	LV_Delete()
 	
 	Loop, parse, sites, |
 	{
 		i := A_index
 		site := A_LoopField
-		Gui, Tab, % site
-		Gui, Add, Listview
-			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
-			, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, ListView, WQlv%i%
+		LV_Delete()																		; refresh each respective LV
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
 		{
 			k := ens.item(A_Index-1)
@@ -564,28 +624,8 @@ WQlist() {
 				,e0.dev
 				,e0.prov
 				,e0.site)
-			
 		}
-		Gui, ListView, WQlv%i%
-			LV_ModifyCol()
-			LV_ModifyCol(1,"0")
-			LV_ModifyCol(2,"60 Desc")
-			LV_ModifyCol(2,"Sort")
-			LV_ModifyCol(3,"40")
-			LV_ModifyCol(4,"60")
-			LV_ModifyCol(6,140)
-			LV_ModifyCol(8,130)
 	}
-	
-	Gui, ListView, WQlv_all
-		LV_ModifyCol()
-		LV_ModifyCol(1,"0")
-		LV_ModifyCol(2,"60 Desc")
-		LV_ModifyCol(2,"Sort")
-		LV_ModifyCol(3,"40")
-		LV_ModifyCol(4,"60")
-		LV_ModifyCol(6,140)
-		LV_ModifyCol(8,130)
 	
 	progress, off
 	return
@@ -692,6 +732,7 @@ readWQlv:
 	LV_GetText(ftype,x,8)																; filetype
 	SplitPath,fileIn,fnam,,,fileNam
 	
+	wq := new XML("worklist.xml")														; refresh WQ
 	blocks := Object()																	; clear all objects
 	fields := Object()
 	labels := Object()
@@ -709,6 +750,11 @@ readWQlv:
 	
 	fldVal := readWQ(wqid)																; wqid would have been determined by parsing hl7
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
+	if (fldval.node = "done") {															; task has been done already by another user
+		MsgBox, 262208, Completed, File has already been processed!
+		WQlist()																		; refresh list and return
+		return
+	}
 	
 	if (ftype~="HL7|HOL|CEM|BGH") {														; hl7 file (could still be Holter or CEM)
 		eventlog("===> " fnam )
@@ -739,7 +785,7 @@ readWQlv:
 		gosub outputfiles																; generate and save output CSV, rename and move PDFs
 	}
 	
-	gosub PhaseGUI																		; Refresh the worklist
+	WQlist()																			; Refresh the worklist
 	
 	return
 }
@@ -1127,6 +1173,7 @@ getDem:
 
 CheckPreventiceWeb(win) {
 	global phase
+	SetTimer, checkWQfile, Off
 	checkCitrix()
 	
 	str := {}
@@ -1186,6 +1233,8 @@ CheckPreventiceWeb(win) {
 		
 		PreventiceWebPager(wb,str[phase].changed,str[phase].btn)
 	}
+	
+	setwqupdate()
 	
 	wb.navigate(str[phase].url)															; refresh first page
 	ComObjConnect(wb)																	; release wb object
@@ -1407,6 +1456,7 @@ return "Scanned " files " files, " count " DONE records added."
 MortaraUpload()
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
+	SetTimer, checkWQfile, Off
 	checkCitrix()
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
@@ -1907,8 +1957,9 @@ registerPreventice() {
 		, "" ;"Plan Expiration Date"
 		, "" ;"Authorization Information"
 		, "" ;"Plan Type"
-		, ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
-		, "Self"
+		;~ , ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
+		, ptDem.parentL "^" ptDem.parentF
+		, "Legal Guardian"
 		, tmpDOB.yyyy . tmpDOB.mm . tmpDOB.dd
 		, "" ;ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
 		, "" ;"Assignment of Benefits"
@@ -2012,6 +2063,7 @@ registerPreventice() {
 
 BGHregister() {
 	global wq, ptDem, fetchQuit
+	SetTimer, checkWQfile, Off
 	checkCitrix()
 	
 	MsgBox, 262177, Event recorder, Start BGH event recorder registration?
@@ -2515,6 +2567,7 @@ outputfiles:
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
 	FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
 	
+	setwqupdate()
 	wq := new XML("worklist.xml")
 	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
 	
