@@ -1286,19 +1286,17 @@ parsePreventiceEnrollment(tbl) {
 		tmp := parseDate(res.date)
 		date := tmp.YYYY tmp.MM tmp.DD
 		
-		if IsObject(ens := wq.selectSingleNode("//enroll[mrn='" res.mrn "'][dev='" res.dev "']")) {			; S/N is currently in use
-			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in " ens.parentNode.nodeName ".")
+		if enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']") {											; MRN+S/N is currently in use
 			continue
 		}
-		if IsObject(ens := wq.selectSingleNode("//enroll[date='" date "'][mrn='" res.mrn "']")) {			; exists in PENDING or DONE
-			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in " ens.parentNode.nodeName ".")
+		if enrollcheck("[name='" res.name "'][dev='" res.dev "']") {										; NAME+S/N is currently in use
+			continue
+		}
+		if enrollcheck("[date='" date "'][dev='" res.dev "']") {											; DATE+S/N exists in PENDING or DONE
 			continue
 		} 
 		
-			continue
-		}
-		
-		/*	No perfect or close match
+		/*	No match (i.e. unique record)
 		 *	add new record to PENDING
 		 */
 		sleep 1																			; delay 1ms to ensure different tick time
@@ -1321,6 +1319,21 @@ parsePreventiceEnrollment(tbl) {
 	filedelete, .lock
 	
 	return done																			; returns number of matches, or 0 (error) if no matches
+}
+
+enrollcheck(params) {
+	global wq
+	
+	en := wq.selectSingleNode("//enroll" params)
+	id := en.getAttribute("id")
+	node := en.parentNode.nodeName
+	
+	if (id) {
+		eventlog("Enroll id " id " for " params " already exists in " node ".")
+		return true
+	} else {
+		return false
+	}
 }
 
 parsePreventiceInventory(tbl) {
