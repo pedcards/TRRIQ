@@ -186,11 +186,11 @@ PhaseGUI:
 			, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|FTP
 		Gui, ListView, WQlv_in
 		LV_ModifyCol(1,"0")																; filename and path, "0" = hidden
-		LV_ModifyCol(2,"140")															; name
+		LV_ModifyCol(2,"160")															; name
 		LV_ModifyCol(3,"60")															; mrn
 		LV_ModifyCol(4,"80")															; dob
-		LV_ModifyCol(5,"60")															; site
-		LV_ModifyCol(6,"80 Sort")														; date
+		LV_ModifyCol(5,"80")															; site
+		LV_ModifyCol(6,"80")															; date
 		LV_ModifyCol(7,"2")																; wqid
 		LV_ModifyCol(8,"40")															; ftype
 		LV_ModifyCol(9,"40 Center")														; ftp
@@ -583,7 +583,8 @@ WQlist() {
 			wqfiles.push(id)															; add non-null wqid to wqfiles
 		}
 	}
-	
+	LV_ModifyCol(6,"Sort")																; date
+
 	}	; <-- finish Main Campus Inbox
 	
 /*	Now scan <pending/enroll> nodes
