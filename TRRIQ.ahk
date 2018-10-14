@@ -149,7 +149,7 @@ PhaseGUI:
 	
 	Gui, Font, Bold
 	Gui, Add, Button
-		, Y+10 wp h40 gPhaseTask
+		, Y+10 wp h40 gWQlist
 		, Refresh files
 	Gui, Add, Button
 		, Y+10 wp h40 vEnrollment gPhaseTask
@@ -729,7 +729,7 @@ readWQlv:
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
 	if (fldval.node = "done") {															; task has been done already by another user
 		MsgBox, 262208, Completed, File has already been processed!
-		gosub PhaseGUI																	; refresh list and return
+		WQlist()																		; refresh list and return
 		return
 	}
 	
@@ -762,7 +762,7 @@ readWQlv:
 		gosub outputfiles																; generate and save output CSV, rename and move PDFs
 	}
 	
-	gosub PhaseGUI																		; Refresh the worklist
+	WQlist()																			; Refresh the worklist
 	
 	return
 }
