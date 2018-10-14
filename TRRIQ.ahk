@@ -1214,14 +1214,15 @@ CheckPreventiceWeb(win) {
 		
 		tbl := tbl.getElementsByTagName("tbody")[0]
 		clip := tbl.innertext
-		if (clip=clip0) {
+		if (clip=clip0) {																; no change since last clip
 			progress, off
 			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
 			break
 		}
 		
 		done := %prvFunc%(tbl)		; parsePreventiceEnrollment() or parsePreventiceInventory()
-		if (done=0) {
+		
+		if (done=0) {																	; no new records returned
 			progress, off
 			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
 			break
