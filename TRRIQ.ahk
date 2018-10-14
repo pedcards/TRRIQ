@@ -323,6 +323,13 @@ checkWQfile() {
 	return
 }
 
+setwqupdate() {
+	global wqfileDT
+	FileDelete, wqupdate
+	FileAppend,,wqupdate
+	wqfileDT := A_now
+}
+
 checkCitrix() {
 /*	TRRIQ must be run from local machine
 	local machine names begin with EWCS and Citrix machines start with PPWC
@@ -393,7 +400,7 @@ WQtask() {
 		wq.save("worklist.xml")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
 		MsgBox, 4160, Logged, % pt.Name "`nUpload date logged!"
-		FileAppend,,wqupdate
+		setwqupdate()
 		return
 	}
 	if instr(choice,"note") {
@@ -427,7 +434,7 @@ WQtask() {
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
 		WriteOut("/root/pending","enroll[@id='" idx "']")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
-		FileAppend,,wqupdate
+		setwqupdate()
 		return
 	}
 	if instr(choice,"done") {
@@ -453,7 +460,7 @@ WQtask() {
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},"MOVED: " reason)
 		moveWQ(idx)
 		eventlog(idx " Move from WQ: " reason)
-		FileAppend,,wqupdate
+		setwqupdate()
 	}
 return	
 }
@@ -1226,6 +1233,8 @@ CheckPreventiceWeb(win) {
 		
 		PreventiceWebPager(wb,str[phase].changed,str[phase].btn)
 	}
+	
+	setwqupdate()
 	
 	wb.navigate(str[phase].url)															; refresh first page
 	ComObjConnect(wb)																	; release wb object
@@ -2558,8 +2567,7 @@ outputfiles:
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
 	FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
 	
-	FileAppend,,wqupdate
-	wqfileDT := A_now
+	setwqupdate()
 	wq := new XML("worklist.xml")
 	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
 	
