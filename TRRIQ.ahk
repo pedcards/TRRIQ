@@ -1327,7 +1327,7 @@ enrollcheck(params) {
 	
 	en := wq.selectSingleNode("//enroll" params)
 	id := en.getAttribute("id")
-	name := en.selectSingleNode("name").text
+	name := parsename(en.selectSingleNode("name").text).lastfirst
 	node := en.parentNode.nodeName
 	
 	if (id) {
