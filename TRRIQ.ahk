@@ -393,6 +393,7 @@ WQtask() {
 		wq.save("worklist.xml")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
 		MsgBox, 4160, Logged, % pt.Name "`nUpload date logged!"
+		FileAppend,,wqupdate
 		return
 	}
 	if instr(choice,"note") {
@@ -426,6 +427,7 @@ WQtask() {
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
 		WriteOut("/root/pending","enroll[@id='" idx "']")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
+		FileAppend,,wqupdate
 		return
 	}
 	if instr(choice,"done") {
@@ -451,6 +453,7 @@ WQtask() {
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},"MOVED: " reason)
 		moveWQ(idx)
 		eventlog(idx " Move from WQ: " reason)
+		FileAppend,,wqupdate
 	}
 return	
 }
