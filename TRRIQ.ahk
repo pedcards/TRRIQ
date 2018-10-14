@@ -4113,7 +4113,10 @@ ParseName(x) {
 		first := RegExReplace(x," " last)
 	}
 	
-	return {first:first,last:last}
+	return {first:first
+			,last:last
+			,firstlast:first " " last
+			,lastfirst:last ", " first}
 }
 
 ParseDate(x) {
