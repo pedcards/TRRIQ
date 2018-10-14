@@ -1283,6 +1283,7 @@ parsePreventiceEnrollment(tbl) {
 			c_idx := A_Index-1
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
+		res.name := parsename(res.name).lastfirst
 		tmp := parseDate(res.date)
 		date := tmp.YYYY tmp.MM tmp.DD
 		
