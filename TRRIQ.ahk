@@ -389,7 +389,7 @@ WQtask() {
 		return
 	}
 	if instr(choice,"upload") {
-		InputBox ,inDT,Upload log,`n`nEnter date uploaded to Preventice,,,,,,,,% niceDate(A_now)
+		inputbox(inDT,"Upload log","`n`nEnter date uploaded to Preventice`n",niceDate(A_now))
 		if (ErrorLevel) {
 			return
 		}
@@ -414,9 +414,11 @@ WQtask() {
 		Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
 		{
 			k := notes.item(A_index-1)
-			list .= k.getAttribute("date") "/" k.getAttribute("user") ": " k.text "`n"
+			dt := parsedate(k.getAttribute("date"))
+			list .= dt.mm "/" dt.dd ":" k.getAttribute("user") ": " k.text "`n"
 		}
-		note := maxinput("Communication note", list "`nEnter a brief communication note",60)
+		inputbox(note,"Communication note"
+			, strQ(list,"###====================================`n") "`nEnter a brief communication note:`n","")
 		if (note="") {
 			return
 		}
@@ -454,7 +456,8 @@ WQtask() {
 			return
 		}
 		if instr(reason,"Other") {
-			reason := maxinput("Clear record from worklist","Enter the reason for moving this record",30)
+			reason:=""
+			inputbox(reason,"Clear record from worklist","Enter the reason for moving this record","")
 			if (reason="") {
 				return
 			}
@@ -470,26 +473,6 @@ WQtask() {
 		WQlist()
 	}
 return	
-}
-
-maxinput(title, prompt, max) {
-	Loop
-	{
-		prompt .= "`n(Max " max " chars)"
-		StrReplace(prompt,"`n","`n",lines)
-		InputBox, reason, % title, % prompt " " lines " lines",,400,% (lines*20)+150
-		StringLen, addLength, reason
-		If (addLength > max) {
-			MsgBox, 0, ERROR, % "String too long. Please explain in less than " max " chars." 	
-		} else {
-			break
-		}
-	}
-	if (reason="") {
-		return error
-	}
-	
-	return reason
 }
 
 WQlist() {
@@ -1157,7 +1140,7 @@ indSubmit:
 {
 	Gui, ind:Submit
 	if InStr(indChoices,"OTHER",Yes) {
-		InputBox, indOther, Other, Enter other indication
+		InputBox(indOther, "Other", "Enter other indication","")
 		indChoices := RegExReplace(indChoices,"OTHER", "OTHER - " indOther)
 	}
 	ptDem["Indication"] := indChoices
@@ -1633,7 +1616,7 @@ MortaraUpload()
 			eventlog("Cancelled getPatInfo.")
 			return
 		}
-		InputBox, note, Fedex, `n`n`n`n Enter FedEx return sticker number
+		InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
 		if (RegExMatch(note,"((\d\s*){12})",fedex)) {
 			fedex := RegExReplace(fedex1," ")
 			ptDem["fedex"] := fedex
@@ -2367,8 +2350,8 @@ getPatInfo() {
 		}
 	}
 	if (ptDem.addr1~="i)P[\. ]+O[\. ]+Box") {
-		InputBox, addr1, Cannot use P.O. Box,`n`nEnter valid street address
-		InputBox, addr2, Cannot use P.O. Box,`n`nEnter city,,,,,,,,% ptDem.city
+		InputBox(addr1, "Cannot use P.O. Box","`n`nEnter valid street address","")
+		InputBox(addr2, "Cannot use P.O. Box","`n`nEnter city", ptDem.city)
 		if (addr1) {
 			ptDem.addr1 := addr1
 			eventlog("Replaced PO box with valid address.")
@@ -2642,7 +2625,7 @@ wqSetVal(id,node,val) {
 getMD:
 {
 	Gui, fetch:Hide
-	InputBox, ed_Crd, % "Enter responsible cardiologist"						; no call schedule for that day, must choose
+	InputBox(ed_Crd, "Enter responsible cardiologist","","")							; no call schedule for that day, must choose
 	Gui, fetch:Show
 	if (ed_Crd="")
 		return
@@ -4341,6 +4324,7 @@ readIni(section) {
 }
 
 #Include CMsgBox.ahk
+#Include InputBox.ahk
 #Include xml.ahk
 #Include sift3.ahk
 #Include hl7.ahk
