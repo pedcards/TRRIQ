@@ -2559,6 +2559,7 @@ outputfiles:
 	FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
 	
 	FileAppend,,wqupdate
+	wqfileDT := A_now
 	wq := new XML("worklist.xml")
 	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
 	
