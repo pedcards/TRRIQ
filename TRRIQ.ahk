@@ -141,11 +141,11 @@ PhaseGUI:
 	Gui, phase:Default
 	Gui, +AlwaysOnTop
 
-	Gui, Add, Text, x650 y15 w200
+	Gui, Add, Text, x670 y15 w200
 		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
 		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n"
 		.	"Last Inventory update: " niceDate(wq.selectSingleNode("/root/inventory").getAttribute("update")) 
-	Gui, Add, GroupBox, x640 y0 w220 h65
+	Gui, Add, GroupBox, x660 y0 w220 h65
 	
 	Gui, Font, Bold
 	Gui, Add, Button
@@ -173,7 +173,7 @@ PhaseGUI:
 		, Grab Preventice inventory
 	
 	Gui, Add, Tab3
-		, -Wrap x10 y10 w620 h320 vWQtab +HwndWQtab
+		, -Wrap x10 y10 w640 h320 vWQtab +HwndWQtab
 		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	WQlist()
 	
