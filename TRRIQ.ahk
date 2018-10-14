@@ -586,6 +586,8 @@ WQlist() {
 	
 	}	; <-- finish Main Campus Inbox
 	
+/*	Now scan <pending/enroll> nodes
+*/
 	Gui, ListView, WQlv_all
 	LV_Delete()
 	
@@ -603,15 +605,15 @@ WQlist() {
 			dt := A_now
 			dt -= e0.date, Days
 			e0.dev := RegExReplace(e0.dev,"BodyGuardian","BG")
-			if (instr(e0.dev,"BG") && (dt < 30)) {
-				continue
-			}
+			;~ if (instr(e0.dev,"BG") && (dt < 30)) {										; skip BGH less than 30 days
+				;~ continue
+			;~ }
 			Gui, ListView, WQlv%i%
 			LV_Add(""
 				,id
-				,e0.date																;~ ,parseDate(e0.date).MM "/" parseDate(e0.date).DD
+				,e0.date
 				,strQ(e0.fedex,"X")
-				,e0.sent																;~ ,strQ(e0.sent,parseDate(e0.date).MM "/" parseDate(e0.date).DD)
+				,e0.sent
 				,e0.mrn
 				,e0.name
 				,e0.dev
@@ -620,9 +622,9 @@ WQlist() {
 			Gui, ListView, WQlv_all														
 			LV_Add(""
 				,id
-				,e0.date																;~ ,parseDate(e0.date).MM "/" parseDate(e0.date).DD
+				,e0.date
 				,strQ(e0.fedex,"X")
-				,e0.sent																;~ ,strQ(e0.sent,parseDate(e0.date).MM "/" parseDate(e0.date).DD)
+				,e0.sent
 				,e0.mrn
 				,e0.name
 				,e0.dev
