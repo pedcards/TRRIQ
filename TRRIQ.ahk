@@ -1163,6 +1163,7 @@ getDem:
 
 CheckPreventiceWeb(win) {
 	global phase
+	SetTimer, checkWQfile, Off
 	checkCitrix()
 	
 	str := {}
@@ -1443,6 +1444,7 @@ return "Scanned " files " files, " count " DONE records added."
 MortaraUpload()
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
+	SetTimer, checkWQfile, Off
 	checkCitrix()
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
@@ -2048,6 +2050,7 @@ registerPreventice() {
 
 BGHregister() {
 	global wq, ptDem, fetchQuit
+	SetTimer, checkWQfile, Off
 	checkCitrix()
 	
 	MsgBox, 262177, Event recorder, Start BGH event recorder registration?
