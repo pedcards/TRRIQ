@@ -443,6 +443,7 @@ WQlist() {
 	Gui, Add, Listview
 		, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
 		, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|FTP
+	LV_Delete()																			; clear the INBOX entries
 	
 /*	Process each .hl7 file
 */
@@ -525,6 +526,7 @@ WQlist() {
 	Gui, Add, Listview
 		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
 		, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	LV_Delete()
 	
 	Loop, parse, sites, |
 	{
@@ -534,6 +536,7 @@ WQlist() {
 		Gui, Add, Listview
 			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
 			, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		LV_Delete()																		; refresh each respective LV
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
 		{
 			k := ens.item(A_Index-1)
