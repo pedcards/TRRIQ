@@ -1286,14 +1286,17 @@ parsePreventiceEnrollment(tbl) {
 		res.name := parsename(res.name).lastfirst
 		tmp := parseDate(res.date)
 		date := tmp.YYYY tmp.MM tmp.DD
+		dt := A_Now
+		dt -= date, Days
+		done += (dt<14)																	; if days < 14, returns done+1
 		
-		if enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']") {											; MRN+S/N is currently in use
+		if enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']") {						; MRN+S/N is currently in use
 			continue
 		}
-		if enrollcheck("[name='" res.name "'][dev='" res.dev "']") {										; NAME+S/N is currently in use
+		if enrollcheck("[name='" res.name "'][dev='" res.dev "']") {					; NAME+S/N is currently in use
 			continue
 		}
-		if enrollcheck("[date='" date "'][dev='" res.dev "']") {											; DATE+S/N exists in PENDING or DONE
+		if enrollcheck("[date='" date "'][dev='" res.dev "']") {						; DATE+S/N exists in PENDING or DONE
 			continue
 		} 
 		
