@@ -183,7 +183,7 @@ PhaseGUI:
 		Gui, Tab, INBOX
 		Gui, Add, Listview
 			, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
-			, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|FTP
+			, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|Need FTP
 		Gui, ListView, WQlv_in
 		LV_ModifyCol(1,"0")																; filename and path, "0" = hidden
 		LV_ModifyCol(2,"160")															; name
@@ -193,7 +193,7 @@ PhaseGUI:
 		LV_ModifyCol(6,"80")															; date
 		LV_ModifyCol(7,"2")																; wqid
 		LV_ModifyCol(8,"40")															; ftype
-		LV_ModifyCol(9,"40 Center")														; ftp
+		LV_ModifyCol(9,"70 Center")														; ftp
 	}
 	Gui, Tab, ALL
 	Gui, Add, Listview
