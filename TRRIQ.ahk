@@ -4078,6 +4078,9 @@ FilePrepend( Text, Filename ) {
 ParseName(x) {
 /*	Determine first and last name
 */
+	if (x="") {
+		return error
+	}
 	x := trim(x)																		; trim edges
 	x := RegExReplace(x," \w "," ")														; remove middle initial: Troy A Johnson => Troy Johnson
 	x := RegExReplace(x,"(,.*?)( \w)$","$1")											; remove trailing MI: Johnston, Troy A => Johnston, Troy
