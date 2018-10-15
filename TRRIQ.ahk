@@ -782,8 +782,6 @@ readWQlv:
 		gosub outputfiles																; generate and save output CSV, rename and move PDFs
 	}
 	
-	WQlist()																			; Refresh the worklist
-	
 	return
 }
 
