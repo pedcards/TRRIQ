@@ -727,7 +727,7 @@ readWQlv:
 	LV_GetText(fileIn,x,1)																; selection filename
 	LV_GetText(wqid,x,7)																; WQID
 	LV_GetText(ftype,x,8)																; filetype
-	SplitPath,fileIn,fnam,,,fileNam
+	SplitPath,fileIn,fnam,,fExt,fileNam
 	
 	wq := new XML("worklist.xml")														; refresh WQ
 	blocks := Object()																	; clear all objects
@@ -753,7 +753,7 @@ readWQlv:
 		return
 	}
 	
-	if (ftype~="HL7|HOL|CEM|BGH") {														; hl7 file (could still be Holter or CEM)
+	if (fExt="hl7") {																	; hl7 file (could still be Holter or CEM)
 		eventlog("===> " fnam )
 		Gui, phase:Hide
 		
