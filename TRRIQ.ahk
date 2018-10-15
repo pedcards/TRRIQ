@@ -544,9 +544,9 @@ WQlist() {
 	{
 		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)										; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
 		id := fnID.1
-		ftype := (fnID.2="H") ? "PDF"													; type of file based on fnID label
+		ftype := (fnID.2="H") ? "HOL"													; type of file based on fnID label
 				: (fnID.2="Z") ? "ZIO"
-				: (fnID.2="E") ? "CEM"
+				: (fnID.2="E") ? "BGH"
 				: (fnID.2="M") ? "MINI"
 				: "???"																	; could condense as ftype := {"H":"PDF","Z":"ZIO","E":"CEM","M":"MINI"}[fnID.2]
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
@@ -561,7 +561,7 @@ WQlist() {
 			, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))								; mrn
 			, strQ(res.dob,"###")														; dob
 			, strQ(res.site,"###","???")												; site
-			, strQ(res.date,"###")														; study date
+			, strQ(nicedate(res.date),"###")											; study date
 			, id																		; wqid
 			, ftype																		; study type
 			, "")																		; fulldisc present, make blank
