@@ -2910,7 +2910,9 @@ findFullPdf(wqid:="") {
 			eventlog("Holter PDF: " fName " renamed to " newFnam)
 			fName := newFnam ".pdf"
 		} 
-		pdfList.push(fName)
+		if !objhasvalue(pdfList,fName) {
+			pdfList.push(fName)
+		}
 		
 		if (wqid = "") {																; this is just a refresh loop
 			continue																	; just build the list
