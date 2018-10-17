@@ -2962,13 +2962,13 @@ getPdfID(txt) {
 		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###E","00000E")
 	} else if instr(txt,"Zio XT") {
 		res.type := "Z"
-		name := parseName(res.name := trim(stregX(txt,"Final Report for",1,1,"Date of Birth",1)," `t`r`n"))
+		name := parseName(res.name := trim(stregX(txt,"Final Report for\R",1,1,"\R",1)," `t`r`n"))
 			res.nameL := name.last
 			res.nameF := name.first
 		enroll := stregX(txt,"Enrollment Period",1,0,"Analysis Time",1)
 		dt := parseDate(stregX(enroll,"i)\R+.*?(hours|days).*?\R+",1,1,",",1))
 			res.date := dt.yyyy dt.mm dt.dd
-		res.mrn := strQ(trim(stregX(txt,"Patient ID",1,1,"Managing Location",1)," `t`r`n"),"###","Zio")
+		res.mrn := strQ(trim(stregX(txt,"Patient ID\R",1,1,"\R",1)," `t`r`n"),"###","Zio")
 		res.wqid := "00000Z"
 	}
 	return res
