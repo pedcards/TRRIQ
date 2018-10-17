@@ -2812,7 +2812,7 @@ fieldsToCSV() {
 			;~ . "sve-Longest(0)	sve-Longest_time	sve-Fastest(0)	sve-Fastest_time	sve-Pairs(0)	sve-Drop(0)	sve-Late(0)	"
 			;~ . "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
 	} else if (monType="BGH") {
-		tabs := "dem-Name_L	dem-Name_F	dem-MRN	dem-Ordering	dem-Sex(NA)	dem-DOB	dem-VOID_Practice dem-Indication	"
+		tabs := "dem-Name_L	dem-Name_F	dem-MRN	dem-Ordering	dem-Sex(NA)	dem-DOB	dem-VOID_Practice	dem-Indication	"
 			. "dem-Test_date	dem-Test_end	dem-VOID	dem-Billing	"
 			. "counts-Critical(0)	counts-Total(0)	counts-Serious(0)	counts-Manual(0)	counts-Stable(0)	counts-Auto(0)"
 		;~ tabs := "dem-Name_L	dem-Name_F	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Ordering	dem-Site	dem-Billing	dem-Device_SN	"		; for when we are full TRRIQ
