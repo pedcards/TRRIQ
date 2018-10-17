@@ -2876,7 +2876,9 @@ findFullPdf(wqid:="") {
 	
 	Loop, files, %holterDir%*.pdf
 	{
-		fname := A_LoopFileName, fileIn := A_LoopFileFullPath, fnam := RegExReplace(fname,"i)\.pdf")
+		fileIn := A_LoopFileFullPath													; full path and filename
+		fname := A_LoopFileName															; full filename
+		fnam := RegExReplace(fname,"i)\.pdf")											; filename without ext
 		progress, % 100*A_index/fileCount, % fname, Scanning PDFs folder
 		
 		;---Skip any PDFs that have already been processed or are in the middle of being processed
