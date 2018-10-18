@@ -97,7 +97,6 @@ if fileexist("worklist.xml") {
 	wq.addElement("done","/root")
 	wq.save("worklist.xml")
 }
-scanTempfiles()
 
 demVals := ["MRN","Account Number","DOB","Sex","Legal Sex","Birth Sex","Loc","Provider"]						; valid field names for parseClip()
 sites := "MAIN|BELLEVUE|EVERETT|TRI-CITIES|TRI|WENATCHEE|YAKIMA|GREAT FALLS"			; sites we are tracking
