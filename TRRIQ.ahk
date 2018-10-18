@@ -1286,7 +1286,7 @@ parsePreventiceEnrollment(tbl) {
 		date := tmp.YYYY tmp.MM tmp.DD
 		dt := A_Now
 		dt -= date, Days
-		done += (dt<14)																	; if days < 14, returns done+1
+		done += (dt<10)																	; if days < threshold, returns done+1 == keep paging
 		
 		if enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']") {						; MRN+S/N is currently in use
 			continue
