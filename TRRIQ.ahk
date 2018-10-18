@@ -1288,13 +1288,15 @@ parsePreventiceEnrollment(tbl) {
 		dt -= date, Days
 		done += (dt<10)																	; if days < threshold, returns done+1 == keep paging
 		
-		if enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']") {						; MRN+S/N is currently in use
+	/*	Check whether any params match this device
+	*/
+		if enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']") {						; MRN+S/N
 			continue
 		}
-		if enrollcheck("[name='" res.name "'][dev='" res.dev "']") {					; NAME+S/N is currently in use
+		if enrollcheck("[name='" res.name "'][dev='" res.dev "']") {					; NAME+S/N
 			continue
 		}
-		if enrollcheck("[date='" date "'][dev='" res.dev "']") {						; DATE+S/N exists in PENDING or DONE
+		if enrollcheck("[date='" date "'][dev='" res.dev "']") {						; DATE+S/N
 			continue
 		} 
 		
