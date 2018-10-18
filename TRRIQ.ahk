@@ -1300,9 +1300,28 @@ parsePreventiceEnrollment(tbl) {
 			continue
 		} 
 		
-		/*	No match (i.e. unique record)
-		 *	add new record to PENDING
-		 */
+	/*	Check whether completes any pending with blank S/N for this patient
+	*/
+		foundIt := false
+		Loop % (ens := wq.selectNodes("/root/pending/enroll[date='" date "'][mrn='" res.mrn "']")).length
+		{
+			en := ens.item(A_Index-1)
+			id := en.getAttribute("id")
+			ser := en.getAttribute("dev")
+			if instr(res.dev,ser) {														; e.g. wq="BodyGuardian -" and web="BodyGuardian - BG12345"
+				foundIt := id
+			}
+		}
+		if (foundIt) {																	; found a full web S/N when wqID S/N blank
+			wqSetVal(foundIt,"dev",res.dev)
+			eventlog("Changed " res.name " (" foundIt ") dev to " res.dev)
+			done ++
+			continue
+		}
+		
+	/*	No match (i.e. unique record)
+	 *	add new record to PENDING
+	 */
 		sleep 1																			; delay 1ms to ensure different tick time
 		id := A_TickCount 
 		newID := "/root/pending/enroll[@id='" id "']"
