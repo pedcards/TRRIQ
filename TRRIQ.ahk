@@ -1768,6 +1768,9 @@ MorUIgrab() {
 	id := WinExist("Mortara Web Upload")
 	q := Object()
 	WinGet, WinText, ControlList, ahk_id %id%
+	ControlGet , Tabnum, Tab,
+		, WindowsForms10.SysTabControl32.app.0.33c0d9d1
+		, ahk_id %id%
 
 	Loop, parse, % WinText, `n,`r
 	{
@@ -1786,6 +1789,7 @@ MorUIgrab() {
 		el := {x:mx,y:my,w:mw,h:mh,str:str,val:val}
 		q[A_index] := el
 	}
+	q.tab := Tabnum
 	q.txt := WinText
 	q.TRct := TRct
 	q.PRct := PRct
