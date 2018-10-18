@@ -340,6 +340,20 @@ setwqupdate() {
 	return
 }
 
+checkMUwin() {
+	global muwin
+	static wintab
+	t0 := A_TickCount
+	mu_UI := MorUIgrab()
+	if !(mu_UI.tab==wintab) {
+		wintab := mu_UI.tab
+		;~ WinGetText, txt, ahk_id %muWinID%											; Should only check visible window
+		;~ MsgBox % txt
+	}
+	t1 := A_TickCount-t0
+	return t1
+}
+
 checkCitrix() {
 /*	TRRIQ must be run from local machine
 	local machine names begin with EWCS and Citrix machines start with PPWC
