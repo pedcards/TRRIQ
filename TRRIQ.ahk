@@ -243,7 +243,7 @@ PhaseGUI:
 	Gui, Menu, menuBar
 	Gui, Show,, TRRIQ Dashboard
 	
-	SetTimer, checkWQfile, 1000
+	SetTimer, idleTimer, 500
 	return
 }
 
@@ -313,6 +313,15 @@ PhaseTask:
 	return
 }
 
+idleTimer() {
+	checkWQfile()
+	x:=checkMUwin()
+	progress,,,% x
+	sleep 50
+	progress, off
+	return
+}
+
 checkWQfile() {
 	global wqfileDT
 	FileGetTime, tmpdt, wqupdate														; get mod dt for "wqupdate"
@@ -328,6 +337,7 @@ setwqupdate() {
 	FileDelete, wqupdate
 	FileAppend,,wqupdate
 	wqfileDT := A_now
+	return
 }
 
 checkCitrix() {
@@ -1168,7 +1178,7 @@ getDem:
 
 CheckPreventiceWeb(win) {
 	global phase
-	SetTimer, checkWQfile, Off
+	SetTimer, idleTimer, Off
 	checkCitrix()
 	
 	str := {}
@@ -1473,7 +1483,7 @@ return "Scanned " files " files, " count " DONE records added."
 MortaraUpload()
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
-	SetTimer, checkWQfile, Off
+	SetTimer, idleTimer, Off
 	checkCitrix()
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
@@ -2080,7 +2090,7 @@ registerPreventice() {
 
 BGHregister() {
 	global wq, ptDem, fetchQuit
-	SetTimer, checkWQfile, Off
+	SetTimer, idleTimer, Off
 	checkCitrix()
 	
 	MsgBox, 262177, Event recorder, Start BGH event recorder registration?
