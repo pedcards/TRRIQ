@@ -1328,11 +1328,11 @@ enrollcheck(params) {
 	
 	en := wq.selectSingleNode("//enroll" params)
 	id := en.getAttribute("id")
-	name := parsename(en.selectSingleNode("name").text).lastfirst
-	node := en.parentNode.nodeName
+	;~ name := parsename(en.selectSingleNode("name").text).lastfirst
+	;~ node := en.parentNode.nodeName
 	
 	if (id) {
-		eventlog("Enroll id " id " for " strQ(name,"### ") params " already exists in " node ".")
+		;~ eventlog("Enroll id " id " for " strQ(name,"### ") params " already exists in " node ".")
 		return true
 	} else {
 		return false
