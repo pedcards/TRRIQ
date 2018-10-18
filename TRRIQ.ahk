@@ -342,11 +342,16 @@ setwqupdate() {
 
 checkMUwin() {
 	global muwin
-	static wintab
+	static wintab, wintxt
 	t0 := A_TickCount
-	mu_UI := MorUIgrab()																; returns .tab, .txt, .TRct, .PRct
-	if !(mu_UI.tab==wintab) {
-		wintab := mu_UI.tab
+	ui := MorUIgrab()																; returns .tab, .txt, .TRct, .PRct
+	
+	if !(ui.tab==wintab) {
+		wintab := ui.tab
+	}
+	if !(ui.txt==wintxt) {
+		wintxt := ui.txt
+		MsgBox % wintxt
 	}
 	t1 := A_TickCount-t0
 	return t1
