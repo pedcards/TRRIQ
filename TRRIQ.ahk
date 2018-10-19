@@ -1518,48 +1518,17 @@ MortaraUpload(tabnum="")
 	
 	SetTimer, idleTimer, Off
 	ptDem := Object()
-	mu_UI := Object()
 	fetchQuit := false
 	MtCt := ""
+	mu_UI := MorUIgrab()
+	muWinTxt := mu_UI.vis
 	
-	Loop																				; Do until Web Upload program is running
-	{
-		if (muWinID := winexist("Mortara Web Upload")) {								; Break out of loop when window present
-			WinGetClass, muWinClass, ahk_id %muWinID%									; Grab WinClass string for processing
-			break
-		}
-		MsgBox, 262193, Inject demographics, Must launch Mortara Web Upload program!	; Otherwise remind to launch program
-		IfMsgBox Cancel 
-		{
-			return																		; Can cancel out of this process if desired
-		}
-	}
-	
-	DetectHiddenText, Off																; Only check the visible text
-	Loop																				; Do until either Upload or Prepare window text is present
-	{
-		WinGetText, muWinTxt, ahk_id %muWinID%											; Should only check visible window
-		if instr(muWinTxt,"Recorder S/N") {
-			break
-		}
-		MsgBox, 262193, Inject demographics
-			, Select the device activity,`nTransfer or Prepare Holter
-		IfMsgBox Cancel 
-		{
-			return																		; Can cancel out of this process if desired
-		}
-	}
-	DetectHiddenText, On
-	ControlGet , Tabnum, Tab, 															; Get selected tab num
-		, WindowsForms10.SysTabControl32.app.0.33c0d9d1
-		, ahk_id %muWinID%
 	SerNum := substr(stregX(muWintxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-6)		; Get S/N on visible page
 	SerNum := SerNum ? trim(SerNum," `r`n") : ""
 	eventlog("Device S/N " sernum " attached.")
 	
 	if (Tabnum=1) {																		; TRANSFER RECORDING TAB
 		eventlog("Transfer recording selected.")
-		mu_UI := MorUIgrab()
 		
 		wuDir := {}
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
