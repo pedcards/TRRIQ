@@ -1527,7 +1527,7 @@ MortaraUpload(tabnum="")
 	SerNum := SerNum ? trim(SerNum," `r`n") : ""
 	eventlog("Device S/N " sernum " attached.")
 	
-	if (Tabnum=1) {																		; TRANSFER RECORDING TAB
+	if (Tabnum="Transfer") {															; TRANSFER RECORDING TAB
 		eventlog("Transfer recording selected.")
 		
 		wuDir := {}
@@ -1624,7 +1624,7 @@ MortaraUpload(tabnum="")
 		MsgBox, 262208, Transfer, Successful data upload to Preventice.
 	}
 	
-	if (Tabnum=2) {																		; PREPARE MEDIA TAB
+	if (Tabnum="Prepare") {																; PREPARE MEDIA TAB
 		eventlog("Prepare media selected.")
 		mu_UI := MorUIgrab()
 		
