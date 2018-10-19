@@ -342,14 +342,18 @@ setwqupdate() {
 
 checkMUwin() {
 	global muwin
-	static wintab, wintxt
+	static wintxt, tabtxt
 	t0 := A_TickCount
 	ui := MorUIgrab()																; returns .tab, .txt, .TRct, .PRct
-
-	if (ui.vis != wintxt) {
-		;~ clipboard:=ui.txt
-		MsgBox % ui.vis
-		wintxt := ui.vis
+	
+	if !instr(ui.vis,"Second ID") {													; not on a form tab
+		t1 := A_TickCount-t0
+		return t1
+	}
+	if (ui.vis != wintxt) {															; form text has changed
+		wintxt := ui.vis															; reset text for wintxt comparison
+		RegExMatch(wintxt,"i)(Transfer Recording|Prepare Recorder)",match)			; first string that matches will be in "match1"
+		MsgBox % match
 	}
 	
 	t1 := A_TickCount-t0
