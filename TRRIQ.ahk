@@ -1567,6 +1567,10 @@ MortaraUpload(tabnum="")
 		if !(serNum=wuDir.Ser) {
 			eventlog("Serial number mismatch.")
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
+			WinActivate, ahk_id %muWinID%
+			ControlGet, clkbut, HWND,, Back
+			sleep 200
+			ControlClick,, ahk_id %clkbut%,,,,NA
 			return
 		}
 		
@@ -1594,6 +1598,10 @@ MortaraUpload(tabnum="")
 			IfMsgBox, Cancel
 			{
 				eventlog("Cancelled GUI.")
+				WinActivate, ahk_id %muWinID%
+				ControlGet, clkbut, HWND,, Back
+				sleep 200
+				ControlClick,, ahk_id %clkbut%,,,,NA
 				return
 			}
 		} else {																		; no valid S/N exists
@@ -1601,6 +1609,10 @@ MortaraUpload(tabnum="")
 			if (fetchQuit=true) {
 				fetchQuit:=false
 				eventlog("Cancelled getDem.")
+				WinActivate, ahk_id %muWinID%
+				ControlGet, clkbut, HWND,, Back
+				sleep 200
+				ControlClick,, ahk_id %clkbut%,,,,NA
 				return
 			}
 			ptDem["muphase"] := "upload"
@@ -1648,11 +1660,19 @@ MortaraUpload(tabnum="")
 		if (fetchQuit=true) {
 			fetchQuit:=false
 			eventlog("Cancelled getDem.")
+			WinActivate, ahk_id %muWinID%
+			ControlGet, clkbut, HWND,, Back
+			sleep 200
+			ControlClick,, ahk_id %clkbut%,,,,NA
 			return
 		}
 		getPatInfo()																	; grab remaining demographics for Preventice registration
 		if (fetchQuit=true) {
 			eventlog("Cancelled getPatInfo.")
+			WinActivate, ahk_id %muWinID%
+			ControlGet, clkbut, HWND,, Back
+			sleep 200
+			ControlClick,, ahk_id %clkbut%,,,,NA
 			return
 		}
 		InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
