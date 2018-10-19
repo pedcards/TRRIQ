@@ -353,6 +353,7 @@ checkMUwin() {
 		return t1
 	}
 	RegExMatch(wintxt,"i)(Transfer|Prepare)",match)										; first string that matches will be in "match1"
+	Gui, phase:Hide
 	MortaraUpload(match1)
 	
 	return 
