@@ -1532,6 +1532,8 @@ MortaraUpload(tabnum="")
 		return
 	}
 	
+	muWinID := WinExist("Mortara Web Upload")
+
 	ptDem := Object()
 	fetchQuit := false
 	MtCt := ""
@@ -1641,7 +1643,6 @@ MortaraUpload(tabnum="")
 	
 	if (Tabnum="Prepare") {																; PREPARE MEDIA TAB
 		eventlog("Prepare media selected.")
-		mu_UI := MorUIgrab()
 		
 		gosub getDem
 		if (fetchQuit=true) {
