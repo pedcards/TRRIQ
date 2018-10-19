@@ -345,14 +345,13 @@ checkMUwin() {
 	static wintab, wintxt
 	t0 := A_TickCount
 	ui := MorUIgrab()																; returns .tab, .txt, .TRct, .PRct
+
+	if (ui.vis != wintxt) {
+		;~ clipboard:=ui.txt
+		MsgBox % ui.vis
+		wintxt := ui.vis
+	}
 	
-	if !(ui.tab==wintab) {
-		wintab := ui.tab
-	}
-	if !(ui.txt==wintxt) {
-		wintxt := ui.txt
-		MsgBox % wintxt
-	}
 	t1 := A_TickCount-t0
 	return t1
 }
