@@ -341,20 +341,21 @@ checkMUwin() {
 	global muwin
 	static wintxt, tabtxt
 	t0 := A_TickCount
-	ui := MorUIgrab()																; returns .tab, .txt, .TRct, .PRct
+	ui := MorUIgrab()																	; returns .tab, .txt, .TRct, .PRct
 	
-	if !instr(ui.vis,"Second ID") {													; not on a form tab
+	if (ui.vis = wintxt) {																; form text unchanged
 		t1 := A_TickCount-t0
 		return t1
 	}
-	if (ui.vis != wintxt) {															; form text has changed
-		wintxt := ui.vis															; reset text for wintxt comparison
-		RegExMatch(wintxt,"i)(Transfer Recording|Prepare Recorder)",match)			; first string that matches will be in "match1"
-		MsgBox % match
+	wintxt := ui.vis																	; reset text for wintxt comparison
+	if !instr(ui.vis,"Second ID") {														; not on a form tab
+		t1 := A_TickCount-t0
+		return t1
 	}
+	RegExMatch(wintxt,"i)(Transfer|Prepare)",match)										; first string that matches will be in "match1"
+	MortaraUpload(match1)
 	
-	t1 := A_TickCount-t0
-	return t1
+	return 
 }
 
 checkCitrix() {
