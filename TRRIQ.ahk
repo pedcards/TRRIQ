@@ -1783,6 +1783,9 @@ muWqSave(sernum) {
 
 MorUIgrab() {
 	id := WinExist("Mortara Web Upload")
+	DetectHiddenText, off
+	WinGetText, visTxt, ahk_id %id%											; Should only check visible window
+	DetectHiddenText, on
 	q := Object()
 	WinGet, WinText, ControlList, ahk_id %id%
 	ControlGet , Tabnum, Tab,
@@ -1807,6 +1810,7 @@ MorUIgrab() {
 		q[A_index] := el
 	}
 	q.tab := Tabnum
+	q.vis := vistxt
 	q.txt := WinText
 	q.TRct := TRct
 	q.PRct := PRct
