@@ -1503,10 +1503,9 @@ scanTempfiles() {
 return "Scanned " files " files, " count " DONE records added."
 }
 
-MortaraUpload()
+MortaraUpload(tabnum="")
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
-	SetTimer, idleTimer, Off
 	checkCitrix()
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
@@ -1514,8 +1513,10 @@ MortaraUpload()
 		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
 		ComObjConnect(wb)																; disconnect the webbrowser object
 		WinWait, Mortara Web Upload, , 5												; wait 5 seconds for window to appear
+		return
 	}
 	
+	SetTimer, idleTimer, Off
 	ptDem := Object()
 	mu_UI := Object()
 	fetchQuit := false
