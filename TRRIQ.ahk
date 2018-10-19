@@ -316,9 +316,9 @@ PhaseTask:
 idleTimer() {
 	checkWQfile()
 	x:=checkMUwin()
-	progress,,,% x
-	sleep 50
-	progress, off
+	;~ progress,,,% x
+	;~ sleep 50
+	;~ progress, off
 	return
 }
 
