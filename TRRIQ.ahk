@@ -246,8 +246,13 @@ PhaseGUI:
 
 PhaseGUIclose:
 {
-	eventlog("<<<<< Session end.")
-	ExitApp
+	MsgBox, 262161, Exit, Really quit TRRIQ?
+	IfMsgBox, OK
+	{
+		eventlog("<<<<< Session end.")
+		ExitApp
+	}
+	return
 }	
 
 menuTrriq:
