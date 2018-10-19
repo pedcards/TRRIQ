@@ -1507,16 +1507,25 @@ MortaraUpload(tabnum="")
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
 	checkCitrix()
+	SetTimer, idleTimer, Off
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
 		wb := ComObjCreate("InternetExplorer.Application")								; webbrowser object
 		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
 		ComObjConnect(wb)																; disconnect the webbrowser object
-		WinWait, Mortara Web Upload, , 5												; wait 5 seconds for window to appear
+		
+		progress, y150,,Loading Mortara program...
+		loop, 100																		; loop up to 30 seconds for window to appear
+		{
+			progress, % A_index
+			if WinExist("Mortara Web Upload") {
+				break
+			}
+			sleep 100
+		}
 		return
 	}
 	
-	SetTimer, idleTimer, Off
 	ptDem := Object()
 	fetchQuit := false
 	MtCt := ""
