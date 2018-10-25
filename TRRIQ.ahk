@@ -428,12 +428,10 @@ WQtask() {
 			return
 		}
 		wq := new XML("worklist.xml")
-		tmp := parseDate(inDT)
-		dt := tmp.YYYY tmp.MM tmp.DD
 		if !IsObject(wq.selectSingleNode(idstr "/sent")) {
 			wq.addElement("sent",idstr)
 		}
-		wq.setText(idstr "/sent",dt)
+		wq.setText(idstr "/sent",parseDate(inDT).YMD)
 		wq.setAtt(idstr "/sent",{user:user})
 		wq.save("worklist.xml")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
@@ -1321,8 +1319,7 @@ parsePreventiceEnrollment(tbl) {
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
 		res.name := parsename(res.name).lastfirst
-		tmp := parseDate(res.date)
-		date := tmp.YYYY tmp.MM tmp.DD
+		date := parseDate(res.date).YMD
 		dt := A_Now
 		dt -= date, Days
 		done += (dt<10)																	; if days < threshold, returns done+1 == keep paging
@@ -1486,8 +1483,7 @@ scanTempfiles() {
 		}
 		mrn :=  wqnm.value(1)
 		name := wqnm.value(2)
-		dt := parseDate(wqnm.value(3))
-		date := dt.YYYY dt.MM dt.DD
+		date := parseDate(wqnm.value(3)).YMD
 		
 		if IsObject(wq.selectSingleNode("/root/done/enroll[mrn='" mrn "'][date='" date "']")) {
 			continue
@@ -1759,9 +1755,8 @@ muWqSave(sernum) {
 		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
 	}
 	
-	if (ptDem.EncDate) {
-		tmp := parsedate(ptDem.EncDate)
-		ptDem.date := tmp.YYYY tmp.MM tmp.DD
+	if (ptDem.EncDate) {																; make sure ptDem.encdate in proper format
+		ptDem.EncDate := parsedate(ptDem.EncDate).YMD
 	}
 	
 	id := A_TickCount
@@ -1964,14 +1959,13 @@ registerPreventice() {
 		,"T"
 		,"2.3")
 	
-	tmpDOB := parseDate(ptDem.dob)
 	buildHL7("PID"
 		, ptDem.MRN
 		, ptDem.MRN
 		, ""
 		, ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
 		, ""
-		, tmpDOB.yyyy . tmpDOB.mm . tmpDOB.dd
+		, parseDate(ptDem.dob).YMD
 		, substr(ptDem.sex,1,1)
 		, ""
 		, ""
@@ -2024,7 +2018,7 @@ registerPreventice() {
 		;~ , ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
 		, ptDem.parentL "^" ptDem.parentF
 		, "Legal Guardian"
-		, tmpDOB.yyyy . tmpDOB.mm . tmpDOB.dd
+		, parseDate(ptDem.dob).YMD
 		, "" ;ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
 		, "" ;"Assignment of Benefits"
 		, "" ;"Coordination of Benefits"
@@ -2593,7 +2587,7 @@ outputfiles:
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["dem-Test_Date"])											; get the study date from PDF result
 	filenameOut := fldval["dem-MRN"] " " fldval["dem-Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
-	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
+	tmpFlag := tmpDate.YMD . "020000"
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
@@ -3014,10 +3008,10 @@ getPdfID(txt) {
 			res.nameL := name.last
 			res.nameF := name.first
 		dt := parseDate(trim(stregX(txt,"Start Date/Time:?",1,1,"\R",1)))
-			res.date := dt.yyyy dt.mm dt.dd
+			res.date := dt.YMD
 			res.time := dt.hr dt.min
 		dobDt := parseDate(trim(stregX(txt,"(Date of Birth|DOB):?",1,1,"\R",1)))
-			res.dob := dobDt.yyyy dobDt.mm dobDt.dd
+			res.dob := dobDt.YMD
 		res.mrn := trim(stregX(txt,"Secondary ID:?",1,1,"Age:?",1))
 		res.ser := trim(stregX(txt,"Recorder (No|Number):?",1,1,"\R",1))
 		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "H"
@@ -3027,7 +3021,7 @@ getPdfID(txt) {
 			res.nameL := name.last
 			res.nameF := name.first
 		dt := parseDate(trim(stregX(txt,"Period \(.*?\R",1,1," - ",1)," `t`r`n"))
-			res.date := dt.yyyy dt.mm dt.dd
+			res.date := dt.YMD
 		res.mrn := trim(stregX(txt,"Patient ID",1,1,"Gender",1)," `t`r`n")
 		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###E","00000E")
 	} else if instr(txt,"Zio XT") {
@@ -3037,7 +3031,7 @@ getPdfID(txt) {
 			res.nameF := name.first
 		enroll := stregX(txt,"Enrollment Period",1,0,"Analysis Time",1)
 		dt := parseDate(stregX(enroll,"i)\R+.*?(hours|days).*?\R+",1,1,",",1))
-			res.date := dt.yyyy dt.mm dt.dd
+			res.date := dt.YMD
 		res.mrn := strQ(trim(stregX(txt,"Patient ID\R",1,1,"\R",1)," `t`r`n"),"###","Zio")
 		res.wqid := "00000Z"
 	}
