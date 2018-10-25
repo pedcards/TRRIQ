@@ -844,25 +844,33 @@ FetchDem:
 					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {					; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
 						eventlog("MouseGrab provider " tmpPrv ".")
-					} else {
+						
+						tmpPrvFuzz := fuzzySearch(format("{:U}"							; degrees of fuzz for ptDem.Provider with clicked value
+									, ptDem.Provider)
+									, format("{:U}",tmpPrv))
+						
+						if (ptDem.Provider="") {
+							ptDem.Provider := tmpPrv
+							eventlog("MouseGrab provider empty --> " tmpPrv ".")
+							
+						} else if (tmpPrvFuzz>0.15) {									; names differ by more than 15%
+							MsgBox, 4148
+								, Provider already exists
+								, % "Replace " ptDem.Provider "`n with `n" tmpPrv "?"
+							IfMsgBox, Yes												; Check before replacing
+							{
+								eventlog("Replacing provider """ ptDem.Provider """ with """ tmpPrv """.")
+								ptDem.Provider := tmpPrv
+							}
+						}																; otherwise ptDem.Provider exists and matches, so leave alone
+						
+					} else {															; no name clicked
 						tmpPrv :=
 						eventlog("MouseGrab provider empty.")
-					}
-					if ((ptDem.Provider) && (tmpPrv)) {												; Provider already exists
-						MsgBox, 4148
-							, Provider already exists
-							, % "Replace " ptDem.Provider "`n with `n" tmpPrv "?"
-						IfMsgBox, Yes													; Check before replacing
-						{
-							eventlog("Replacing provider """ ptDem.Provider """ with """ tmpPrv """.")
-							ptDem.Provider := tmpPrv
-						}
-					} else if (tmpPrv) {												; Otherwise populate ptDem.Provider if tmpPrv exists
-						ptDem.Provider := tmpPrv										; but leave ptDem.Provider alone if tmpPrv null
-						eventlog("MouseGrab provider empty --> " tmpPrv ".")
-					}
-					tmpCrd := checkCrd(ptDem.Provider)
-					ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
+					}																	; tmpPrv will contain either clicked Provider or null
+					
+					;~ tmpCrd := checkCrd(ptDem.Provider)
+					;~ ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
 					mdCoord.x4 := mouseXpos													; demographics grid[4,1]
 					mdCoord.y1 := mouseYpos
 					mdProv := true														; we have got Provider
