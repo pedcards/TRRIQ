@@ -869,8 +869,6 @@ FetchDem:
 						eventlog("MouseGrab provider empty.")
 					}																	; tmpPrv will contain either clicked Provider or null
 					
-					;~ tmpCrd := checkCrd(ptDem.Provider)
-					;~ ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
 					mdCoord.x4 := mouseXpos													; demographics grid[4,1]
 					mdCoord.y1 := mouseYpos
 					mdProv := true														; we have got Provider
