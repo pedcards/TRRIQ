@@ -2711,6 +2711,8 @@ getMD:
 		IfMsgBox, Yes
 		{
 			ptDem.Provider := tmpCrd.best
+		} else {
+			gosub getMD											; don't agree? try again
 		}
 	}
 	eventlog("Cardiologist " ptDem.Provider " entered.")
