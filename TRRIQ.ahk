@@ -1763,15 +1763,12 @@ muWqSave(sernum) {
 		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
 	}
 	
-	if (ptDem.EncDate) {																; make sure ptDem.encdate in proper format
-		ptDem.EncDate := parsedate(ptDem.EncDate).YMD
-	}
-	
 	id := A_TickCount
 	ptDem["model"] := "Mortara H3+"
 	ptDem["ser"] := sernum
 	ptDem["dev"] := ptDem.model " - " sernum
 	ptDem["wqid"] := id
+	ptDem["date"] := parsedate(ptDem["EncDate"]).YMD									; make sure ptDem.date in proper format
 	
 	wq.addElement("enroll","/root/pending",{id:id})
 	newID := "/root/pending/enroll[@id='" id "']"
@@ -1782,7 +1779,7 @@ muWqSave(sernum) {
 	wq.addElement("dob",newID,ptDem["dob"])
 	wq.addElement("dev",newID,ptDem["dev"])
 	wq.addElement("prov",newID,ptDem["Provider"])
-	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
+	wq.addElement("site",newID,sitesLong[ptDem["loc"]])									; need to transform site abbrevs
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
 	wq.addElement("ind",newID,ptDem["Indication"])
 	if (ptDem.fedex) {
@@ -2459,8 +2456,7 @@ bghWqSave(sernum) {
 	global wq, ptDem, user, sitesLong
 	
 	id := A_TickCount 
-	tmpDT := parsedate(ptDem.EncDate)
-	ptDem["date"] := tmpDT.YYYY tmpDT.MM tmpDT.DD
+	ptDem["date"] := parsedate(ptDem["EncDate"]).YMD
 	ptDem["dev"] := ptDem.model " - " ptDem.ser
 	ptDem["wqid"] := id
 	
@@ -2662,7 +2658,7 @@ moveWQ(id) {
 		id := A_TickCount																; create an id
 		wq.addElement("enroll","/root/done",{id:id})									; in </root/done>
 		newID := "/root/done/enroll[@id='" id "']"
-		wq.addElement("date",newID,fldval["dem-Test_date"])								; add these to the new done node
+		wq.addElement("date",newID,parseDate(fldval["dem-Test_date"]).YMD)				; add these to the new done node
 		wq.addElement("name",newID,fldval["dem-Name"])
 		wq.addElement("mrn",newID,fldval["dem-MRN"])
 		wq.addElement("done",newID,{user:A_UserName},A_Now)
@@ -3201,6 +3197,7 @@ CheckProc:
 				wq.addElement("enroll","/root/pending",{id:id})
 			}
 			newID := "/root/pending/enroll[@id='" id "']"
+			ptDem.date := parseDate(ptDem["EncDate"]).YMD
 			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
 			wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
 			wqSetVal(id,"mrn",ptDem["mrn"])
