@@ -1093,19 +1093,30 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	if !(ptDem.Provider) {																; no provider? ask!
 		gosub getMD
 		eventlog("New provider field " ptDem.Provider ".")
-	} else if (matchProv.fuzz > 0.10) {													; Provider not recognized
+	} 
+	else if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {				; encounter is an inpatient type (Inpt, ER, DaySurg, etc)
+		encDT := ptDem.date := substr(A_now,1,8)										; Set date to today
+		ptDem.EncDate := niceDate(ptDem.date)											; set formatted EncDate
+		gosub assignMD																	; find who recommended it from the Chipotle schedule
+		eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
+	}
+	else if (matchProv.fuzz > 0.10) {													; Provider not recognized
 		eventlog(ptDem.Provider " not recognized (" matchProv.fuzz ").")
-		if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {
-			ptDem.EncDate := substr(A_now,1,8)											; Set date to today
-			gosub assignMD																; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
-			eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
-		} else {
-			gosub getMD																	; Otherwise, ask for it.
-			eventlog("Provider set to " ptDem.Provider ".")
-		}
-	} else {																			; Provider recognized
+		gosub getMD																		; Otherwise, ask for it.
+		eventlog("Provider set to " ptDem.Provider ".")
+	} 
+	else {																				; Provider recognized
 		eventlog(ptDem.Provider " matches " matchProv.Best " (" (1-matchProv.fuzz)*100 ").")
 		ptDem.Provider := matchProv.Best
+	}
+	loop
+	{
+		MsgBox, 262180, Confirm ordering Cardiologist, % ptDem.Provider
+		IfMsgBox, Yes
+		{
+			break
+		}
+		gosub getMD
 	}
 	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
 	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
