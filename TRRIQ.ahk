@@ -172,7 +172,7 @@ PhaseGUI:
 	Gui, Font, Normal
 	
 	GuiControl
-		, % (wksloc="Main Campus" ? "Disable" : "Disable") 
+		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
 		, Grab Preventice enrollments
 	GuiControl
 		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
