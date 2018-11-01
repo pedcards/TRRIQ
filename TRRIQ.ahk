@@ -4208,7 +4208,7 @@ ParseName(x) {
 			,last:last
 			,firstlast:first " " last
 			,lastfirst:last ", " first
-			,apostr:RegExReplace(x,"[^]","'")}
+			,apostr:RegExReplace(x,"\^","'")}
 }
 
 ParseDate(x) {
