@@ -4167,6 +4167,7 @@ ParseName(x) {
 		return error
 	}
 	x := trim(x)																		; trim edges
+	x := RegExReplace(x,"\'","^")														; replace ['] with [^] to avoid XPATH errors
 	x := RegExReplace(x," \w "," ")														; remove middle initial: Troy A Johnson => Troy Johnson
 	x := RegExReplace(x,"(,.*?)( \w)$","$1")											; remove trailing MI: Johnston, Troy A => Johnston, Troy
 	x := RegExReplace(x,"i),?( JR| III| IV)$")											; Filter out name suffixes
