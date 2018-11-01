@@ -3151,8 +3151,8 @@ CheckProc:
 		return
 	}
 	
-	ptDem := Object()																	; Populate temp object ptDem with parsed data from PDF fldVal
-	ptDem["nameL"] := fldVal["dem-Name_L"]
+	ptDem := Object()																	; Populate temp object ptDem with parsed data from HL7 or PDF fldVal
+	ptDem["nameL"] := fldVal["dem-Name_L"]												; dem-Name contains ['] not [^]
 	ptDem["nameF"] := fldVal["dem-Name_F"] 
 	ptDem["Name"] := fldval["dem-Name"]
 	ptDem["mrn"] := fldVal["dem-MRN"] 
