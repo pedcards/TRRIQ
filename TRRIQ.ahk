@@ -1,16 +1,6 @@
 /*	TRRIQ - The Rhythm Recording Interpretation Query
-	Converts file
-		Drag-and-drop onto window
-		Monitor folder for changes
-	Inputs a text file
-		Probably converted from PDF using XPDF's "PDFtoTEXT"
-		Use the -layout or -table option
-		Only need the first 1-2 pages
-	Identifies type of report:
-		ZioPatch Holter
-		LifeWatch (or other) Holter
-	Extracts salient data
-	Generates report using mail merge or template in Word
+	Disassembles HL7 and PDF files into discrete data elements
+	Outputs into a format readable by HolterDB (CSV, PDF, and short PDF)
 	Sends report to HIM
 */
 
@@ -25,34 +15,52 @@ progress,,,TRRIQ intializing...
 FileInstall, pdftotext.exe, pdftotext.exe
 FileInstall, pdftk.exe, pdftk.exe
 FileInstall, libiconv2.dll, libiconv2.dll
+FileInstall, trriq.ini, trriq.ini
+FileInstall, hl7.ini, hl7.ini
+FileGetTime, wqfileDT, wqupdate
 
 SplitPath, A_ScriptDir,,fileDir
 user := A_UserName
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
-	
 	;~ chip := httpComm("","full")
 	;~ FileDelete, .\Chipotle\currlist.xml
 	;~ FileAppend, % chip, .\Chipotle\currlist.xml
 	isAdmin := true
-	holterDir := ".\Holter PDFs\"
-	importFld := ".\Import\"
-	chipDir := ".\Chipotle\"
-	OnbaseDir1 := ".\Onbase\"
-	OnbaseDir2 := ".\HCClinic\"
-	webUploadDir := ".\files\Web Upload Files for h3.preventice.com  WebUploadApplication.application\"
+	readIni("adminpaths")
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
-	FileGetTime, tmp, TRRIQ.exe
+	FileGetTime, tmp, % A_ScriptName
 	isAdmin := false
-	holterDir := "..\Holter PDFs\"
-	importFld := "..\Import\"
-	chipDir := "\\childrens\files\HCChipotle\"
-	OnbaseDir1 := "\\childrens\apps$\OnbaseFaxFiles\CardiacCathReport\" 
-	OnbaseDir2 := "\\childrens\files\HCClinic\Holter Monitors\Holter HIM uploads\"
-	webUploadDir := "C:\Web Upload Files for h3.preventice.com  WebUploadApplication.application\"
-	eventlog(">>>>> Started in PROD mode. Exe ver " substr(tmp,1,12))
+	readIni("paths")
+	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
+	checkcitrix()
 }
+
+/*	Get location info
+*/
+IfExist, % webUploadDir "Configuration\ConfigInfoV1"
+{
+	x := new XML(webUploadDir "Configuration\ConfigInfoV1")
+	cust := x.selectSingleNode("CustomerName").text
+	cust := RegExReplace(cust,"i)Seattle Childrens ")
+	eventlog("MWU location: " cust)
+	x := cust :=
+}
+#Include HostName.ahk
+progress,,,Identifying workstation...
+if !(wksLoc := GetLocation()) {
+	progress, off
+	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
+	ExitApp
+}
+
+site := getSites(wksLoc)
+sites := site.tracked																	; sites we are tracking
+sites0 := site.ignored																	; sites we are not tracking <tracked>N</tracked> in wkslocation
+sitesLong := site.long																	; {CIS:TAB}
+sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
+sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -61,31 +69,28 @@ Docs := Object()
 tmpChk := false
 Loop, Read, %chipDir%outdocs.csv
 {
-	tmp := tmp0 := tmp1 := tmp2 := tmp3 := tmp4 := ""
-	tmpline := A_LoopReadLine
-	StringSplit, tmp, tmpline, `, , `"
-	if ((tmp1="Name") or (tmp1="end") or !(tmp1)) {					; header, end, or blank lines
+	tmp := StrSplit(A_LoopReadLine,",","""")
+	if (tmp.1="Name" or tmp.1="end" or tmp.1="") {				; header, end, or blank lines
 		continue
 	}
-	if (tmp4="group") {												; skip group names
+	if (tmp.4="group") {											; skip group names
 		continue
 	}
-	if (tmp2="" and tmp3="" and tmp4="") {							; Fields 2,3,4 blank = new group
-		tmpGrp := tmp1
+	if (tmp.2="" and tmp.3="" and tmp.4="") {						; Fields 2,3,4 blank = new group
+		tmpGrp := tmp.1
 		tmpIdx := 0
 		tmpIdxG += 1
 		outGrps.Insert(tmpGrp)
 		continue
 	}
-	if !(tmp4~="i)(seattlechildrens.org|washington.edu)") {		; skip non-SCH or non-UW providers
+	if !(tmp.4~="i)(seattlechildrens\.org|washington\.edu)") {		; skip non-SCH or non-UW providers
 		continue
 	}
 	tmpIdx += 1
-	StringSplit, tmpPrv, tmp1, %A_Space%`"
-	;tmpPrv := substr(tmpPrv1,1,1) . ". " . tmpPrv2					; F. Last
-	tmpPrv := tmpPrv2 ", " tmpPrv1									; Last, First
+	tmpPrv := RegExReplace(tmp.1,"^(.*?) (.*?)$","$2, $1")			; input FIRST LAST NAME ==> LAST NAME, FIRST
 	Docs[tmpGrp,tmpIdx]:=tmpPrv
-	Docs[tmpGrp ".eml",tmpIdx] := tmp4
+	Docs[tmpGrp ".eml",tmpIdx] := tmp.4
+	Docs[tmpGrp ".npi",tmpIdx] := tmp.5
 }
 
 y := new XML(chipDir "currlist.xml")
@@ -98,68 +103,45 @@ if fileexist("worklist.xml") {
 	wq.save("worklist.xml")
 }
 
-demVals := ["MRN","Account Number","DOB","Sex","Legal Sex","Birth Sex","Loc","Provider"]						; valid field names for parseClip()
-sites := "MAIN|BELLEVUE|EVERETT|TRI-CITIES|TRI|WENATCHEE|YAKIMA|GREAT FALLS"			; sites we are tracking
-sites0 := "TACOMA|SILVERDALE|ALASKA"													; sites we are not tracking
-sitesLong := {CRD:"MAIN"
-			, EKG:"MAIN"
-			, INPATIENT:"MAIN"
-			, SURGCNTR:"MAIN"
-			, CRDBEL:"BELLEVUE"
-			, CRDEVT:"EVERETT"
-			, CRDTRI:"TRI-CITIES"
-			, CRDWEN:"WENATCHEE"
-			, CRDYAK:"YAKIMA"
-			, CRDMT:"GREAT FALLS"
-			, CRDTAC:"TACOMA"
-			, CRDSIL:"SILVERDALE"}
+demVals := readIni("demVals")																		; valid field names for parseClip()
 
-Loop
+indCodes := readIni("indCodes")
+for key,val in indCodes
 {
-	Gosub PhaseGUI
-	WinWaitClose, TRRIQ Dashboard
-
-	if (phase="Enroll") {
-		eventlog("Update Preventice enrollments.")
-		gosub CheckPrEnroll
-	}
-
-	if (phase="PDF") {
-		eventlog("Start PDF folder scan.")
-		holterLoops := 0								; Reset counters
-		holtersDone := 
-		loop, %holterDir%*.pdf							; Process all PDF files in holterDir
-		{
-			fileNam := RegExReplace(A_LoopFileName,"i)\.pdf")				; fileNam is name only without extension, no path
-			fileIn := A_LoopFileFullPath									; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
-			FileGetTime, fileDt, %fileIn%, C								; fildDt is creatdate/time 
-			if (substr(fileDt,-5,2)<4) {									; skip files with creation TIME 0000-0359 (already processed)
-				eventlog("Skipping file """ fileNam ".pdf"", already processed.")	; should be more resistant to DST. +0100 or -0100 will still be < 4
-				continue
-			}
-			FileGetSize, fileInSize, %fileIn%
-			eventlog("----------")
-			eventlog("Processing """ fileNam ".pdf"" (" thousandsSep(fileInSize) ").")
-			gosub MainLoop													; process the PDF
-			if (fetchQuit=true) {											; [x] out of fetchDem means skip this file
-				continue
-			}
-			if !IsObject(ptDem) {											; bad file, never acquires demographics
-				continue
-			}
-			holterLoops++													; increment counter for processed counter
-			holtersDone .= A_LoopFileName "->" filenameOut ".pdf`n"			; add to report
-		}
-		MsgBox % "Monitors processed (" holterLoops ")`n" holtersDone
-		FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
-	}
-	if (phase="Upload") {
-		eventlog("Start Mortara preparation/upload.")
-		MortaraUpload()
-	}
+	tmpVal := strX(val,"",1,0,":",1)
+	tmpStr := strX(val,":",1,1,"",0)
+	indOpts .= tmpStr "|"
 }
 
-ExitApp
+initHL7()
+
+MainLoop: ; ===================== This is the main part ====================================
+{
+	Loop
+	{
+		Gosub PhaseGUI
+		WinWaitClose, TRRIQ Dashboard
+		
+		if (phase="Enrollment") {
+			eventlog("Update Preventice enrollments.")
+			CheckPreventiceWeb("Patient Enrollment")
+		}
+		if (phase="Inventory") {
+			eventlog("Update Preventice inventory.")
+			CheckPreventiceWeb("Facilities")
+		}
+		if (phase="Register") {
+			eventlog("Start BGH registration.")
+			BGHregister()
+		}
+		if (phase="Upload") {
+			eventlog("Start Mortara preparation/upload.")
+			MortaraUpload()
+		}
+	}
+	
+	ExitApp
+}
 
 PhaseGUI:
 {
@@ -168,30 +150,94 @@ PhaseGUI:
 	Gui, phase:Default
 	Gui, +AlwaysOnTop
 
-	Gui, Add, Text, x650 y20 w200 h110
-		, % "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) 
-	Gui, Add, GroupBox, x640 y0 w220 h60
+	Gui, Add, Text, x670 y15 w200 vPhaseNumbers, "`n`n"
+	Gui, Add, GroupBox, x660 y0 w220 h65
 	
 	Gui, Font, Bold
 	Gui, Add, Button
-		, Y+20 w220 h40 vPDF gPhaseTask
-		, Process PDF folder
+		, Y+10 wp h40 gWQlist
+		, Refresh files
 	Gui, Add, Button
-		, Y+20 wp h40 vEnroll gPhaseTask
+		, Y+10 wp h40 vEnrollment gPhaseTask
 		, Grab Preventice enrollments
 	Gui, Add, Button
-		, Y+20 wp h40 vUpload gPhaseTask
-		, Prepare/Upload Holter
+		, Y+10 wp h40 vInventory gPhaseTask
+		, Grab Preventice inventory
+	Gui, Add, Button
+		, Y+10 wp h40 vRegister gPhaseTask
+		, Register BGH EVENT RECORDER
+	Gui, Add, Button
+		, Y+10 wp h40 vUpload gPhaseTask
+		, Prepare/Upload MORTARA HOLTER
 	Gui, Font, Normal
 	
-	Gui, Add, Tab3, -Wrap x10 y10 w620 h240 vWQtab, % "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
+	GuiControl
+		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
+		, Grab Preventice enrollments
+	GuiControl
+		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
+		, Grab Preventice inventory
+	
+	Gui, Add, Tab3
+		, -Wrap x10 y10 w640 h320 vWQtab +HwndWQtab
+		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
+	GuiControlGet, wqDim, Pos, WQtab
+	lvDim := "W" wqDimW-25 " H" wqDimH-35
+	
+	if (wksloc="Main Campus") {
+		Gui, Tab, INBOX
+		Gui, Add, Listview
+			, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
+			, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|Need FTP
+		Gui, ListView, WQlv_in
+		LV_ModifyCol(1,"0")																; filename and path, "0" = hidden
+		LV_ModifyCol(2,"160")															; name
+		LV_ModifyCol(3,"60")															; mrn
+		LV_ModifyCol(4,"80")															; dob
+		LV_ModifyCol(5,"80")															; site
+		LV_ModifyCol(6,"80")															; date
+		LV_ModifyCol(7,"2")																; wqid
+		LV_ModifyCol(8,"40")															; ftype
+		LV_ModifyCol(9,"70 Center")														; ftp
+	}
+	Gui, Tab, ALL
+	Gui, Add, Listview
+		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
+		, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+	Gui, ListView, WQlv_all
+	LV_ModifyCol(1,"0")																	; wqid (hidden)
+	LV_ModifyCol(2,"60")																; date
+	LV_ModifyCol(3,"40 Center")															; FedEx
+	LV_ModifyCol(4,"60")																; uploaded
+	LV_ModifyCol(5,"60")																; MRN
+	LV_ModifyCol(6,"140")																; Name
+	LV_ModifyCol(7,"130")																; Ser Num
+	LV_ModifyCol(8,"100")																; Prov
+	LV_ModifyCol(9,"80")																; Site
+	
+	Loop, parse, sites, |
+	{
+		i := A_index
+		site := A_LoopField
+		Gui, Tab, % site
+		Gui, Add, Listview
+			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
+			, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, ListView, WQlv%i%
+		LV_ModifyCol(1,"0")																	; wqid (hidden)
+		LV_ModifyCol(2,"60")																; date
+		LV_ModifyCol(3,"40 Center")															; FedEx
+		LV_ModifyCol(4,"60")																; uploaded
+		LV_ModifyCol(5,"60")																; MRN
+		LV_ModifyCol(6,"140")																; Name
+		LV_ModifyCol(7,"130")																; Ser Num
+		LV_ModifyCol(8,"100")																; Prov
+	}
 	WQlist()
 	
-	Menu, menuSys, Add, Scan tempfiles, scanTempFiles
-	Menu, menuSys, Add, Find returned devices, WQfindlost
-	Menu, menuSys, Add, Find close matches, WQfindclose
-	Menu, menuSys, Add, Show GeoIP info, showGeoIP
+	;~ Menu, menuSys, Add, Scan tempfiles, scanTempFiles
+	;~ Menu, menuSys, Add, Find returned devices, WQfindlost
+	Menu, menuSys, Add, Change clinic location, changeLoc
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
@@ -201,20 +247,27 @@ PhaseGUI:
 	
 	Gui, Menu, menuBar
 	Gui, Show,, TRRIQ Dashboard
+	
+	SetTimer, idleTimer, 500
 	return
 }
 
 PhaseGUIclose:
 {
-	eventlog("<<<<< Session end.")
-	ExitApp
+	MsgBox, 262161, Exit, Really quit TRRIQ?
+	IfMsgBox, OK
+	{
+		eventlog("<<<<< Session end.")
+		ExitApp
+	}
+	return
 }	
 
 menuTrriq:
 {
 	Gui, phase:hide
-	FileGetTime, tmp, TRRIQ.exe
-	MsgBox, 64, About..., % "TRRIQ version " substr(tmp,1,12) "`nTerrence Chun, MD"
+	FileGetTime, tmp, % A_ScriptName
+	MsgBox, 64, About..., % A_ScriptName " version " substr(tmp,1,12) "`nTerrence Chun, MD"
 	Gui, phase:show
 	return
 }
@@ -223,6 +276,23 @@ menuInstr:
 	Gui, phase:hide
 	MsgBox How to...
 	gui, phase:show
+	return
+}
+
+changeLoc:
+{
+	MsgBox, 262193, Change clinic, Current location: %wksLoc%`n`nReally change the clinic location for this PC?`n`nWill restart TRRIQ
+	IfMsgBox, Ok
+	{
+		locationData := new xml(m_strXmlFilename)                               	  ; load xml file
+		wksList := locationData.SelectSingleNode(m_strXmlWorkstationsPath)            ; retreive list of all workstations
+		wksNode := wksList.selectSingleNode(m_strXmlWksNodeName "[" m_strXmlWksName "='" A_ComputerName "']")
+		wksNode.parentNode.removeChild(wksNode)
+		locationData.TransformXML()
+		locationData.saveXML()
+		eventlog("Removed wks node for " A_ComputerName)
+		Reload
+	}
 	return
 }
 
@@ -253,6 +323,80 @@ PhaseTask:
 	return
 }
 
+idleTimer() {
+	checkWQfile()
+	x:=checkMUwin()
+	;~ progress,,,% x
+	;~ sleep 50
+	;~ progress, off
+	return
+}
+
+checkWQfile() {
+	global wqfileDT
+	FileGetTime, tmpdt, wqupdate														; get mod dt for "wqupdate"
+	if (tmpdt > wqfileDT) {																; file is more recent than internal var
+		wqfileDT := tmpdt																; set var to this date
+		WQlist()																		; refresh list
+	}
+	return
+}
+
+setwqupdate() {
+	global wqfileDT
+	FileDelete, wqupdate
+	FileAppend,,wqupdate
+	wqfileDT := A_now
+	return
+}
+
+checkMUwin() {
+	global muwin
+	static wintxt, tabtxt
+	t0 := A_TickCount
+	ui := MorUIgrab()																	; returns .tab, .txt, .TRct, .PRct
+	
+	if (ui.vis = wintxt) {																; form text unchanged
+		t1 := A_TickCount-t0
+		return t1
+	}
+	wintxt := ui.vis																	; reset text for wintxt comparison
+	if !instr(ui.vis,"Second ID") {														; not on a form tab
+		t1 := A_TickCount-t0
+		return t1
+	}
+	RegExMatch(wintxt,"i)(Transfer|Prepare)",match)										; first string that matches will be in "match1"
+	Gui, phase:Hide
+	MortaraUpload(match1)
+	
+	return 
+}
+
+checkCitrix() {
+/*	TRRIQ must be run from local machine
+	local machine names begin with EWCS and Citrix machines start with PPWC
+*/
+
+	if (A_UserName="tchun1") {
+		return
+	}
+	if (A_ComputerName~="EWCS") {														; running on a local machine
+		return																			; return successfully
+	}
+	else if (A_ComputerName~="PPWC") {
+		MsgBox, 4112, Environment error, TRRIQ cannot be run from Citrix/VDI`nWill now exit...
+		IfMsgBox, OK
+		{
+			eventlog("Exiting due to Citrix environment.")
+			ExitApp
+		} 
+	}
+	else {
+		eventlog("Unique machine name.")
+		return
+	}
+}
+
 WQtask() {
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {
@@ -268,7 +412,7 @@ WQtask() {
 	}
 	global wq, user
 	
-	Gui, phase:Hide
+	;~ Gui, phase:Hide
 	pt := readWQ(idx)
 	idstr := "/root/pending/enroll[@id='" idx "']"
 	
@@ -283,25 +427,25 @@ WQtask() {
 			. "Log UPLOAD to Preventice|"
 			. "Mark record as DONE"
 			, "Q")
-	if (choice="Close") {
+	if (choice="xClose") {
 		return
 	}
 	if instr(choice,"upload") {
-		InputBox ,inDT,Upload log,`n`nEnter date uploaded to Preventice,,,,,,,,% niceDate(A_now)
+		inputbox(inDT,"Upload log","`n`nEnter date uploaded to Preventice`n",niceDate(A_now))
 		if (ErrorLevel) {
 			return
 		}
 		wq := new XML("worklist.xml")
-		tmp := parseDate(inDT)
-		dt := tmp.YYYY tmp.MM tmp.DD
 		if !IsObject(wq.selectSingleNode(idstr "/sent")) {
 			wq.addElement("sent",idstr)
 		}
-		wq.setText(idstr "/sent",dt)
+		wq.setText(idstr "/sent",parseDate(inDT).YMD)
 		wq.setAtt(idstr "/sent",{user:user})
 		wq.save("worklist.xml")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
 		MsgBox, 4160, Logged, % pt.Name "`nUpload date logged!"
+		setwqupdate()
+		WQlist()
 		return
 	}
 	if instr(choice,"note") {
@@ -310,9 +454,11 @@ WQtask() {
 		Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
 		{
 			k := notes.item(A_index-1)
-			list .= k.getAttribute("date") "/" k.getAttribute("user") ": " k.text "`n"
+			dt := parsedate(k.getAttribute("date"))
+			list .= dt.mm "/" dt.dd ":" k.getAttribute("user") ": " k.text "`n"
 		}
-		note := maxinput("Communication note", list "`nEnter a brief communication note",60)
+		inputbox(note,"Communication note"
+			, strQ(list,"###====================================`n") "`nEnter a brief communication note:`n","")
 		if (note="") {
 			return
 		}
@@ -335,6 +481,8 @@ WQtask() {
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
 		WriteOut("/root/pending","enroll[@id='" idx "']")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
+		setwqupdate()
+		WQlist()
 		return
 	}
 	if instr(choice,"done") {
@@ -344,11 +492,12 @@ WQtask() {
 				. "Device missing|"
 				. "Other (explain)"
 				, "E")
-		if (reason="Close") {
+		if (reason="xClose") {
 			return
 		}
 		if instr(reason,"Other") {
-			reason := maxinput("Clear record from worklist","Enter the reason for moving this record",30)
+			reason:=""
+			inputbox(reason,"Clear record from worklist","Enter the reason for moving this record","")
 			if (reason="") {
 				return
 			}
@@ -360,37 +509,20 @@ WQtask() {
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},"MOVED: " reason)
 		moveWQ(idx)
 		eventlog(idx " Move from WQ: " reason)
+		setwqupdate()
+		WQlist()
 	}
 return	
 }
 
-maxinput(title, prompt, max) {
-	Loop
-	{
-		prompt .= "`n(Max " max " chars)"
-		StrReplace(prompt,"`n","`n",lines)
-		InputBox, reason, % title, % prompt " " lines " lines",,400,% (lines*20)+150
-		StringLen, addLength, reason
-		If (addLength > max) {
-			MsgBox, 0, ERROR, % "String too long. Please explain in less than " max " chars." 	
-		} else {
-			break
-		}
-	}
-	if (reason="") {
-		return error
-	}
-	
-	return reason
-}
-
 WQlist() {
 	global
-	local k, ens, id, e0, now, dt, site
+	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim
+	wqfiles := []
+	GuiControlGet, wqDim, Pos, WQtab
+	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
 	Progress,,,Scanning worklist...
-	
-	Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv0 hwndHLV0, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
@@ -410,67 +542,133 @@ WQlist() {
 	wq.save("worklist.xml")
 	FileDelete, .lock
 	
+	if (wksloc="Main Campus") {
+		
+	Gui, ListView, WQlv_in
+	LV_Delete()																			; clear the INBOX entries
+	
+/*	Process each .hl7 file
+*/
+	loop, Files, % hl7Dir "*.hl7"
+	{
+		fileIn := A_LoopFileName
+		x := StrSplit(fileIn,"_")
+		id := findWQid(SubStr(x.5,1,8),x.3).id											; get id based on study date and mrn
+		res := readWQ(id)																; wqid should always be present in hl7 downloads
+		if (res.node="done") {															; skip if DONE, might be currently in process 
+			eventlog("Report already done. WQlist removing " fileIn)
+			FileMove, % hl7Dir "\" fileIn, .\tempfiles\%fileIn%, 1
+			continue
+		}
+		FileGetSize,full,% hl7Dir fileIn,M
+		
+		LV_Add(""
+			, hl7Dir fileIn																; path and filename
+			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
+			, strQ(res.mrn,"###",x.3)													; mrn
+			, strQ(niceDate(res.dob),"###",niceDate(x.4))								; dob
+			, strQ(res.site,"###","???")												; site
+			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
+			, id																		; wqid
+			, (res.dev~="BG") ? "BGH"													; extracted
+			: (res.dev~="Mortara") ? "HOL"
+			: "HL7"
+			, (full>2)||(res.dev~="BG") ? "":"X")										; fulldisc if filesize >2 Meg
+		wqfiles.push(id)
+	}
+	
+/*	Scan Holter PDFs folder for additional files
+*/
+	findfullPDF()
+	for key,val in pdfList
+	{
+		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)										; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
+		id := fnID.1
+		ftype := (fnID.2="H") ? "HOL"													; type of file based on fnID label
+				: (fnID.2="Z") ? "ZIO"
+				: (fnID.2="E") ? "BGH"
+				: (fnID.2="M") ? "MINI"
+				: "???"																	; could condense as ftype := {"H":"PDF","Z":"ZIO","E":"CEM","M":"MINI"}[fnID.2]
+		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
+			LV_Modify(k,"Col9","")														; clear the "X" in the FullDisc column
+			continue																	; skip rest of processing
+		}
+		res := readwq(id)																; get values for wqid if valid, else null
+		
+		LV_Add(""
+			, HolterDir val																; filename and path to HolterDir
+			, strQ(res.Name,"###",strX(val,"",1,0,"_",1))								; name from wqid or filename
+			, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))								; mrn
+			, strQ(res.dob,"###")														; dob
+			, strQ(res.site,"###","???")												; site
+			, strQ(nicedate(res.date),"###")											; study date
+			, id																		; wqid
+			, ftype																		; study type
+			, "")																		; fulldisc present, make blank
+		if (id) {
+			wqfiles.push(id)															; add non-null wqid to wqfiles
+		}
+	}
+	LV_ModifyCol(6,"Sort")																; date
+
+	}	; <-- finish Main Campus Inbox
+	
+/*	Now scan <pending/enroll> nodes
+*/
+	Gui, ListView, WQlv_all
+	LV_Delete()
+	
 	Loop, parse, sites, |
 	{
 		i := A_index
 		site := A_LoopField
-		Gui, Tab, % site
-		Gui, Add, Listview, -Multi Grid BackgroundSilver W600 H200 gWQtask vWQlv%i% hwndHLV%i%, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+		Gui, ListView, WQlv%i%
+		LV_Delete()																		; refresh each respective LV
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
 		{
 			k := ens.item(A_Index-1)
 			id	:= k.getAttribute("id")
 			e0 := readWQ(id)
-			now := A_Now
-			dt := e0.date
-			dt -= now, Days
+			dt := A_now
+			dt -= e0.date, Days
 			e0.dev := RegExReplace(e0.dev,"BodyGuardian","BG")
-			if (instr(e0.dev,"BG") && (dt > -30)) {
-				continue
-			}
+			;~ if (instr(e0.dev,"BG") && (dt < 30)) {										; skip BGH less than 30 days
+				;~ continue
+			;~ }
 			Gui, ListView, WQlv%i%
 			LV_Add(""
 				,id
-				,e0.date																;~ ,parseDate(e0.date).MM "/" parseDate(e0.date).DD
+				,e0.date
 				,strQ(e0.fedex,"X")
-				,e0.sent																;~ ,strQ(e0.sent,parseDate(e0.date).MM "/" parseDate(e0.date).DD)
+				,e0.sent
 				,e0.mrn
 				,e0.name
 				,e0.dev
 				,e0.prov
 				,e0.site)
-			Gui, ListView, WQlv0
+			Gui, ListView, WQlv_all														
 			LV_Add(""
 				,id
-				,e0.date																;~ ,parseDate(e0.date).MM "/" parseDate(e0.date).DD
+				,e0.date
 				,strQ(e0.fedex,"X")
-				,e0.sent																;~ ,strQ(e0.sent,parseDate(e0.date).MM "/" parseDate(e0.date).DD)
+				,e0.sent
 				,e0.mrn
 				,e0.name
 				,e0.dev
 				,e0.prov
 				,e0.site)
-			
 		}
 		Gui, ListView, WQlv%i%
-		LV_ModifyCol()
-		LV_ModifyCol(1,"0")
-		LV_ModifyCol(2,"60 Desc")
 		LV_ModifyCol(2,"Sort")
-		LV_ModifyCol(3,"40")
-		LV_ModifyCol(4,"60")
-		LV_ModifyCol(6,140)
-		LV_ModifyCol(8,130)
 	}
-	Gui, ListView, WQlv0
-	LV_ModifyCol()
-	LV_ModifyCol(1,"0")
-	LV_ModifyCol(2,"60 Desc")
+	Gui, ListView, WQlv_all														
 	LV_ModifyCol(2,"Sort")
-	LV_ModifyCol(3,"40")
-	LV_ModifyCol(4,"60")
-	LV_ModifyCol(6,140)
-	LV_ModifyCol(8,130)
+	
+	GuiControl, Text, PhaseNumbers
+		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
+		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n"
+		.	"Last Inventory update: " niceDate(wq.selectSingleNode("/root/inventory").getAttribute("update")) 
+	
 	progress, off
 	return
 }
@@ -538,50 +736,6 @@ WQfindreturned() {
 	return "clean"
 }
 
-WQfindclose() {
-/*	This may be a redundant function
-	Consider removing
-*/
-	global wq
-	
-	loop, % (pend := wq.selectNodes("/root/pending/enroll")).Length
-	{
-		k1 := pend.item(A_Index-1)
-		id1 := k1.getAttribute("id")
-		e1 := readWQ(id1)
-		Progress, % 100*A_index/pend.length,, % e1.date
-		
-		loop, % (done := wq.selectNodes("/root/done/enroll[date='" e1.date "']")).length				; all items matching [date]
-		{
-			k2 := done.item(A_index-1)
-			id2 := k2.getAttribute("id")
-			e2 := readWQ(id2)
-			e2.fuzzName := 100*(1-fuzzysearch(e2.name,e1.name))						; percent match
-			e2.fuzzMRN	:= 100*(1-fuzzysearch(e2.mrn,e1.mrn))
-			if ((e2.fuzzName>85)||(e2.fuzzMRN>85)) {									; close match for either NAME or MRN
-				e2.match := id2
-				break
-			}
-		}
-		if (e2.match) {
-			;~ eventlog("Enrollment close match (" res.mrn "/" e0.mrn ") and (" res.name "/" e0.name ") found in " e0.match "[" date "].")
-			MsgBox % "Close match (" e1.mrn "/" e2.mrn ") and (" e1.name "/" e2.name ") found in " e2.match
-			e2.match := ""
-			continue
-		}
-	}
-	progress, off
-	return
-}
-
-showGeoIP() {
-	;~ geo := httpComm("http://api.geoiplookup.net")
-	MsgBox % "IP: " A_IPAddress1 "`n"
-		.	"-------------`n"
-		.	geo
-	return
-}
-
 readWQ(idx) {
 	global wq
 	
@@ -594,7 +748,86 @@ readWQ(idx) {
 		val := i.text
 		res[node]:=val
 	}
+	res.node := k.parentNode.nodeName 
+	
 	return res
+}
+
+readWQlv:
+{
+/*	Retrieve info from WQlist line
+	Will be for HL7 data, or an additional file in Holter PDFs folder
+*/
+	agc := A_GuiControl
+	if !instr(agc,"WQlv") {																; Must be in WQlv listview
+		return
+	}
+	if !(A_GuiEvent="DoubleClick") {													; Must be double click
+		return
+	}
+	Gui, ListView, %agc%
+	if !(x := LV_GetNext()) {															; Must be on actual row
+		return
+	}
+	LV_GetText(fileIn,x,1)																; selection filename
+	LV_GetText(wqid,x,7)																; WQID
+	LV_GetText(ftype,x,8)																; filetype
+	SplitPath,fileIn,fnam,,fExt,fileNam
+	
+	wq := new XML("worklist.xml")														; refresh WQ
+	blocks := Object()																	; clear all objects
+	fields := Object()
+	labels := Object()
+	blk := Object()
+	blk2 := Object()
+	ptDem := Object()
+	pt := Object()
+	chk := Object()
+	matchProv := Object()
+	fileOut := fileOut1 := fileOut2 := ""
+	summBl := summ := ""
+	fullDisc := ""
+	monType := ""
+	obxval := Object()
+	
+	fldVal := readWQ(wqid)																; wqid would have been determined by parsing hl7
+	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
+	if (fldval.node = "done") {															; task has been done already by another user
+		MsgBox, 262208, Completed, File has already been processed!
+		WQlist()																		; refresh list and return
+		return
+	}
+	
+	if (fExt="hl7") {																	; hl7 file (could still be Holter or CEM)
+		eventlog("===> " fnam )
+		Gui, phase:Hide
+		
+		progress, 25 , % fnam, Extracting data
+		processHL7(fnam)																; extract DDE to fldVal, and PDF into hl7Dir
+		moveHL7dem()																	; prepopulate the fldval["dem-"] values
+		
+		progress, 50 , % fnam, Processing PDF
+		gosub processHl7PDF																; process resulting PDF file
+	}
+	else if (ftype) {																	; Any other PDF type
+		FileGetSize, fileInSize, %fileIn%
+		Gui, phase:Hide
+		eventlog("===> " fnam " type " ftype " (" thousandsSep(fileInSize) ").")
+		gosub processPDF
+	}
+	else {
+		Gui, phase:Hide
+		eventlog("Filetype cannot be determined from WQlist (somehow).")
+		
+		MsgBox, 16, , Unrecognized filetype (somehow)
+	}
+	
+	if (fldval.done) {
+		epRead()																		; find out which EP is reading today
+		gosub outputfiles																; generate and save output CSV, rename and move PDFs
+	}
+	
+	return
 }
 
 FetchDem:
@@ -619,30 +852,38 @@ FetchDem:
 					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {					; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
 						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
 						eventlog("MouseGrab provider " tmpPrv ".")
-					} else {
+						
+						tmpPrvFuzz := fuzzySearch(format("{:U}"							; degrees of fuzz for ptDem.Provider with clicked value
+									, ptDem.Provider)
+									, format("{:U}",tmpPrv))
+						
+						if (ptDem.Provider="") {
+							ptDem.Provider := tmpPrv
+							eventlog("MouseGrab provider empty --> " tmpPrv ".")
+							
+						} else if (tmpPrvFuzz>0.15) {									; names differ by more than 15%
+							MsgBox, 4148
+								, Provider already exists
+								, % "Replace " ptDem.Provider "`n with `n" tmpPrv "?"
+							IfMsgBox, Yes												; Check before replacing
+							{
+								eventlog("Replacing provider """ ptDem.Provider """ with """ tmpPrv """.")
+								ptDem.Provider := tmpPrv
+							}
+						}																; otherwise ptDem.Provider exists and matches, so leave alone
+						
+					} else {															; no name clicked
 						tmpPrv :=
 						eventlog("MouseGrab provider empty.")
-					}
-					if ((ptDem.Provider) && (tmpPrv)) {												; Provider already exists
-						MsgBox, 4148
-							, Provider already exists
-							, % "Replace " ptDem.Provider "`n with `n" tmpPrv "?"
-						IfMsgBox, Yes													; Check before replacing
-						{
-							eventlog("Replacing provider """ ptDem.Provider """ with """ tmpPrv """.")
-							ptDem.Provider := tmpPrv
-						}
-					} else if (tmpPrv) {												; Otherwise populate ptDem.Provider if tmpPrv exists
-						ptDem.Provider := tmpPrv										; but leave ptDem.Provider alone if tmpPrv null
-						eventlog("MouseGrab provider empty --> " tmpPrv ".")
-					}
+					}																	; tmpPrv will contain either clicked Provider or null
+					
 					mdCoord.x4 := mouseXpos													; demographics grid[4,1]
 					mdCoord.y1 := mouseYpos
 					mdProv := true														; we have got Provider
 					gosub getDemName													; extract patient name, MRN from window title 
 				}																		; (this is why it must be sister or parent VM).
 				if (clk.field = "Account Number") {
-					ptDem["Account Number"] := clk.value
+					ptDem["Account"] := clk.value
 					eventlog("MouseGrab Account Number " clk.value ".")
 					mdCoord.x1 := mouseXpos													; demographics grid[1,3]
 					mdCoord.y3 := mouseYpos
@@ -766,6 +1007,7 @@ parseClip() {
 getDemName:
 {
 	if (RegExMatch(mdTitle, "i)\s\-\s\d{6,7}\s(Opened by)")) {							; Match window title "LAST, FIRST - 12345678 Opened by Chun, Terrence U, MD"
+		mdTitle := RegExReplace(mdTitle,"\'","^")
 		ptDem["nameL"] := strX(mdTitle,,1,0, ",",1,1)									; and parse the name
 		ptDem["nameF"] := strX(mdTitle,",",1,2, " ",1,1)
 	}
@@ -779,7 +1021,7 @@ fetchGUI:
 	fW1 := 80,	fW2 := 190									; width for title and input fields
 	fH := 20												; line heights
 	fY := 10												; y pos to start
-	EncNum := ptDem["Account Number"]						; we need these non-array variables for the Gui statements
+	EncNum := ptDem["Account"]						; we need these non-array variables for the Gui statements
 	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
 	demBits := 0											; clear the error check
 	fTxt := "	To auto-grab demographic info:`n"
@@ -802,7 +1044,7 @@ fetchGUI:
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " cDefault", % ptDem["Loc"]
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" fetchValid("Type","i)[a-z]+",1), Type
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " cDefault", % ptDem["Type"]
-	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" fetchValid("Account Number","\d{8,}",1), Encounter #
+	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" fetchValid("Account","\d{8,}",1), Encounter #
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH " vEncNum" " cDefault", % encNum
 	Gui, fetch:Add, Text, % "x" fX1 " y" (fY += fYd) " w" fW1 " h" fH " c" ((!(checkCrd(ptDem.Provider).fuzz=0)||!(ptDem.Provider))?"Red":"Default"), Ordering MD
 	Gui, fetch:Add, Edit, % "readonly x" fX2 " y" fY-4 " w" fW2 " h" fH  " cDefault", % ptDem["Provider"]
@@ -853,43 +1095,54 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
 	
-	if (instr(ptDem.Provider," ") && !instr(ptDem.Provider,",")) {				; somehow string passed in wrong order
-		tmp := trim(ptDem.Provider)
-		tmpF := strX(tmp,"",1,0, " ",1,1)
-		tmpL := strX(tmp," ",1,1, "",1,0)
-		ptDem.Provider := tmpL ", " tmpF
+	if (instr(ptDem.Provider," ") && !instr(ptDem.Provider,",")) {						; somehow string passed in wrong order
+		ptDem.Provider := parseName(ptDem.Provider).lastfirst
 	}
 	matchProv := checkCrd(ptDem.Provider)
-	if !(ptDem.Provider) {														; no provider? ask!
+	if !(ptDem.Provider) {																; no provider? ask!
 		gosub getMD
 		eventlog("New provider field " ptDem.Provider ".")
-	} else if (matchProv.fuzz > 0.10) {							; Provider not recognized
+	} 
+	else if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {				; encounter is an inpatient type (Inpt, ER, DaySurg, etc)
+		encDT := ptDem.date := substr(A_now,1,8)										; Set date to today
+		ptDem.EncDate := niceDate(ptDem.date)											; set formatted EncDate
+		gosub assignMD																	; find who recommended it from the Chipotle schedule
+		eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
+	}
+	else if (matchProv.fuzz > 0.10) {													; Provider not recognized
 		eventlog(ptDem.Provider " not recognized (" matchProv.fuzz ").")
-		if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {
-			gosub assignMD														; Inpt, ER, DaySurg, we must find who recommended it from the Chipotle schedule
-			eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
-		} else {
-			gosub getMD															; Otherwise, ask for it.
-			eventlog("Provider set to " ptDem.Provider ".")
-		}
-	} else {													; Provider recognized
+		gosub getMD																		; Otherwise, ask for it.
+		eventlog("Provider set to " ptDem.Provider ".")
+	} 
+	else {																				; Provider recognized
 		eventlog(ptDem.Provider " matches " matchProv.Best " (" (1-matchProv.fuzz)*100 ").")
 		ptDem.Provider := matchProv.Best
 	}
-	ptDem["Account Number"] := EncNum											; make sure array has submitted EncNum value
-	FormatTime, EncDt, %EncDt%, MM/dd/yyyy										; and the properly formatted date 06/15/2016
+	loop
+	{
+		MsgBox, 262180, Confirm ordering Cardiologist, % ptDem.Provider
+		IfMsgBox, Yes
+		{
+			break
+		}
+		gosub getMD
+	}
+	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
+	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
+	ptDem["Account"] := EncNum															; make sure array has submitted EncNum value
+	FormatTime, EncDt, %EncDt%, MM/dd/yyyy												; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
-	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 					; valid names
-			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account Number"]~="\d{8,}") 						; valid MRN and Acct numbers
+	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 		; valid names
+			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account"]~="\d{8,}") 				; valid MRN and Acct numbers
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="^[MF]") 		; valid DOB and Sex
-			&& (ptDem["Loc"]) && (ptDem["Type"])													; Loc and type is not null
-			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])								; prov any string, encDate not null
+			&& (ptDem["Loc"]) && (ptDem["Type"])										; Loc and type is not null
+			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])					; prov any string, encDate not null
 	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
 		eventlog("Data incomplete."
 			. ((ptDem["nameF"]) ? "" : " nameF")
 			. ((ptDem["nameL"]) ? "" : " nameL")
 			. ((ptDem["mrn"]) ? "" : " MRN")
-			. ((ptDem["Account number"]) ? "" : " EncNum")
+			. ((ptDem["Account"]) ? "" : " EncNum")
 			. ((ptDem["DOB"]) ? "" : " DOB")
 			. ((ptDem["Sex"]) ? "" : " Sex")
 			. ((ptDem["Loc"]) ? "" : " Loc")
@@ -898,21 +1151,10 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 			. ((ptDem["Provider"]) ? "" : " Provider")
 			. ".")
 		MsgBox,, % "Data incomplete. Try again", % ""
-			;~ . ((ptDem["nameF"]) ? "" : "First name`n")
-			;~ . ((ptDem["nameL"]) ? "" : "Last name`n")
-			;~ . ((ptDem["mrn"]) ? "" : "MRN`n")
-			;~ . ((ptDem["Account number"]) ? "" : "Account number`n")
-			;~ . ((ptDem["DOB"]) ? "" : "DOB`n")
-			;~ . ((ptDem["Sex"]) ? "" : "Sex`n")
-			;~ . ((ptDem["Loc"]) ? "" : "Location`n")
-			;~ . ((ptDem["Type"]) ? "" : "Visit type`n")
-			;~ . ((ptDem["EncDate"]) ? "" : "Date Holter placed`n")
-			;~ . ((ptDem["Provider"]) ? "" : "Provider`n")
-			;~ . "`nREQUIRED!"
 			. "First name " ptDem["nameF"] "`n"
 			. "Last name " ptDem["nameL"] "`n"
 			. "MRN " ptDem["mrn"] "`n"
-			. "Account number " ptDem["Account number"] "`n"
+			. "Account number " ptDem["Account"] "`n"
 			. "DOB " ptDem["DOB"] "`n"
 			. "Sex " ptDem["Sex"] "`n"
 			. "Location " ptDem["Loc"] "`n"
@@ -937,46 +1179,28 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 
 indGUI:
 {
-	indOpts := ""
-		. "Abnormal Electrocardiogram/Rhythm Strip" "|"
-		. "Bradycardia" "|"
-		. "Chest Pain" "|"
-		. "Cyanosis" "|"
-		. "Dizziness" "|"
-		. "Electrolyte Disorder" "|"
-		. "Failure to thrive" "|"
-		. "Fever" "|"
-		. "History of Cardiovascular Disease" "|"
-		. "Hypertension" "|"
-		. "Kawasaki Disease" "|"
-		. "Medication requiring ECG surveillance" "|"
-		. "Palpitations" "|"
-		. "Premature Atrial Contractions (PAC's)" "|"
-		. "Premature Ventricular Contractions (PVC's)" "|"
-		. "Respiratory Distress" "|"
-		. "Shortness of Breath" "|"
-		. "Supraventricular Tachycardia (SVT)" "|"
-		. "Syncope" "|"
-		. "Tachycardia" "|"
-		. "OTHER"
 	Gui, ind:Destroy
 	Gui, ind:+AlwaysOnTop
 	Gui, ind:font, s12
 	Gui, ind:Add, Text, , % "Enter indications: " ptDem["Indication"]
-	Gui, ind:Add, ListBox, r12 vIndChoices 8, %indOpts%
+	Gui, ind:Add, ListBox, w360 r12 vIndChoices 8, %indOpts%
 	Gui, ind:Add, Button, gindSubmit, Submit
 	Gui, ind:Show, Autosize, Enter indications
 	return
 }
 
 indClose:
-ExitApp
+{
+	Gui, ind:Destroy
+	fetchQuit := true
+	return
+}
 
 indSubmit:
 {
 	Gui, ind:Submit
 	if InStr(indChoices,"OTHER",Yes) {
-		InputBox, indOther, Other, Enter other indication
+		InputBox(indOther, "Other", "Enter other indication","")
 		indChoices := RegExReplace(indChoices,"OTHER", "OTHER - " indOther)
 	}
 	ptDem["Indication"] := indChoices
@@ -1004,130 +1228,161 @@ getDem:
 	return
 }
 
-CheckPrEnroll:
-{
-	while !(WinExist("Patient Enrollment"))
+CheckPreventiceWeb(win) {
+	global phase
+	SetTimer, idleTimer, Off
+	checkCitrix()
+	
+	str := {}
+	str.Enrollment := {dlg:"Enrollment / Submitted Patients"
+		, url:"https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
+		, tbl:"ctl00_mainContent_PatientListSubmittedCtrl1_RadGridPatients_ctl00"
+		, changed:"ctl00_mainContent_PatientListSubmittedCtrl1_lblTotalCountMessage"
+		, btn:"ctl00_mainContent_PatientListSubmittedCtrl1_btnNextPage"
+		, fx:"ParsePreventiceEnrollment"}
+	str.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
+		, url:"https://secure.preventice.com/Facilities/"
+		, tbl:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00"
+		, changed:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00_Pager"
+		, btn:"rgPageNext"
+		, fx:"ParsePreventiceInventory"}
+	
+	while !(WinExist(win))																; expected IE window title not present
 	{
-		MsgBox,4161,Update Preventice enrollments
-			, % "Navigate on Preventice website to:`n`nEnrollment / Submitted Patients`n`n"
+		MsgBox,4161,Update Preventice %phase%
+			, % "Navigate on Preventice website to:`n`n"
+			.	str[phase].dlg "`n`n"
 			.	"Click OK when ready to proceed"
 		IfMsgBox, Cancel
 		{
 			return
 		}
 	}
-	loop																				; Repeat until determine done
+	
+	prvFunc := str[phase].fx
+	wb := IEGet(win)
+	
+	loop
 	{
-		clip := grabWebpage("Patient Enrollment")										; Page exists, ask to grab
-		if !(clip) {
-			break																		; Clicked "Cancel", exit out
+		tbl := wb.document.getElementById(str[phase].tbl)
+		if !IsObject(tbl) {
+			progress, off
+			MsgBox No match
+			return
 		}
-		if (clip = clip0) {																; Check if this is the same as the last page
-			MsgBox,4144,, % "Done already!`n`nClick on 'Next Page'`nbefore proceding."
-			IfMsgBox, OK
-			{
-				continue
-			} else {
-				break
-			}
+		progress,,,Scanning page %A_index% ...
+		
+		tbl := tbl.getElementsByTagName("tbody")[0]
+		clip := tbl.innertext
+		if (clip=clip0) {																; no change since last clip
+			progress, off
+			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
+			break
 		}
-		if (instr(clip,"Enrollment Queue (Submitted)")) {
-			list := clip
-			done:=parseEnrollment(list)
-			if !(done) {
-				MsgBox,4144,, Reached the end of novel records.`n`nYou may exit scan mode.
-			}
-			clip0 := clip
-		} else {
-			MsgBox,4112,, Wrong page!`nNavigate to:`n`nEnrollment / Submitted Patients
+		
+		done := %prvFunc%(tbl)		; parsePreventiceEnrollment() or parsePreventiceInventory()
+		
+		if (done=0) {																	; no new records returned
+			progress, off
+			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
+			break
 		}
+		clip0 := clip																	; set the check for repeat copy
+		
+		PreventiceWebPager(wb,str[phase].changed,str[phase].btn)
 	}
+	
+	setwqupdate()
+	
+	wb.navigate(str[phase].url)															; refresh first page
+	ComObjConnect(wb)																	; release wb object
 	return
 }
 
-grabWebpage(title) {
-/*	Copy text of an open webpage
- *	title = string in window title
- */
-	WinActivate, %title%																; activate the browser window when title matches
-	MsgBox, 4145, "%title%" grab, Ready to grab!`n`n`[OK] to grab this page`n[CANCEL] to exit
-	IfMsgBox, OK
-	{
-		WinActivate, %title%															; activate the browser window when title matches
-		MouseGetPos,mouseX,mouseY														; get mouse coords
-			MouseClick, Left, 0, mouseY													; Click off to far side to clear selection
-			Send, ^a^c																	; Select All, Copy
-			sleep 200																	; need to pause to fill clipboard
-			clip := Clipboard
-			MouseClick, Left, 0, mouseY												; Click off to far side to clear selection
-		MouseMove, mouseX, mouseY														; move back to original coords
-		return clip
-	} 
-	return error
-}
-
-parseEnrollment(x) {
-	global wq
+PreventiceWebPager(wb,chgStr,btnStr) {
+	global phase
 	
-	fileCheck()
-	wq := new XML("worklist.xml")													; refresh WQ
-	FileOpen(".lock", "W")															; Create lock file.
-	Loop
+	if (phase="Enrollment") {
+		wb.document.getElementById(btnStr).click() 										; click when id=btnStr
+	}
+	if (phase="Inventory") {
+		wb.document.getElementsByClassName(btnStr)[0].click() 							; click when class=btnstr
+	}
+	pg0 := wb.document.getElementById(chgStr).innerText
+	
+	loop, 100																			; wait up to 100*0.05 = 5 sec
 	{
-		blk := stregX(x,"Patient Enrollment",n,1,"Dr\..*?[\r\n]",0,n)
-		if !(blk) {
+		pg := wb.document.getElementById(chgStr).innerText
+		progress,% A_index
+		if (pg != pg0) {
 			break
 		}
-		blk := trim(RegExReplace(blk,"[\r\n]+")," `r`n")
-		fields := ["^"
-				,"\d{6,7}"
-				,"\d{1,2}/\d{1,2}/\d{2,4}"
-				,"\w"
-				,"Dr. "
-				,"$"]
-		labels := ["name"
-				,"mrn"
-				,"date"
-				,"dev"
-				,"prov"
-				,"end"]
-		res:=scanX(blk,fields,labels)
-		tmp := parseDate(res.date)
-		date := tmp.YYYY tmp.MM tmp.DD
-		count ++
+		sleep 50
+	}
+
+	return
+}
+
+parsePreventiceEnrollment(tbl) {
+	global wq
+	
+	lbl := ["name","mrn","date","dev","prov"]
+	done := 0
+	fileCheck()
+	wq := new XML("worklist.xml")														; refresh WQ
+	FileOpen(".lock", "W")																; Create lock file.
+	
+	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
+	{
+		r_idx := A_index-1
+		trow := trows[r_idx]
+		tcols := trow.getElementsByTagName("td")
+		res := []
+		loop % lbl.length()																; loop through cols
+		{
+			c_idx := A_Index-1
+			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
+		}
+		res.name := parsename(res.name).lastfirst
+		date := parseDate(res.date).YMD
+		dt := A_Now
+		dt -= date, Days
+		done += (dt<10)																	; if days < threshold, returns done+1 == keep paging
 		
-		if IsObject(wq.selectSingleNode("/root/pending/enroll[mrn='" res.mrn "'][dev='" res.dev "']")) {	; S/N is currently in use
-			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in Pending.")
+	/*	Check whether any params match this device
+	*/
+		if enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']") {						; MRN+S/N
 			continue
 		}
-		if IsObject(ens := wq.selectSingleNode("//enroll[date='" date "'][mrn='" res.mrn "']")) {			; exists in PENDING or DONE
-			eventlog("Enrollment for " res.mrn " " res.name " " date " already exists in " ens.parentNode.nodeName ".")
+		if enrollcheck("[name='" res.name "'][dev='" res.dev "']") {					; NAME+S/N
+			continue
+		}
+		if enrollcheck("[date='" date "'][dev='" res.dev "']") {						; DATE+S/N
 			continue
 		} 
 		
-		loop, % (ens := wq.selectNodes("//enroll[date='" date "']")).length				; all items matching [date]
+	/*	Check whether completes any pending with blank S/N for this patient
+	*/
+		foundIt := false
+		Loop % (ens := wq.selectNodes("/root/pending/enroll[date='" date "'][mrn='" res.mrn "']")).length
 		{
-			k := ens.item(A_index-1)
-			e0 := []
-			e0.id := k.getAttribute("id")
-			e0.name	:= k.selectSingleNode("name").text
-			e0.mrn	:= k.selectSingleNode("mrn").text
-			e0.fuzzName := 100*(1-fuzzysearch(e0.name,res.name))						; percent match
-			e0.fuzzMRN	:= 100*(1-fuzzysearch(e0.mrn,res.mrn))
-			if ((e0.fuzzName>85)||(e0.fuzzMRN>85)) {									; close match for either NAME or MRN
-				e0.match := k.parentNode.nodeName 
-				break
+			en := ens.item(A_Index-1)
+			id := en.getAttribute("id")
+			ser := en.getAttribute("dev")
+			if instr(res.dev,ser) {														; e.g. wq="BodyGuardian -" and web="BodyGuardian - BG12345"
+				foundIt := id
 			}
 		}
-		if (e0.match) {
-			eventlog("Enrollment close match (" res.mrn "/" e0.mrn ") and (" res.name "/" e0.name ") found in " e0.match "[" date "].")
-			e0.match := ""
+		if (foundIt) {																	; found a full web S/N when wqID S/N blank
+			wqSetVal(foundIt,"dev",res.dev)
+			eventlog("Changed " res.name " (" foundIt ") dev to " res.dev)
+			done ++
 			continue
 		}
 		
-		/*	No perfect or close match
-		 *	add new record to PENDING
-		 */
+	/*	No match (i.e. unique record)
+	 *	add new record to PENDING
+	 */
 		sleep 1																			; delay 1ms to ensure different tick time
 		id := A_TickCount 
 		newID := "/root/pending/enroll[@id='" id "']"
@@ -1147,34 +1402,93 @@ parseEnrollment(x) {
 	wq.save("worklist.xml")
 	filedelete, .lock
 	
-	return done
-/*		value = records added
- *		null  = no records added (no unique)
- */
+	return done																			; returns number of matches, or 0 (error) if no matches
 }
 
-scanX(txt,fields,labels) {
-	res := Object()
-	for k, i in fields																	; Step through each val "i" from fields[bl,k]
-	{
-		x := fields[k]
-		y := fields[k+1]
-		
-		val := stregX(txt,x,n,0,y,1,n)
-		
-		res[labels[k]]:=trim(val)
-	}
-	return res
-}
-
-findWQid(DT,MRN,name="") {
+enrollcheck(params) {
 	global wq
 	
-	if IsObject(x := wq.selectSingleNode("//enroll[date='" DT "'][mrn='" MRN "']")) {				; Perfect match
-	} else if IsObject(x := wq.selectSingleNode("//enroll[mrn='" MRN "']")) {						; or matches MRN only
-	} else if IsObject(x := wq.selectSingleNode("//enroll[name='" name "']")) {						; or neither, find matching name
+	en := wq.selectSingleNode("//enroll" params)
+	id := en.getAttribute("id")
+	;~ name := parsename(en.selectSingleNode("name").text).lastfirst
+	;~ node := en.parentNode.nodeName
+	
+	if (id) {
+		;~ eventlog("Enroll id " id " for " strQ(name,"### ") params " already exists in " node ".")
+		return true
+	} else {
+		return false
 	}
-	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}										; will return null (error) if no match
+}
+
+parsePreventiceInventory(tbl) {
+/*	Parse Preventice website for device inventory
+	Add unique ser nums to /root/inventory/dev[@ser]
+	These will be removed when registered
+*/
+	global wq
+	
+	lbl := ["button","model","ser"]
+	wq := new XML("worklist.xml")														; refresh WQ
+	
+	wqtime := wq.selectSingleNode("/root/inventory").getAttribute("update")
+	if !(wqTime) {
+		wq.addElement("inventory","/root")
+		eventlog("Created new Inventory node.")
+	}
+	
+	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
+	{
+		r_idx := A_index-1
+		trow := trows[r_idx]
+		tcols := trow.getElementsByTagName("td")
+		res := []
+		loop % lbl.length()																; loop through cols
+		{
+			c_idx := A_Index-1
+			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
+		}
+		if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" res.ser "']")) {	; already exists in Inventory
+			continue
+		}
+		wq.addElement("dev","/root/inventory",{model:res.model,ser:res.ser})
+		eventlog("Added new Inventory dev " res.ser)
+	}
+
+	loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
+	{
+		k := devs.item(A_Index-1)
+		ser := k.getAttribute("ser")
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='BodyGuardian Heart - " ser "']")) {	; exists in Pending
+			k.parentNode.removeChild(k)
+			eventlog("Removed inventory ser " ser)
+		}
+	}
+	
+	wq.selectSingleNode("/root/inventory").setAttribute("update",A_now)					; set pending[@update] attr
+	
+	writeout("/root","inventory")
+	
+	return true
+}
+
+findWQid(DT:="",MRN:="",ser:="",name:="") {
+/*	DT = 20170803
+	MRN = 123456789
+	ser = BodyGuardian Heart - BG12345, or Mortara H3+ - 12345
+	name = LAST, FIRST
+*/
+	global wq
+	
+	name := parseName(name).lastfirst														; transform name if needed
+	if IsObject(x := wq.selectSingleNode("//enroll[date='" DT "'][mrn='" MRN "']")) {		; Perfect match DT and MRN
+	} else if IsObject(x := wq.selectSingleNode("//enroll"									; or matches S/N and MRN
+		. "[dev='Mortara H3+ - " DT "'][mrn='" MRN "']")) {
+	} else if IsObject(x := wq.selectSingleNode("//enroll[mrn='" MRN "']")) {				; or matches MRN only 
+	} else if (name) && IsObject(x := wq.selectSingleNode("//enroll[name='" name "']")) {	; or neither, find matching name 
+	}
+
+	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; will return null (error) if no match
 }
 
 scanTempfiles() {
@@ -1195,8 +1509,7 @@ scanTempfiles() {
 		}
 		mrn :=  wqnm.value(1)
 		name := wqnm.value(2)
-		dt := parseDate(wqnm.value(3))
-		date := dt.YYYY dt.MM dt.DD
+		date := parseDate(wqnm.value(3)).YMD
 		
 		if IsObject(wq.selectSingleNode("/root/done/enroll[mrn='" mrn "'][date='" date "']")) {
 			continue
@@ -1218,52 +1531,43 @@ scanTempfiles() {
 return "Scanned " files " files, " count " DONE records added."
 }
 
-MortaraUpload()
+MortaraUpload(tabnum="")
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
+	checkCitrix()
+	SetTimer, idleTimer, Off
+	
+	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
+		wb := ComObjCreate("InternetExplorer.Application")								; webbrowser object
+		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
+		ComObjConnect(wb)																; disconnect the webbrowser object
+		
+		progress, y150,,Loading Mortara program...
+		loop, 100																		; loop up to 30 seconds for window to appear
+		{
+			progress, % A_index
+			if WinExist("Mortara Web Upload") {
+				break
+			}
+			sleep 100
+		}
+		return
+	}
+	
+	muWinID := WinExist("Mortara Web Upload")
+
 	ptDem := Object()
-	mu_UI := Object()
 	fetchQuit := false
 	MtCt := ""
+	mu_UI := MorUIgrab()
+	muWinTxt := mu_UI.vis
 	
-	Loop																				; Do until Web Upload program is running
-	{
-		if (muWinID := winexist("Mortara Web Upload")) {								; Break out of loop when window present
-			WinGetClass, muWinClass, ahk_id %muWinID%									; Grab WinClass string for processing
-			break
-		}
-		MsgBox, 262193, Inject demographics, Must launch Mortara Web Upload program!	; Otherwise remind to launch program
-		IfMsgBox Cancel 
-		{
-			return																		; Can cancel out of this process if desired
-		}
-	}
-	
-	DetectHiddenText, Off																; Only check the visible text
-	Loop																				; Do until either Upload or Prepare window text is present
-	{
-		WinGetText, muWinTxt, ahk_id %muWinID%											; Should only check visible window
-		if instr(muWinTxt,"Recorder S/N") {
-			break
-		}
-		MsgBox, 262193, Inject demographics
-			, Select the device activity,`nTransfer or Prepare Holter
-		IfMsgBox Cancel 
-		{
-			return																		; Can cancel out of this process if desired
-		}
-	}
-	DetectHiddenText, On
-	ControlGet , Tabnum, Tab, 															; Get selected tab num
-		, WindowsForms10.SysTabControl32.app.0.33c0d9d1
-		, ahk_id %muWinID%
 	SerNum := substr(stregX(muWintxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-6)		; Get S/N on visible page
 	SerNum := SerNum ? trim(SerNum," `r`n") : ""
 	eventlog("Device S/N " sernum " attached.")
 	
-	if (Tabnum=1) {																		; TRANSFER RECORDING TAB
+	if (Tabnum="Transfer") {															; TRANSFER RECORDING TAB
 		eventlog("Transfer recording selected.")
-		mu_UI := MorUIgrab()
 		
 		wuDir := {}
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
@@ -1285,6 +1589,10 @@ MortaraUpload()
 		if !(serNum=wuDir.Ser) {
 			eventlog("Serial number mismatch.")
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
+			WinActivate, ahk_id %muWinID%
+			ControlGet, clkbut, HWND,, Back
+			sleep 200
+			ControlClick,, ahk_id %clkbut%,,,,NA
 			return
 		}
 		
@@ -1296,7 +1604,7 @@ MortaraUpload()
 			ptDem["mrn"] := pt.mrn														; fill ptDem[] with values
 			ptDem["loc"] := pt.site
 			ptDem["date"] := pt.date
-			ptDem["Account Number"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
+			ptDem["Account"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
 			ptDem["nameL"] := strX(pt.name,"",0,1,",",1,1)
 			ptDem["nameF"] := strX(pt.name,",",1,1,"",0)
 			ptDem["Sex"] := pt.sex
@@ -1312,6 +1620,10 @@ MortaraUpload()
 			IfMsgBox, Cancel
 			{
 				eventlog("Cancelled GUI.")
+				WinActivate, ahk_id %muWinID%
+				ControlGet, clkbut, HWND,, Back
+				sleep 200
+				ControlClick,, ahk_id %clkbut%,,,,NA
 				return
 			}
 		} else {																		; no valid S/N exists
@@ -1319,10 +1631,15 @@ MortaraUpload()
 			if (fetchQuit=true) {
 				fetchQuit:=false
 				eventlog("Cancelled getDem.")
+				WinActivate, ahk_id %muWinID%
+				ControlGet, clkbut, HWND,, Back
+				sleep 200
+				ControlClick,, ahk_id %clkbut%,,,,NA
 				return
 			}
 			ptDem["muphase"] := "upload"
 			muWqSave(SerNum)
+			eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 			wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']"
 		}
 		MorUIfill(mu_UI.TRct,muWinID)
@@ -1355,17 +1672,38 @@ MortaraUpload()
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']")
 		eventlog(ptDem.MRN " " ptDem.Name " study " ptDem.Date " uploaded to Preventice.")
+		MsgBox, 262208, Transfer, Successful data upload to Preventice.
 	}
 	
-	if (Tabnum=2) {																		; PREPARE MEDIA TAB
+	if (Tabnum="Prepare") {																; PREPARE MEDIA TAB
 		eventlog("Prepare media selected.")
-		mu_UI := MorUIgrab()
 		
 		gosub getDem
 		if (fetchQuit=true) {
 			fetchQuit:=false
 			eventlog("Cancelled getDem.")
+			WinActivate, ahk_id %muWinID%
+			ControlGet, clkbut, HWND,, Back
+			sleep 200
+			ControlClick,, ahk_id %clkbut%,,,,NA
 			return
+		}
+		getPatInfo()																	; grab remaining demographics for Preventice registration
+		if (fetchQuit=true) {
+			eventlog("Cancelled getPatInfo.")
+			WinActivate, ahk_id %muWinID%
+			ControlGet, clkbut, HWND,, Back
+			sleep 200
+			ControlClick,, ahk_id %clkbut%,,,,NA
+			return
+		}
+		InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
+		if (RegExMatch(note,"((\d\s*){12})",fedex)) {
+			fedex := RegExReplace(fedex1," ")
+			ptDem["fedex"] := fedex
+			eventlog("Fedex number entered.")
+		} else {
+			eventlog("Fedex ignored.")
 		}
 		
 		WinActivate, ahk_id %muWinID%
@@ -1393,7 +1731,11 @@ MortaraUpload()
 		
 		wq := new XML("worklist.xml")													; refresh WQ
 		ptDem["muphase"] := "prepare"
+		ptDem["hookup"] := "Office"
 		muWqSave(SerNum)
+		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
+		
+		registerPreventice()
 	}
 	
 	return
@@ -1439,12 +1781,13 @@ muWqSave(sernum) {
 		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
 	}
 	
-	if (ptDem.EncDate) {
-		tmp := parsedate(ptDem.EncDate)
-		ptDem.date := tmp.YYYY tmp.MM tmp.DD
-	}
+	id := A_TickCount
+	ptDem["model"] := "Mortara H3+"
+	ptDem["ser"] := sernum
+	ptDem["dev"] := ptDem.model " - " sernum
+	ptDem["wqid"] := id
+	ptDem["date"] := parsedate(ptDem["EncDate"]).YMD									; make sure ptDem.date in proper format
 	
-	id := A_TickCount 
 	wq.addElement("enroll","/root/pending",{id:id})
 	newID := "/root/pending/enroll[@id='" id "']"
 	wq.addElement("date",newID,(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
@@ -1452,24 +1795,32 @@ muWqSave(sernum) {
 	wq.addElement("mrn",newID,ptDem["mrn"])
 	wq.addElement("sex",newID,ptDem["Sex"])
 	wq.addElement("dob",newID,ptDem["dob"])
-	wq.addElement("dev",newID,"Mortara H3+ - " sernum)
+	wq.addElement("dev",newID,ptDem["dev"])
 	wq.addElement("prov",newID,ptDem["Provider"])
-	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
-	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account Number"])
+	wq.addElement("site",newID,sitesLong[ptDem["loc"]])									; need to transform site abbrevs
+	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
 	wq.addElement("ind",newID,ptDem["Indication"])
+	if (ptDem.fedex) {
+		wq.addElement("fedex",newID,ptDem["fedex"])
+	}
 	wq.addElement(ptDem["muphase"],newID,{user:A_UserName},A_now)
 	
 	filedelete, .lock
 	writeOut("/root/pending","enroll[@id='" id "']")
-	eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	
 	return
 }
 
 MorUIgrab() {
 	id := WinExist("Mortara Web Upload")
+	DetectHiddenText, off
+	WinGetText, visTxt, ahk_id %id%											; Should only check visible window
+	DetectHiddenText, on
 	q := Object()
 	WinGet, WinText, ControlList, ahk_id %id%
+	ControlGet , Tabnum, Tab,
+		, WindowsForms10.SysTabControl32.app.0.33c0d9d1
+		, ahk_id %id%
 
 	Loop, parse, % WinText, `n,`r
 	{
@@ -1488,6 +1839,8 @@ MorUIgrab() {
 		el := {x:mx,y:my,w:mw,h:mh,str:str,val:val}
 		q[A_index] := el
 	}
+	q.tab := Tabnum
+	q.vis := vistxt
 	q.txt := WinText
 	q.TRct := TRct
 	q.PRct := PRct
@@ -1611,7 +1964,611 @@ UiFieldFill(fld,val,win) {
 	return
 }
 
-MainLoop:
+registerPreventice() {
+	global wq, ptDem, fetchQuit, hl7out, hl7OutDir, indCodes, sitesCode, sitesFacility
+	
+	hl7time := A_Now
+	hl7out := Object()
+	buildHL7("MSH"
+		,"^~\&"
+		,"TRRIQ"
+		,sitesCode
+		,sitesFacility
+		,"PREVENTICE"
+		,hl7time
+		,"TECH"
+		,"ORM^O01"
+		,ptDem["wqid"]
+		,"T"
+		,"2.3")
+	
+	buildHL7("PID"
+		, ptDem.MRN
+		, ptDem.MRN
+		, ""
+		, parseName(ptDem.nameL).apostr "^" parseName(ptDem.nameF).apostr . strQ(ptDem.nameMI,"^###")
+		, ""
+		, parseDate(ptDem.dob).YMD
+		, substr(ptDem.sex,1,1)
+		, ""
+		, ""
+		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
+		, ""
+		, ptDem.phone
+		, ""
+		, ""
+		, ""
+		, ""
+		, ptDem.account
+		, "")
+	
+	tmpPrv := parseName(ptDem.provider)
+	buildHL7("PV1"
+		, ptDem.type
+		, ptDem.loc
+		, ""
+		, ""
+		, ""
+		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ""
+		, ptDem.account)
+	
+	buildHL7("IN1",
+		, "N/A"
+		, "" ;"Insurance Company ID"
+		, "Seattle Childrens - GB" ;"Insurance Company Name"
+		, "" ;"Insurance Company Address"
+		, "" ;"Insurance Co Contact Person"
+		, "" ;"Insurance Co Phone Number"
+		, "" ;"Group Number"
+		, "" ;"Group Name"
+		, "" ;"Insureds Group Emp ID"
+		, "" ;"Insureds Group Emp Name"
+		, "" ;"Plan Effective Date"
+		, "" ;"Plan Expiration Date"
+		, "" ;"Authorization Information"
+		, "" ;"Plan Type"
+		;~ , ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
+		, parseName(ptDem.parentL).apostr "^" parseName(ptDem.parentF).apostr
+		, "Legal Guardian"
+		, parseDate(ptDem.dob).YMD
+		, "" ;ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
+		, "" ;"Assignment of Benefits"
+		, "" ;"Coordination of Benefits"
+		, "" ;"Primary Payor"
+		, "" ;"Notice of Admission Code"
+		, "" ;"Notice of Admission Date"
+		, "" ;"Report of Eligibility Flag"
+		, "" ;"Report of Eligibility Date"
+		, "" ;"Release Information Code"
+		, "" ;"Pre-Admit Cert (PAC)"
+		, "" ;"Verification Date/Time"
+		, "" ;"Verification By"
+		, "" ;"Type of Agreement Code"
+		, "" ;"Billing Status"
+		, "" ;"Lifetime Reserve Days"
+		, "" ;"Delay Before L R Day"
+		, "" ;"Company Plan Code"
+		, "" ;"Policy Number"
+		, "" ;"Bill Type"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "" ;"Blank"
+		, "")
+	
+	buildHL7("ORC","")
+	
+	buildHL7("OBR"
+		, ptDem.account
+		, ""
+		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter^Holter")
+		. strQ((ptDem.model~="BodyGuardian") ? 1 : "","CEM^CEM")
+		, ""
+		, ""
+		, hl7time
+		, ""
+		, ""
+		, ""
+		, "ANCILLARY"
+		, ""
+		, ""
+		, ""
+		, ""
+		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, "206-987-2015"
+		, "","","","","","","","","","","")
+	
+	tmpInd := ptDem.indication
+	loop, parse, tmpInd, |
+	{
+		indIdx := ""
+		indSeg := A_LoopField
+		for key,val in indCodes
+		{
+			indVal := strX(val,"",1,0,":",1)
+			indStr := strX(val,":",1,1,"",0)
+			if (indSeg=indStr) {
+				indIdx := indVal
+				break
+			}
+		}
+		
+		buildHL7("DG1"
+			, ""
+			, indIdx
+			, indSeg)
+	}
+	
+	buildHL7("OBX"
+		, "ST", "12915^Service Type", ""
+		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter")
+		. strQ((ptDem.model~="BodyGuardian") ? 1 : "","CEM") )
+	
+	buildHL7("OBX"
+		, "ST", "12916^Device", "", ptDem.model)
+	
+	buildHL7("OBX"
+		, "ST", "12919^Serial Number", "", ptDem.ser)
+	
+	buildHL7("OBX"
+		, "ST", "12917^Hookup Location", "", ptDem.Hookup)
+	
+	buildHL7("OBX"
+		, "ST", "12918^Deploy Duration (In Days)", ""
+		, (ptDem.model~="Mortara" ? "1" : "")
+		. (ptDem.model~="BodyGuardian" ? "30" : "") )
+	
+	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
+	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
+	FileCopy, % ".\tempfiles\" fileNm , % hl7OutDir . fileNm
+	eventlog("Preventice registration completed: " fileNm)
+	MsgBox, 262208, Preventice registration, Successful device registration!
+	return
+}
+
+BGHregister() {
+	global wq, ptDem, fetchQuit
+	SetTimer, idleTimer, Off
+	checkCitrix()
+	
+	MsgBox, 262177, Event recorder, Start BGH event recorder registration?
+	IfMsgBox, Cancel
+	{
+		return
+	}
+	
+	ptDem := object()																	; need to initialize ptDem
+	fetchQuit := false
+	gosub getDem																		; need to grab CIS demographics
+	if (fetchQuit=true) {
+		eventlog("Cancelled getDem.")
+		return
+	}
+	getPatInfo()																		; grab remaining demographics for Preventice registration
+	if (fetchQuit=true) {
+		eventlog("Cancelled getPatInfo.")
+		return
+	}
+	
+	i := cMsgBox("Hook-up","Delivery type","Office|Home")
+	if (i="Home") {
+		ptDem["hookup"] := "Home"
+		ptDem["model"] := "BodyGuardian Heart"
+		eventlog("BGH home registration for " ptDem["mrn"] " " ptDem["nameL"] ".") 
+	} else {																			; either Office or [X]
+		ptDem["hookup"] := "Office"
+		ptDem.ser := selectDev()														; need to grab a BGH ser num
+		if (ptDem.ser="") {
+			eventlog("Cancelled selectDev.")
+			return
+		}
+		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
+		if !(ptDem.model) {
+			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart")
+			if (i="xClose") {
+				return
+			} else {
+				ptDem.model := i
+			}
+		}
+		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
+		writeOut("/root","inventory")
+		eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
+	}
+	bghWqSave(ptDem.ser)																; write to worklist.xml
+	
+	registerPreventice()
+}
+
+selectDev() {
+/*	User starts typing any number from label
+	and ComboBox offers available devices
+*/
+	global wq, selBox, selEdit, selBut, fetchQuit
+	static typed, devs, ser
+	typed := devs := ser :=
+	
+	loop, % (k:=wq.selectNodes("/root/inventory/dev")).length							; Add all ser nums to devs string
+	{
+		i := k.item(A_Index-1).getAttribute("ser")
+		if !(i) {
+			continue
+		}
+		devs .= i "|"																	; generate listbox menu
+	}
+	devs := trim(devs," |`r`n")
+
+	Gui, dev:Destroy
+	Gui, dev:Default
+	Gui, -MinimizeBox
+	Gui, Add, Text, w180 +Wrap
+		, % "Type some digits from the device serial number "
+		. "until there is only one item, or type the full serial number"
+	Gui, Font, s12
+	Gui, Add, Edit, vselEdit gSelDevCount
+	Gui, Add, ListBox, h100 vSelBox -vScroll Disabled, % devs							; listbox and button
+	Gui, Add, Button, h30 vSelBut gSelDevSubmit Disabled, Submit						; disabled by default
+	Gui, Show, AutoSize, Select device
+	Gui, +AlwaysOnTop
+	
+	winwaitclose, Select device
+	Gui, dev:Destroy
+	
+	return choice
+	
+	selDevCount:
+	{
+		GuiControlGet, typed, , selEdit													; get selEdit contents on each char
+		tmpDev := ""
+		ct := 0
+		tmp := []
+		tmp := StrSplit(devs,"|")														; split all devs into array
+		loop, % tmp.count()
+		{
+			i := tmp[A_index]
+			if instr(i,typed) {															; item contains typed string
+				tmpDev .= "|" i 														; add to tmpdev menu
+				ct ++																	; increment counter
+			}
+		}
+		tmpDev:=tmpDev ? tmpDev : "|"
+		GuiControl, , selBox, % tmpDev													; update selBox menu
+		
+		if (ct=1) {																		; only one remaining match
+			GuiControl, Enable, SelBut													; activate Submit button
+			GuiControl, Enable, SelBox
+			GuiControl, Choose, selBox, 1												; highlight remaining match
+			
+		} else if (typed~="i)^(BG)?\d{7}$") {											; typed full ser num
+			GuiControl, Enable, SelBut													; activate button
+			
+		} else {																		; otherwise
+			GuiControl, Disable, SelBut													; disable button
+			GuiControl, Disable, SelBox													; and listbox
+		}
+		return
+	}
+	
+	selDevSubmit:
+	{
+		GuiControlGet, boxed, , selBox													; get values from box and edit
+		GuiControlGet, typed, , selEdit
+		choice := (boxed) ? boxed : "BG" RegExReplace(typed,"[[:alpha:]]")
+		if !(choice~="^BG\d{7}$") {														; ignore if doesn't match full ser num
+			return
+		}
+		Gui, dev:Destroy
+		return
+	}
+
+}
+
+getPatInfo() {
+/*	Identify Patient Info page in CIS
+	Get window dimensions, activate window H50% X80%, copy to clipboard
+	Parse address block
+*/
+	global wq, ptDem, fetchQuit
+	
+;	Make sure a CIS patient window exists
+	Loop
+	{
+		if (winID := WinExist("Opened by")) {											; break out if so
+			break
+		}
+		MsgBox, 4149, Window error, Must open CIS to proper patient
+		IfMsgBox, Retry
+		{
+			continue																	; try again
+		} else {
+			fetchQuit := true
+			return
+		}
+	}
+	MouseGetPos,mouseX,mouseY															; get original mouse coords
+	WinActivate, ahk_id %winID%															; activate the CIS patient window
+	WinGetActiveStats, winTitle, winW, winH, winX, winY									; and get dimensions
+	
+;	Make sure we are on Patient Summary / Contacts, either inpatient or outpatient
+	Loop
+	{
+		WinActivate, ahk_id %winID%
+		clipboard := 
+		MouseClick, Left, % winW-40, % 0.6*winH											; click just inside window
+		
+		Send, ^a^c																		; Select All, Copy
+		sleep 200																		; need to pause to fill clipboard
+		txt := Clipboard
+		MouseClick, Left, % winW-40, % 0.6*winH+10										; click again to deselect all
+		MouseMove, mouseX, mouseY														; move back to original coords
+		if instr(txt,"Patient contact info") {
+			break																		; break out of this loop
+		}
+		MsgBox, 4149, Window error, Navigate to:`n   * Patient Summary / Contacts
+		IfMsgBox, Retry
+		{
+			continue
+		} else {
+			fetchQuit := true
+			return
+		}
+	}
+	
+	ptInfo := cleanBlank(stregX(txt,"i)Patient contact info.*?\R+",1,1,"i)Family contact info",1))
+	nameLine := strX(ptInfo,"",1,0,"`n",1)
+	prefName := trim(stregX(nameLine,"i)Pref.*? name:",1,1,"\R+",1))
+	if !instr(nameLine, ptDem.Name) {													; fetched ptInfo must contain ptDem.name
+		MsgBox, 4149, Name error, % "Fetched name """ prefName """`ndoes not match """ ptDem.Name """"
+		fetchQuit := true
+		eventlog("Fetched info does not match " ptDem.Name)
+		return
+	}
+	homePhoneLine := stregX(ptInfo,"i)Home Phone:",1,1,"\R+",1)
+	RegExMatch(homePhoneLine,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
+	ptDem.phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
+
+	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
+	relStr := "Father|Mother|Grand|Aunt|Uncle|Foster|Parent|Sibling|Cousin|Relative|Step|Adult"
+	rel := Object()
+	loop, parse, famInfo, `n,`r
+	{
+		i := A_LoopField
+		if (i~="\(" relStr) {															; line contains "(Mother"
+			ct ++																		; increment counter
+			rel[ct] := object()															; create a rel index object
+			rel[ct].name := strX(i,"",1,1,"(",1,1)										; get name string
+			continue
+		}
+		if (i~="Home:") {
+			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
+			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
+			continue
+		}
+		if !(i~="i)("
+			. "Legal guardian|"															; skip lines containing these strings
+			. "Birth certificate|"
+			. "Comment|"
+			. "Lives with|"
+			. "Custody|"
+			. "Mobile:|"
+			. "Work:|"
+			. "Inpatient|"
+			. "Emergency|"
+			. "Adoption|"
+			. "^\s*$|"
+			. "^>)")
+		{
+			rel[ct].addr .= i "`n"														; add address lines to each relative index string
+		}
+	}
+	loop, % rel.MaxIndex()
+	{
+		i := A_index
+		loop, % rel.MaxIndex()															; compare against all other addresses
+		{
+			j := A_Index
+			if (i=j) {																	; do not compare to self
+				continue
+			}
+			if (rel[j].phone != ptDem.phone) {
+				rel.delete(j)															; remove if doesn't match patient's home phone number
+			}
+			if (rel[i].addr = rel[j].addr) {
+				rel.delete(j)															; remove duplicate addresses
+			}
+		}
+		if (rel[i].addr = "") {
+			rel.Delete(i)																; remove entries with no address
+		}
+	}
+	loop, % rel.MaxIndex()
+	{
+		nm .= A_index ") " rel[A_index].name "|"										; generate parent name menu for cmsgbox
+	}
+	if (rel.MaxIndex() > 1) {
+		eventlog("Multiple potential parent matches (" rel.MaxIndex() ").")
+		q := cmsgbox("Parent","Who is the guarantor?",trim(nm,"|"))
+		if (q="xClose") {
+			fetchQuit:=true
+			return
+		}
+		choice := strX(q,"",1,1,")",1,1)
+	} else {
+		choice := 1
+	}
+	
+	ptDem.parent := rel[choice].Name
+	ptDem.parentL := parseName(ptDem.parent).last
+	ptDem.parentF := parseName(ptDem.parent).first
+	
+	addrLine := 0
+	loop, parse, % rel[choice].addr, `n,`r												; parse selected addr string
+	{
+		i := cleanspace(A_LoopField)
+		if (i~=", [A-Z]{2} \d{5}") {													; matches City, State Zip
+			ptDem.city := trim(stregX(i,"",1,0,", ",1))
+			ptDem.state := trim(stregX(i,", ",1,1," ",1))
+			ptDem.zip := trim(stregX(i "<<<",", [A-Z]{2} ",1,1,"<<<",1))
+			continue
+		} 
+		else 																			; everything else is an addr string
+		{
+			addrLine ++
+			addr := "addr" addrLine
+			ptDem[addr] := trim(i)
+		}
+	}
+	if (ptDem.addr1~="i)P[\. ]+O[\. ]+Box") {
+		InputBox(addr1, "Cannot use P.O. Box","`n`nEnter valid street address","")
+		InputBox(addr2, "Cannot use P.O. Box","`n`nEnter city", ptDem.city)
+		if (addr1) {
+			ptDem.addr1 := addr1
+			eventlog("Replaced PO box with valid address.")
+		} else {
+			fetchQuit := true
+			return
+		}
+	}
+	
+	MsgBox, 4164
+		, Patient contact information
+		, % "Retrieved info `n`n"
+		. "Patient name: " ptDem.nameL ", " ptDem.nameF "`n"
+		. "Patient MRN: " ptDem.mrn "`n"
+		. "Patient DOB: " ptDem.DOB "`n"
+		. "Parent: " ptDem.parentL ", " ptDem.parentF "`n"
+		. "Address:`n"
+		. "   " ptDem.addr1 "`n"
+		. strQ(ptDem.addr2,"   ###`n")
+		. "   " ptDem.city ", " ptDem.state " " ptDem.zip "`n"
+		. "Phone: " ptDem.phone "`n`n"
+		. "Provider: " ptDem.provider "`n"
+		. "Encounter date: " ptDem.encDate "`n"
+		. "Site: " ptDem.loc
+	IfMsgBox, Yes
+	{
+		eventlog("Accepted patient address info.")
+		fetchQuit := false
+	} else {
+		fetchQuit := true
+	}
+	return
+}
+
+bghWqSave(sernum) {
+	global wq, ptDem, user, sitesLong
+	
+	id := A_TickCount 
+	ptDem["date"] := parsedate(ptDem["EncDate"]).YMD
+	ptDem["dev"] := ptDem.model " - " ptDem.ser
+	ptDem["wqid"] := id
+	
+	wq.addElement("enroll","/root/pending",{id:id})
+	newID := "/root/pending/enroll[@id='" id "']"
+	wq.addElement("date",newID,(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
+	wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
+	wq.addElement("mrn",newID,ptDem["mrn"])
+	wq.addElement("sex",newID,ptDem["Sex"])
+	wq.addElement("dob",newID,ptDem["dob"])
+	wq.addElement("dev",newID,ptDem["dev"])
+	wq.addElement("prov",newID,ptDem["Provider"])
+	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
+	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
+	wq.addElement("ind",newID,ptDem["Indication"])
+	wq.addElement("register",newID,{user:A_UserName},A_now)
+	
+	writeOut("/root/pending","enroll[@id='" id "']")
+	
+	return
+}
+
+moveHL7dem() {
+/*	Populate fldVal["dem-"] with data from wqlist (if valid), otherwise from hl7
+*/
+	global fldVal, obxVal
+	if (fldVal.acct) {																	; valid wqid has been previously processed
+		name := parseName(fldval.name)													; name from wqid (will have ^ sub)
+		fldVal["dem-Name"] := fldval.Name
+		fldVal["dem-Name_L"] := parseName(name.last).apostr								; replace [^] with [']
+		fldVal["dem-Name_F"] := parseName(name.first).apostr
+		fldVal["dem-MRN"] := fldval.MRN
+		fldVal["dem-DOB"] := fldval.DOB
+		fldVal["dem-Sex"] := fldval.Sex
+		fldVal["dem-Indication"] := fldVal.ind
+		fldVal["dem-Site"] := fldVal.site
+		fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
+		fldVal["dem-Ordering"] := fldval.prov
+		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
+	} else {
+		fldVal["dem-Name"] := obxVal["PID_NameL"] ", " obxVal["PID_NameF"]
+		fldVal["dem-Name_L"] := obxVal["PID_NameL"]
+		fldVal["dem-Name_F"] := obxVal["PID_NameF"]
+		fldVal["dem-MRN"] := obxVal["PID_PatMRN"]
+		fldVal["dem-DOB"] := niceDate(obxVal["PID_DOB"])
+		fldVal["dem-Sex"] := (obxVal["PID_Sex"]~="F") ? "Female" : "Male"
+		fldVal["dem-Indication"] := obxVal.Diagnosis
+		;~ fldVal["dem-Site"] := fldVal.site
+		;~ fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
+		fldVal["dem-Ordering"] := filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name
+		;~ fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
+	}
+	return
+}
+
+ProcessHl7PDF:
+{
+/*	Associate fldVal data with extra metadata from extracted PDF, complete final CSV report, handle files
+*/
+	fileNam := RegExReplace(fldVal.Filename,"i)\.pdf")									; fileNam is name only without extension, no path
+	fileIn := hl7Dir fldVal.Filename													; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
+	
+	if (fileNam="") {																	; No PDF extracted
+		eventlog("No PDF extracted.")
+		progress, off
+		MsgBox No PDF extracted!
+		return
+	}
+	
+	runwait, pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min							; convert PDF pages 1-2 with no tabular structure
+	FileRead, newtxt, %filenam%.txt														; load into newtxt
+	FileDelete, %filenam%.txt
+	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
+	FileAppend % newtxt, %filenam%.txt													; create new tempfile with result, minus PDF
+	FileMove %filenam%.txt, .\tempfiles\*, 1											; move a copy into tempfiles for troubleshooting
+	FileAppend % fldval.hl7, %filenam%_hl7.txt											; create new tempfile with result, minus PDF
+	FileMove %filenam%_hl7.txt, .\tempfiles\*, 1										; move a copy into tempfiles for troubleshooting
+	
+	progress, off
+	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
+	if (type="Holter") {
+		gosub Holter_Pr_Hl7
+	} else if (type~="CEM|EOS") {
+		gosub Event_BGH_Hl7
+	} else {
+		MsgBox % "No match!`n" type
+		return
+	}
+	
+	return
+}
+
+ProcessPDF:
 {
 /*	This main loop accepts a %fileIn% filename,
  *	determines the filetype based on header contents,
@@ -1619,49 +2576,30 @@ MainLoop:
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
  */
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt"			; convert PDF pages 1-2 to txt file
-	newTxt:=""																		; clear the full txt variable
-	FileRead, maintxt, %filenam%.txt												; load into maintxt
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt"				; convert PDF pages 1-2 to txt file
+	newTxt:=""																			; clear the full txt variable
+	FileRead, maintxt, %filenam%.txt													; load into maintxt
 	FileDelete, %filenam%.txt
 	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All
-	FileAppend %newtxt%, %filenam%.txt												; create new tempfile with newtxt result
-	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1							; move a copy into tempfiles for troubleshooting
-	eventlog("tempfile.txt -> " fileNam ".txt")
-	
-	blocks := Object()																; clear all objects
-	fields := Object()
-	fldval := Object()
-	labels := Object()
-	blk := Object()
-	blk2 := Object()
-	ptDem := Object()
-	pt := Object()
-	chk := Object()
-	matchProv := Object()
-	fileOut := fileOut1 := fileOut2 := ""
-	summBl := summ := ""
-	fullDisc := ""
-	monType := ""
-	
-	if (instr(newtxt,"zio xt")) {															; Processing loop based on identifying string in newtxt
+	FileAppend %newtxt%, %filenam%.txt													; create new tempfile with newtxt result
+	FileMove %filenam%.txt, .\tempfiles\%fileNam%.txt, 1								; move a copy into tempfiles for troubleshooting
+		
+	if (instr(newtxt,"zio xt")) {														; Processing loop based on identifying string in newtxt
 		gosub Zio
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) 	{					; New Preventice Holter 2017
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"HScribe")) 	{				; New Preventice Holter 2017
 		gosub Holter_Pr2
-	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {		; Body Guardian Heart CEM
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
 		gosub Event_BGH
-	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {					; Original Preventice Holter
+	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {				; Original Preventice Holter
 		;~ gosub Holter_Pr
 	} else {
 		eventlog(fileNam " bad file.")
 		MsgBox No match!
 		return
 	}
-	if (fetchQuit=true) {																	; exited demographics fetchGUI
-		return																				; so skip processing this file
+	if (fetchQuit=true) {																; exited demographics fetchGUI
+		return																			; so skip processing this file
 	}
-	gosub epRead																			; find out which EP is reading today
-	
-	gosub outputfiles																		; generate and save output CSV, rename and move PDFs
 return
 }
 
@@ -1669,12 +2607,13 @@ outputfiles:
 {
 	/*	Output the results and move files around
 	*/
-	fileOut1 .= (substr(fileOut1,0,1)="`n") ?: "`n"											; make sure that there is only one `n 
-	fileOut2 .= (substr(fileOut2,0,1)="`n") ?: "`n"											; on the header and data lines
+	fileOut1 := trim(fileOut1,",`t`r`n") "`n"												; make sure that there is only one `n 
+	fileOut2 := trim(fileOut2,",`t`r`n") "`n"												; on the header and data lines
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
-	tmpDate := parseDate(fldval["Test_Date"])												; get the study date
-	filenameOut := fldval["MRN"] " " fldval["Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
-	tmpFlag := tmpDate.YYYY . tmpDate.MM . tmpDate.DD . "020000"
+	tmpDate := parseDate(fldval["dem-Test_Date"])											; get the study date from PDF result
+	filenameOut := fldval["dem-MRN"] " " fldval["dem-Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
+	filenameOut := RegExReplace(filenameOut,"\^","'")										; convert [^] back to [']
+	tmpFlag := tmpDate.YMD . "020000"
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
@@ -1696,12 +2635,13 @@ outputfiles:
 	FileDelete, %fileIn%sh.pdf																;	was never completing filemove
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
+	FileDelete, % hl7dir fileNam ".hl7"														; We can delete the original HL7, if exists
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
 	fileWQ := ma_date "," user "," 															; date processed and MA user
-			. """" chk.Prov """" ","														; extracted provider
-			. """" fldval["Name_L"] ", " fldval["Name_F"] """" ","							; CIS name
-			. """" fldval["MRN"] """" ","													; CIS MRN
+			. """" fldval["dem-Ordering"] """" ","											; extracted provider
+			. """" fldval["dem-Name_L"] ", " fldval["dem-Name_F"] """" ","					; CIS name
+			. """" fldval["dem-MRN"] """" ","												; CIS MRN
 			. """" fldval["dem-Test_date"] """" ","											; extracted Test date (or CIS encounter date if none)
 			. """" fldval["dem-Test_end"] """" ","											; extracted Test end
 			. """" fldval["dem-Site"] """" ","												; CIS location
@@ -1709,7 +2649,9 @@ outputfiles:
 			. """" monType """" ; ","														; Monitor type
 			. "`n"
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
+	FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
 	
+	setwqupdate()
 	wq := new XML("worklist.xml")
 	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
 	
@@ -1734,11 +2676,11 @@ moveWQ(id) {
 		wq.selectSingleNode("/root/done").appendChild(clone)							; copy x.clone to DONE
 		x.parentNode.removeChild(x)														; remove x
 		eventlog("wqid " id " (" mrn " from " date ") moved to DONE list.")
-	} else {
-		id := A_TickCount
-		wq.addElement("enroll","/root/done",{id:id})
-		newID := "/root/pending/enroll[@id='" id "']"
-		wq.addElement("date",newID,fldval["dem-Test_date"])
+	} else {																			; no record exists (enrollment never captured, or Zio)
+		id := A_TickCount																; create an id
+		wq.addElement("enroll","/root/done",{id:id})									; in </root/done>
+		newID := "/root/done/enroll[@id='" id "']"
+		wq.addElement("date",newID,parseDate(fldval["dem-Test_date"]).YMD)				; add these to the new done node
 		wq.addElement("name",newID,fldval["dem-Name"])
 		wq.addElement("mrn",newID,fldval["dem-MRN"])
 		wq.addElement("done",newID,{user:A_UserName},A_Now)
@@ -1751,10 +2693,27 @@ moveWQ(id) {
 	return
 }
 
+wqSetVal(id,node,val) {
+	global wq
+	
+	newID := "/root/pending/enroll[@id='" id "']"
+	k := wq.selectSingleNode(newID "/" node)
+	val := RegExReplace(val,"\'","^")													; make sure no val ever contains [']
+	
+	if IsObject(k) {
+		wq.setText(newID "/" node,val)
+	} else {
+		wq.addElement(node,newID,val)
+	}
+	
+	return
+}
+
+
 getMD:
 {
 	Gui, fetch:Hide
-	InputBox, ed_Crd, % "Enter responsible cardiologist"						; no call schedule for that day, must choose
+	InputBox(ed_Crd, "Enter responsible cardiologist","","")							; no call schedule for that day, must choose
 	Gui, fetch:Show
 	if (ed_Crd="")
 		return
@@ -1767,6 +2726,8 @@ getMD:
 		IfMsgBox, Yes
 		{
 			ptDem.Provider := tmpCrd.best
+		} else {
+			gosub getMD											; don't agree? try again
 		}
 	}
 	eventlog("Cardiologist " ptDem.Provider " entered.")
@@ -1775,32 +2736,27 @@ getMD:
 
 assignMD:
 {
-	if !(ptDem.EncDate) {														; must have a date to figure it out
+	if !(ptDem.date) {																	; must have a date to figure it out
 		return
 	}
-	encDT := parseDate(ptDem.EncDate).YYYY . parseDate(ptDem.EncDate).MM . parseDate(ptDem.EncDate).DD
-	inptMD := checkCrd(ptDem.Provider) 
-	if (inptMD.fuzz=0) {														; attg is Crd
-		ptDem.Loc := "Inpatient"												; set Loc so it won't fail
-		return
-	} 
-	if (ymatch := y.selectSingleNode("//call[@date='" encDT "']/Ward_A").text) {
-		inptMD := checkCrd(strX(ymatch," ",1,1) ", " strX(ymatch,"",1,0," ",1,1))
-		if (inptMD.fuzz=0) {													; on-call Cards that day 
-			ptDem.Loc := "Inpatient"
+	ptDem.Loc := "Inpatient"															; set default Loc so it won't fail
+	ymatch := y.selectSingleNode("//call[@date='" ptDem.date "']/Ward_A").text			; get ward attg from chipotle call schedule
+	if (ymatch) {
+		inptMD := checkCrd(ymatch)
+		if (inptMD.fuzz<0.15) {															; close enough match
 			ptDem.Provider := inptMD.best
 			eventlog("Cardiologist autoselected " ptDem.Provider )
 			return
 		}
+	} else {
+		gosub getMD																		; when all else fails, ask
 	}
-	gosub getMD																	; when all else fails, ask
-	ptDem.Loc := "Inpatient"
 return
 }
 
-epRead:
-{
-	FileGetTime, dlDate, %fileIn%
+epRead() {
+	global y, user, ma_date, fldval
+	dlDate := A_Now
 	FormatTime, dlDay, %dlDate%, dddd
 	if (dlDay="Friday") {
 		dlDate += 3, Days
@@ -1808,74 +2764,161 @@ epRead:
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
 	
 	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun|Salerno|Seslar)", ymatch)
-	if !(ymatch := ymatch.value()) {
-		ymatch := epMon ? epMon : cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
-		epMon := ymatch
-		eventlog("Reading EP assigned to " epMon ".")
+	if !(ep := ymatch.value()) {
+		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
+		eventlog("Reading EP assigned to " ep ".")
 	}
 	
-	if (RegExMatch(fldval["ordering"], "Oi)(Chun|Salerno|Seslar)", epOrder))  {
-		ymatch := epOrder.value()
+	if (RegExMatch(fldval["dem-Ordering"], "Oi)(Chun|Salerno|Seslar)", epOrder))  {
+		ep := epOrder.value()
 	}
 	
 	FormatTime, ma_date, A_Now, MM/dd/yyyy
-	fileOut1 .= ",""EP_read"",""EP_date"",""MA"",""MA_date"""
-	fileOut2 .= ",""" ymatch """,""" niceDate(dlDate) """,""" user """,""" ma_date """"
+	fieldcoladd("","EP_read",ep)
+	fieldcoladd("","EP_date",niceDate(dlDate))
+	fieldcoladd("","MA",user)
+	fieldcoladd("","MA_date",ma_date)
 return
 }
 
-LWify() {
-	global fileout1, fileout2
-	lwfields := {"dem-Name_L":"", "dem-Name_F":"", "dem-Name_M":"", "dem-MRN":"", "dem-DOB":"", "dem-Sex":"NA"
-				, "dem-Site":"", "dem-Billing":"", "dem-Device_SN":"", "dem-VOID1":"", "dem-Hookup_tech":""
-				, "dem-VOID2":"", "dem-Meds":"NA", "dem-Ordering":"", "dem-Ordering_grp":"", "dem-Ordering_eml":""
-				, "dem-Scanned_by":"", "dem-Reading":"", "dem-Test_date":"", "dem-Scan_date":"", "dem-Hookup_time":""
-				, "dem-Recording_time":"", "dem-Analysis_time":"", "dem-Indication":"", "dem-VOID3":""
-				, "hrd-Total_beats":"0", "hrd-Min":"0", "hrd-Min_time":"", "hrd-Avg":"0", "hrd-Max":"0", "hrd-Max_time":"", "hrd-HRV":""
-				, "ve-Total":"0", "ve-Total_per":"0", "ve-Runs":"0", "ve-Beats":"0", "ve-Longest":"0", "ve-Longest_time":""
-				, "ve-Fastest":"0", "ve-Fastest_time":"", "ve-Triplets":"0", "ve-Couplets":"0", "ve-SinglePVC":"0", "ve-InterpPVC":"0"
-				, "ve-R_on_T":"0", "ve-SingleVE":"0", "ve-LateVE":"0", "ve-Bigem":"0", "ve-Trigem":"0", "ve-SVE":"0"
-				, "sve-Total":"0", "sve-Total_per":"0", "sve-Runs":"0", "sve-Beats":"0", "sve-Longest":"0", "sve-Longest_time":""
-				, "sve-Fastest":"0", "sve-Fastest_time":"", "sve-Pairs":"0", "sve-Drop":"0", "sve-Late":"0"
-				, "sve-LongRR":"0", "sve-LongRR_time":"", "sve-Single":"0", "sve-Bigem":"0", "sve-Trigem":"0", "sve-AF":"0"}
+Holter_Pr_Hl7:
+{
+/*	Process newtxt from pdftotxt from HL7 extract
+*/
+	eventlog("Holter_Pr_HL7")
+	monType := "PR"
+	fullDisc := "i)60\s+s(ec)?/line"
 	
-	lwtabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
-		. "dem-Hookup_tech	dem-VOID2	dem-Meds	dem-Ordering	dem-Ordering_grp	dem-Ordering_eml	dem-Scanned_by	"
-		. "dem-Reading	dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
-		. "dem-VOID3	hrd-Total_beats	hrd-Min	hrd-Min_time	hrd-Avg	hrd-Max	hrd-Max_time	hrd-HRV	ve-Total	ve-Total_per	"
-		. "ve-Runs	ve-Beats	ve-Longest	ve-Longest_time	ve-Fastest	ve-Fastest_time	ve-Triplets	ve-Couplets	ve-SinglePVC	"
-		. "ve-InterpPVC	ve-R_on_T	ve-SingleVE	ve-LateVE	ve-Bigem	ve-Trigem	ve-SVE	sve-Total	sve-Total_per	sve-Runs	"
-		. "sve-Beats	sve-Longest	sve-Longest_time	sve-Fastest	sve-Fastest_time	sve-Pairs	sve-Drop	sve-Late	"
-		. "sve-LongRR	sve-LongRR_time	sve-Single	sve-Bigem	sve-Trigem	sve-AF"
+	demog := stregX(newtxt,"Name:",1,0,"Medications:",1)
+	fields[1] := ["Recording Start Date/Time","\R"
+		, "Date Processed","(Technician|Hookup Tech)","Analyst","\R"
+		, "Recording Duration","Recorder (No|Number)","\R"
+		, "Indications","\R"]
+	labels[1] := ["Test_date","null"
+		, "Scan_date","Hookup_tech","Scanned_by","null"
+		, "Recording_time","Device_SN","null"
+		, "Indication","null"]
+	fieldvals(demog,1,"dem")
 	
-	field := Object()
+	duration := stregx(newtxt "<<<","(\R)ALL BEATS",1,0,"(\R)HEART RATE EPISODES",0)
+	fields[1] := ["Original Duration","Recording Duration","Analyzed Duration","Artifact Duration","\R"]
+	labels[1] := ["null","Recording_time","Analysis_time","null","null"]
+	fieldvals(duration,1,"dem")
+	formatfield("dem","Test_end",fldval["dem-Recording_time"])
 	
-	; Parse label lines in CSV
-	loop, Parse, fileOut1, CSV
-	{
-		field.push(A_LoopField)
-	}
-	; Parse values in CSV, match to equivalent labels
-	loop, Parse, fileOut2, CSV
-	{
-		lwFields[field[A_index]] := A_LoopField
-		if !objhaskey(lwFields,field[A_Index]) {
-			MsgBox % field[A_Index]
+	if !(fldval.acct) {																	; fldval.acct exists if Holter has been processed
+		gosub checkProc																	; get valid demographics
+		if (fetchQuit=true) {
+			return
 		}
 	}
-	; Populate lwFields with equivalent named label values
-	lwOut1 :=
-	lwOut2 :=
-	loop, parse, lwTabs, `t
-	{
-		fld := A_LoopField
-		val := lwFields[fld]
-		lwOut1 .= """" fld ""","
-		lwOut2 .= """" val ""","
+	
+	fieldsToCSV()
+	
+	FileGetSize, fileInSize, % hl7dir fldval.Filename
+	if (fileInSize > 2000000) {															; probably a full disclosure PDF
+		shortenPDF(fullDisc)															; generates .pdf and sh.pdf versions
+	} 
+	else loop {																			; just a short PDF
+		if (findFullPDF(fldval.wqid)) {
+			eventlog("Full disclosure PDF found.")
+			break																		; found matching full disclosure, exit loop
+		} else {
+			eventlog("Full disclosure PDF not found.")
+			
+			msg := cmsgbox("Missing full disclosure PDF"
+				, fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
+				. "Download from ftp.eCardio.com site`n"
+				. "then click [Retry].`n`n"
+				. "If full disclosure PDF not available,`n"
+				. "click [Email] to send a message to Preventice."
+				, "Retry|Email|Cancel"
+				, "E", "V")
+			if (msg="Retry") {
+				findFullPDF()
+				continue
+			}
+			if (msg~="Cancel|Close") {
+				FileDelete, % fileIn
+				eventlog("Refused to get full disclosure. Extracted PDF deleted.")
+				Exit																	; either Cancel or X, go back to main GUI
+			}
+			if (msg="Email") {
+				progress,100 ,,Generating email...
+				Eml := ComObjCreate("Outlook.Application").CreateItem(0)				; Create item [0]
+				Eml.BodyFormat := 2														; HTML format
+				
+				Eml.To := "HolterNotificationGroup@preventice.com"
+				Eml.cc := "EkgMaInbox@seattlechildrens.org"
+				Eml.Subject := "Missing full disclosure PDF"
+				Eml.Display																; Display first to get default signature
+				Eml.HTMLBody := "Please upload the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
+					. " MRN#" fldval["dem-MRN"] " study date " fldval["dem-Test_date"]
+					. " to the eCardio FTP site.<br><br>Thank you!<br>"
+					. Eml.HTMLBody														; Prepend to existing default message
+				progress, off
+				eventlog("Email sent to Preventice.")
+			}
+		}
 	}
-	fileOut1 := lwOut1
-	fileOut2 := lwOut2
-	eventlog("LWify complete.")
+	
+	fieldcoladd("","INTERP","")
+	fieldcoladd("","Mon_type","Holter")
+	
+	fldval.done := true
+	
+return
+}
+
+fieldsToCSV() {
+/*	tabs = tab-delim string
+	"hrd-Total_beats(0)" -> fldval["hrd-Total_beats"] (default 0 if null)
+	Regenerates new fileOut
+*/
+	global fldval, fileOut1, fileOut2, monType
+	
+	if (monType~="PR|Zio") {
+		tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
+			. "dem-Hookup_tech	dem-VOID2	dem-Meds	dem-Ordering	dem-Scanned_by	dem-Reading	"
+			. "dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	dem-VOID3	"
+			. "hrd-Total_beats(0)	hrd-Min(0)	hrd-Min_time	hrd-Avg(0)	hrd-Max(0)	hrd-Max_time	hrd-HRV	"
+			. "ve-Total(0)	ve-Total_per(0)	ve-Runs(0)	ve-Beats(0)	ve-Longest(0)	ve-Longest_time	ve-Fastest(0)	ve-Fastest_time	"
+			. "ve-Triplets(0)	ve-Couplets(0)	ve-SinglePVC(0)	ve-InterpPVC(0)	ve-R_on_T(0)	ve-SingleVE(0)	ve-LateVE(0)	"
+			. "ve-Bigem(0)	ve-Trigem(0)	ve-SVE(0)	sve-Total(0)	sve-Total_per(0)	sve-Runs(0)	sve-Beats(0)	"
+			. "sve-Longest(0)	sve-Longest_time	sve-Fastest(0)	sve-Fastest_time	sve-Pairs(0)	sve-Drop(0)	sve-Late(0)	"
+			. "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
+		;~ tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	"			; for when we are full TRRIQ
+			;~ . "dem-Hookup_tech	dem-Ordering	dem-Scanned_by	"
+			;~ . "dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
+			;~ . "hrd-Total_beats(0)	hrd-Min(0)	hrd-Min_time	hrd-Avg(0)	hrd-Max(0)	hrd-Max_time	hrd-HRV	"
+			;~ . "ve-Total(0)	ve-Total_per(0)	ve-Runs(0)	ve-Beats(0)	ve-Longest(0)	ve-Longest_time	ve-Fastest(0)	ve-Fastest_time	"
+			;~ . "ve-Triplets(0)	ve-Couplets(0)	ve-SinglePVC(0)	ve-InterpPVC(0)	ve-R_on_T(0)	ve-SingleVE(0)	ve-LateVE(0)	"
+			;~ . "ve-Bigem(0)	ve-Trigem(0)	ve-SVE(0)	sve-Total(0)	sve-Total_per(0)	sve-Runs(0)	sve-Beats(0)	"
+			;~ . "sve-Longest(0)	sve-Longest_time	sve-Fastest(0)	sve-Fastest_time	sve-Pairs(0)	sve-Drop(0)	sve-Late(0)	"
+			;~ . "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
+	} else if (monType="BGH") {
+		tabs := "dem-Name_L	dem-Name_F	dem-MRN	dem-Ordering	dem-Sex(NA)	dem-DOB	dem-VOID_Practice	dem-Indication	"
+			. "dem-Test_date	dem-Test_end	dem-VOID	dem-Billing	"
+			. "counts-Critical(0)	counts-Total(0)	counts-Serious(0)	counts-Manual(0)	counts-Stable(0)	counts-Auto(0)"
+		;~ tabs := "dem-Name_L	dem-Name_F	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Ordering	dem-Site	dem-Billing	dem-Device_SN	"		; for when we are full TRRIQ
+			;~ . "dem-Test_date	dem-Test_end	dem-Indication	"
+			;~ . "counts-Critical	counts-Total	counts-Serious	counts-Manual	counts-Stable	counts-Auto"
+	}
+	fileOut1 := ""
+	fileOut2 := ""
+	loop, parse, tabs, `t
+	{
+		x := A_LoopField																; PRE-LAB(default val)
+		fld := strX(x,"",1,0,"(",1,1)													; field
+			pre := strX(fld,"",1,0,"-",1,1)												; prefix
+			lab := strX(fld,"-",1,1,"",0)												; label
+		def := strX(x,"(",1,1,")",1,1)													; default value
+		val := fldval[fld]																; value in fldval[pre-lab]
+		res := (val = "") ? def : val													; result is value if exists, else default
+		formatfield(pre,lab,res)														; sends formatted results, i.e. recreates fresh fileOut
+	}
+	eventlog("Fields mapping complete.")
+	
 return	
 }
 
@@ -1906,38 +2949,148 @@ shortenPDF(find) {
 return	
 }
 
+findFullPdf(wqid:="") {
+/*	Scans HolterDir for potential full disclosure PDFs
+	maybe rename if appropriate
+*/
+	global holterDir, hl7dir, fldval, pdfList
+	
+	pdfList := Object()																	; clear list to add to WQlist
+	
+	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(holterDir).Files.Count
+	
+	Loop, files, %holterDir%*.pdf
+	{
+		fileIn := A_LoopFileFullPath													; full path and filename
+		fname := A_LoopFileName															; full filename
+		fnam := RegExReplace(fname,"i)\.pdf")											; filename without ext
+		progress, % 100*A_index/fileCount, % fname, Scanning PDFs folder
+		
+		;---Skip any PDFs that have already been processed or are in the middle of being processed
+		if (fname~="i)(sh|-short)\.pdf") 
+			continue
+		if FileExist(fname "sh.pdf") 
+			continue
+		if FileExist(fnam "-short.pdf") 
+			continue
+		
+		RegExMatch(fname,"O)_WQ(\d+)(\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
+		
+		if (readWQ(fnID.1).node = "done") {
+			eventlog("Leftover PDF: " fnam ", moved to archive.")
+			FileMove, % fileIn, % holterDir "archive\" fname
+			continue
+		}
+		
+		if (fnID.0 = "") {																; Unprocessed full disclosure PDF
+			runwait, pdftotext.exe -l 1 "%fileIn%" "%fnam%.txt",,min					; convert PDF pages 1-2 with no tabular structure
+			FileRead, newtxt, %fnam%.txt												; load into newtxt
+			FileDelete, %fnam%.txt
+			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
+			
+			flds := getPdfID(newtxt)
+			
+			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
+			FileMove, %fileIn%, % holterDir newFnam ".pdf", 1							; rename the unprocessed PDF
+			eventlog("Holter PDF: " fName " renamed to " newFnam)
+			fName := newFnam ".pdf"
+		} 
+		if !objhasvalue(pdfList,fName) {
+			pdfList.push(fName)
+		}
+		
+		if (wqid = "") {																; this is just a refresh loop
+			continue																	; just build the list
+		}
+		
+		if (fnID.1 == wqid) {															; filename WQID matches wqid arg
+			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "sh.pdf"		; rename the pdf in hl7dir to -short.pdf
+			FileMove, % holterDir fName , % hl7dir fldval.filename 						; move this full disclosure PDF into hl7dir
+			progress, off
+			eventlog(fName " moved to hl7dir.")
+			return true																	; stop search and return
+		} else {
+			continue
+		}
+	}
+	progress, off
+	return false																		; fell through without a match
+}
+
+getPdfID(txt) {
+/*	Parses txt for demographics
+	returns type=H,E,Z,M and demographics in an array, and wqid if found
+	or error if no match
+*/
+	global fldval
+	res := Object()
+	
+	if instr(txt,"MORTARA") {															; Mortara Holter
+		res.type := "H"
+		name := parseName(res.name := trim(stregX(txt,"Name:",1,1,"Recording Start",1)))
+			res.nameL := name.last
+			res.nameF := name.first
+		dt := parseDate(trim(stregX(txt,"Start Date/Time:?",1,1,"\R",1)))
+			res.date := dt.YMD
+			res.time := dt.hr dt.min
+		dobDt := parseDate(trim(stregX(txt,"(Date of Birth|DOB):?",1,1,"\R",1)))
+			res.dob := dobDt.YMD
+		res.mrn := trim(stregX(txt,"Secondary ID:?",1,1,"Age:?",1))
+		res.ser := trim(stregX(txt,"Recorder (No|Number):?",1,1,"\R",1))
+		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "H"
+	} else if instr(txt,"BodyGuardian Heart") {
+		res.type := "E"
+		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1)," `t`r`n"))
+			res.nameL := name.last
+			res.nameF := name.first
+		dt := parseDate(trim(stregX(txt,"Period \(.*?\R",1,1," - ",1)," `t`r`n"))
+			res.date := dt.YMD
+		res.mrn := trim(stregX(txt,"Patient ID",1,1,"Gender",1)," `t`r`n")
+		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###E","00000E")
+	} else if instr(txt,"Zio XT") {
+		res.type := "Z"
+		name := parseName(res.name := trim(stregX(txt,"Final Report for\R",1,1,"\R",1)," `t`r`n"))
+			res.nameL := name.last
+			res.nameF := name.first
+		enroll := stregX(txt,"Enrollment Period",1,0,"Analysis Time",1)
+		dt := parseDate(stregX(enroll,"i)\R+.*?(hours|days).*?\R+",1,1,",",1))
+			res.date := dt.YMD
+		res.mrn := strQ(trim(stregX(txt,"Patient ID\R",1,1,"\R",1)," `t`r`n"),"###","Zio")
+		res.wqid := "00000Z"
+	}
+	return res
+}
+
 Holter_Pr2:
 {
 	eventlog("Holter_Pr2")
 	monType := "PR"
 	fullDisc := "i)60\s+s(ec)?/line"
 	
-	demog := stregX(newtxt,"Name:",1,0,"Conclusions",1)
-	
-	gosub checkProcPR2											; check validity of PDF, make demographics valid if not
-	if (fetchQuit=true) {
-		return													; fetchGUI was quit, so skip processing
+	if (fileinsize < 2000000) {															; Shortened files are usually < 1-2 Meg
+		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
+		MsgBox, 4112, Filesize error!, This file does not appear to be a full-disclosure PDF. Please download the proper file and try again.
+		fetchQuit := true
+		return
 	}
 	
-	/* Holter PDF is valid. OK to process.
-	 * Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
+	demog := stregX(newtxt,"Name:",1,0,"Conclusions",1)
 	fields[1] := ["Name","\R","Recording Start Date/Time","\R"
 		, "ID","Secondary ID","Admission ID","\R"
 		, "Date Of Birth","Age","Gender","\R"
 		, "Date Processed","(Referring|Ordering) Phys(ician)?","\R"
 		, "Technician|Hookup Tech","Recording Duration","\R"
 		, "Analyst","Recorder (No|Number)","\R"
-		, "Indications","Medications","\R"
-		, "Hookup time","Location","Acct Num"]
+		, "Indications","Medications","\R"]
 	labels[1] := ["Name","null","Test_date","null"
 		, "null","MRN","null","null"
 		, "DOB","VOID_Age","Sex","null"
 		, "Scan_date","Ordering","null"
 		, "Hookup_tech","VOID_Duration","null"
 		, "Scanned_by","Device_SN","null"
-		, "Indication","VOID_meds","null"
-		, "Hookup_time","Site","Billing"]
+		, "Indication","VOID_meds","null"]
 	fieldvals(demog,1,"dem")
 	
 	sumStat := RegExReplace(columns(stregX(newtxt,"\s+Scan Criteria",1,0,"\s+RR Variability\s+\(",0)
@@ -1954,7 +3107,7 @@ Holter_Pr2:
 		, "Longest_tachy","Fastest","Longest_brady","Slowest"
 		, "sve:LongRR","sve:Pauses"]
 	scanParams(rateStat,1,"hrd",1)
-	fldVal["dem-Test_end"] := RegExReplace(fldVal["dem-Recording_time"],"(\d{1,2}) hr (\d{1,2}) min","$1:$2")	; Places value for fileWQ, without affecting fileOut
+	fldVal["dem-Test_end"] := RegExReplace(fldVal["dem-Recording_time"],"(\d{1,2}) hr (\d{1,2}) min","$1:$2")	; Places value for fileWQ
 	
 	rateStat := stregX(sumStat,"VENTRICULAR ECTOPY",1,0,"PACED|SUPRAVENTRICULAR ECTOPY",1)
 	fields[2] := ["Ventricular Beats","Singlets","Couplets","Runs","Fastest Run","Longest Run","R on T Beats"]
@@ -1966,164 +3119,138 @@ Holter_Pr2:
 	labels[3] := ["Total","Single","Pairs","Runs","Fastest","Longest"]
 	scanParams(rateStat,3,"sve",1)
 	
-	LWify()
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	fieldsToCSV()
 	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
 	StringReplace, tmpstr, tmpstr, `r, `n, ALL
-	fileout1 .= """INTERP"""
-	fileout2 .= """" trim(cleanspace(tmpstr)," `n") """"
-	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Holter"""
+	fieldcoladd("","INTERP",trim(cleanspace(tempstr)," `n"))
+	fieldcoladd("","Mon_type","Holter")
 	
 	ShortenPDF(fullDisc)
+	
+	fldval.done := true
 
 return
 }
 
-CheckProcPr2:
+CheckProc:
 {
 	eventlog("CheckProcPr")
 	fetchQuit := false
-	chk.Name := strVal(demog,"Name","\R")												; Name
-		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")							; Filter out 
-		chk.Last := trim(strX(chk.Name,"",1,1,",",1,1)," `r`n")								; NameL				must be [A-Z]
-		chk.First := trim(strX(chk.Name,",",1,1,"",0)," `r`n")								; NameF				must be [A-Z]
-	chk.MRN := strVal(demog,"Secondary ID","Admission ID")								; MRN
-	chk.DOB := strVal(demog,"Date of Birth","Age")										; DOB
-	chk.Sex := strVal(demog,"Gender","\R")												; Sex
-	chk.Prov := cleanspace(strVal(demog,"(Ordering|Referring) Phys(ician)?","\R"))		; Ordering MD
-	chk.Ind := strVal(demog,"Indications","Medications")								; Indication
-	chk.Med := strVal(demog,"Medications","\R")											; Meds (contains upload code)
-	chk.Ser := strVal(demog,"Recorder N(o|umber)","\R")									; Ser Num
-	chk.Date := strVal(demog,"Recording Start Date/Time","\R")							; Study date
 	
-	chkDT := parseDate(chk.Date)
-	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
-	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
-		FileDelete, %fileIn%
-		eventlog(chk.MRN " PDF archive exists, deleting '" fileIn "'")
-		fetchQuit := true
-		return
-	}
-	wq := new XML("worklist.xml")
-	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " chk.Ser "'][mrn='" chk.MRN "']"
-	tmpWQ := object()
-	if IsObject(wq.selectSingleNode(wqStr)) {											; perfect match
-		tmpWQ.id := wq.selectSingleNode(wqStr).getAttribute("id")
-		eventlog("Found registration ID " tmpWQ.id)
-	} else {
-		tmpWQ := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name)
-		if (tmpWQ.node = "done") {
-			MsgBox % fileIn " has been scanned already."
-			eventlog(fileIn " already scanned.")
-			fetchQuit := true
-			return
-		}
-	}
-	fldval["wqid"] := tmpWQ.id
-	pt := readwq(tmpWQ.id)
-	if (fileinsize < 3000000) {															; Shortened files are usually < 1-2 Meg
-		eventlog("Filesize predicts non-full disclosure PDF.")							; Full disclosure are usually ~ 9-19 Meg
-		MsgBox, 4112, Filesize error!, This file does not appear to be a full-disclosure PDF. Please download the proper file and try again.
+	if (fldval.node = "done") {
+	;~ if (zzzfldval.node = "done") {
+		MsgBox % fileIn " has been scanned already.`n`nDeleting file."
+		eventlog(fileIn " already scanned. PDF deleted.")
+		FileDelete, % fileIn
 		fetchQuit := true
 		return
 	}
 	
-	if (pt.acct) {																		; <acct> exists, has been registered or uploaded through TRRIQ
-		eventlog("Pulled valid data for " pt.name " " pt.mrn " " pt.date)
-		ptDem["mrn"] := pt.mrn															; fill ptDem[] with values
-		ptDem["loc"] := pt.site
-		ptDem["EncDate"] := pt.date
-		ptDem["Account Number"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
-		ptDem["nameL"] := strX(pt.name,"",0,1,",",1,1)
-		ptDem["nameF"] := strX(pt.name,",",1,1,"",0)
-		ptDem["Sex"] := pt.sex
-		ptDem["dob"] := pt.dob
-		ptDem["Provider"] := pt.prov
-		ptDem["Indication"] := pt.ind
-		ptDem["loc"] := z1
+	ptDem := Object()																	; Populate temp object ptDem with parsed data from HL7 or PDF fldVal
+	ptDem["nameL"] := fldVal["dem-Name_L"]												; dem-Name contains ['] not [^]
+	ptDem["nameF"] := fldVal["dem-Name_F"] 
+	ptDem["Name"] := fldval["dem-Name"]
+	ptDem["mrn"] := fldVal["dem-MRN"] 
+	ptDem["DOB"] := fldVal["dem-DOB"] 
+	ptDem["Sex"] := fldVal["dem-Sex"]
+	ptDem["Loc"] := fldVal["dem-Site"]
+	ptDem["Account"] := fldVal["dem-Billing"]											; If want to force click, don't include Acct Num
+	ptDem["Provider"] := filterProv(fldVal["dem-Ordering"]).name
+	ptDem["EncDate"] := fldVal["dem-Test_date"]
+	ptDem["Indication"] := fldVal["dem-Indication"]
+	eventlog("PDF demog: " ptDem.nameL ", " ptDem.nameF " " ptDem.mrn " " ptDem.EncDate)
+	
+	if (fldval.acct) {																	; <acct> exists, has been registered or uploaded through TRRIQ
+		eventlog("Pulled valid data for " fldval.name " " fldval.mrn " " fldval.date)
 		MsgBox, 4160, Found valid registration, % "" 
-		  . pt.Name "`n" 
-		  . "MRN " pt.MRN "`n" 
-		  . "Acct " pt.Acct "`n" 
-		  . "Ordering: " pt.Prov "`n" 
-		  . "Study date: " pt.Date "`n`n" 
-	} else {																			; no prior TRRIQ data
-		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
-		Clipboard := chk.Last ", " chk.First											; fill clipboard with name, so can just paste into CIS search bar
+		  . fldval.name "`n" 
+		  . "MRN " fldval.mrn "`n" 
+		  . "Acct " fldval.acct "`n" 
+		  . "Ordering: " fldval.prov "`n" 
+		  . "Study date: " fldval.date "`n`n" 
+	} 
+	else {
+	;~ else if false {
+		/*	Did not return based on done or valid status, 
+		 *	and has not been validated yet so no prior TRRIQ data
+		 */
+		Clipboard := ptDem.nameL ", " ptDem.nameF											; fill clipboard with name, so can just paste into CIS search bar
 		MsgBox, 4096,, % "Extracted data for:`n"
-			. "   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
+			. "   " ptDem.nameL ", " ptDem.nameF "`n"
+			. "   " ptDem.mrn "`n"
+			. "   " ptDem.EncDate "`n`n"
 			. "Paste clipboard into CIS search to select patient and encounter"
-			
-		ptDem["nameL"] := chk.Last														; Placeholder values for fetchGUI from PDF
-		ptDem["nameF"] := chk.First
-		ptDem["mrn"] := chk.MRN
-		ptDem["DOB"] := chk.DOB
-		ptDem["Sex"] := chk.Sex
-		ptDem["Loc"] := chk.Loc
-		ptDem["Account number"] := chk.Acct												; If want to force click, don't include Acct Num
-		ptDem["Provider"] := filterProv(chk.Prov).name
-		ptDem["EncDate"] := chk.Date
-		ptDem["Indication"] := chk.Ind
 		
-		fetchQuit:=false
 		gosub fetchGUI
 		gosub fetchDem
+		checkFetchDem(fldVal["dem-Name_L"],fldVal["dem-Name_F"],fldVal["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldVal)
 		if (fetchQuit=true) {
 			return
 		}
+		/*	When fetchDem successfully completes,
+		 *	replace fldVal with newly acquired values
+		 */
+		fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
+		fldVal["dem-Name_L"] := fldval["Name_L"] := RegExReplace(ptDem["nameL"],"\^","'")
+		fldVal["dem-Name_F"] := fldval["Name_F"] := RegExReplace(ptDem["nameF"],"\^","'")
+		fldVal["dem-MRN"] := ptDem["mrn"] 
+		fldVal["dem-DOB"] := ptDem["DOB"] 
+		fldVal["dem-Sex"] := ptDem["Sex"]
+		fldVal["dem-Site"] := ptDem["Loc"]
+		fldVal["dem-Billing"] := ptDem["Account"]
+		fldVal["dem-Ordering"] := ptDem["Provider"]
+		fldVal["dem-Test_date"] := ptDem["EncDate"]
+		fldVal["dem-Indication"] := ptDem["Indication"]
 		
-		tmp:=fuzzysearch(format("{:U}",chk.Last ", " chk.First), format("{:U}",ptDem["nameL"] ", " ptDem["nameF"]))
-		if (tmp > 0.15) {
-			eventlog("Name error. "
-				. "Parsed """ chk.mrn """, """ chk.Last ", " chk.First """ "
-				. "Grabbed """ ptDem["mrn"] """, """ ptDem["nameL"] ", " ptDem["nameF"] """.")
-				
-			if (chk.MRN=ptDem["mrn"]) {													; correct MRN but bad name match
-				MsgBox, 262193, % "Name error (" round((1-tmp)*100,2) "%)"
-					, % "Name does not match!`n`n"
-					.	"	Parsed:	" chk.Last ", " chk.First "`n"
-					.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
-					.	"OK = use " ptDem["nameL"] ", " ptDem["nameF"] "`n`n"			; "OK" will accept this fetchDem data
-					.	"Cancel = skip this file"
-				IfMsgBox, Cancel
-				{
-					eventlog("Cancel this PDF.")
-					fetchQuit:=true														; cancel out of processing file
-					return
-				}
-			} else {																	; just plain doesn't match
-				MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
-					, % "Name does not match!`n`n"
-					.	"	Parsed:	" chk.Last ", " chk.First "`n"
-					.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
-					.	"Skipping this file."
-					
-				eventlog("Demographics mismatch.")
-				fetchQuit:=true
-				return
+		filecheck()
+		FileOpen(".lock", "W")																; Create lock file.
+			if (fldval.wqid) {
+				id := fldval.wqid
+			} else {
+				id := A_TickCount 															; create wqid record if it doesn't exist somehow
+				wq.addElement("enroll","/root/pending",{id:id})
 			}
-		}
+			newID := "/root/pending/enroll[@id='" id "']"
+			ptDem.date := parseDate(ptDem["EncDate"]).YMD
+			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
+			wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
+			wqSetVal(id,"mrn",ptDem["mrn"])
+			wqSetVal(id,"sex",ptDem["Sex"])
+			wqSetVal(id,"dob",ptDem["dob"])
+			wqSetVal(id,"dev"
+				, (montype="PR" ? "Mortara H3+ - " 
+				: montype="BGH" ? "BodyGuardian Heart - BG"
+				: montype="ZIO" ? "Zio" : "")
+				. fldVal["dem-Device_SN"])
+			wqSetVal(id,"prov",ptDem["Provider"])
+			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
+			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
+			wqSetVal(id,"ind",ptDem["Indication"])
+		filedelete, .lock
+		writeOut("/root/pending","enroll[@id='" id "']")
+		
+		eventlog("Demographics updated for WQID " fldval.wqid ".") 
 	}
-	/*	When fetchDem successfully completes,
-	 *	replace the fields in demog with newly acquired values
-	 */
-	chk.Name := ptDem["nameL"] ", " ptDem["nameF"] 
-	fldval["name_L"] := ptDem["nameL"]
-	fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i`a)Name: (.*)\R","Name:   " chk.Name "   `n")
-	demog := RegExReplace(demog,"i)Secondary ID: (.*) Admission ID:","Secondary ID:   " ptDem["mrn"] "                   Admission ID:")
-	demog := RegExReplace(demog,"i)Date Of Birth: (.*) Age:", "Date Of Birth:   " ptDem["DOB"] "  Age:")
-	demog := RegExReplace(demog,"i`a)(Ordering|Referring) Phys(ician)?:? (.*)\R", "Referring Physician:   " ptDem["Provider"] "`n")
-	demog := RegExReplace(demog,"i`a)Indications: (.*) Medications:", "Indications:   " ptDem["Indication"] "   Medications:")	
-	demog := RegExReplace(demog,"i`a)Recording Start Date/Time: (.*)\R", "Recording Start Date/Time:   " chk.Date "`n")
-	demog := RegExReplace(demog,"i`a)Analyst: (.*) Recorder N(o|umber)","Analyst:   $1   Recorder No")
-	demog := RegExReplace(demog,"i`a)Technician: (.*) Recording Duration","Hookup Tech:   $1   Recording Duration")
-	demog .= "   Hookup time:   " ptDem["Hookup time"] "`n"
-	demog .= "   Location:    " ptDem["Loc"] "`n"
-	demog .= "   Acct Num:    " ptDem["Account number"] "`n"
-	eventlog("Demog replaced.")
 	
-	return
+	;---Copy ptDem back to fldVal, whether fetched or not
+	fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
+	fldVal["dem-Name_L"] := fldval["Name_L"] := RegExReplace(ptDem["nameL"],"\^","'")
+	fldVal["dem-Name_F"] := fldval["Name_F"] := RegExReplace(ptDem["nameF"],"\^","'")
+	fldVal["dem-MRN"] := fldval["MRN"] := ptDem["mrn"] 
+	fldVal["dem-DOB"] := ptDem["DOB"] 
+	fldVal["dem-Sex"] := ptDem["Sex"]
+	fldVal["dem-Site"] := ptDem["Loc"]
+	fldVal["dem-Billing"] ptDem["Account"]
+	fldVal["dem-Ordering"] := ptDem["Provider"]
+	fldVal["dem-Test_date"] := ptDem["EncDate"]
+	fldVal["dem-Indication"] := ptDem["Indication"]
+	
+return
 }
 
 Zio:
@@ -2146,26 +3273,21 @@ Zio:
 	demo2 := onecol(cleanblank(stregX(zcol,"\s+Prescribing Clinician",1,0,"\s+(Supraventricular Tachycardia \(|Ventricular tachycardia \(|AV Block \(|Pauses \(|Atrial Fibrillation)",1)))
 	demog := RegExReplace(demo1 "`n" demo2,">>>end") ">>>end"
 	
-	gosub checkProcZio											; check validity of PDF, make demographics valid if not
-	if (fetchQuit=true) {
-		return													; fetchGUI was quit, so skip processing
-	}
+	znam := strVal(zcol,"Report for","Date of Birth")
+	formatfield("dem","Name",znam)
 	
-	znam := strVal(demog,"Name","Date of Birth")
-	formatField("dem","Name_L",strX(znam, "", 1,0, ",", 1,1))
-	formatField("dem","Name_F",strX(znam, ", ", 1,2, "", 0))
-	
-	fields[1] := ["Date of Birth","Patient ID","Gender","Primary Indication","Prescribing Clinician","Managing Location",">>>end"]
+	fields[1] := ["Date of Birth","Patient ID","Gender","Primary Indication","Prescribing Clinician","(Referring Clinician|Managing Location)",">>>end"]
 	labels[1] := ["DOB","MRN","Sex","Indication","Ordering","Site","end"]
 	fieldvals(demog,1,"dem")
 	
-	formatField("dem","Test_date",fldval["Test_date"])
-	formatField("dem","Billing",fldval["Acct"])
-	
+	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
+	enroll := strVal(tmp,"Enrollment Period","Analysis Time")
+	fieldcoladd("dem","Test_date",strVal(enroll,"hours?",","))
+	fieldcoladd("dem","Test_end",strVal(enroll,"to\s",","))
+	fieldcoladd("dem","Analysis_time",strVal(tmp,"Analysis Time","\(after"))
+	fieldcoladd("dem","Recording_time",strVal(tmp,"Enrollment Period","\R\d{1,2}/\d{1,2}"))
+
 	znums := columns(zcol ">>>end","Enrollment Period",">>>end",1)
-	
-	formatField("dem","Recording_time",chk.enroll)
-	formatField("dem","Analysis_time",chk.Analysis)
 	
 	zrate := columns(znums,"Heart Rate","Patient Events",1)
 	fields[3] := ["Max","Min","Avg","\R"]
@@ -2238,15 +3360,22 @@ Zio:
 		fieldvals(zve_longest,8,"ve")
 	}
 	
-	LWify()
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	fieldsToCSV()
+	
 	zinterp := cleanspace(columns(newtxt,"Preliminary Findings","SIGNATURE",,"Final Interpretation"))
 	zinterp := trim(StrX(zinterp,"",1,0,"Final Interpretation",1,20))
-	fileout1 .= """INTERP"""
-	fileout2 .= """" . zinterp . """"
-	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Holter"""
+	
+	fieldcoladd("","INTERP",zinterp)
+	fieldcoladd("","Mon_type","Holter")
 	
 	FileCopy, %fileIn%, %fileIn%sh.pdf
+	
+	fldval.done := true
 
 return
 }
@@ -2254,7 +3383,6 @@ return
 ZioArrField(txt,fld) {
 	str := stregX(txt,fld,1,0,"#####",1)
 	if instr(str,"Episodes") {
-		;~ str := strX(columns(str,fld,"#####",0,"Episodes"),"Episodes",1,0,"",0)
 		str := columns(str,fld,"#####",0,"Episodes")
 		str := RegExReplace(str,"i)None found")
 	}
@@ -2275,119 +3403,59 @@ ZioArrField(txt,fld) {
 	return trim(cleanspace(newStr))
 }
 
-CheckProcZio:
-{
-	eventlog("CheckProcZio")
-	fetchQuit := false
-	chk.Name := trim(cleanSpace(stregX(zcol,"Report for",1,1,"Date of Birth",1)))
-		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")									; Filter out 
-		chk.Last := trim(strX(chk.Name, "", 1,1, ",", 1,1))
-		chk.First := trim(strX(chk.Name, ", ", 1,2, "", 0))
-	chk.DOB := RegExReplace(strVal(demog,"Date of Birth","Patient ID"),"\s+\(.*(yrs|mos)\)")		; DOB
-	chk.MRN := strVal(demog,"Patient ID","Gender")											; MRN
-	chk.Sex := strVal(demog,"Gender","Primary Indication")											; Sex
-	chk.Ind := RegExReplace(strVal(demog,"Primary Indication","Prescribing Clinician"),"\(R00.0\)\s+")				; Indication
-	chk.Prov:= strVal(demog,"Prescribing Clinician","(Referring Clinician|Managing Location)")												; Ordering MD
-	chk.Loc := strVal(demog,"Managing Location",">>>end")											; MRN
+hl7fld(bl,pre) {
+	global fields, labels, fldval
 	
-	demog := "Name   " chk.Last ", " chk.First "`n" demog
-	
-	tmp := oneCol(stregX(zcol,"Enrollment Period",1,0,"Heart\s+Rate",1))
-		chk.enroll := strVal(tmp,"Enrollment Period","Analysis Time")
-		chk.DateStart := strVal(chk.enroll,"hours?",",")
-		chk.DateEnd := strVal(chk.enroll,"to\s",",")
-		chk.Date := chk.DateStart
-		chk.Analysis := strVal(tmp,"Analysis Time","\(after")
-		chk.enroll := stregX(chk.enroll,"",1,0,"\s{3}",1)
-	
-	zcol := stregx(zcol,"\s+(Supra)?ventricular tachycardia \(",1,0,">>>end",1)
-	
-	/*	
-	 *	Return from CheckProc for testing
-	 */
-		;~ Return
-	
-	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	;~ if (!(chk.Last~="[a-z]+")															; Check field values to see if proper demographics
-		;~ && !(chk.First~="[a-z]+") 														; meaning names in ALL CAPS
-		;~ && (chk.Acct~="\d{8}"))															; and EncNum present
-	;~ {
-		;~ MsgBox, 4132, Valid PDF, % ""
-			;~ . chk.Last ", " chk.First "`n"
-			;~ . "MRN " chk.MRN "`n"
-			;~ . "Acct " chk.Acct "`n"
-			;~ . "Ordering: " chk.Prov "`n"
-			;~ . "Study date: " chk.DateStart "`n`n"
-			;~ . "Is all the information correct?`n"
-			;~ . "If NO, reacquire demographics."
-		;~ IfMsgBox, Yes																; All tests valid
-		;~ {
-			;~ return																	; Select YES, return to processing Holter
-		;~ } 
-		;~ else 																		; Select NO, reacquire demographics
-		;~ {
-			;~ MsgBox, 4096, Adjust demographics, % chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			;~ . "Paste clipboard into CIS search to select patient and encounter"
-		;~ }
-	;~ }
-	;~ else 																			; Not valid PDF, get demographics post hoc
+	for k, i in fields[bl]																; Step through each val "i" from fields[bl,k]
 	{
-		eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
-		MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
+		lbl := labels[bl][k]
+		res := fldval[i]
+		formatField(pre,lbl,res)
 	}
-	; Either invalid PDF or want to correct values
-	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
-	ptDem["nameF"] := chk.First
-	ptDem["MRN"] := chk.MRN
-	ptDem["DOB"] := chk.DOB
-	ptDem["Sex"] := chk.Sex
-	ptDem["Loc"] := chk.Loc
-	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := filterProv(chk.Prov).name
-	ptDem["EncDate"] := chk.DateStart
-	ptDem["Indication"] := chk.Ind
-	
-	fetchQuit:=false
-	gosub fetchGUI
-	gosub fetchDem
-	if (fetchQuit=true) {
-		return
-	}
-	
-	if (tmp:=fuzzysearch(chk.Last " " chk.First, ptDem["nameL"] " " ptDem["nameF"]) > 0.15) {
-		MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
-			, % "Name does not match!`n`n"
-			.	"	Parsed:	" chk.Last ", " chk.First "`n"
-			.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
-			.	"Skipping this file."
-			
-		eventlog("Name error. Parsed """ chk.Last ", " chk.First """ Grabbed """ ptDem["nameL"] ", " ptDem["nameF"] """.")
-		fetchQuit:=true
-		return
-	}
-	/*	When fetchDem successfully completes,
-	 *	replace the fields in demog with newly acquired values
-	 */
-	fldval["Test_date"] := chk.DateStart
-	fldval["Test_end"] := chk.DateEnd
-	fldval["name_L"] := ptDem["nameL"]
-	fldval["name_F"] := ptDem["nameF"]
-	fldval["MRN"] := ptDem["MRN"]
-	fldval["Acct"] := ptDem["Account Number"]
-	fldval["dem-Billing"] := fldval["Acct"]
-	fldval["dem-Test_date"] := chk.DateStart
-	fldval["dem-Test_end"] := chk.DateEnd
-	
-	demog := RegExReplace(demog,"i)Name(.*)Date of Birth","Name   " ptDem["nameL"] ", " ptDem["nameF"] "`nDate of Birth",,1)
-	demog := RegExReplace(demog,"i)Date of Birth(.*)Patient ID","Date of Birth   " ptDem["DOB"] "`nPatient ID",,1)
-	demog := RegExReplace(demog,"i)Patient ID(.*)Gender","Patient ID   " ptDem["MRN"] "`nGender",,1)
-	demog := RegExReplace(demog,"i)Gender(.*)Primary Indication","Gender   " ptDem["Sex"] "`nPrimary Indication",,1)
-	demog := RegExReplace(demog,"i)Primary Indication(.*)Prescribing Clinician","Primary Indication   " ptDem["Indication"] "`nPrescribing Clinician",,1)
-	demog := RegExReplace(demog,"i)Prescribing Clinician(.*)(Referring Clinician|Managing Location)","Prescribing Clinician   " ptDem["Provider"] "`nManaging Location",,1)
-	demog := RegExReplace(demog,"i)Managing Location(.*)>>>end","Managing Location   " ptDem["loc"] "`n>>>end",,1)
-	
 	return
+}
+
+Event_BGH_Hl7:
+{
+	eventlog("Event_BGH_HL7")
+	monType := "BGH"
+	
+	fieldcoladd("dem","Test_date",niceDate(obxVal["Enroll_Start_Dt"]))
+	fieldcoladd("dem","Test_end",niceDate(obxVal["Enroll_End_Dt"]))
+	
+	count:=[]																			; create object for counts
+	count["Patient-Activated"]:=0														; zero the results instead of null
+	count["Auto-Detected"]:=0
+	count["Stable"]:=0
+	count["Serious"]:=0
+	count["Critical"]:=0
+	for key,val in obxVal																; recurse through obxVal results
+	{
+		if (key~="Event_Acuity|Event_Type") {											; count Critical/Serious/Stable and Auto/Manual events
+			count[val] ++																; more reliable than parsing PDF
+		}
+	}
+	fieldcoladd("counts","Critical",count["Critical"])
+	fieldcoladd("counts","Serious",count["Serious"])
+	fieldcoladd("counts","Stable",count["Stable"])
+	fieldcoladd("counts","Manual",count["Patient-Activated"])
+	fieldcoladd("counts","Auto",count["Auto-Detected"])
+	fieldcoladd("counts","Total",count["Auto-Detected"]+count["Patient-Activated"])
+	
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	fieldstoCSV()
+	
+	fieldcoladd("","Mon_type","Event")
+	
+	FileCopy, %fileIn%, %fileIn%sh.pdf
+	
+	fldval.done := true
+	
+Return
 }
 
 Event_BGH:
@@ -2396,7 +3464,7 @@ Event_BGH:
 	monType := "BGH"
 	
 	name := "Patient Name:   " trim(columns(newtxt,"Patient:","Enrollment Info",1,"")," `n")
-	demog := columns(newtxt,"","(Summarized Findings|Event Summary)",,"Enrollment Info")
+	demog := columns(newtxt,"","(Summarized Findings|Event Summary|Rhythm Summary)",,"Enrollment Info")
 	enroll := RegExReplace(strX(demog,"Enrollment Info",1,0,"",0),": ",":   ")
 	diag := "Diagnosis:   " trim(stRegX(demog,"`a)Diagnosis \(.*\R",1,1,"(Preventice|Enrollment Info)",1)," `n")
 	demog := columns(demog,"\s+Patient ID","Diagnosis \(",,"Monitor   ") "#####"
@@ -2415,135 +3483,32 @@ Event_BGH:
 	}
 	demog := demog0
 	
-	gosub checkProcBGH											; check validity of PDF, make demographics valid if not
-	if (fetchQuit=true) {
-		return													; fetchGUI was quit, so skip processing
-	}
-	
 	fields[1] := ["Patient Name", "Patient ID", "Physician", "Gender", "Date of Birth", "Practice", "Diagnosis"]
 	labels[1] := ["Name", "MRN", "Ordering", "Sex", "DOB", "VOID_Practice", "Indication"]
 	fieldvals(demog,1,"dem")
 	fldval["name_L"] := ptDem["nameL"]
 	
-	fields[2] := ["Date Recorded","Date Ended","\R"]
-	labels[2] := ["Test_date","Test_end","VOID"]
-	fieldvals(enroll,2,"dem")
-	fieldColAdd("dem","Billing",ptDem["Account Number"])
+	tmpDT := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
+	fieldcoladd("dem","Test_date",trim(strX(tmpDT,"",1,1," ",1,1)," `r`n"))
+	fieldcoladd("dem","Test_end",trim(strX(tmpDT," - ",0,3,"",0)," `r`n"))
 	
 	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
 	fieldvals(enroll,3,"counts")
 	
-	fileOut1 .= ",""Mon_type"""
-	fileOut2 .= ",""Event"""
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	fieldstoCSV()
+	
+	fieldcoladd("","Mon_type","Event")
 	
 	FileCopy, %fileIn%, %fileIn%sh.pdf
 	
+	fldval.done := true
+	
 Return
-}
-
-CheckProcBGH:
-{
-	eventlog("CheckProcBGH")
-	fetchQuit := false
-	chk.Name := strVal(demog,"Patient Name","Patient ID")										; Name
-		chk.Name := RegExReplace(chk.Name,"i),?( JR| III| IV)$")									; Filter out JR
-		chk.First := trim(strX(chk.Name,"",1,1," ",1,1)," `r`n")									; NameL				must be [A-Z]
-		chk.Last := trim(strX(chk.Name," ",0,1,"",0)," `r`n")										; NameF				must be [A-Z]
-	chk.MRN := strVal(demog,"Patient ID","Physician")											; MRN
-	chk.Prov := strVal(demog,"Physician","Gender")												; Ordering MD
-	chk.Sex := strVal(demog,"Gender","Date of Birth")											; Sex
-	chk.DOB := strVal(demog,"Date of Birth","Practice")											; DOB
-	chk.Ind := strVal(demog,"Diagnosis","\R")													; Indication
-	chk.Ser := 																					; No S/N in PDF!
-	chk.Date := strVal(enroll,"Period \(.*\)","Event Counts")									; Study date
-		chk.DateEnd := trim(strX(chk.Date," - ",0,3,"",0)," `r`n")
-		chk.DateStart := trim(strX(chk.Date,"",1,1," ",1,1)," `r`n")
-	
-	chkDT := parseDate(chk.DateStart)
-	chkFilename := chk.MRN " * " chkDT.MM "-" chkDT.DD "-" chkDT.YYYY
-	if FileExist(holterDir . "Archive\" . chkFilename . ".pdf") {
-		FileDelete, %fileIn%
-		eventlog(chk.MRN " PDF archive exists, deleting '" fileIn "'")
-		fetchQuit := true
-		return
-	}
-	wq := new XML("worklist.xml")
-	fldval["wqid"] := findWQid(chkDT.YYYY chkDT.MM chkDT.DD,chk.MRN,chk.Name).id
-
-	eventlog("PDF demog: " chk.MRN " - " chk.Last ", " chk.First)
-	Clipboard := chk.Last ", " chk.First												; fill clipboard with name, so can just paste into CIS search bar
-	MsgBox, 4096,, % "Extracted data for:`n   " chk.Last ", " chk.First "`n   " chk.MRN "`n   " chk.Loc "`n   " chk.Acct "`n`n"
-		. "Paste clipboard into CIS search to select patient and encounter"
-	; Either invalid PDF or want to correct values
-	ptDem["nameL"] := chk.Last															; Placeholder values for fetchGUI from PDF
-	ptDem["nameF"] := chk.First
-	ptDem["mrn"] := chk.MRN
-	ptDem["DOB"] := chk.DOB
-	ptDem["Sex"] := chk.Sex
-	ptDem["Loc"] := chk.Loc
-	ptDem["Account number"] := chk.Acct													; If want to force click, don't include Acct Num
-	ptDem["Provider"] := filterProv(chk.Prov).name
-	ptDem["EncDate"] := chk.DateStart
-	ptDem["EndDate"] := chk.DateEnd
-	ptDem["Indication"] := chk.Ind
-	
-	fetchQuit:=false
-	gosub fetchGUI
-	gosub fetchDem
-	if (fetchQuit=true) {
-		return
-	}
-	
-	tmp:=fuzzysearch(format("{:U}",chk.Last ", " chk.First), format("{:U}",ptDem["nameL"] ", " ptDem["nameF"]))
-	if (tmp > 0.15) {
-		eventlog("Name error. "
-			. "Parsed """ chk.mrn """, """ chk.Last ", " chk.First """ "
-			. "Grabbed """ ptDem["mrn"] """, """ ptDem["nameL"] ", " ptDem["nameF"] """.")
-			
-		if (chk.MRN=ptDem["mrn"]) {														; correct MRN but bad name match
-			MsgBox, 262193, % "Name error (" round((1-tmp)*100,2) "%)"
-				, % "Name does not match!`n`n"
-				.	"	Parsed:	" chk.Last ", " chk.First "`n"
-				.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
-				.	"OK = use " ptDem["nameL"] ", " ptDem["nameF"] "`n`n"				; "OK" will accept this fetchDem data
-				.	"Cancel = skip this file"
-			IfMsgBox, Cancel
-			{
-				eventlog("Cancel this PDF.")
-				fetchQuit:=true															; cancel out of processing file
-				return
-			}
-		} else {																		; just plain doesn't match
-			MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
-				, % "Name does not match!`n`n"
-				.	"	Parsed:	" chk.Last ", " chk.First "`n"
-				.	"	Grabbed:	" ptDem["nameL"] ", " ptDem["nameF"] "`n`n"
-				.	"Skipping this file."
-				
-			eventlog("Demographics mismatch.")
-			fetchQuit:=true
-			return
-		}
-	}
-	
-	/*	When fetchDem successfully completes,
-	 *	replace the fields in demog with newly acquired values
-	 */
-	fldval["dem-Site"] := ptDem["Loc"]
-	fldval["dem-Billing"] := ptDem["Account Number"]
-	chk.Name := ptDem["nameF"] " " ptDem["nameL"] 
-		fldval["name_L"] := ptDem["nameL"]
-		fldval["name_F"] := ptDem["nameF"]
-	demog := RegExReplace(demog,"i)Patient Name: (.*?)Patient ID","Patient Name:   " chk.Name "`nPatient ID")
-	demog := RegExReplace(demog,"i)Patient ID(.*?)Physician","Patient ID   " ptDem["mrn"] "`nPhysician")
-	demog := RegExReplace(demog,"i)Physician(.*?)Gender", "Physician   " ptDem["Provider"] "`nGender")
-	demog := RegExReplace(demog,"i)Gender(.*?)Date of Birth", "Gender   " ptDem["Sex"] "`nDate of Birth")
-	demog := RegExReplace(demog,"i)Date of Birth(.*?)Practice", "Date of Birth   " ptDem["DOB"] "`nPractice")	
-	enroll := RegExReplace(enroll,"i)Period(.*?)\R", "$1`nDate Recorded:   " chk.DateStart "`nDate Ended:   " chk.DateEnd "`n") 
-	eventlog("Demog replaced.")
-	
-	return
 }
 
 oneCol(txt) {
@@ -2676,7 +3641,7 @@ fieldvals(x,bl,bl2) {
 		cleanSpace(m)
 		cleanColon(m)
 		fldval[pre "-" lbl] := m
-		fldval[lbl] := m
+		;~ fldval[lbl] := m
 		
 		formatField(pre,lbl,m)
 	}
@@ -2696,7 +3661,7 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 		eventlog("*** strVal fail: ''" n1 "' ... '" n2 "'")								; Note the bad fields
 	}
 
-	return trim(str.value("res")," :`n")
+	return trim(str.value("res")," :`n`r`t")
 }
 
 scanParams(txt,blk,pre:="par",rx:="") {
@@ -2856,8 +3821,20 @@ formatField(pre, lab, txt) {
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
 	txt := trim(txt)
 	
-	if (lab~="Referring|Ordering") {
-		tmpCrd := checkCrd(RegExReplace(txt,"i)^Dr(\.)?\s"))				;	Get Crd, Grp, and Eml via checkCrd() <== shouldn't this already be determined?
+	if (lab="Name") {
+		txt := RegExReplace(txt,"i),?( JR| III| IV)$")						; Filter out name suffixes
+		name := parseName(txt)
+		fieldColAdd(pre,"Name",name.last ", " name.first)
+		fieldColAdd(pre,"Name_L",name.last)
+		fieldColAdd(pre,"Name_F",name.first)
+		return
+	}
+	if (lab="DOB") {														; remove (age) from DOB
+		txt := strX(txt,"",1,0," (",2)
+	}
+
+	if (lab~="^(Referring|Ordering)$") {
+		tmpCrd := checkCrd(txt)												; Get Crd, Grp, and Eml via checkCrd()
 		fieldColAdd(pre,lab,tmpCrd.best)
 		fieldColAdd(pre,lab "_grp",tmpCrd.group)
 		fieldColAdd(pre,lab "_eml",Docs[tmpCrd.Group ".eml",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)])
@@ -2865,38 +3842,6 @@ formatField(pre, lab, txt) {
 			eventlog("*** Blank Crd value ***")
 		}
 		return
-	}
-	
-;	Lifewatch Holter specific search fixes
-	if (monType="H") {
-		if txt ~= ("^[0-9]+.*at.*(AM|PM)$") {								;	Split timed results "139 at 8:31:47 AM" into two fields
-			tx1 := trim(strX(txt,,1,1," at",1,3))							;		labels e.g. xxx and xxx_time
-			tx2 := trim(strX(txt," at",1,3,"",1,0))							;		result e.g. "139" and "8:31:47 AM"
-			fieldColAdd(pre,lab,tx1)
-			fieldColAdd(pre,lab "_time",tx2)
-			return
-		}
-		if (lab~="i)(Longest|Fastest)") {
-			fieldColAdd(pre,lab,txt)
-			fieldColAdd(pre,lab "_time","")
-			return
-		}
-		if (txt ~= "^[0-9]+\s\([0-9.]+\%\)$") {								;	Split percents |\(.*%\)
-			tx1 := trim(strX(txt,,1,1,"(",1,1))
-			tx2 := trim(strX(txt,"(",1,1,"%",1,0))
-			fieldColAdd(pre,lab,tx1)
-			fieldColAdd(pre,lab "_per",tx2)
-			return
-		}
-		if (txt ~= "^[0-9,]{1,}\/[0-9,]{1,}$") {							;	Split multiple number value results "5/0" into two fields, ignore date formats (5/1/12)
-			tx1 := strX(txt,,1,1,"/",1,1,n)
-			tx2 := SubStr(txt,n+1)
-			lb1 := strX(lab,,1,1,"_",1,1,n)									;	label[] fields are named "xxx_yyy", split into "xxx" and "yyy"
-			lb2 := SubStr(lab,n+1)
-			fieldColAdd(pre,lb1,tx1)
-			fieldColAdd(pre,lb2,tx2)
-			return
-		}
 	}
 	
 ;	Preventice Holter specific fixes
@@ -2919,6 +3864,11 @@ formatField(pre, lab, txt) {
 				tmp := zDigit(tmp-24)													; subtract 24 hrs
 				txt := RegExReplace(txt,"\d{2}:",tmp ":")
 			}
+			fieldColAdd(pre,lab,txt)
+			return
+		}
+		if (lab ~= "i)_time") {															; Any other _Time field, remove the date
+			txt := parseDate(txt).time
 		}
 		if (txt ~= "^([0-9.]+( BPM( Avg)?)?).+at.+(\d{1,2}:\d{2}:\d{2}).*(AM|PM)?$") {		;	Split timed results "139 at 8:31:47 AM" into two fields
 			tx1 := trim(stregX(txt,"",1,0," at ",1))
@@ -2986,9 +3936,14 @@ formatField(pre, lab, txt) {
 }
 
 fieldColAdd(pre,lab,txt) {
-	global fileOut1, fileOut2
-	fileOut1 .= """" pre "-" lab ""","
+	global fileOut1, fileOut2, fldVal
+	pre := (pre="") ? "" : pre "-"
+	if instr(fileOut1,"""" pre lab """") {
+		return
+	}
+	fileOut1 .= """" pre lab ""","
 	fileOut2 .= """" txt ""","
+	fldVal[pre lab] := txt
 	return
 }
 
@@ -3002,17 +3957,19 @@ checkCrd(x) {
 	if (x="") {																			; fuzzysearch fails if x = ""
 		return 
 	}
-	for rowidx,row in Docs
+	x := filterprov(x).name
+	for rowidx,row in Docs																; Groups
 	{
-		if (substr(rowIdx,-3)=".eml")
+		if (substr(rowIdx,-3)=".eml") {
 			continue
-		for colidx,item in row
+		}
+		for colidx,item in row															; Providers
 		{
-			if (item="") {																; empty field will break fuzzysearch
-				continue
-			}
+			if (item="") {                                ; empty field will break fuzzysearch 
+				continue 
+			} 
 			res := fuzzysearch(x,item)
-			if (res<fuzz) {																; less fuzzy, new best match
+			if (res<fuzz) {
 				fuzz := res
 				best:=item
 				group:=rowidx
@@ -3022,28 +3979,90 @@ checkCrd(x) {
 	return {"fuzz":fuzz,"best":best,"group":group}
 }
 
+checkFetchDem(nameL,nameF,mrn) {
+/*	Check if fetchDem NAME and MRN match that parsed from PDF
+	nameL, nameF, mrn all required params
+	If bad match, returns fetchQuit=true
+	If acceptable, returns fetchQuit=false
+*/
+	global ptDem, fetchQuit
+	fullName := nameL ", " nameF
+	fullNameDem := RegExReplace(ptDem["nameL"] ", " ptDem["nameF"],"\^","'")			; fetched ptDem.nameL has [^], passed nameL has [']
+	fuzz := fuzzysearch(format("{:U}",fullName), format("{:U}",fullNameDem))
+	thresh := 0.15													
+	
+	if (fuzz > thresh) {
+		eventlog("Name fuzz error. "
+			. "Parsed """ mrn """, """ fullName """ "
+			. "Grabbed """ ptDem["mrn"] """, """ fullNameDem """.")
+			
+		if (mrn=ptDem["mrn"]) {															; correct MRN but bad name match
+			MsgBox, 262193, % "Name error (" round((1-tmp)*100,2) "%)"
+				, % "Name does not match!`n`n"
+				.	"	Parsed:	" fullName "`n"
+				.	"	Grabbed:	" fullNameDem "`n`n"
+				.	"OK = use " fullNameDem "`n`n"										; "OK" will accept this fetchDem data
+				.	"Cancel = skip this file"
+			IfMsgBox, Cancel
+			{
+				eventlog("Cancel this file.")
+				fetchQuit:=true															; cancel out of processing file
+				return
+			}
+		} else {																		; just plain doesn't match
+			MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
+				, % "Name does not match!`n`n"
+				.	"	Parsed:	" fullName "`n"
+				.	"	Grabbed:	" fullNameDem "`n`n"
+				.	"Skipping this file."
+				
+			eventlog("Demographics mismatch.")
+			fetchQuit:=true
+			return
+		}
+	}
+	
+	return
+}
+
 filterProv(x) {
+/*	Filters out all irregularities and common typos in Provider name from manual entry
+	Returns as {name:"Albers, Erin", site:"CRB"}
+	Provider-Site may be in error
+*/
 	global sites, sites0
 	
 	allsites := sites "|" sites0
 	RegExMatch(x,"i)-(" allsites ")\s*,",site)
 	x := trim(x)																		; trim leading and trailing spaces
-	x := RegExReplace(x,"i)-(" allsites ")$")											; remove trailing "LOUAY TONI(-tri)"
-	x := RegExReplace(x,"i)( [a-z](\.)? )"," ")												; remove middle initial "STEPHEN P SESLAR" to "Stephen Seslar"
+	x := RegExReplace(x,"i)\s*-\s*(" allsites ")$")										; remove trailing "LOUAY TONI(-tri)"
+	x := RegExReplace(x,"i)( [a-z](\.)? )"," ")											; remove middle initial "STEPHEN P SESLAR" to "Stephen Seslar"
 	x := RegExReplace(x,"i)^Dr(\.)?(\s)?")												; remove preceding "(Dr. )Veronica..."
 	x := RegExReplace(x,"i)^[a-z](\.)?\s")												; remove preceding "(P. )Ruggerie, Dennis"
 	x := RegExReplace(x,"i)\s[a-z](\.)?$")												; remove trailing "Ruggerie, Dennis( P.)"
-	x := RegExReplace(x,"i)-(" allsites ")\s*,",",")									; remove "SCHMER(-YAKIMA), VERONICA"
+	x := RegExReplace(x,"i)\s*-\s*(" allsites ")\s*,",",")								; remove "SCHMER(-YAKIMA), VERONICA"
 	x := RegExReplace(x,"i) (MD|DO)$")													; remove trailing "( MD)"
 	x := RegExReplace(x,"i) (MD|DO),",",")												; replace "Ruggerie MD, Dennis" with "Ruggerie, Dennis"
 	StringUpper,x,x,T																	; convert "RUGGERIE, DENNIS" to "Ruggerie, Dennis"
 	if !instr(x,", ") {
 		x := strX(x," ",1,1,"",1,0) ", " strX(x,"",1,1," ",1,1)							; convert "DENNIS RUGGERIE" to "RUGGERIE, DENNIS"
 	}
+	x := RegExReplace(x,"^, ")															; remove preceding "(, )Albers" in event this happens
 	if (site1="TRI") {																	; sometimes site improperly registered as "tri"
 		site1 := "TRI-CITIES"
 	}
 	return {name:x, site:site1}
+}
+
+IEGet(name="") {
+/*	from the very helpful post by jethrow
+	https://autohotkey.com/board/topic/47052-basic-webpage-controls-with-javascript-com-tutorial/
+*/
+	IfEqual, Name,, WinGetTitle, Name, ahk_class IEFrame     ;// Get active window if no parameter
+	Name := (Name="New Tab - Windows Internet Explorer")? "about:Tabs":RegExReplace(Name, " - (Windows|Microsoft)? ?Internet Explorer$")
+	for wb in ComObjCreate("Shell.Application").Windows()
+		if wb.LocationName=Name and InStr(wb.FullName, "iexplore.exe")
+			return wb
 }
 
 httpComm(url:="",verb:="") {
@@ -3108,15 +4127,13 @@ ObjHasValue(aObj, aValue, rx:="") {
     return, false, errorlevel := 1
 }
 
-strQ(var1,txt) {
+strQ(var1,txt,null:="") {
 /*	Print Query - Returns text based on presence of var
 	var1	= var to query
 	txt		= text to return with ### on spot to insert var1 if present
+	null	= text to return if var1="", defaults to ""
 */
-	if (var1="") {
-		return error
-	}
-	return RegExReplace(txt,"###",var1)
+	return (var1="") ? null : RegExReplace(txt,"###",var1)
 }
 
 countlines(hay,n) {
@@ -3149,6 +4166,56 @@ FilePrepend( Text, Filename ) {
     File.Close()
 }
 
+ParseName(x) {
+/*	Determine first and last name
+*/
+	if (x="") {
+		return error
+	}
+	x := trim(x)																		; trim edges
+	x := RegExReplace(x,"\'","^")														; replace ['] with [^] to avoid XPATH errors
+	x := RegExReplace(x," \w "," ")														; remove middle initial: Troy A Johnson => Troy Johnson
+	x := RegExReplace(x,"(,.*?)( \w)$","$1")											; remove trailing MI: Johnston, Troy A => Johnston, Troy
+	x := RegExReplace(x,"i),?( JR| III| IV)$")											; Filter out name suffixes
+	x := RegExReplace(x,"\s+"," ",ct)													; Count " "
+	
+	if instr(x,",") 																	; Last, First
+	{
+		last := trim(strX(x,"",1,0,",",1,1))
+		first := trim(strX(x,",",1,1,"",0))
+	}
+	else if (ct=1)																		; First Last
+	{
+		first := strX(x,"",1,0," ",1)
+		last := strX(x," ",1,1,"",0)
+	}
+	else if (ct>1)																		; James Jacob Jingleheimer Schmidt
+	{
+		x0 := x																			; make a copy to disassemble
+		n := 1
+		Loop
+		{
+			x0 := strX(x0," ",n,1,"",0)													; cut from first " " to end
+			if (x0="") {
+				q := trim(q,"|")
+				break
+			}
+			q .= x0 "|"																	; add to button q
+		}
+		last := cmsgbox("Name check",x "`n" RegExReplace(x,".","--") "`nWhat is the patient's`nLAST NAME?",q)
+		if (last~="close|xClose") {
+			return {first:"",last:x}
+		}
+		first := RegExReplace(x," " last)
+	}
+	
+	return {first:first
+			,last:last
+			,firstlast:first " " last
+			,lastfirst:last ", " first
+			,apostr:RegExReplace(x,"\^","'")}
+}
+
 ParseDate(x) {
 	mo := ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 	moStr := "Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec"
@@ -3178,7 +4245,7 @@ ParseDate(x) {
 				: "20" d3
 		date.date := trim(d)
 	}
-	else if RegExMatch(x,"\b(\d{4})(\d{2})(\d{2})\b",d) {								; 20150103
+	else if RegExMatch(x,"\b(\d{4})-?(\d{2})-?(\d{2})\b",d) {								; 20150103 or 2015-01-03
 		date.yyyy := d1
 		date.mm := d2
 		date.mmm := mo[d2]
@@ -3195,6 +4262,8 @@ ParseDate(x) {
 	}
 
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
+			, YMD:date.yyyy date.mm date.dd
+			, MDY:date.mm "/" date.dd "/" date.yyyy
 			, hr:time.hr, min:time.min, sec:time.sec, ampm:time.ampm, time:time.time}
 }
 
@@ -3288,14 +4357,74 @@ filecheck() {
 	return
 }
 
-;~ ~LButton::
-;~ {
-	;~ If (A_PriorHotKey = A_ThisHotKey and A_TimeSincePriorHotkey < DllCall("GetDoubleClickTime")) {
-		;~ MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2			; put mouse coords into mouseXpos and mouseYpos, and associated winID
-	;~ }
-;~ return
-;~ }
+readIni(section) {
+/*	Reads a set of variables
+	[section]					==	 		var1 := res1, var2 := res2
+	var1=res1
+	var2=res2
+	
+	[array]						==			array := ["ccc","bbb","aaa"]
+	=ccc
+	bbb
+	=aaa
+	
+	[objet]						==	 		objet := {aaa:10,bbb:27,ccc:31}
+	aaa:10
+	bbb:27
+	ccc:31
+*/
+	global
+	local x, i, key, val
+		, i_res := object()
+		, i_type := []
+		, i_lines := []
+	i_type.var := i_type.obj := i_type.arr := false
+	IniRead,x,trriq.ini,%section%
+	Loop, parse, x, `n,`r																; analyze section struction
+	{
+		i := A_LoopField
+		if (i~="(?<!"")[=]")															; find = not preceded by "
+		{
+			if (i ~= "^=") {															; starts with "=" is an array list
+				i_type.arr := true
+			} else {																	; "aaa=123" is a var declaration
+				i_type.var := true
+			}
+		} else																			; does not contain a quoted =
+		{
+			if (i~="(?<!"")[:]") {														; find : not preceded by " is an object
+				i_type.obj := true
+			} else {																	; contains neither = nor : can be an array list
+				i_type.arr := true
+			}
+		}
+	}
+	if ((i_type.obj) + (i_type.arr) + (i_type.var)) > 1 {								; too many types, return error
+		return error
+	}
+	Loop, parse, x, `n,`r																; now loop through lines
+	{
+		i := A_LoopField
+		if (i_type.var) {
+			key := strX(i,"",1,0,"=",1,1)
+			val := strX(i,"=",1,1,"",0)
+			%key% := trim(val,"""")
+		}
+		if (i_type.obj) {
+			key := strX(i,"",1,0,":",1,1)
+			val := strX(i,":",1,1,"",0)
+			i_res[key] := trim(val,"""")
+		}
+		if (i_type.arr) {
+			i := RegExReplace(i,"^=")													; remove preceding =
+			i_res.push(trim(i,""""))
+		}
+	}
+	return i_res
+}
 
 #Include CMsgBox.ahk
+#Include InputBox.ahk
 #Include xml.ahk
 #Include sift3.ahk
+#Include hl7.ahk
