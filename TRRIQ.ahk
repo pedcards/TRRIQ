@@ -1353,7 +1353,7 @@ parsePreventiceEnrollment(tbl) {
 		if enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']") {						; MRN+S/N
 			continue
 		}
-		if enrollcheck("[name='" res.name "'][dev='" res.dev "']") {					; NAME+S/N
+		if enrollcheck("[mrn='" res.mrn "'][date='" date "']") {						; MRN+DATE
 			continue
 		}
 		if enrollcheck("[date='" date "'][dev='" res.dev "']") {						; DATE+S/N
@@ -1471,19 +1471,20 @@ parsePreventiceInventory(tbl) {
 	return true
 }
 
-findWQid(DT:="",MRN:="",ser:="",name:="") {
+findWQid(DT:="",MRN:="",ser:="") {
 /*	DT = 20170803
 	MRN = 123456789
 	ser = BodyGuardian Heart - BG12345, or Mortara H3+ - 12345
-	name = LAST, FIRST
 */
 	global wq
 	
 	if IsObject(x := wq.selectSingleNode("//enroll[date='" DT "'][mrn='" MRN "']")) {		; Perfect match DT and MRN
-	} else if IsObject(x := wq.selectSingleNode("//enroll"									; or matches S/N and MRN
-		. "[dev='Mortara H3+ - " DT "'][mrn='" MRN "']")) {
-	} else if IsObject(x := wq.selectSingleNode("//enroll[mrn='" MRN "']")) {				; or matches MRN only 
-	} else if (name) && IsObject(x := wq.selectSingleNode("//enroll[name='" name "']")) {	; or neither, find matching name 
+	if IsObject(x := wq.selectSingleNode("//enroll"
+		. "[date='" DT "'][mrn='" MRN "']")) {												; Perfect match DT and MRN
+	} else if IsObject(x := wq.selectSingleNode("//enroll"
+		. "[dev='" ser "'][mrn='" MRN "']")) {												; or matches S/N and MRN
+	} else if IsObject(x := wq.selectSingleNode("//enroll"
+		. "[date='" DT "'][dev='" ser "']")) {												; or matches DT and S/N
 	}
 
 	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; will return null (error) if no match
@@ -2332,6 +2333,7 @@ getPatInfo() {
 	nameLine := strX(ptInfo,"",1,0,"`n",1)
 	prefName := trim(stregX(nameLine,"i)Pref.*? name:",1,1,"\R+",1))
 	if !instr(nameLine, ptDem.Name) {													; fetched ptInfo must contain ptDem.name
+		MsgBox, 4149, Name error, % "Fetched name """ prefName """`ndoes not match """ ptDem.Name """"
 		fetchQuit := true
 		eventlog("Fetched info does not match " ptDem.Name)
 		return
@@ -2496,6 +2498,8 @@ bghWqSave(sernum) {
 }
 
 moveHL7dem() {
+/*	Populate fldVal["dem-"] with data from wqlist (if valid), otherwise from hl7
+*/
 	global fldVal, obxVal
 	if (fldVal.acct) {	
 		name := parseName(fldval.name)
@@ -2633,9 +2637,9 @@ outputfiles:
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
 	fileWQ := ma_date "," user "," 															; date processed and MA user
-			. """" fldval["dem-Ordering"] """" ","														; extracted provider
-			. """" fldval["dem-Name_L"] ", " fldval["dem-Name_F"] """" ","							; CIS name
-			. """" fldval["dem-MRN"] """" ","													; CIS MRN
+			. """" fldval["dem-Ordering"] """" ","											; extracted provider
+			. """" fldval["dem-Name_L"] ", " fldval["dem-Name_F"] """" ","					; CIS name
+			. """" fldval["dem-MRN"] """" ","												; CIS MRN
 			. """" fldval["dem-Test_date"] """" ","											; extracted Test date (or CIS encounter date if none)
 			. """" fldval["dem-Test_end"] """" ","											; extracted Test end
 			. """" fldval["dem-Site"] """" ","												; CIS location
@@ -4181,7 +4185,7 @@ ParseName(x) {
 		first := strX(x,"",1,0," ",1)
 		last := strX(x," ",1,1,"",0)
 	}
-	else																				; James Jacob Jingleheimer Schmidt
+	else if (ct>1)																		; James Jacob Jingleheimer Schmidt
 	{
 		x0 := x																			; make a copy to disassemble
 		n := 1
