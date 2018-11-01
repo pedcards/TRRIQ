@@ -2609,6 +2609,7 @@ outputfiles:
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["dem-Test_Date"])											; get the study date from PDF result
 	filenameOut := fldval["dem-MRN"] " " fldval["dem-Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
+	filenameOut := RegExReplace(filenameOut,"\^","'")
 	tmpFlag := tmpDate.YMD . "020000"
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
