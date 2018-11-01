@@ -2334,6 +2334,7 @@ getPatInfo() {
 	nameLine := strX(ptInfo,"",1,0,"`n",1)
 	prefName := trim(stregX(nameLine,"i)Pref.*? name:",1,1,"\R+",1))
 	if !instr(nameLine, ptDem.Name) {													; fetched ptInfo must contain ptDem.name
+		MsgBox, 4149, Name error, % "Fetched name """ prefName """`ndoes not match """ ptDem.Name """"
 		fetchQuit := true
 		eventlog("Fetched info does not match " ptDem.Name)
 		return
