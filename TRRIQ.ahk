@@ -4184,7 +4184,7 @@ ParseName(x) {
 		first := strX(x,"",1,0," ",1)
 		last := strX(x," ",1,1,"",0)
 	}
-	else																				; James Jacob Jingleheimer Schmidt
+	else if (ct>1)																		; James Jacob Jingleheimer Schmidt
 	{
 		x0 := x																			; make a copy to disassemble
 		n := 1
