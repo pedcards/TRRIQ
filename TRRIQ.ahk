@@ -3196,8 +3196,8 @@ CheckProc:
 		 *	replace fldVal with newly acquired values
 		 */
 		fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
-		fldVal["dem-Name_L"] := fldval["Name_L"] := ptDem["nameL"]
-		fldVal["dem-Name_F"] := fldval["Name_F"] := ptDem["nameF"] 
+		fldVal["dem-Name_L"] := fldval["Name_L"] := RegExReplace(ptDem["nameL"],"\^","'")
+		fldVal["dem-Name_F"] := fldval["Name_F"] := RegExReplace(ptDem["nameF"],"\^","'")
 		fldVal["dem-MRN"] := ptDem["mrn"] 
 		fldVal["dem-DOB"] := ptDem["DOB"] 
 		fldVal["dem-Sex"] := ptDem["Sex"]
@@ -3239,8 +3239,8 @@ CheckProc:
 	
 	;---Copy ptDem back to fldVal, whether fetched or not
 	fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
-	fldVal["dem-Name_L"] := fldval["Name_L"] := ptDem["nameL"]
-	fldVal["dem-Name_F"] := fldval["Name_F"] := ptDem["nameF"] 
+	fldVal["dem-Name_L"] := fldval["Name_L"] := RegExReplace(ptDem["nameL"],"\^","'")
+	fldVal["dem-Name_F"] := fldval["Name_F"] := RegExReplace(ptDem["nameF"],"\^","'")
 	fldVal["dem-MRN"] := fldval["MRN"] := ptDem["mrn"] 
 	fldVal["dem-DOB"] := ptDem["DOB"] 
 	fldVal["dem-Sex"] := ptDem["Sex"]
