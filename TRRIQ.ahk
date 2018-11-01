@@ -2499,12 +2499,14 @@ bghWqSave(sernum) {
 }
 
 moveHL7dem() {
+/*	Populate fldVal["dem-"] with data from wqlist (if valid), otherwise from hl7
+*/
 	global fldVal, obxVal
-	if (fldVal.acct) {	
-		name := parseName(fldval.name)
+	if (fldVal.acct) {																	; valid wqid has been previously processed
+		name := parseName(fldval.name)													; name from wqid (will have ^ sub)
 		fldVal["dem-Name"] := fldval.Name
-		fldVal["dem-Name_L"] := name.last
-		fldVal["dem-Name_F"] := name.first
+		fldVal["dem-Name_L"] := parseName(name.last).apostr								; replace [^] with [']
+		fldVal["dem-Name_F"] := parseName(name.first).apostr
 		fldVal["dem-MRN"] := fldval.MRN
 		fldVal["dem-DOB"] := fldval.DOB
 		fldVal["dem-Sex"] := fldval.Sex
