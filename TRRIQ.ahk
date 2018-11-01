@@ -1478,13 +1478,14 @@ findWQid(DT:="",MRN:="",ser:="") {
 */
 	global wq
 	
-	if IsObject(x := wq.selectSingleNode("//enroll[date='" DT "'][mrn='" MRN "']")) {		; Perfect match DT and MRN
 	if IsObject(x := wq.selectSingleNode("//enroll"
 		. "[date='" DT "'][mrn='" MRN "']")) {												; Perfect match DT and MRN
 	} else if IsObject(x := wq.selectSingleNode("//enroll"
 		. "[dev='" ser "'][mrn='" MRN "']")) {												; or matches S/N and MRN
 	} else if IsObject(x := wq.selectSingleNode("//enroll"
 		. "[date='" DT "'][dev='" ser "']")) {												; or matches DT and S/N
+	} else {
+		x :=																				; anything else is null
 	}
 
 	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; will return null (error) if no match
