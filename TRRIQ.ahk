@@ -1480,6 +1480,7 @@ findWQid(DT:="",MRN:="",ser:="",name:="") {
 */
 	global wq
 	
+	name := parseName(name).lastfirst														; transform name if needed
 	if IsObject(x := wq.selectSingleNode("//enroll[date='" DT "'][mrn='" MRN "']")) {		; Perfect match DT and MRN
 	} else if IsObject(x := wq.selectSingleNode("//enroll"									; or matches S/N and MRN
 		. "[dev='Mortara H3+ - " DT "'][mrn='" MRN "']")) {
