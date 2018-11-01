@@ -3987,7 +3987,7 @@ checkFetchDem(nameL,nameF,mrn) {
 */
 	global ptDem, fetchQuit
 	fullName := nameL ", " nameF
-	fullNameDem := ptDem["nameL"] ", " ptDem["nameF"]
+	fullNameDem := RegExReplace(ptDem["nameL"] ", " ptDem["nameF"],"\^","'")			; fetched ptDem.nameL has [^], passed nameL has [']
 	fuzz := fuzzysearch(format("{:U}",fullName), format("{:U}",fullNameDem))
 	thresh := 0.15													
 	
