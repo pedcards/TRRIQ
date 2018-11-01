@@ -1986,7 +1986,7 @@ registerPreventice() {
 		, ptDem.MRN
 		, ptDem.MRN
 		, ""
-		, ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
+		, parseName(ptDem.nameL).apostr "^" parseName(ptDem.nameF).apostr . strQ(ptDem.nameMI,"^###")
 		, ""
 		, parseDate(ptDem.dob).YMD
 		, substr(ptDem.sex,1,1)
@@ -2039,7 +2039,7 @@ registerPreventice() {
 		, "" ;"Authorization Information"
 		, "" ;"Plan Type"
 		;~ , ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
-		, ptDem.parentL "^" ptDem.parentF
+		, parseName(ptDem.parentL).apostr "^" parseName(ptDem.parentF).apostr
 		, "Legal Guardian"
 		, parseDate(ptDem.dob).YMD
 		, "" ;ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
