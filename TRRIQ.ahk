@@ -39,14 +39,6 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 
 /*	Get location info
 */
-IfExist, % webUploadDir "Configuration\ConfigInfoV1"
-{
-	x := new XML(webUploadDir "Configuration\ConfigInfoV1")
-	cust := x.selectSingleNode("CustomerName").text
-	cust := RegExReplace(cust,"i)Seattle Childrens ")
-	eventlog("MWU location: " cust)
-	x := cust :=
-}
 #Include HostName.ahk
 progress,,,Identifying workstation...
 if !(wksLoc := GetLocation()) {
