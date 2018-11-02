@@ -1098,6 +1098,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	else if (matchProv.group="FELLOWS") {												; using fellow encounter
 		ptDem.Fellow := matchProv.best
 		eventlog("Fellow: " parseName(ptDem.fellow).firstlast)
+		MsgBox, 262208, % parseName(ptDem.fellow).firstLast, Fellow-ordered monitor.`nMust also include the attending preceptor.
 		gosub getMD
 	}
 	else if (matchProv.fuzz > 0.10) {													; Provider not recognized, ask!
