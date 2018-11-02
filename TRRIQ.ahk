@@ -2465,6 +2465,7 @@ getPatInfo() {
 		. strQ(ptDem.addr2,"   ###`n")
 		. "   " ptDem.city ", " ptDem.state " " ptDem.zip "`n"
 		. "Phone: " ptDem.phone "`n`n"
+		. strQ(ptDem.fellow,"Fellow: ###`n")
 		. "Provider: " ptDem.provider "`n"
 		. "Encounter date: " ptDem.encDate "`n"
 		. "Site: " ptDem.loc
