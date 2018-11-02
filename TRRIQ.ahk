@@ -1803,6 +1803,9 @@ muWqSave(sernum) {
 	wq.addElement("sex",newID,ptDem["Sex"])
 	wq.addElement("dob",newID,ptDem["dob"])
 	wq.addElement("dev",newID,ptDem["dev"])
+	if (ptDem.fellow) {
+		wq.addElement("fellow",newID,ptDem["fellow"])
+	}
 	wq.addElement("prov",newID,ptDem["Provider"])
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])									; need to transform site abbrevs
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
@@ -2495,6 +2498,9 @@ bghWqSave(sernum) {
 	wq.addElement("sex",newID,ptDem["Sex"])
 	wq.addElement("dob",newID,ptDem["dob"])
 	wq.addElement("dev",newID,ptDem["dev"])
+	if (ptDem.fellow) {
+		wq.addElement("fellow",newID,ptDem["fellow"])
+	}
 	wq.addElement("prov",newID,ptDem["Provider"])
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
