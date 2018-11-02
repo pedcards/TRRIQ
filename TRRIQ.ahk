@@ -3153,7 +3153,7 @@ return
 
 CheckProc:
 {
-	eventlog("CheckProcPr")
+	eventlog("CheckProc")
 	fetchQuit := false
 	
 	if (fldval.node = "done") {
