@@ -2527,7 +2527,7 @@ moveHL7dem() {
 		fldVal["dem-Indication"] := fldVal.ind
 		fldVal["dem-Site"] := fldVal.site
 		fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
-		fldVal["dem-Ordering"] := fldval.prov
+		fldVal["dem-Ordering"] := (fldval.fellow) ? fldval.fellow : fldval.prov
 		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 	} else {
 		fldVal["dem-Name"] := obxVal["PID_NameL"] ", " obxVal["PID_NameF"]
