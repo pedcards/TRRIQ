@@ -1094,37 +1094,44 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Submit
 	Gui, fetch:Destroy
 	
-	if (instr(ptDem.Provider," ") && !instr(ptDem.Provider,",")) {						; somehow string passed in wrong order
-		ptDem.Provider := parseName(ptDem.Provider).lastfirst
-	}
+	gotMD := false
+	ptDem.Provider := parseName(ptDem.Provider).lastfirst								; ensure provider name is in proper format
 	matchProv := checkCrd(ptDem.Provider)
-	if !(ptDem.Provider) {																; no provider? ask!
-		gosub getMD
-		eventlog("New provider field " ptDem.Provider ".")
-	} 
-	else if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {				; encounter is an inpatient type (Inpt, ER, DaySurg, etc)
+	if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {					; encounter is an inpatient type (Inpt, ER, DaySurg, etc)
 		encDT := ptDem.date := substr(A_now,1,8)										; Set date to today
 		ptDem.EncDate := niceDate(ptDem.date)											; set formatted EncDate
 		gosub assignMD																	; find who recommended it from the Chipotle schedule
 		eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
 	}
-	else if (matchProv.fuzz > 0.10) {													; Provider not recognized
+	else if (matchProv.group="FELLOWS") {												; using fellow encounter
+		ptDem.Fellow := matchProv.best
+		eventlog("Fellow: " parseName(ptDem.fellow).firstlast)
+		gosub getMD
+	}
+	else if (matchProv.fuzz > 0.10) {													; Provider not recognized, ask!
 		eventlog(ptDem.Provider " not recognized (" matchProv.fuzz ").")
-		gosub getMD																		; Otherwise, ask for it.
+		gosub getMD
 		eventlog("Provider set to " ptDem.Provider ".")
 	} 
-	else {																				; Provider recognized
+	else if !(ptDem.Provider) {															; No provider? ask!
+		gosub getMD
+		eventlog("New provider field " ptDem.Provider ".")
+	} 
+	else {																				; Attending cardiologist recognized
 		eventlog(ptDem.Provider " matches " matchProv.Best " (" (1-matchProv.fuzz)*100 ").")
 		ptDem.Provider := matchProv.Best
 	}
-	loop
-	{
-		MsgBox, 262180, Confirm ordering Cardiologist, % ptDem.Provider
-		IfMsgBox, Yes
+	
+	if (gotMD=false) {																	; no confirmed cardiologist
+		loop																			; ask until we confirm this
 		{
-			break
+			MsgBox, 262180, Confirm attending Cardiologist, % ptDem.Provider
+			IfMsgBox, Yes
+			{
+				break
+			}
+			gosub getMD
 		}
-		gosub getMD
 	}
 	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
 	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
@@ -1796,6 +1803,9 @@ muWqSave(sernum) {
 	wq.addElement("sex",newID,ptDem["Sex"])
 	wq.addElement("dob",newID,ptDem["dob"])
 	wq.addElement("dev",newID,ptDem["dev"])
+	if (ptDem.fellow) {
+		wq.addElement("fellow",newID,ptDem["fellow"])
+	}
 	wq.addElement("prov",newID,ptDem["Provider"])
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])									; need to transform site abbrevs
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
@@ -2458,6 +2468,7 @@ getPatInfo() {
 		. strQ(ptDem.addr2,"   ###`n")
 		. "   " ptDem.city ", " ptDem.state " " ptDem.zip "`n"
 		. "Phone: " ptDem.phone "`n`n"
+		. strQ(ptDem.fellow,"Fellow: ###`n")
 		. "Provider: " ptDem.provider "`n"
 		. "Encounter date: " ptDem.encDate "`n"
 		. "Site: " ptDem.loc
@@ -2487,6 +2498,9 @@ bghWqSave(sernum) {
 	wq.addElement("sex",newID,ptDem["Sex"])
 	wq.addElement("dob",newID,ptDem["dob"])
 	wq.addElement("dev",newID,ptDem["dev"])
+	if (ptDem.fellow) {
+		wq.addElement("fellow",newID,ptDem["fellow"])
+	}
 	wq.addElement("prov",newID,ptDem["Provider"])
 	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
@@ -2513,7 +2527,7 @@ moveHL7dem() {
 		fldVal["dem-Indication"] := fldVal.ind
 		fldVal["dem-Site"] := fldVal.site
 		fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
-		fldVal["dem-Ordering"] := fldval.prov
+		fldVal["dem-Ordering"] := (fldval.fellow) ? fldval.fellow : fldval.prov
 		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 	} else {
 		fldVal["dem-Name"] := obxVal["PID_NameL"] ", " obxVal["PID_NameF"]
@@ -2710,8 +2724,9 @@ wqSetVal(id,node,val) {
 
 getMD:
 {
+	gotMD := false
 	Gui, fetch:Hide
-	InputBox(ed_Crd, "Enter responsible cardiologist","","")							; no call schedule for that day, must choose
+	InputBox(ed_Crd, "Assign attending cardiologist","","")								; no call schedule for that day, must choose
 	Gui, fetch:Show
 	if (ed_Crd="")
 		return
@@ -2728,6 +2743,7 @@ getMD:
 			gosub getMD											; don't agree? try again
 		}
 	}
+	gotMD := true
 	eventlog("Cardiologist " ptDem.Provider " entered.")
 	return
 }	
@@ -3137,7 +3153,7 @@ return
 
 CheckProc:
 {
-	eventlog("CheckProcPr")
+	eventlog("CheckProc")
 	fetchQuit := false
 	
 	if (fldval.node = "done") {
