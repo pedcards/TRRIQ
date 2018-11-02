@@ -1114,16 +1114,14 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		ptDem.Provider := matchProv.Best
 	}
 	
-	if (gotMD=false) {																	; no confirmed cardiologist
-		loop																			; ask until we confirm this
+	while (gotMD=false)																	; do until we have while no confirmed cardiologist
+	{
+		MsgBox, 262180, Confirm attending Cardiologist, % ptDem.Provider
+		IfMsgBox, Yes
 		{
-			MsgBox, 262180, Confirm attending Cardiologist, % ptDem.Provider
-			IfMsgBox, Yes
-			{
-				break
-			}
-			gosub getMD
+			break
 		}
+		gosub getMD
 	}
 	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
 	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
