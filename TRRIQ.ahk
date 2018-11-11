@@ -3425,6 +3425,12 @@ Event_BGH_Hl7:
 	eventlog("Event_BGH_HL7")
 	monType := "BGH"
 	
+	if !(obxVal["Enroll_Start_Dt"]) {
+		eventlog("No OBX data.")
+		gosub processPDF
+		return
+	}
+	
 	fieldcoladd("dem","Test_date",niceDate(obxVal["Enroll_Start_Dt"]))
 	fieldcoladd("dem","Test_end",niceDate(obxVal["Enroll_End_Dt"]))
 	
