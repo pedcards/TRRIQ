@@ -555,7 +555,7 @@ WQlist() {
 		FileGetSize,full,% hl7Dir fileIn,M
 		
 		/*	disable showing mystery files and BGH files
-		*/
+		;*/																				; comment this line to show regardless
 			if !(res.dev) {
 				continue
 			}
