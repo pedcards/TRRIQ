@@ -3170,7 +3170,7 @@ CheckProc:
 		id := findWQid(parseDate(fldval["dem-Test_date"]).YMD,fldval["dem-MRN"]).id		; get id based on study date and mrn
 		res := readWQ(id)
 		fldval.wqid := id																; pull some vals
-		fldval["dem-Device_SN"] := res.dev
+		fldval["dem-Device_SN"] := strX(res.dev,"BG",1,2,"",0)
 	}
 	
 	ptDem := Object()																	; Populate temp object ptDem with parsed data from PDF fldVal
