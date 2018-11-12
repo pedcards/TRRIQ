@@ -554,6 +554,17 @@ WQlist() {
 		}
 		FileGetSize,full,% hl7Dir fileIn,M
 		
+		/*	disable showing mystery files and BGH files
+		*/
+			if !(res.dev) {
+				continue
+			}
+			if (res.dev~="BG") {
+				continue
+			}
+		/*
+		*/
+		
 		LV_Add(""
 			, hl7Dir fileIn																; path and filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
