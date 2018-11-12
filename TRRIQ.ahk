@@ -3166,6 +3166,12 @@ CheckProc:
 		fetchQuit := true
 		return
 	}
+	if !(fldval.wqid) {
+		id := findWQid(parseDate(fldval["dem-Test_date"]).YMD,fldval["dem-MRN"]).id		; get id based on study date and mrn
+		res := readWQ(id)
+		fldval.wqid := id																; pull some vals
+		fldval["dem-Device_SN"] := res.dev
+	}
 	
 	ptDem := Object()																	; Populate temp object ptDem with parsed data from PDF fldVal
 	ptDem["nameL"] := fldVal["dem-Name_L"]
