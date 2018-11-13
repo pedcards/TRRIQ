@@ -2552,7 +2552,7 @@ moveHL7dem() {
 		;~ fldVal["dem-Site"] := fldVal.site
 		;~ fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
 		fldVal["dem-Ordering"] := filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name
-		;~ fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
+		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 	}
 	return
 }
