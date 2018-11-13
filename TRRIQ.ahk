@@ -552,6 +552,7 @@ WQlist() {
 			if (id := findWQid(pv1_dt,x.3).id) {										; but found a wqid based on date in PV1.40
 				newFileIn := RegExReplace(fileIn,"i)_(\d+).hl7","_" pv1_dt ".hl7")
 				FileMove,% hl7Dir fileIn, % hl7Dir newFileIn							; rename file
+				eventlog("HL7 renamed to " newFileIn)
 				fileIn := newFileIn														; send correct filename to list
 			}
 		}
