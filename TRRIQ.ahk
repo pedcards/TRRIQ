@@ -39,14 +39,6 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 
 /*	Get location info
 */
-IfExist, % webUploadDir "Configuration\ConfigInfoV1"
-{
-	x := new XML(webUploadDir "Configuration\ConfigInfoV1")
-	cust := x.selectSingleNode("CustomerName").text
-	cust := RegExReplace(cust,"i)Seattle Childrens ")
-	eventlog("MWU location: " cust)
-	x := cust :=
-}
 #Include HostName.ahk
 progress,,,Identifying workstation...
 if !(wksLoc := GetLocation()) {
@@ -553,7 +545,17 @@ WQlist() {
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
-		id := findWQid(SubStr(x.5,1,8),x.3).id											; get id based on study date and mrn
+		if !(id := findWQid(SubStr(x.5,1,8),x.3).id) {									; if can't id based on study date and mrn
+			fileread, tmptxt, % hl7Dir fileIn
+			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")
+			pv1_dt := SubStr(pv1.40,1,8)
+			if (id := findWQid(pv1_dt,x.3).id) {										; but found a wqid based on date in PV1.40
+				newFileIn := RegExReplace(fileIn,"i)_(\d+).hl7","_" pv1_dt ".hl7")
+				FileMove,% hl7Dir fileIn, % hl7Dir newFileIn							; rename file
+				eventlog("HL7 renamed to " newFileIn)
+				fileIn := newFileIn														; send correct filename to list
+			}
+		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
 		if (res.node="done") {															; skip if DONE, might be currently in process 
 			eventlog("Report already done. WQlist removing " fileIn)
@@ -561,6 +563,17 @@ WQlist() {
 			continue
 		}
 		FileGetSize,full,% hl7Dir fileIn,M
+		
+		/*	disable showing mystery files and BGH files
+		;*/																				; comment this line to show regardless
+			if !(res.dev) {
+				continue
+			}
+			if (res.dev~="BG") {
+				continue
+			}
+		/*
+		*/
 		
 		LV_Add(""
 			, hl7Dir fileIn																; path and filename
@@ -1107,6 +1120,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	else if (matchProv.group="FELLOWS") {												; using fellow encounter
 		ptDem.Fellow := matchProv.best
 		eventlog("Fellow: " parseName(ptDem.fellow).firstlast)
+		MsgBox, 262208, % parseName(ptDem.fellow).firstLast, Fellow-ordered monitor.`nMust also include the attending preceptor.
 		gosub getMD
 	}
 	else if (matchProv.fuzz > 0.10) {													; Provider not recognized, ask!
@@ -1123,16 +1137,14 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		ptDem.Provider := matchProv.Best
 	}
 	
-	if (gotMD=false) {																	; no confirmed cardiologist
-		loop																			; ask until we confirm this
+	while (gotMD=false)																	; do until we have while no confirmed cardiologist
+	{
+		MsgBox, 262180, Confirm attending Cardiologist, % ptDem.Provider
+		IfMsgBox, Yes
 		{
-			MsgBox, 262180, Confirm attending Cardiologist, % ptDem.Provider
-			IfMsgBox, Yes
-			{
-				break
-			}
-			gosub getMD
+			break
 		}
+		gosub getMD
 	}
 	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
 	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
@@ -2541,7 +2553,7 @@ moveHL7dem() {
 		;~ fldVal["dem-Site"] := fldVal.site
 		;~ fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
 		fldVal["dem-Ordering"] := filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name
-		;~ fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
+		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 	}
 	return
 }
@@ -3167,6 +3179,12 @@ CheckProc:
 		fetchQuit := true
 		return
 	}
+	if !(fldval.wqid) {
+		id := findWQid(parseDate(fldval["dem-Test_date"]).YMD,fldval["dem-MRN"]).id		; get id based on study date and mrn
+		res := readWQ(id)
+		fldval.wqid := id																; pull some vals
+		fldval["dem-Device_SN"] := strX(res.dev,"BG",1,2,"",0)
+	}
 	
 	ptDem := Object()																	; Populate temp object ptDem with parsed data from HL7 or PDF fldVal
 	ptDem["nameL"] := fldVal["dem-Name_L"]												; dem-Name contains ['] not [^]
@@ -3436,6 +3454,12 @@ Event_BGH_Hl7:
 {
 	eventlog("Event_BGH_HL7")
 	monType := "BGH"
+	
+	if !(obxVal["Enroll_Start_Dt"]) {													; missing this if no OBX
+		eventlog("No OBX data.")
+		gosub processPDF																; process as an ad hoc
+		return																			; and bail out
+	}
 	
 	fieldcoladd("dem","Test_date",niceDate(obxVal["Enroll_Start_Dt"]))
 	fieldcoladd("dem","Test_end",niceDate(obxVal["Enroll_End_Dt"]))
