@@ -545,7 +545,16 @@ WQlist() {
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
-		id := findWQid(SubStr(x.5,1,8),x.3).id											; get id based on study date and mrn
+		if !(id := findWQid(SubStr(x.5,1,8),x.3).id) {									; if can't id based on study date and mrn
+			fileread, tmptxt, % hl7Dir fileIn
+			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")
+			pv1_dt := SubStr(pv1.40,1,8)
+			if (id := findWQid(pv1_dt,x.3).id) {										; but found a wqid based on date in PV1.40
+				newFileIn := RegExReplace(fileIn,"i)_(\d+).hl7","_" pv1_dt ".hl7")
+				FileMove,% hl7Dir fileIn, % hl7Dir newFileIn							; rename file
+				fileIn := newFileIn														; send correct filename to list
+			}
+		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
 		if (res.node="done") {															; skip if DONE, might be currently in process 
 			eventlog("Report already done. WQlist removing " fileIn)
