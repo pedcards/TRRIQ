@@ -1507,7 +1507,7 @@ findWQid(DT:="",MRN:="",ser:="") {
 		x :=																				; anything else is null
 	}
 
-	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; will return null (error) if no match
+	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; returns {id,node}; or null (error) if no match
 }
 
 scanTempfiles() {
