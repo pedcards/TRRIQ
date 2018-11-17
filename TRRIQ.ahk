@@ -545,7 +545,7 @@ WQlist() {
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
-		if !(id := findWQid(SubStr(x.5,1,8),x.3).id) {									; if can't id based on study date and mrn
+ 		if !(id := findWQid(SubStr(x.5,1,8),x.3).id) {									; if can't id based on study date and mrn
 			fileread, tmptxt, % hl7Dir fileIn
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")
 			pv1_dt := SubStr(pv1.40,1,8)
@@ -3168,6 +3168,19 @@ CheckProc:
 	eventlog("CheckProc")
 	fetchQuit := false
 	
+	if !(fldval.wqid) {
+		id := findWQid(parseDate(fldval["dem-Test_date"]).YMD							; search wqid based on combination of study date, mrn, SN
+				, fldval["dem-MRN"]
+				, fldval["dem-Device_SN"]).id
+		if IsObject(res := readWQ(id)) {												; pull some vals
+			fldval["dem-Device_SN"] := strX(res.dev," ",0,1,"",0)
+			fldval.name := res.name
+			fldval.node := res.node
+			fldval.wqid := id
+			eventlog("CheckProc: found wqid " id " in " res.node)
+		} else {
+			eventlog("CheckProc: no matching wqid found")
+	}
 	if (fldval.node = "done") {
 	;~ if (zzzfldval.node = "done") {
 		MsgBox % fileIn " has been scanned already.`n`nDeleting file."
@@ -3175,12 +3188,6 @@ CheckProc:
 		FileDelete, % fileIn
 		fetchQuit := true
 		return
-	}
-	if !(fldval.wqid) {
-		id := findWQid(parseDate(fldval["dem-Test_date"]).YMD,fldval["dem-MRN"]).id		; get id based on study date and mrn
-		res := readWQ(id)
-		fldval.wqid := id																; pull some vals
-		fldval["dem-Device_SN"] := strX(res.dev,"BG",1,2,"",0)
 	}
 	
 	ptDem := Object()																	; Populate temp object ptDem with parsed data from PDF fldVal
