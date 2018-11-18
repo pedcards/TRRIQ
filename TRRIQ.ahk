@@ -106,6 +106,7 @@ for key,val in indCodes
 }
 
 initHL7()
+hl7DirMap := {}
 
 MainLoop: ; ===================== This is the main part ====================================
 {
@@ -545,15 +546,13 @@ WQlist() {
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
- 		if !(id := findWQid(SubStr(x.5,1,8),x.3).id) {									; if can't id based on study date and mrn
+		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % hl7Dir fileIn
-			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")
-			pv1_dt := SubStr(pv1.40,1,8)
-			if (id := findWQid(pv1_dt,x.3).id) {										; but found a wqid based on date in PV1.40
-				newFileIn := RegExReplace(fileIn,"i)_(\d+).hl7","_" pv1_dt ".hl7")
-				FileMove,% hl7Dir fileIn, % hl7Dir newFileIn							; rename file
-				eventlog("HL7 renamed to " newFileIn)
-				fileIn := newFileIn														; send correct filename to list
+			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
+			pv1_dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
+			
+			if (id := findWQid(pv1_dt,x.3).id) { 										; try to find wqid based on date in PV1.40 and mrn
+				hl7dirMap[fileIn] := id 												; populate hl7dirMap
 			}
 		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
@@ -3180,6 +3179,7 @@ CheckProc:
 			eventlog("CheckProc: found wqid " id " in " res.node)
 		} else {
 			eventlog("CheckProc: no matching wqid found")
+		}
 	}
 	if (fldval.node = "done") {
 	;~ if (zzzfldval.node = "done") {
