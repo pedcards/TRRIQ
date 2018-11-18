@@ -2042,7 +2042,7 @@ registerPreventice() {
 		, ""
 		, ""
 		, ""
-		, ptDem.account)
+		, ptDem.wqid)
 	
 	buildHL7("IN1",
 		, "N/A"
@@ -2096,7 +2096,7 @@ registerPreventice() {
 	buildHL7("ORC","")
 	
 	buildHL7("OBR"
-		, ptDem.account
+		, ptDem.wqid
 		, ""
 		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter^Holter")
 		. strQ((ptDem.model~="BodyGuardian") ? 1 : "","CEM^CEM")
