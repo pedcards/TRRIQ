@@ -548,11 +548,20 @@ WQlist() {
 		x := StrSplit(fileIn,"_")
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % hl7Dir fileIn
+			obr:= strsplit(stregX(tmptxt,"\R+OBR",1,0,"\R+",0),"|")						; get OBR segment
+			obr_req := trim(obr.3," ^")													; requision num from registration PV1.21
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
 			pv1_dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
 			
-			if (id := findWQid(pv1_dt,x.3).id) { 										; try to find wqid based on date in PV1.40 and mrn
-				hl7dirMap[fileIn] := id 												; populate hl7dirMap
+			if (readWQ(obr_req).mrn) {													; check if obr_req is valid wqid
+				id := obr_req
+				hl7dirMap[fileIn] := id
+			} 
+			else if (id := findWQid(pv1_dt,x.3).id) { 									; try to find wqid based on date in PV1.40 and mrn
+				hl7dirMap[fileIn] := id
+			}
+			else {																		; can't find wqid, just admit defeat
+				id :=
 			}
 		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
