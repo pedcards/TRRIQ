@@ -3024,6 +3024,15 @@ findFullPdf(wqid:="") {
 			
 			flds := getPdfID(newtxt)
 			
+			if (flds.type = "E") {
+				MsgBox, 262160, File error
+					, % holterDir "`n" fName "`n"
+					. "saved from email.`n`n"
+					. "DO NOT SAVE FROM EMAIL!`n`n"
+					. "(delete the file to stop getting this message)"
+				continue
+			}
+			
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
 			FileMove, %fileIn%, % holterDir newFnam ".pdf", 1							; rename the unprocessed PDF
 			eventlog("Holter PDF: " fName " renamed to " newFnam)
