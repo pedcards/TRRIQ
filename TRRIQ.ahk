@@ -37,6 +37,8 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	checkcitrix()
 }
 
+readini("setup")
+
 /*	Get location info
 */
 #Include HostName.ahk
@@ -2987,7 +2989,7 @@ findFullPdf(wqid:="") {
 /*	Scans HolterDir for potential full disclosure PDFs
 	maybe rename if appropriate
 */
-	global holterDir, hl7dir, fldval, pdfList
+	global holterDir, hl7dir, fldval, pdfList, AllowSavedPDF
 	
 	pdfList := Object()																	; clear list to add to WQlist
 	
@@ -3024,7 +3026,7 @@ findFullPdf(wqid:="") {
 			
 			flds := getPdfID(newtxt)
 			
-			if (flds.type = "E") {
+			if (AllowSavedPDF!="true") && (flds.type = "E") {
 				MsgBox, 262160, File error
 					, % holterDir "`n" fName "`n"
 					. "saved from email.`n`n"
