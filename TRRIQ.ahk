@@ -37,6 +37,8 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	checkcitrix()
 }
 
+readini("setup")
+
 /*	Get location info
 */
 #Include HostName.ahk
@@ -106,6 +108,7 @@ for key,val in indCodes
 }
 
 initHL7()
+hl7DirMap := {}
 
 MainLoop: ; ===================== This is the main part ====================================
 {
@@ -545,15 +548,22 @@ WQlist() {
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
-		if !(id := findWQid(SubStr(x.5,1,8),x.3).id) {									; if can't id based on study date and mrn
+		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % hl7Dir fileIn
-			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")
-			pv1_dt := SubStr(pv1.40,1,8)
-			if (id := findWQid(pv1_dt,x.3).id) {										; but found a wqid based on date in PV1.40
-				newFileIn := RegExReplace(fileIn,"i)_(\d+).hl7","_" pv1_dt ".hl7")
-				FileMove,% hl7Dir fileIn, % hl7Dir newFileIn							; rename file
-				eventlog("HL7 renamed to " newFileIn)
-				fileIn := newFileIn														; send correct filename to list
+			obr:= strsplit(stregX(tmptxt,"\R+OBR",1,0,"\R+",0),"|")						; get OBR segment
+			obr_req := trim(obr.3," ^")													; requision num from registration PV1.21
+			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
+			pv1_dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
+			
+			if (readWQ(obr_req).mrn) {													; check if obr_req is valid wqid
+				id := obr_req
+				hl7dirMap[fileIn] := id
+			} 
+			else if (id := findWQid(pv1_dt,x.3).id) { 									; try to find wqid based on date in PV1.40 and mrn
+				hl7dirMap[fileIn] := id
+			}
+			else {																		; can't find wqid, just admit defeat
+				id :=
 			}
 		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
@@ -1508,7 +1518,7 @@ findWQid(DT:="",MRN:="",ser:="") {
 		x :=																				; anything else is null
 	}
 
-	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; will return null (error) if no match
+	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; returns {id,node}; or null (error) if no match
 }
 
 scanTempfiles() {
@@ -2044,7 +2054,7 @@ registerPreventice() {
 		, ""
 		, ""
 		, ""
-		, ptDem.account)
+		, ptDem.wqid)
 	
 	buildHL7("IN1",
 		, "N/A"
@@ -2098,7 +2108,7 @@ registerPreventice() {
 	buildHL7("ORC","")
 	
 	buildHL7("OBR"
-		, ptDem.account
+		, ptDem.wqid
 		, ""
 		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter^Holter")
 		. strQ((ptDem.model~="BodyGuardian") ? 1 : "","CEM^CEM")
@@ -2982,7 +2992,7 @@ findFullPdf(wqid:="") {
 /*	Scans HolterDir for potential full disclosure PDFs
 	maybe rename if appropriate
 */
-	global holterDir, hl7dir, fldval, pdfList
+	global holterDir, hl7dir, fldval, pdfList, AllowSavedPDF
 	
 	pdfList := Object()																	; clear list to add to WQlist
 	
@@ -3018,6 +3028,15 @@ findFullPdf(wqid:="") {
 			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
 			
 			flds := getPdfID(newtxt)
+			
+			if (AllowSavedPDF!="true") && (flds.type = "E") {
+				MsgBox, 262160, File error
+					, % holterDir "`n" fName "`n"
+					. "saved from email.`n`n"
+					. "DO NOT SAVE FROM EMAIL!`n`n"
+					. "(delete the file to stop getting this message)"
+				continue
+			}
 			
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
 			FileMove, %fileIn%, % holterDir newFnam ".pdf", 1							; rename the unprocessed PDF
@@ -3171,6 +3190,20 @@ CheckProc:
 	eventlog("CheckProc")
 	fetchQuit := false
 	
+	if !(fldval.wqid) {
+		id := findWQid(parseDate(fldval["dem-Test_date"]).YMD							; search wqid based on combination of study date, mrn, SN
+				, fldval["dem-MRN"]
+				, fldval["dem-Device_SN"]).id
+		if IsObject(res := readWQ(id)) {												; pull some vals
+			fldval["dem-Device_SN"] := strX(res.dev," ",0,1,"",0)
+			fldval.name := res.name
+			fldval.node := res.node
+			fldval.wqid := id
+			eventlog("CheckProc: found wqid " id " in " res.node)
+		} else {
+			eventlog("CheckProc: no matching wqid found")
+		}
+	}
 	if (fldval.node = "done") {
 	;~ if (zzzfldval.node = "done") {
 		MsgBox % fileIn " has been scanned already.`n`nDeleting file."
@@ -3178,12 +3211,6 @@ CheckProc:
 		FileDelete, % fileIn
 		fetchQuit := true
 		return
-	}
-	if !(fldval.wqid) {
-		id := findWQid(parseDate(fldval["dem-Test_date"]).YMD,fldval["dem-MRN"]).id		; get id based on study date and mrn
-		res := readWQ(id)
-		fldval.wqid := id																; pull some vals
-		fldval["dem-Device_SN"] := strX(res.dev,"BG",1,2,"",0)
 	}
 	
 	ptDem := Object()																	; Populate temp object ptDem with parsed data from HL7 or PDF fldVal
