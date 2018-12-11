@@ -3104,6 +3104,19 @@ getPdfID(txt) {
 			res.date := dt.YMD
 		res.mrn := strQ(trim(stregX(txt,"Patient ID\R",1,1,"\R",1)," `t`r`n"),"###","Zio")
 		res.wqid := "00000Z"
+	} else if instr(txt,"Global Instrumentation LLC") {									; BG Mini
+		res.type := "M"
+		name := parseName(res.name := trim(stregX(txt,"Patient Name:",1,1,"\R",1)))
+			res.nameL := name.last
+			res.nameF := name.first
+		dt := parseDate(trim(stregX(txt,"Test Start:",1,1,"Test End:",1)))
+			res.date := dt.YMD
+			res.time := dt.hr dt.min
+		dobDt := parseDate(trim(stregX(txt,"(Date of Birth|DOB):",1,1,"\R",1)))
+			res.dob := dobDt.YMD
+		res.mrn := trim(stregX(txt,"MRN:",1,1,"Date of Birth:",1)," `r`n")
+		res.ser := trim(stregX(txt,"Device Serial Number:",1,1,"\(Firmware",1))
+		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "M"
 	}
 	return res
 }
