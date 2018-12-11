@@ -2628,6 +2628,8 @@ ProcessPDF:
 		gosub Event_BGH
 	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {				; Original Preventice Holter
 		;~ gosub Holter_Pr
+	} else if (instr(newtxt,"Global Instrumentation LLC")) {							; BG Mini extended Holter
+		gosub Holter_BGM
 	} else {
 		eventlog(fileNam " bad file.")
 		MsgBox No match!
