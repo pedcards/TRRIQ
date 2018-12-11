@@ -3389,6 +3389,19 @@ Holter_BGM:
 return	
 }
 
+daycount(byref txt,day1) {
+	n:="(\d{2}:\d{2}:\d{2}) Day (\d{1,2})"
+	pos:=1, v:=0
+	while pos:=RegExMatch(txt,n,m,v+pos)
+	{
+		day:=day1
+		day += m2, Days
+		v:=StrLen(m)
+		txt:=RegExReplace(txt,n,parseDate(substr(day,1,8)).mdy " at " m1,,1,pos)
+	}
+	return
+}
+
 Zio:
 {
 	eventlog("Holter_Zio")
