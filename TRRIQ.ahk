@@ -4050,6 +4050,24 @@ formatField(pre, lab, txt) {
 			return
 		}
 	}
+
+;	Body Guardian Mini specific fixes
+	if (monType="Mini") {
+		if (lab ~= "Test_(date|end)") {													; convert dates to MDY format
+			txt := parseDate(txt).mdy
+		}
+		if RegExMatch(txt																; reconstitute Beats and BPM for longest/fastest/slowest fields
+		,"(.*)? \((\d{1,2}/\d{1,2}/\d{2,4} at \d{1,2}:\d{2}:\d{2})\)"
+		,res) {
+			res1 := RegExReplace(res1,"(\d+)\s*,\s*(\d+)","$1 beats, $2 bpm")
+			fieldColAdd(pre,lab,res1)
+			fieldColAdd(pre,lab "_time",res2)
+			return
+		}
+		if (lab~="_time" && RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res)) {		; convert DD:HH:MM:SS into Days & Hrs
+			txt := res1 " days, " res2 " hours"
+		}
+	}
 	
 ;	ZIO patch specific search fixes
 	if (monType="Zio") {
