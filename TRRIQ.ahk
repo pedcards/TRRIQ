@@ -3972,7 +3972,7 @@ formatField(pre, lab, txt) {
 		StringReplace, txt, txt, %A_Space%hr%A_space% , :
 		StringReplace, txt, txt, %A_Space%min , 
 	}
-	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(s)?)")			; Remove units from numbers
+	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(ond)?(s)?)")			; Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						; Fix time strings without space before AM|PM
 	txt:=RegExReplace(txt,"\(DD:HH:MM:SS\)")								; Remove time units
 	txt := trim(txt)
