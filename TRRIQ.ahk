@@ -593,10 +593,10 @@ WQlist() {
 			, strQ(res.site,"###","???")												; site
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
-			, (res.dev~="BG") ? "BGH"													; extracted
+			, (res.dev~="BG|BodyGuardian Heart") ? "BGH"													; extracted
 			: (res.dev~="Mortara") ? "HOL"
 			: "HL7"
-			, (full>2)||(res.dev~="BG") ? "":"X")										; fulldisc if filesize >2 Meg
+			, (full>2)||(res.dev~="BG|BodyGuardian Heart") ? "":"X")										; fulldisc if filesize >2 Meg
 		wqfiles.push(id)
 	}
 	
@@ -1376,38 +1376,44 @@ parsePreventiceEnrollment(tbl) {
 		date := parseDate(res.date).YMD
 		dt := A_Now
 		dt -= date, Days
-		done += (dt<10)																	; if days < threshold, returns done+1 == keep paging
+		if (dt>14) {																	; if days > threshold, break loop
+			break
+		} else {																		; otherwise done+1 == keep paging
+			done ++
+		}
 		
 	/*	Check whether any params match this device
 	*/
-		if enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']") {						; MRN+S/N
+		if enrollcheck("[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']") {		; MRN+DATE+S/N = perfect match
 			continue
 		}
-		if enrollcheck("[mrn='" res.mrn "'][date='" date "']") {						; MRN+DATE
+		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
+			en:=readWQ(id)
+			if (en.node="done") {
+				continue
+			}
+			wqSetVal(id,"date",date)
+			eventlog(en.name " (" id ") changed WQ date '" en.date "' ==> '" date "'")
 			continue
 		}
-		if enrollcheck("[date='" date "'][dev='" res.dev "']") {						; DATE+S/N
+		if (id:=enrollcheck("[mrn='" res.mrn "'][date='" date "']")) {					; MRN+DATE, no S/N
+			en:=readWQ(id)
+			if (en.node="done") {
+				continue
+			}
+			wqSetVal(id,"dev",res.dev)
+			eventlog(en.name " (" id ") changed WQ dev '" en.dev "' ==> '" res.dev "'")
+			continue
+		}
+		if (id:=enrollcheck("[date='" date "'][dev='" res.dev "']")) {					; DATE+S/N, no MRN
+			en:=readWQ(id)
+			if (en.node="done") {
+				continue
+			}
+			wqSetVal(id,"mrn",res.mrn)
+			eventlog(en.name " (" id ") changed WQ mrn '" en.mrn "' ==> '" res.mrn "'")
 			continue
 		} 
-		
-	/*	Check whether completes any pending with blank S/N for this patient
-	*/
-		foundIt := false
-		Loop % (ens := wq.selectNodes("/root/pending/enroll[date='" date "'][mrn='" res.mrn "']")).length
-		{
-			en := ens.item(A_Index-1)
-			id := en.getAttribute("id")
-			ser := en.getAttribute("dev")
-			if instr(res.dev,ser) {														; e.g. wq="BodyGuardian -" and web="BodyGuardian - BG12345"
-				foundIt := id
-			}
-		}
-		if (foundIt) {																	; found a full web S/N when wqID S/N blank
-			wqSetVal(foundIt,"dev",res.dev)
-			eventlog("Changed " res.name " (" foundIt ") dev to " res.dev)
-			done ++
-			continue
-		}
 		
 	/*	No match (i.e. unique record)
 	 *	add new record to PENDING
@@ -1439,15 +1445,9 @@ enrollcheck(params) {
 	
 	en := wq.selectSingleNode("//enroll" params)
 	id := en.getAttribute("id")
-	;~ name := parsename(en.selectSingleNode("name").text).lastfirst
-	;~ node := en.parentNode.nodeName
 	
-	if (id) {
-		;~ eventlog("Enroll id " id " for " strQ(name,"### ") params " already exists in " node ".")
-		return true
-	} else {
-		return false
-	}
+; 	returns id if finds a match, else null
+	return id																			
 }
 
 parsePreventiceInventory(tbl) {
@@ -2629,6 +2629,8 @@ ProcessPDF:
 		gosub Event_BGH
 	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {				; Original Preventice Holter
 		;~ gosub Holter_Pr
+	} else if (instr(newtxt,"Global Instrumentation LLC")) {							; BG Mini extended Holter
+		gosub Holter_BGM
 	} else {
 		eventlog(fileNam " bad file.")
 		MsgBox No match!
@@ -3105,6 +3107,19 @@ getPdfID(txt) {
 			res.date := dt.YMD
 		res.mrn := strQ(trim(stregX(txt,"Patient ID\R",1,1,"\R",1)," `t`r`n"),"###","Zio")
 		res.wqid := "00000Z"
+	} else if instr(txt,"Global Instrumentation LLC") {									; BG Mini
+		res.type := "M"
+		name := parseName(res.name := trim(stregX(txt,"Patient Name:",1,1,"\R",1)))
+			res.nameL := name.last
+			res.nameF := name.first
+		dt := parseDate(trim(stregX(txt,"Test Start:",1,1,"Test End:",1)))
+			res.date := dt.YMD
+			res.time := dt.hr dt.min
+		dobDt := parseDate(trim(stregX(txt,"(Date of Birth|DOB):",1,1,"\R",1)))
+			res.dob := dobDt.YMD
+		res.mrn := trim(stregX(txt,"MRN:",1,1,"Date of Birth:",1)," `r`n")
+		res.ser := trim(stregX(txt,"Device Serial Number:",1,1,"\(Firmware",1))
+		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "M"
 	}
 	return res
 }
@@ -3313,6 +3328,81 @@ CheckProc:
 	fldVal["dem-Indication"] := ptDem["Indication"]
 	
 return
+}
+
+Holter_BGM:
+{
+	eventlog("Holter_BGMini")
+	monType := "Mini"
+	
+	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	 */
+	demog := columns(newtxt,"Subject Data","Ventricular Tachycardia",,"Test Start")
+	fields[1] := ["Patient Name","MRN","Date Of Birth","Gender"
+				, "Test Start","Test End","Test Duration","Analysis Duration","Practice:"]
+	labels[1] := ["Name","MRN","DOB","Sex","Test_date","Test_end","Recording_time","Analysis_time","Site"]
+	scanParams(demog,1,"dem",1)
+	
+	t0 := parseDate(fldval["dem-Test_date"]).ymd
+	;~ t1 := t0.YMD t0.hr t0.min t0.sec
+	
+	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS Complexes") "<<<end"
+	daycount(summary,t0)
+	
+	sumEvent := stregX(summary,"",1,0,"\s+Summary\R",1) "<<<end"
+	summary := stregX(summary,"\s+Summary\R",1,1,"<<<end",0)
+	
+	sumTot := stregX(summary,"\s+Totals\R",1,1,"\s+Heart Rate\R",1)
+	
+	sumRate := sumTot "`n" stregX(summary,"\s+Heart Rate\R",1,1,"\s+Ventricular Event Information\R",1)
+	fields[1] := ["Total QRS Complexes","Minimum","Maximum","Average","Tachycardia","Bradycardia"]
+	labels[1] := ["Total_beats","Min","Max","Avg","Longest_tachy","Longest_brady"]
+	scanParams(sumRate,1,"hrd",1)
+	
+	sumVE := sumTot "`n" stregX(summary,"\s+Ventricular Event Information\R",1,1,"\s+Supraventricular Event Information\R",1)
+	fields[2] := ["Ventricular Ectopics","Isolated","Bigeminy","Couplets","Runs","Longest","Fastest"]
+	labels[2] := ["Total","SingleVE","Bigeminy","Couplets","Runs","Longest","Fastest"]
+	scanParams(sumVE,2,"ve",1)
+	
+	sumSVE := sumTot "`n" stregX(summary,"\s+Supraventricular Event Information\R",1,1,"\s+RR.Pause\R",1)
+	fields[3] := ["Supraventricular Ectopics","Isolated","Couplets","Runs","Longest","Fastest"]
+	labels[3] := ["Total","Single","Pairs","Runs","Longest","Fastest"]
+	scanParams(sumSVE,3,"sve",1)
+	
+	sumPause := stregX(summary,"\s+RR.Pause\R",1,1,"\s+AFib.AFlutter\R",1)
+	fields[4] := ["Maximum","Total Pauses"]
+	labels[4] := ["LongRR","Pauses"]
+	scanParams(sumPause,4,"sve",1)
+	
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	fieldsToCSV()
+	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
+	StringReplace, tmpstr, tmpstr, `r, `n, ALL
+	fieldcoladd("","INTERP",trim(cleanspace(tempstr)," `n"))
+	fieldcoladd("","Mon_type","Holter")
+	
+	ShortenPDF(fullDisc)
+	
+	fldval.done := true
+
+return	
+}
+
+daycount(byref txt,day1) {
+	n:="(\d{2}:\d{2}:\d{2}) Day (\d{1,2})"
+	pos:=1, v:=0
+	while pos:=RegExMatch(txt,n,m,v+pos)
+	{
+		day:=day1
+		day += m2, Days
+		v:=StrLen(m)
+		txt:=RegExReplace(txt,n,parseDate(substr(day,1,8)).mdy " at " m1,,1,pos)
+	}
+	return
 }
 
 Zio:
@@ -3885,8 +3975,9 @@ formatField(pre, lab, txt) {
 		StringReplace, txt, txt, %A_Space%hr%A_space% , :
 		StringReplace, txt, txt, %A_Space%min , 
 	}
-	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(s)?)")			; 	Remove units from numbers
-	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						;	Fix time strings without space before AM|PM
+	txt:=RegExReplace(txt,"i)BPM|Event(s)?|Beat(s)?|( sec(ond)?(s)?)")			; Remove units from numbers
+	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						; Fix time strings without space before AM|PM
+	txt:=RegExReplace(txt,"\(DD:HH:MM:SS\)")								; Remove time units
 	txt := trim(txt)
 	
 	if (lab="Name") {
@@ -3899,6 +3990,7 @@ formatField(pre, lab, txt) {
 	}
 	if (lab="DOB") {														; remove (age) from DOB
 		txt := strX(txt,"",1,0," (",2)
+		txt := parseDate(txt).mdy
 	}
 
 	if (lab~="^(Referring|Ordering)$") {
@@ -3959,6 +4051,24 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,"Name_L",ptDem["nameL"])
 			fieldColAdd(pre,"Name_F",ptDem["nameF"])
 			return
+		}
+	}
+
+;	Body Guardian Mini specific fixes
+	if (monType="Mini") {
+		if (lab ~= "Test_(date|end)") {													; convert dates to MDY format
+			txt := parseDate(txt).mdy
+		}
+		if RegExMatch(txt																; reconstitute Beats and BPM for longest/fastest/slowest fields
+		,"(.*)? \((\d{1,2}/\d{1,2}/\d{2,4} at \d{1,2}:\d{2}:\d{2})\)"
+		,res) {
+			res1 := RegExReplace(res1,"(\d+)\s*,\s*(\d+)","$1 beats, $2 bpm")
+			fieldColAdd(pre,lab,res1)
+			fieldColAdd(pre,lab "_time",res2)
+			return
+		}
+		if (lab~="_time" && RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res)) {		; convert DD:HH:MM:SS into Days & Hrs
+			txt := res1 " days, " res2 " hours"
 		}
 	}
 	
