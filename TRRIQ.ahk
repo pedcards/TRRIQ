@@ -1375,7 +1375,7 @@ parsePreventiceEnrollment(tbl) {
 		date := parseDate(res.date).YMD
 		dt := A_Now
 		dt -= date, Days
-		if (dt>10) {																	; if days > threshold, break loop
+		if (dt>14) {																	; if days > threshold, break loop
 			break
 		} else {																		; otherwise done+1 == keep paging
 			done ++
