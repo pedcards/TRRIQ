@@ -1383,34 +1383,36 @@ parsePreventiceEnrollment(tbl) {
 		
 	/*	Check whether any params match this device
 	*/
-		if enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']") {						; MRN+S/N
+		if enrollcheck("[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']") {		; MRN+DATE+S/N = perfect match
 			continue
 		}
-		if enrollcheck("[mrn='" res.mrn "'][date='" date "']") {						; MRN+DATE
+		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
+			en:=readWQ(id)
+			if (en.node="done") {
 			continue
 		}
-		if enrollcheck("[date='" date "'][dev='" res.dev "']") {						; DATE+S/N
+			wqSetVal(id,"date",date)
+			eventlog(en.name " (" id ") changed WQ date '" en.date "' ==> '" date "'")
+			continue
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "'][date='" date "']")) {					; MRN+DATE, no S/N
+			en:=readWQ(id)
+			if (en.node="done") {
+				continue
+			}
+			wqSetVal(id,"dev",res.dev)
+			eventlog(en.name " (" id ") changed WQ dev '" en.dev "' ==> '" res.dev "'")
+			continue
+		}
+		if (id:=enrollcheck("[date='" date "'][dev='" res.dev "']")) {					; DATE+S/N, no MRN
+			en:=readWQ(id)
+			if (en.node="done") {
+				continue
+			}
+			wqSetVal(id,"mrn",res.mrn)
+			eventlog(en.name " (" id ") changed WQ mrn '" en.mrn "' ==> '" res.mrn "'")
 			continue
 		} 
-		
-	/*	Check whether completes any pending with blank S/N for this patient
-	*/
-		foundIt := false
-		Loop % (ens := wq.selectNodes("/root/pending/enroll[date='" date "'][mrn='" res.mrn "']")).length
-		{
-			en := ens.item(A_Index-1)
-			id := en.getAttribute("id")
-			ser := en.getAttribute("dev")
-			if instr(res.dev,ser) {														; e.g. wq="BodyGuardian -" and web="BodyGuardian - BG12345"
-				foundIt := id
-			}
-		}
-		if (foundIt) {																	; found a full web S/N when wqID S/N blank
-			wqSetVal(foundIt,"dev",res.dev)
-			eventlog("Changed " res.name " (" foundIt ") dev to " res.dev)
-			done ++
-			continue
-		}
 		
 	/*	No match (i.e. unique record)
 	 *	add new record to PENDING
