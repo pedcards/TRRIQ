@@ -1389,8 +1389,8 @@ parsePreventiceEnrollment(tbl) {
 		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
 			en:=readWQ(id)
 			if (en.node="done") {
-			continue
-		}
+				continue
+			}
 			wqSetVal(id,"date",date)
 			eventlog(en.name " (" id ") changed WQ date '" en.date "' ==> '" date "'")
 			continue
@@ -1444,15 +1444,9 @@ enrollcheck(params) {
 	
 	en := wq.selectSingleNode("//enroll" params)
 	id := en.getAttribute("id")
-	;~ name := parsename(en.selectSingleNode("name").text).lastfirst
-	;~ node := en.parentNode.nodeName
 	
-	if (id) {
-		;~ eventlog("Enroll id " id " for " strQ(name,"### ") params " already exists in " node ".")
-		return true
-	} else {
-		return false
-	}
+; 	returns id if finds a match, else null
+	return id																			
 }
 
 parsePreventiceInventory(tbl) {
