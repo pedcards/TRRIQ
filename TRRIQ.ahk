@@ -3087,8 +3087,8 @@ getPdfID(txt) {
 			res.dob := dobDt.YMD
 		res.mrn := trim(stregX(txt,"Secondary ID:?",1,1,"Age:?",1))
 		res.ser := trim(stregX(txt,"Recorder (No|Number):?",1,1,"\R",1))
-		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "H"
-	} else if instr(txt,"BodyGuardian Heart") {
+		res.wqid := strQ(findWQid(res.date,res.mrn,"Mortara H3+ - " res.ser).id,"###","00000") "H"
+	} else if instr(txt,"BodyGuardian Heart") {											; BG Heart
 		res.type := "E"
 		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1)," `t`r`n"))
 			res.nameL := name.last
@@ -3097,7 +3097,7 @@ getPdfID(txt) {
 			res.date := dt.YMD
 		res.mrn := trim(stregX(txt,"Patient ID",1,1,"Gender",1)," `t`r`n")
 		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###E","00000E")
-	} else if instr(txt,"Zio XT") {
+	} else if instr(txt,"Zio XT") {														; Zio
 		res.type := "Z"
 		name := parseName(res.name := trim(stregX(txt,"Final Report for\R",1,1,"\R",1)," `t`r`n"))
 			res.nameL := name.last
