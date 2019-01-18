@@ -602,7 +602,7 @@ WQlist() {
 	
 /*	Scan Holter PDFs folder for additional files
 */
-	findfullPDF()
+	findfullPDF()																		; read Holter PDF dir into pdfList
 	for key,val in pdfList
 	{
 		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)										; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
@@ -2994,6 +2994,7 @@ findFullPdf(wqid:="") {
 	global holterDir, hl7dir, fldval, pdfList, AllowSavedPDF
 	
 	pdfList := Object()																	; clear list to add to WQlist
+	pdfScanPages := 3
 	
 	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(holterDir).Files.Count
 	
@@ -3021,7 +3022,7 @@ findFullPdf(wqid:="") {
 		}
 		
 		if (fnID.0 = "") {																; Unprocessed full disclosure PDF
-			runwait, pdftotext.exe -l 1 "%fileIn%" "%fnam%.txt",,min					; convert PDF pages 1-2 with no tabular structure
+			runwait, pdftotext.exe -l %pdfScanPages% "%fileIn%" "%fnam%.txt",,min		; convert PDF pages with no tabular structure
 			FileRead, newtxt, %fnam%.txt												; load into newtxt
 			FileDelete, %fnam%.txt
 			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
