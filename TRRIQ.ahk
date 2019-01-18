@@ -3105,7 +3105,7 @@ getPdfID(txt) {
 			res.date := dt.YMD
 		res.mrn := strQ(trim(stregX(txt,"Patient ID\R",1,1,"\R",1)," `t`r`n"),"###","Zio")
 		res.wqid := "00000Z"
-	} else if instr(txt,"Global Instrumentation LLC") {									; BG Mini
+	} else if instr(txt,"Preventice Services, LLC") {									; BG Mini report
 		res.type := "M"
 		name := parseName(res.name := trim(stregX(txt,"Patient Name:",1,1,"\R",1)))
 			res.nameL := name.last
