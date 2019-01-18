@@ -4431,13 +4431,14 @@ ParseDate(x) {
 		date.dd := d3
 		date.date := trim(d)
 	}
-	
-	if RegExMatch(x,"i)(\d{1,2}):(\d{2})(:\d{2})?(.*AM|PM)?",t) {						; 17:42 PM
-		time.hr := zdigit(t1)
-		time.min := t2
-		time.sec := trim(t3," :")
-		time.ampm := trim(t4)
-		time.time := trim(t)
+	if RegExMatch(x,"iO)(\d{1,2}):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {				; 17:42 PM
+		hasDays := (t.value[4]) ? true : false 												; 4 nums has days
+		time.days := (hasDays) ? t.value[1] : ""
+		time.hr := zdigit(t.value[1+hasDays])
+		time.min := trim(t.value[2+hasDays]," :")
+		time.sec := trim(t.value[3+hasDays]," :")
+		time.ampm := trim(t.value[5])
+		time.time := trim(t.value)
 	}
 
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
