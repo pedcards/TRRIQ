@@ -1030,6 +1030,7 @@ parseClip() {
 getDemName:
 {
 	if (RegExMatch(mdTitle, "i)\s\-\s\d{6,7}\s(Opened by)")) {							; Match window title "LAST, FIRST - 12345678 Opened by Chun, Terrence U, MD"
+		mdTitle := RegExReplace(mdTitle,"\'","^")
 		ptDem["nameL"] := strX(mdTitle,,1,0, ",",1,1)									; and parse the name
 		ptDem["nameF"] := strX(mdTitle,",",1,2, " ",1,1)
 	}
@@ -2017,7 +2018,7 @@ registerPreventice() {
 		, ptDem.MRN
 		, ptDem.MRN
 		, ""
-		, ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
+		, parseName(ptDem.nameL).apostr "^" parseName(ptDem.nameF).apostr . strQ(ptDem.nameMI,"^###")
 		, ""
 		, parseDate(ptDem.dob).YMD
 		, substr(ptDem.sex,1,1)
@@ -2070,7 +2071,7 @@ registerPreventice() {
 		, "" ;"Authorization Information"
 		, "" ;"Plan Type"
 		;~ , ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
-		, ptDem.parentL "^" ptDem.parentF
+		, parseName(ptDem.parentL).apostr "^" parseName(ptDem.parentF).apostr
 		, "Legal Guardian"
 		, parseDate(ptDem.dob).YMD
 		, "" ;ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
@@ -2537,11 +2538,11 @@ moveHL7dem() {
 /*	Populate fldVal["dem-"] with data from wqlist (if valid), otherwise from hl7
 */
 	global fldVal, obxVal
-	if (fldVal.acct) {	
-		name := parseName(fldval.name)
+	if (fldVal.acct) {																	; valid wqid has been previously processed
+		name := parseName(fldval.name)													; name from wqid (will have ^ sub)
 		fldVal["dem-Name"] := fldval.Name
-		fldVal["dem-Name_L"] := name.last
-		fldVal["dem-Name_F"] := name.first
+		fldVal["dem-Name_L"] := parseName(name.last).apostr								; replace [^] with [']
+		fldVal["dem-Name_F"] := parseName(name.first).apostr
 		fldVal["dem-MRN"] := fldval.MRN
 		fldVal["dem-DOB"] := fldval.DOB
 		fldVal["dem-Sex"] := fldval.Sex
@@ -2649,6 +2650,7 @@ outputfiles:
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["dem-Test_Date"])											; get the study date from PDF result
 	filenameOut := fldval["dem-MRN"] " " fldval["dem-Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
+	filenameOut := RegExReplace(filenameOut,"\^","'")										; convert [^] back to [']
 	tmpFlag := tmpDate.YMD . "020000"
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
@@ -2734,6 +2736,7 @@ wqSetVal(id,node,val) {
 	
 	newID := "/root/pending/enroll[@id='" id "']"
 	k := wq.selectSingleNode(newID "/" node)
+	val := RegExReplace(val,"\'","^")													; make sure no val ever contains [']
 	
 	if IsObject(k) {
 		wq.setText(newID "/" node,val)
@@ -3225,8 +3228,8 @@ CheckProc:
 		return
 	}
 	
-	ptDem := Object()																	; Populate temp object ptDem with parsed data from PDF fldVal
-	ptDem["nameL"] := fldVal["dem-Name_L"]
+	ptDem := Object()																	; Populate temp object ptDem with parsed data from HL7 or PDF fldVal
+	ptDem["nameL"] := fldVal["dem-Name_L"]												; dem-Name contains ['] not [^]
 	ptDem["nameF"] := fldVal["dem-Name_F"] 
 	ptDem["Name"] := fldval["dem-Name"]
 	ptDem["mrn"] := fldVal["dem-MRN"] 
@@ -3270,8 +3273,8 @@ CheckProc:
 		 *	replace fldVal with newly acquired values
 		 */
 		fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
-		fldVal["dem-Name_L"] := fldval["Name_L"] := ptDem["nameL"]
-		fldVal["dem-Name_F"] := fldval["Name_F"] := ptDem["nameF"] 
+		fldVal["dem-Name_L"] := fldval["Name_L"] := RegExReplace(ptDem["nameL"],"\^","'")
+		fldVal["dem-Name_F"] := fldval["Name_F"] := RegExReplace(ptDem["nameF"],"\^","'")
 		fldVal["dem-MRN"] := ptDem["mrn"] 
 		fldVal["dem-DOB"] := ptDem["DOB"] 
 		fldVal["dem-Sex"] := ptDem["Sex"]
@@ -3313,8 +3316,8 @@ CheckProc:
 	
 	;---Copy ptDem back to fldVal, whether fetched or not
 	fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
-	fldVal["dem-Name_L"] := fldval["Name_L"] := ptDem["nameL"]
-	fldVal["dem-Name_F"] := fldval["Name_F"] := ptDem["nameF"] 
+	fldVal["dem-Name_L"] := fldval["Name_L"] := RegExReplace(ptDem["nameL"],"\^","'")
+	fldVal["dem-Name_F"] := fldval["Name_F"] := RegExReplace(ptDem["nameF"],"\^","'")
 	fldVal["dem-MRN"] := fldval["MRN"] := ptDem["mrn"] 
 	fldVal["dem-DOB"] := ptDem["DOB"] 
 	fldVal["dem-Sex"] := ptDem["Sex"]
@@ -4162,7 +4165,7 @@ checkFetchDem(nameL,nameF,mrn) {
 */
 	global ptDem, fetchQuit
 	fullName := nameL ", " nameF
-	fullNameDem := ptDem["nameL"] ", " ptDem["nameF"]
+	fullNameDem := RegExReplace(ptDem["nameL"] ", " ptDem["nameF"],"\^","'")			; fetched ptDem.nameL has [^], passed nameL has [']
 	fuzz := fuzzysearch(format("{:U}",fullName), format("{:U}",fullNameDem))
 	thresh := 0.15													
 	
@@ -4348,6 +4351,7 @@ ParseName(x) {
 		return error
 	}
 	x := trim(x)																		; trim edges
+	x := RegExReplace(x,"\'","^")														; replace ['] with [^] to avoid XPATH errors
 	x := RegExReplace(x," \w "," ")														; remove middle initial: Troy A Johnson => Troy Johnson
 	x := RegExReplace(x,"(,.*?)( \w)$","$1")											; remove trailing MI: Johnston, Troy A => Johnston, Troy
 	x := RegExReplace(x,"i),?( JR| III| IV)$")											; Filter out name suffixes
@@ -4386,7 +4390,8 @@ ParseName(x) {
 	return {first:first
 			,last:last
 			,firstlast:first " " last
-			,lastfirst:last ", " first}
+			,lastfirst:last ", " first
+			,apostr:RegExReplace(x,"\^","'")}
 }
 
 ParseDate(x) {
