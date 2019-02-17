@@ -1559,46 +1559,6 @@ cleanTempFiles() {
 	return
 }
 
-scanTempfiles() {
-	global wq
-	count := 0
-	
-	filecheck()
-	wq := new XML("worklist.xml")
-	FileOpen(".lock", "W")															; Create lock file.
-	
-	loop, files, tempfiles/*.csv
-	{
-		filenm := A_LoopFileName
-		files ++
-		RegExMatch(filenm,"O)^(\d{6,7}) (.*)? (\d{2}-\d{2}-\d{4})",wqnm)
-		if !(wqnm.value(0)) {
-			continue
-		}
-		mrn :=  wqnm.value(1)
-		name := wqnm.value(2)
-		date := parseDate(wqnm.value(3)).YMD
-		
-		if IsObject(wq.selectSingleNode("/root/done/enroll[mrn='" mrn "'][date='" date "']")) {
-			continue
-		}
-		
-		id := A_TickCount 
-		wq.addElement("enroll","/root/done",{id:id})
-		newID := "/root/done/enroll[@id='" id "']"
-		wq.addElement("date",newID,date)
-		wq.addElement("name",newID,name)
-		wq.addElement("mrn",newID,mrn)
-		wq.addElement("scantemp",newID,A_Now)
-		count ++
-		sleep 1
-	}
-	wq.save("worklist.xml")
-	FileDelete, .lock
-	eventlog("Scanned " files " files, " count " DONE records added.")
-return "Scanned " files " files, " count " DONE records added."
-}
-
 MortaraUpload(tabnum="")
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
