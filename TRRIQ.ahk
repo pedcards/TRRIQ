@@ -1539,7 +1539,7 @@ cleanTempFiles() {
 			dt := parseDate(v1)
 			if (dt.date) {																; move if has a valid date
 				dtStr := dt.yyyy dt.mm dt.dd
-				DestDir := "tempfiles\" dt.yyyy "\" dt.mm
+				DestDir := "tempfiles\archived\" dt.yyyy "\" dt.mm
 				if !instr(FileExist(DestDir),"D") {						; 
 					FileCreateDir, % DestDir
 				}
