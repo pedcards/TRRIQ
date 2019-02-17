@@ -230,7 +230,7 @@ PhaseGUI:
 	}
 	WQlist()
 	
-	;~ Menu, menuSys, Add, Scan tempfiles, scanTempFiles
+	Menu, menuSys, Add, Clean tempfiles, CleanTempFiles
 	;~ Menu, menuSys, Add, Find returned devices, WQfindlost
 	Menu, menuSys, Add, Change clinic location, changeLoc
 	Menu, menuSys, Add, Generate late returns report, lateReport
@@ -1521,44 +1521,43 @@ findWQid(DT:="",MRN:="",ser:="") {
 	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; returns {id,node}; or null (error) if no match
 }
 
-scanTempfiles() {
-	global wq
-	count := 0
+cleanTempFiles() {
+	thresh:=180
 	
-	filecheck()
-	wq := new XML("worklist.xml")
-	FileOpen(".lock", "W")															; Create lock file.
-	
-	loop, files, tempfiles/*.csv
+	Loop, files, tempfiles\*
 	{
 		filenm := A_LoopFileName
-		files ++
-		RegExMatch(filenm,"O)^(\d{6,7}) (.*)? (\d{2}-\d{2}-\d{4})",wqnm)
-		if !(wqnm.value(0)) {
-			continue
-		}
-		mrn :=  wqnm.value(1)
-		name := wqnm.value(2)
-		date := parseDate(wqnm.value(3)).YMD
-		
-		if IsObject(wq.selectSingleNode("/root/done/enroll[mrn='" mrn "'][date='" date "']")) {
+		FileGetTime, fileCDT, % "tempfiles\" filenm, C
+		dtDiff := A_now
+		dtDiff -= fileCDT, Days
+		if (dtDiff<thresh) {															; skip younger files, default 180 days
+			ct_skip ++
 			continue
 		}
 		
-		id := A_TickCount 
-		wq.addElement("enroll","/root/done",{id:id})
-		newID := "/root/done/enroll[@id='" id "']"
-		wq.addElement("date",newID,date)
-		wq.addElement("name",newID,name)
-		wq.addElement("mrn",newID,mrn)
-		wq.addElement("scantemp",newID,A_Now)
-		count ++
-		sleep 1
+		if RegExMatch(filenm,"\.csv$") {												; handle CSV files
+			RegExMatch(filenm,"(\d{2}-\d{2}-\d{4})\.csv",v)
+			dt := parseDate(v1)
+			if (dt.date) {																; move if has a valid date
+				dtStr := dt.yyyy dt.mm dt.dd
+				DestDir := "tempfiles\archived\" dt.yyyy "\" dt.mm
+				if !instr(FileExist(DestDir),"D") {						; 
+					FileCreateDir, % DestDir
+				}
+				FileMove, % "tempfiles\" filenm, % DestDir "\" filenm
+				ct_csv ++
+				continue
+			}
+		} else {
+			FileDelete, % "tempfiles\" filenm
+			ct_other ++
+		}
 	}
-	wq.save("worklist.xml")
-	FileDelete, .lock
-	eventlog("Scanned " files " files, " count " DONE records added.")
-return "Scanned " files " files, " count " DONE records added."
+	MsgBox, 262208, , % ""
+		. "CSV files moved: " ct_csv "`n"
+		. "Files deleted: " ct_other "`n"
+		. "FIles skipped: " ct_skip
+	return
 }
 
 MortaraUpload(tabnum="")
@@ -4431,6 +4430,7 @@ ParseDate(x) {
 		date.dd := d3
 		date.date := trim(d)
 	}
+	
 	if RegExMatch(x,"iO)(\d{1,2}):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {				; 17:42 PM
 		hasDays := (t.value[4]) ? true : false 												; 4 nums has days
 		time.days := (hasDays) ? t.value[1] : ""
@@ -4444,7 +4444,7 @@ ParseDate(x) {
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
 			, YMD:date.yyyy date.mm date.dd
 			, MDY:date.mm "/" date.dd "/" date.yyyy
-			, hr:time.hr, min:time.min, sec:time.sec, ampm:time.ampm, time:time.time}
+			, days:time.days, hr:time.hr, min:time.min, sec:time.sec, ampm:time.ampm, time:time.time}
 }
 
 niceDate(x) {
