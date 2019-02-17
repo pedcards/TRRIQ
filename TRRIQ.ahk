@@ -230,7 +230,7 @@ PhaseGUI:
 	}
 	WQlist()
 	
-	;~ Menu, menuSys, Add, Scan tempfiles, scanTempFiles
+	Menu, menuSys, Add, Clean tempfiles, CleanTempFiles
 	;~ Menu, menuSys, Add, Find returned devices, WQfindlost
 	Menu, menuSys, Add, Change clinic location, changeLoc
 	Menu, menuSys, Add, Generate late returns report, lateReport
