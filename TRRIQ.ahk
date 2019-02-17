@@ -1520,6 +1520,45 @@ findWQid(DT:="",MRN:="",ser:="") {
 	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; returns {id,node}; or null (error) if no match
 }
 
+cleanTempFiles() {
+	thresh:=180
+	
+	Loop, files, tempfiles\*
+	{
+		filenm := A_LoopFileName
+		FileGetTime, fileCDT, % "tempfiles\" filenm, C
+		dtDiff := A_now
+		dtDiff -= fileCDT, Days
+		if (dtDiff<thresh) {															; skip younger files, default 180 days
+			ct_skip ++
+			continue
+		}
+		
+		if RegExMatch(filenm,"\.csv$") {												; handle CSV files
+			RegExMatch(filenm,"(\d{2}-\d{2}-\d{4})\.csv",v)
+			dt := parseDate(v1)
+			if (dt.date) {																; move if has a valid date
+				dtStr := dt.yyyy dt.mm dt.dd
+				DestDir := "tempfiles\" dt.yyyy "\" dt.mm
+				if !instr(FileExist(DestDir),"D") {						; 
+					FileCreateDir, % DestDir
+				}
+				FileMove, % "tempfiles\" filenm, % DestDir "\" filenm
+				ct_csv ++
+				continue
+			}
+		} else {
+			FileDelete, % "tempfiles\" filenm
+			ct_other ++
+		}
+	}
+	MsgBox, 262208, , % ""
+		. "CSV files moved: " ct_csv "`n"
+		. "Files deleted: " ct_other "`n"
+		. "FIles skipped: " ct_skip
+	return
+}
+
 scanTempfiles() {
 	global wq
 	count := 0
