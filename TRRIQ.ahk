@@ -125,9 +125,9 @@ MainLoop: ; ===================== This is the main part ========================
 			eventlog("Update Preventice inventory.")
 			CheckPreventiceWeb("Facilities")
 		}
-		if (phase="Register") {
-			eventlog("Start BGH registration.")
-			BGHregister()
+		if (phase~="Register") {
+			eventlog("Start " phase ".")
+			BGregister(RegExReplace(phase,"Register"))
 		}
 		if (phase="Upload") {
 			eventlog("Start Mortara preparation/upload.")
@@ -2187,12 +2187,17 @@ registerPreventice() {
 	return
 }
 
-BGHregister() {
+BGregister(type) {
 	global wq, ptDem, fetchQuit
 	SetTimer, idleTimer, Off
 	checkCitrix()
 	
-	MsgBox, 262177, Event recorder, Start BGH event recorder registration?
+	MsgBox, 262177
+		, BodyGuardian MONITOR
+		, % "Start " 
+		. (type="BGH" ? "30-day BG Heart" : "")
+		. (type="BGM" ? "14-day BG Mini" : "")
+		. " registration?"
 	IfMsgBox, Cancel
 	{
 		return
