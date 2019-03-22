@@ -158,13 +158,26 @@ PhaseGUI:
 	Gui, Add, Button
 		, Y+10 wp h40 vInventory gPhaseTask
 		, Grab Preventice inventory
-	Gui, Add, Button
-		, Y+10 wp h40 vRegister gPhaseTask
-		, Register BGH EVENT RECORDER
-	Gui, Add, Button
-		, Y+10 wp h40 vUpload gPhaseTask
-		, Prepare/Upload MORTARA HOLTER
+	Gui, Add, Text, Y+20 wp h80 Center, Register BodyGuardian MONITOR
+	Gui, Add, Text, Y+20 wp h80 Center, Prepare/Upload MORTARA HOLTER
 	Gui, Font, Normal
+	
+	GuiControlGet, but1, Pos, BodyGuardian
+	GuiControlGet, but2, Pos, MORTARA
+	
+	Gui, Add, Picture
+		, % "Y" but1Y+18 " X" but1X+(wksloc="Main Campus" ? 120 : 60)
+		. " +0x1000 vRegisterBGM gPhaseTask "
+		, .\BGMini.png
+	Gui, Add, Picture
+		, % "Y" but1Y+18 " X" but1X+(wksloc="Main Campus" ? 10 : 60)
+		. " +0x1000 vRegisterBGH gPhaseTask"
+		, .\BGHeart.png
+	
+	Gui, Add, Picture
+		, % "Y" but2Y+18 " X" but2X+60 
+		. " +0x1000 vUpload gPhaseTask"
+		, .\H3.png
 	
 	GuiControl
 		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
@@ -174,7 +187,7 @@ PhaseGUI:
 		, Grab Preventice inventory
 	
 	Gui, Add, Tab3
-		, -Wrap x10 y10 w640 h320 vWQtab +HwndWQtab
+		, -Wrap x10 y10 w640 h400 vWQtab +HwndWQtab
 		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
