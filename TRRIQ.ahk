@@ -2163,7 +2163,8 @@ registerPreventice() {
 	buildHL7("OBX"
 		, "ST", "12915^Service Type", ""
 		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter")
-		. strQ((ptDem.model~="BodyGuardian") ? 1 : "","CEM") )
+		. strQ((ptDem.model~="Heart") ? 1 : "","CEM") )
+		. strQ((ptDem.model~="Mini") ? 1 : "","Holter") )
 	
 	buildHL7("OBX"
 		, "ST", "12916^Device", "", ptDem.model)
@@ -2177,7 +2178,8 @@ registerPreventice() {
 	buildHL7("OBX"
 		, "ST", "12918^Deploy Duration (In Days)", ""
 		, (ptDem.model~="Mortara" ? "1" : "")
-		. (ptDem.model~="BodyGuardian" ? "30" : "") )
+		. (ptDem.model~="Heart" ? "30" : "")
+		. (ptDem.model~="Mini" ? "14" : "") )
 	
 	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
