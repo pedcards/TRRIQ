@@ -2230,7 +2230,7 @@ BGregister(type) {
 		}
 		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
 		if !(ptDem.model) {
-			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart")
+			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart|BodyGuardian Mini")
 			if (i="xClose") {
 				return
 			} else {
