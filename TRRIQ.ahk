@@ -2123,7 +2123,8 @@ registerPreventice() {
 		, ptDem.wqid
 		, ""
 		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter^Holter")
-		. strQ((ptDem.model~="BodyGuardian") ? 1 : "","CEM^CEM")
+		. strQ((ptDem.model~="Heart") ? 1 : "","CEM^CEM")
+		. strQ((ptDem.model~="Mini") ? 1 : "","Holter^Holter")
 		, ""
 		, ""
 		, hl7time
@@ -2163,7 +2164,7 @@ registerPreventice() {
 	buildHL7("OBX"
 		, "ST", "12915^Service Type", ""
 		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter")
-		. strQ((ptDem.model~="Heart") ? 1 : "","CEM") )
+		. strQ((ptDem.model~="Heart") ? 1 : "","CEM")
 		. strQ((ptDem.model~="Mini") ? 1 : "","Holter") )
 	
 	buildHL7("OBX"
