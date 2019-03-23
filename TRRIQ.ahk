@@ -125,9 +125,9 @@ MainLoop: ; ===================== This is the main part ========================
 			eventlog("Update Preventice inventory.")
 			CheckPreventiceWeb("Facilities")
 		}
-		if (phase="Register") {
-			eventlog("Start BGH registration.")
-			BGHregister()
+		if (phase~="Register") {
+			eventlog("Start " phase ".")
+			BGregister(RegExReplace(phase,"Register"))
 		}
 		if (phase="Upload") {
 			eventlog("Start Mortara preparation/upload.")
@@ -158,13 +158,26 @@ PhaseGUI:
 	Gui, Add, Button
 		, Y+10 wp h40 vInventory gPhaseTask
 		, Grab Preventice inventory
-	Gui, Add, Button
-		, Y+10 wp h40 vRegister gPhaseTask
-		, Register BGH EVENT RECORDER
-	Gui, Add, Button
-		, Y+10 wp h40 vUpload gPhaseTask
-		, Prepare/Upload MORTARA HOLTER
+	Gui, Add, Text, Y+20 wp h80 Center, Register BodyGuardian MONITOR
+	Gui, Add, Text, Y+20 wp h80 Center, Prepare/Upload MORTARA HOLTER
 	Gui, Font, Normal
+	
+	GuiControlGet, but1, Pos, BodyGuardian
+	GuiControlGet, but2, Pos, MORTARA
+	
+	Gui, Add, Picture
+		, % "Y" but1Y+18 " X" but1X+(wksloc="Main Campus" ? 120 : 60)
+		. " +0x1000 vRegisterBGM gPhaseTask "
+		, .\BGMini.png
+	Gui, Add, Picture
+		, % "Y" but1Y+18 " X" but1X+(wksloc="Main Campus" ? 10 : 60)
+		. " +0x1000 vRegisterBGH gPhaseTask"
+		, .\BGHeart.png
+	
+	Gui, Add, Picture
+		, % "Y" but2Y+18 " X" but2X+60 
+		. " +0x1000 vUpload gPhaseTask"
+		, .\H3.png
 	
 	GuiControl
 		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
@@ -174,7 +187,7 @@ PhaseGUI:
 		, Grab Preventice inventory
 	
 	Gui, Add, Tab3
-		, -Wrap x10 y10 w640 h320 vWQtab +HwndWQtab
+		, -Wrap x10 y10 w640 h400 vWQtab +HwndWQtab
 		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
@@ -2150,7 +2163,8 @@ registerPreventice() {
 	buildHL7("OBX"
 		, "ST", "12915^Service Type", ""
 		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter")
-		. strQ((ptDem.model~="BodyGuardian") ? 1 : "","CEM") )
+		. strQ((ptDem.model~="Heart") ? 1 : "","CEM") )
+		. strQ((ptDem.model~="Mini") ? 1 : "","Holter") )
 	
 	buildHL7("OBX"
 		, "ST", "12916^Device", "", ptDem.model)
@@ -2164,7 +2178,8 @@ registerPreventice() {
 	buildHL7("OBX"
 		, "ST", "12918^Deploy Duration (In Days)", ""
 		, (ptDem.model~="Mortara" ? "1" : "")
-		. (ptDem.model~="BodyGuardian" ? "30" : "") )
+		. (ptDem.model~="Heart" ? "30" : "")
+		. (ptDem.model~="Mini" ? "14" : "") )
 	
 	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
@@ -2174,12 +2189,17 @@ registerPreventice() {
 	return
 }
 
-BGHregister() {
+BGregister(type) {
 	global wq, ptDem, fetchQuit
 	SetTimer, idleTimer, Off
 	checkCitrix()
 	
-	MsgBox, 262177, Event recorder, Start BGH event recorder registration?
+	MsgBox, 262177
+		, BodyGuardian MONITOR
+		, % "Start " 
+		. (type="BGH" ? "30-day BG Heart" : "")
+		. (type="BGM" ? "14-day BG Mini" : "")
+		. " registration?"
 	IfMsgBox, Cancel
 	{
 		return
@@ -2201,8 +2221,8 @@ BGHregister() {
 	i := cMsgBox("Hook-up","Delivery type","Office|Home")
 	if (i="Home") {
 		ptDem["hookup"] := "Home"
-		ptDem["model"] := "BodyGuardian Heart"
-		eventlog("BGH home registration for " ptDem["mrn"] " " ptDem["nameL"] ".") 
+		ptDem["model"] := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini" : "")
+		eventlog(type " home registration for " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	} else {																			; either Office or [X]
 		ptDem["hookup"] := "Office"
 		ptDem.ser := selectDev()														; need to grab a BGH ser num
@@ -2212,7 +2232,7 @@ BGHregister() {
 		}
 		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
 		if !(ptDem.model) {
-			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart")
+			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart|BodyGuardian Mini")
 			if (i="xClose") {
 				return
 			} else {
@@ -2302,7 +2322,7 @@ selectDev() {
 		GuiControlGet, boxed, , selBox													; get values from box and edit
 		GuiControlGet, typed, , selEdit
 		choice := (boxed) ? boxed : "BG" RegExReplace(typed,"[[:alpha:]]")
-		if !(choice~="^BG\d{7}$") {														; ignore if doesn't match full ser num
+		if !(choice~="^(BG)?\d{7}$") {													; ignore if doesn't match full ser num
 			return
 		}
 		Gui, dev:Destroy
