@@ -2320,7 +2320,7 @@ selectDev() {
 		GuiControlGet, boxed, , selBox													; get values from box and edit
 		GuiControlGet, typed, , selEdit
 		choice := (boxed) ? boxed : "BG" RegExReplace(typed,"[[:alpha:]]")
-		if !(choice~="^BG\d{7}$") {														; ignore if doesn't match full ser num
+		if !(choice~="^(BG)?\d{7}$") {													; ignore if doesn't match full ser num
 			return
 		}
 		Gui, dev:Destroy
