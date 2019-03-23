@@ -2219,8 +2219,8 @@ BGregister(type) {
 	i := cMsgBox("Hook-up","Delivery type","Office|Home")
 	if (i="Home") {
 		ptDem["hookup"] := "Home"
-		ptDem["model"] := "BodyGuardian Heart"
-		eventlog("BGH home registration for " ptDem["mrn"] " " ptDem["nameL"] ".") 
+		ptDem["model"] := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini" : "")
+		eventlog(type " home registration for " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	} else {																			; either Office or [X]
 		ptDem["hookup"] := "Office"
 		ptDem.ser := selectDev()														; need to grab a BGH ser num
