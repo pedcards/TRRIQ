@@ -2402,10 +2402,11 @@ getPatInfo() {
 	loop, parse, famInfo, `n,`r
 	{
 		i := A_LoopField
-		if (i~="\(" relStr) {															; line contains "(Mother"
+		if RegExMatch(i,"O)\([" relStr "].*?\)",val) {									; line contains "(Mother"
 			ct ++																		; increment counter
 			rel[ct] := object()															; create a rel index object
 			rel[ct].name := strX(i,"",1,1,"(",1,1)										; get name string
+			rel[ct].relation := val.0
 			continue
 		}
 		if (i~="Home:") {
@@ -2413,13 +2414,24 @@ getPatInfo() {
 			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
 			continue
 		}
-		if !(i~="i)("
+		if ((i~="Mobile:") && (rel[ct].phone="")) {
+			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
+			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
+			continue
+		}
+		if (i~="i)Lives with") {
+			rel[ct].lives := true
+			continue
+		}
+		if (i~="i)^Legal guardian") {
+			rel[ct].guardian := true
+			continue
+		}
+		if (i~="i)("
 			. "Legal guardian|"															; skip lines containing these strings
 			. "Birth certificate|"
 			. "Comment|"
-			. "Lives with|"
 			. "Custody|"
-			. "Mobile:|"
 			. "Work:|"
 			. "Inpatient|"
 			. "Emergency|"
@@ -2427,8 +2439,10 @@ getPatInfo() {
 			. "^\s*$|"
 			. "^>)")
 		{
-			rel[ct].addr .= i "`n"														; add address lines to each relative index string
+			continue
 		}
+		
+		rel[ct].addr .= i "`n"															; add address lines to each relative index string
 	}
 	loop, % rel.MaxIndex()
 	{
@@ -2439,15 +2453,19 @@ getPatInfo() {
 			if (i=j) {																	; do not compare to self
 				continue
 			}
+			if (rel[j].lives = true) {
+				ptDem.livesaddr := rel[j].addr
+				continue																; keep if "Lives here" is true
+			}
 			if (rel[j].phone != ptDem.phone) {
 				rel.delete(j)															; remove if doesn't match patient's home phone number
 			}
-			if (rel[i].addr = rel[j].addr) {
-				rel.delete(j)															; remove duplicate addresses
-			}
+			;~ if (rel[i].addr = rel[j].addr) {
+				;~ rel.delete(j)															; remove duplicate addresses
+			;~ }
 		}
-		if (rel[i].addr = "") {
-			rel.Delete(i)																; remove entries with no address
+		if ((rel[i].addr="") && (rel[i].phone="")) {
+			rel.Delete(i)																; remove entries with no address or phone
 		}
 	}
 	loop, % rel.MaxIndex()
@@ -2470,6 +2488,9 @@ getPatInfo() {
 	ptDem.parentL := parseName(ptDem.parent).last
 	ptDem.parentF := parseName(ptDem.parent).first
 	
+	if (rel[choice].addr="") {
+		rel[choice].addr := ptDem.livesaddr
+	}
 	addrLine := 0
 	loop, parse, % rel[choice].addr, `n,`r												; parse selected addr string
 	{
