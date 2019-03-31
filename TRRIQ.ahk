@@ -2439,8 +2439,10 @@ getPatInfo() {
 			. "^\s*$|"
 			. "^>)")
 		{
-			rel[ct].addr .= i "`n"														; add address lines to each relative index string
+			continue
 		}
+		
+		rel[ct].addr .= i "`n"															; add address lines to each relative index string
 	}
 	loop, % rel.MaxIndex()
 	{
