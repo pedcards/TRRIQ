@@ -2460,12 +2460,12 @@ getPatInfo() {
 			if (rel[j].phone != ptDem.phone) {
 				rel.delete(j)															; remove if doesn't match patient's home phone number
 			}
-			if (rel[i].addr = rel[j].addr) {
-				rel.delete(j)															; remove duplicate addresses
-			}
+			;~ if (rel[i].addr = rel[j].addr) {
+				;~ rel.delete(j)															; remove duplicate addresses
+			;~ }
 		}
-		if (rel[i].addr = "") {
-			rel.Delete(i)																; remove entries with no address
+		if ((rel[i].addr="") && (rel[i].phone="")) {
+			rel.Delete(i)																; remove entries with no address or phone
 		}
 	}
 	loop, % rel.MaxIndex()
