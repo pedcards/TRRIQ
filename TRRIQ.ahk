@@ -2414,13 +2414,24 @@ getPatInfo() {
 			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
 			continue
 		}
-		if !(i~="i)("
+		if ((i~="Mobile:") && (rel[ct].phone="")) {
+			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
+			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
+			continue
+		}
+		if (i~="i)Lives with") {
+			rel[ct].lives := true
+			continue
+		}
+		if (i~="i)^Legal guardian") {
+			rel[ct].guardian := true
+			continue
+		}
+		if (i~="i)("
 			. "Legal guardian|"															; skip lines containing these strings
 			. "Birth certificate|"
 			. "Comment|"
-			. "Lives with|"
 			. "Custody|"
-			. "Mobile:|"
 			. "Work:|"
 			. "Inpatient|"
 			. "Emergency|"
