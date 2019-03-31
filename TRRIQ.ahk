@@ -2508,7 +2508,7 @@ getPatInfo() {
 			ptDem[addr] := trim(i)
 		}
 	}
-	if (ptDem.addr1~="i)P[\. ]+O[\. ]+Box") {
+	if (ptDem.addr1~="i)^P[\. ]+?O[\. ]+?Box") {
 		InputBox(addr1, "Cannot use P.O. Box","`n`nEnter valid street address","")
 		InputBox(addr2, "Cannot use P.O. Box","`n`nEnter city", ptDem.city)
 		if (addr1) {
