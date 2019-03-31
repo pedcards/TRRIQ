@@ -2488,6 +2488,9 @@ getPatInfo() {
 	ptDem.parentL := parseName(ptDem.parent).last
 	ptDem.parentF := parseName(ptDem.parent).first
 	
+	if (rel[choice].addr="") {
+		rel[choice].addr := ptDem.livesaddr
+	}
 	addrLine := 0
 	loop, parse, % rel[choice].addr, `n,`r												; parse selected addr string
 	{
