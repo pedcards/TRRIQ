@@ -2402,10 +2402,11 @@ getPatInfo() {
 	loop, parse, famInfo, `n,`r
 	{
 		i := A_LoopField
-		if (i~="\(" relStr) {															; line contains "(Mother"
+		if RegExMatch(i,"O)\([" relStr "].*?\)",val) {									; line contains "(Mother"
 			ct ++																		; increment counter
 			rel[ct] := object()															; create a rel index object
 			rel[ct].name := strX(i,"",1,1,"(",1,1)										; get name string
+			rel[ct].relation := val.0
 			continue
 		}
 		if (i~="Home:") {
