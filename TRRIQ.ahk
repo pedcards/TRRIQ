@@ -2453,6 +2453,10 @@ getPatInfo() {
 			if (i=j) {																	; do not compare to self
 				continue
 			}
+			if (rel[j].lives = true) {
+				ptDem.livesaddr := rel[j].addr
+				continue																; keep if "Lives here" is true
+			}
 			if (rel[j].phone != ptDem.phone) {
 				rel.delete(j)															; remove if doesn't match patient's home phone number
 			}
