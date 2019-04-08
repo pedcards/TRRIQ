@@ -3251,7 +3251,8 @@ CheckProc:
 		id := findWQid(parseDate(fldval["dem-Test_date"]).YMD							; search wqid based on combination of study date, mrn, SN
 				, fldval["dem-MRN"]
 				, fldval["dem-Device_SN"]).id
-		if IsObject(res := readWQ(id)) {												; pull some vals
+		if (id) {																		; pull some vals
+			res := readWQ(id)
 			fldval["dem-Device_SN"] := strX(res.dev," ",0,1,"",0)
 			fldval.name := res.name
 			fldval.node := res.node
@@ -3333,6 +3334,7 @@ CheckProc:
 			} else {
 				id := A_TickCount 															; create wqid record if it doesn't exist somehow
 				wq.addElement("enroll","/root/pending",{id:id})
+				fldval.wqid := id
 			}
 			newID := "/root/pending/enroll[@id='" id "']"
 			ptDem.date := parseDate(ptDem["EncDate"]).YMD
@@ -4471,6 +4473,18 @@ ParseDate(x) {
 		date.mmm := mo[d2]
 		date.dd := d3
 		date.date := trim(d)
+	}
+	else if RegExMatch(x,"\b(\d{4})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {			; 20150103174307
+		date.yyyy := d1
+		date.mm := d2
+		date.mmm := mo[d2]
+		date.dd := d3
+		date.date := d1 "-" d2 "-" d3
+		
+		time.hr := d5
+		time.min := d6
+		time.sec := d7
+		time.time := d5 ":" d6 . strQ(d7,":###")
 	}
 	
 	if RegExMatch(x,"iO)(\d{1,2}):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {				; 17:42 PM
