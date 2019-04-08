@@ -3334,6 +3334,7 @@ CheckProc:
 			} else {
 				id := A_TickCount 															; create wqid record if it doesn't exist somehow
 				wq.addElement("enroll","/root/pending",{id:id})
+				fldval.wqid := id
 			}
 			newID := "/root/pending/enroll[@id='" id "']"
 			ptDem.date := parseDate(ptDem["EncDate"]).YMD
