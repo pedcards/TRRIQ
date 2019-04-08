@@ -1370,6 +1370,7 @@ parsePreventiceEnrollment(tbl) {
 	
 	lbl := ["name","mrn","date","dev","prov"]
 	done := 0
+	checkdays := 21
 	fileCheck()
 	wq := new XML("worklist.xml")														; refresh WQ
 	FileOpen(".lock", "W")																; Create lock file.
@@ -1389,7 +1390,7 @@ parsePreventiceEnrollment(tbl) {
 		date := parseDate(res.date).YMD
 		dt := A_Now
 		dt -= date, Days
-		if (dt>14) {																	; if days > threshold, break loop
+		if (dt>checkdays) {																; if days > threshold, break loop
 			break
 		} else {																		; otherwise done+1 == keep paging
 			done ++
