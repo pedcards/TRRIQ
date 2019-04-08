@@ -3251,7 +3251,8 @@ CheckProc:
 		id := findWQid(parseDate(fldval["dem-Test_date"]).YMD							; search wqid based on combination of study date, mrn, SN
 				, fldval["dem-MRN"]
 				, fldval["dem-Device_SN"]).id
-		if IsObject(res := readWQ(id)) {												; pull some vals
+		if (id) {																		; pull some vals
+			res := readWQ(id)
 			fldval["dem-Device_SN"] := strX(res.dev," ",0,1,"",0)
 			fldval.name := res.name
 			fldval.node := res.node
