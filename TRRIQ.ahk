@@ -2367,7 +2367,7 @@ getPatInfo() {
 		MouseClick, Left, % winW-40, % 0.6*winH											; click just inside window
 		
 		Send, ^a^c																		; Select All, Copy
-		sleep 200																		; need to pause to fill clipboard
+		sleep 500																		; need to pause to fill clipboard
 		txt := Clipboard
 		MouseClick, Left, % winW-40, % 0.6*winH+10										; click again to deselect all
 		MouseMove, mouseX, mouseY														; move back to original coords
