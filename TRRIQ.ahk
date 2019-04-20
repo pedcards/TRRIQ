@@ -2541,7 +2541,8 @@ getPatInfo() {
 		. "Site: " ptDem.loc
 	IfMsgBox, Yes
 	{
-		eventlog("Accepted patient address info.")
+		eventlog("Selected parent " ptDem.parentL ", " ptDem.parentF)
+		eventlog("Accepted patient address info. " ptDem.addr1 " | " strQ(ptDem.addr2,"### | ") ptDem.city " | " ptDem.state " " ptDem.zip)
 		fetchQuit := false
 	} else {
 		fetchQuit := true
