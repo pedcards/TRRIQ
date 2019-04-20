@@ -2434,6 +2434,8 @@ getPatInfo() {
 			. "Comment|"
 			. "Custody|"
 			. "Work:|"
+			. "Mobile:|"
+			. "Home:|"
 			. "Inpatient|"
 			. "Emergency|"
 			. "Adoption|"
