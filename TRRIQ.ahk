@@ -110,6 +110,15 @@ for key,val in indCodes
 initHL7()
 hl7DirMap := {}
 
+Loop, files, bak\*.bak
+{
+	dt := A_now
+	dt -= RegExReplace(A_LoopFileName,"\.bak"), Days
+	if (dt > 7) {
+		FileDelete, bak\%A_LoopFileName%.bak
+	}
+}
+
 MainLoop: ; ===================== This is the main part ====================================
 {
 	Loop
@@ -1370,6 +1379,7 @@ parsePreventiceEnrollment(tbl) {
 	
 	lbl := ["name","mrn","date","dev","prov"]
 	done := 0
+	checkdays := 21
 	fileCheck()
 	wq := new XML("worklist.xml")														; refresh WQ
 	FileOpen(".lock", "W")																; Create lock file.
@@ -1389,7 +1399,7 @@ parsePreventiceEnrollment(tbl) {
 		date := parseDate(res.date).YMD
 		dt := A_Now
 		dt -= date, Days
-		if (dt>14) {																	; if days > threshold, break loop
+		if (dt>checkdays) {																; if days > threshold, break loop
 			break
 		} else {																		; otherwise done+1 == keep paging
 			done ++
@@ -2366,7 +2376,7 @@ getPatInfo() {
 		MouseClick, Left, % winW-40, % 0.6*winH											; click just inside window
 		
 		Send, ^a^c																		; Select All, Copy
-		sleep 200																		; need to pause to fill clipboard
+		sleep 500																		; need to pause to fill clipboard
 		txt := Clipboard
 		MouseClick, Left, % winW-40, % 0.6*winH+10										; click again to deselect all
 		MouseMove, mouseX, mouseY														; move back to original coords
@@ -2433,6 +2443,8 @@ getPatInfo() {
 			. "Comment|"
 			. "Custody|"
 			. "Work:|"
+			. "Mobile:|"
+			. "Home:|"
 			. "Inpatient|"
 			. "Emergency|"
 			. "Adoption|"
@@ -2538,7 +2550,8 @@ getPatInfo() {
 		. "Site: " ptDem.loc
 	IfMsgBox, Yes
 	{
-		eventlog("Accepted patient address info.")
+		eventlog("Selected parent " ptDem.parentL ", " ptDem.parentF)
+		eventlog("Accepted patient address info. " ptDem.addr1 " | " strQ(ptDem.addr2,"### | ") ptDem.city " | " ptDem.state " " ptDem.zip)
 		fetchQuit := false
 	} else {
 		fetchQuit := true
@@ -4556,6 +4569,7 @@ WriteOut(path,node) {
 	zPath.replaceChild(clone,zNode)														; replace existing zNode with node clone
 	
 	z.save("worklist.xml")
+	FileCopy, worklist.xml, bak\%A_now%.bak
 	wq := z
 	FileDelete, .lock
 	
