@@ -110,6 +110,15 @@ for key,val in indCodes
 initHL7()
 hl7DirMap := {}
 
+Loop, files, bak\*.bak
+{
+	dt := A_now
+	dt -= RegExReplace(A_LoopFileName,"\.bak"), Days
+	if (dt > 7) {
+		FileDelete, bak\%A_LoopFileName%.bak
+	}
+}
+
 MainLoop: ; ===================== This is the main part ====================================
 {
 	Loop
