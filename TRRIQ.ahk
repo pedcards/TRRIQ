@@ -4560,6 +4560,7 @@ WriteOut(path,node) {
 	zPath.replaceChild(clone,zNode)														; replace existing zNode with node clone
 	
 	z.save("worklist.xml")
+	FileCopy, worklist.xml, .\bak\%A_now%.bak
 	wq := z
 	FileDelete, .lock
 	
