@@ -237,6 +237,7 @@ PhaseGUI:
 	LV_ModifyCol(8,"100")																; Prov
 	LV_ModifyCol(9,"80")																; Site
 	CLV_all := new LV_Colors(HLV_all,true,false)
+	CLV_all.Critical := 100
 	
 	Loop, parse, sites, |
 	{
@@ -256,6 +257,7 @@ PhaseGUI:
 		LV_ModifyCol(7,"130")																; Ser Num
 		LV_ModifyCol(8,"100")																; Prov
 		CLV_%i% := new LV_Colors(HLV%i%,true,false)
+		CLV_%i%.Critical := 100
 	}
 	WQlist()
 	
