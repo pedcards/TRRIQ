@@ -171,20 +171,25 @@ PhaseGUI:
 	Gui, Add, Text, Y+20 wp h80 Center, Prepare/Upload MORTARA HOLTER
 	Gui, Font, Normal
 	
-	GuiControlGet, but1, Pos, BodyGuardian
-	GuiControlGet, but2, Pos, MORTARA
+	GuiControlGet, btn1, Pos, BodyGuardian
+	GuiControlGet, btn2, Pos, MORTARA
 	
+	btnW := 90
+	btnH := 50
 	Gui, Add, Picture
-		, % "Y" but1Y+18 " X" but1X+(wksloc="Main Campus" ? 120 : 60)
-		. " +0x1000 vRegisterBGM gPhaseTask "
+		, % "Y" btn1Y+18 " X" btn1X+(wksloc="Main Campus" ? 120 : 60)
+		. " w" btnW " h" btnH " "
+		. " +0x1000 vRegisterBGM gPhaseTask"
 		, .\BGMini.png
 	Gui, Add, Picture
-		, % "Y" but1Y+18 " X" but1X+(wksloc="Main Campus" ? 10 : 60)
+		, % "Y" btn1Y+18 " X" btn1X+(wksloc="Main Campus" ? 10 : 60)
+		. " w" btnW " h" btnH " "
 		. " +0x1000 vRegisterBGH gPhaseTask"
 		, .\BGHeart.png
 	
 	Gui, Add, Picture
-		, % "Y" but2Y+18 " X" but2X+60 
+		, % "Y" btn2Y+18 " X" btn2X+60 
+		. " w" btnW " h" btnH " "
 		. " +0x1000 vUpload gPhaseTask"
 		, .\H3.png
 	
@@ -220,17 +225,20 @@ PhaseGUI:
 	Gui, Tab, ALL
 	Gui, Add, Listview
 		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
-		, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+		, ID|Enrolled|FedEx|Uploaded|Notes|MRN|Enrolled Name|Device|Provider|Site
 	Gui, ListView, WQlv_all
 	LV_ModifyCol(1,"0")																	; wqid (hidden)
 	LV_ModifyCol(2,"60")																; date
 	LV_ModifyCol(3,"40 Center")															; FedEx
 	LV_ModifyCol(4,"60")																; uploaded
-	LV_ModifyCol(5,"60")																; MRN
-	LV_ModifyCol(6,"140")																; Name
-	LV_ModifyCol(7,"130")																; Ser Num
-	LV_ModifyCol(8,"100")																; Prov
-	LV_ModifyCol(9,"80")																; Site
+	LV_ModifyCol(5,"40 Center")															; Notes
+	LV_ModifyCol(6,"60")																; MRN
+	LV_ModifyCol(7,"140")																; Name
+	LV_ModifyCol(8,"130")																; Ser Num
+	LV_ModifyCol(9,"100")																; Prov
+	LV_ModifyCol(10,"80")																; Site
+	CLV_all := new LV_Colors(HLV_all,true,false)
+	CLV_all.Critical := 100
 	
 	Loop, parse, sites, |
 	{
@@ -239,16 +247,19 @@ PhaseGUI:
 		Gui, Tab, % site
 		Gui, Add, Listview
 			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
-			, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+			, ID|Enrolled|FedEx|Uploaded|Notes|MRN|Enrolled Name|Device|Provider
 		Gui, ListView, WQlv%i%
 		LV_ModifyCol(1,"0")																	; wqid (hidden)
 		LV_ModifyCol(2,"60")																; date
 		LV_ModifyCol(3,"40 Center")															; FedEx
 		LV_ModifyCol(4,"60")																; uploaded
-		LV_ModifyCol(5,"60")																; MRN
-		LV_ModifyCol(6,"140")																; Name
-		LV_ModifyCol(7,"130")																; Ser Num
-		LV_ModifyCol(8,"100")																; Prov
+		LV_ModifyCol(5,"40 Center")															; Notes
+		LV_ModifyCol(6,"60")																; MRN
+		LV_ModifyCol(7,"140")																; Name
+		LV_ModifyCol(8,"130")																; Ser Num
+		LV_ModifyCol(9,"100")																; Prov
+		CLV_%i% := new LV_Colors(HLV%i%,true,false)
+		CLV_%i%.Critical := 100
 	}
 	WQlist()
 	
@@ -433,16 +444,22 @@ WQtask() {
 	pt := readWQ(idx)
 	idstr := "/root/pending/enroll[@id='" idx "']"
 	
-	choice := cmsgbox("Patient task"
-			,	"Which action on this patient?`n`n"
-			.	pt.Name "`n"
-			.	"  MRN: " pt.MRN "`n"
-			.	"  Date: " niceDate(pt.date) "`n"
-			.	"  Provider: " pt.prov "`n"
+	list :=
+	Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
+	{
+		k := notes.item(A_index-1)
+		dt := parsedate(k.getAttribute("date"))
+		list .= dt.mm "/" dt.dd ":" k.getAttribute("user") ": " k.text "`n"
+	}
+
+	choice := cmsgbox(pt.Name " " pt.MRN
+			,	"Date: " niceDate(pt.date) "`n"
+			.	"Provider: " pt.prov "`n"
 			.	strQ(pt.FedEx,"  FedEx: ###`n")
-			, "NOTE communication|"
+			.   strQ(list,"Notes: ========================`n###`n")
+			, "View/Add NOTE|"
 			. "Log UPLOAD to Preventice|"
-			. "Mark record as DONE"
+			. "Move to DONE list"
 			, "Q")
 	if (choice="xClose") {
 		return
@@ -466,14 +483,6 @@ WQtask() {
 		return
 	}
 	if instr(choice,"note") {
-		wq := new XML("worklist.xml")
-		list :=
-		Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
-		{
-			k := notes.item(A_index-1)
-			dt := parsedate(k.getAttribute("date"))
-			list .= dt.mm "/" dt.dd ":" k.getAttribute("user") ": " k.text "`n"
-		}
 		inputbox(note,"Communication note"
 			, strQ(list,"###====================================`n") "`nEnter a brief communication note:`n","")
 		if (note="") {
@@ -535,6 +544,9 @@ return
 WQlist() {
 	global
 	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim
+		, late_BGH := 45
+		, late_BGM := 21
+		, late_Mortara := 14
 	wqfiles := []
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
@@ -680,28 +692,43 @@ WQlist() {
 			;~ if (instr(e0.dev,"BG") && (dt < 30)) {										; skip BGH less than 30 days
 				;~ continue
 			;~ }
+			CLV_col := ""
+			if (instr(e0.dev,"Heart") && (dt > late_BGH))
+			|| (instr(e0.dev,"Mortara") && (dt > late_Mortara)) 
+			|| (instr(e0.dev,"Mini") && (dt > late_BGM)) {
+				CLV_col := "red"
+			}
+			
 			Gui, ListView, WQlv%i%
 			LV_Add(""
 				,id
 				,e0.date
 				,strQ(e0.fedex,"X")
 				,e0.sent
+				,strQ(e0.notes,"X")
 				,e0.mrn
 				,e0.name
 				,e0.dev
 				,e0.prov
 				,e0.site)
+			if (CLV_col) {
+				CLV_%i%.Row(LV_GetCount(),,CLV_col)
+			}
 			Gui, ListView, WQlv_all														
 			LV_Add(""
 				,id
 				,e0.date
 				,strQ(e0.fedex,"X")
 				,e0.sent
+				,strQ(e0.notes,"X")
 				,e0.mrn
 				,e0.name
 				,e0.dev
 				,e0.prov
 				,e0.site)
+			if (CLV_col) {
+				CLV_all.Row(LV_GetCount(),,CLV_col)
+			}
 		}
 		Gui, ListView, WQlv%i%
 		LV_ModifyCol(2,"Sort")
@@ -4675,6 +4702,7 @@ readIni(section) {
 
 #Include CMsgBox.ahk
 #Include InputBox.ahk
+#Include Class_LV_Colors.ahk
 #Include xml.ahk
 #Include sift3.ahk
 #Include hl7.ahk
