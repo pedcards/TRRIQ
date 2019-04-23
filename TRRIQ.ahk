@@ -171,23 +171,25 @@ PhaseGUI:
 	Gui, Add, Text, Y+20 wp h80 Center, Prepare/Upload MORTARA HOLTER
 	Gui, Font, Normal
 	
-	GuiControlGet, but1, Pos, BodyGuardian
-	GuiControlGet, but2, Pos, MORTARA
+	GuiControlGet, btn1, Pos, BodyGuardian
+	GuiControlGet, btn2, Pos, MORTARA
 	
+	btnW := 90
+	btnH := 50
 	Gui, Add, Picture
-		, % "Y" but1Y+18 " X" but1X+(wksloc="Main Campus" ? 120 : 60)
-		. " w90 h50 "
-		. " +0x1000 vRegisterBGM gPhaseTask "
+		, % "Y" btn1Y+18 " X" btn1X+(wksloc="Main Campus" ? 120 : 60)
+		. " w" btnW " h" btnH " "
+		. " +0x1000 vRegisterBGM gPhaseTask"
 		, .\BGMini.png
 	Gui, Add, Picture
-		, % "Y" but1Y+18 " X" but1X+(wksloc="Main Campus" ? 10 : 60)
-		. " w90 h50 "
+		, % "Y" btn1Y+18 " X" btn1X+(wksloc="Main Campus" ? 10 : 60)
+		. " w" btnW " h" btnH " "
 		. " +0x1000 vRegisterBGH gPhaseTask"
 		, .\BGHeart.png
 	
 	Gui, Add, Picture
-		, % "Y" but2Y+18 " X" but2X+60 
-		. " w90 h50 "
+		, % "Y" btn2Y+18 " X" btn2X+60 
+		. " w" btnW " h" btnH " "
 		. " +0x1000 vUpload gPhaseTask"
 		, .\H3.png
 	
