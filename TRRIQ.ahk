@@ -225,17 +225,18 @@ PhaseGUI:
 	Gui, Tab, ALL
 	Gui, Add, Listview
 		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
-		, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider|Site
+		, ID|Enrolled|FedEx|Uploaded|Notes|MRN|Enrolled Name|Device|Provider|Site
 	Gui, ListView, WQlv_all
 	LV_ModifyCol(1,"0")																	; wqid (hidden)
 	LV_ModifyCol(2,"60")																; date
 	LV_ModifyCol(3,"40 Center")															; FedEx
 	LV_ModifyCol(4,"60")																; uploaded
-	LV_ModifyCol(5,"60")																; MRN
-	LV_ModifyCol(6,"140")																; Name
-	LV_ModifyCol(7,"130")																; Ser Num
-	LV_ModifyCol(8,"100")																; Prov
-	LV_ModifyCol(9,"80")																; Site
+	LV_ModifyCol(5,"40 Center")															; Notes
+	LV_ModifyCol(6,"60")																; MRN
+	LV_ModifyCol(7,"140")																; Name
+	LV_ModifyCol(8,"130")																; Ser Num
+	LV_ModifyCol(9,"100")																; Prov
+	LV_ModifyCol(10,"80")																; Site
 	CLV_all := new LV_Colors(HLV_all,true,false)
 	CLV_all.Critical := 100
 	
@@ -246,16 +247,17 @@ PhaseGUI:
 		Gui, Tab, % site
 		Gui, Add, Listview
 			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
-			, ID|Enrolled|FedEx|Uploaded|MRN|Enrolled Name|Device|Provider
+			, ID|Enrolled|FedEx|Uploaded|Notes|MRN|Enrolled Name|Device|Provider
 		Gui, ListView, WQlv%i%
 		LV_ModifyCol(1,"0")																	; wqid (hidden)
 		LV_ModifyCol(2,"60")																; date
 		LV_ModifyCol(3,"40 Center")															; FedEx
 		LV_ModifyCol(4,"60")																; uploaded
-		LV_ModifyCol(5,"60")																; MRN
-		LV_ModifyCol(6,"140")																; Name
-		LV_ModifyCol(7,"130")																; Ser Num
-		LV_ModifyCol(8,"100")																; Prov
+		LV_ModifyCol(5,"40 Center")															; Notes
+		LV_ModifyCol(6,"60")																; MRN
+		LV_ModifyCol(7,"140")																; Name
+		LV_ModifyCol(8,"130")																; Ser Num
+		LV_ModifyCol(9,"100")																; Prov
 		CLV_%i% := new LV_Colors(HLV%i%,true,false)
 		CLV_%i%.Critical := 100
 	}
@@ -705,6 +707,7 @@ WQlist() {
 				,e0.date
 				,strQ(e0.fedex,"X")
 				,e0.sent
+				,strQ(e0.notes,"X")
 				,e0.mrn
 				,e0.name
 				,e0.dev
@@ -719,6 +722,7 @@ WQlist() {
 				,e0.date
 				,strQ(e0.fedex,"X")
 				,e0.sent
+				,strQ(e0.notes,"X")
 				,e0.mrn
 				,e0.name
 				,e0.dev
