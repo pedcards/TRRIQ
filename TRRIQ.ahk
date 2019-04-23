@@ -544,6 +544,9 @@ return
 WQlist() {
 	global
 	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim
+		, late_BGH := 45
+		, late_BGM := 21
+		, late_Mortara := 14
 	wqfiles := []
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
@@ -690,13 +693,9 @@ WQlist() {
 				;~ continue
 			;~ }
 			CLV_col := ""
-			if (instr(e0.dev,"Heart") && (dt > 45)) {
-				CLV_col := "red"
-			}
-			if (instr(e0.dev,"Mortara") && (dt > 21)) {
-				CLV_col := "red"
-			}
-			if (instr(e0.dev,"Mini") && (dt > 30)) {
+			if (instr(e0.dev,"Heart") && (dt > late_BGH))
+			|| (instr(e0.dev,"Mortara") && (dt > late_Mortara)) 
+			|| (instr(e0.dev,"Mini") && (dt > late_BGM)) {
 				CLV_col := "red"
 			}
 			
