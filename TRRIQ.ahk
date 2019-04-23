@@ -236,6 +236,7 @@ PhaseGUI:
 	LV_ModifyCol(7,"130")																; Ser Num
 	LV_ModifyCol(8,"100")																; Prov
 	LV_ModifyCol(9,"80")																; Site
+	CLV_all := new LV_Colors(HLV_all,true,false)
 	
 	Loop, parse, sites, |
 	{
@@ -254,6 +255,7 @@ PhaseGUI:
 		LV_ModifyCol(6,"140")																; Name
 		LV_ModifyCol(7,"130")																; Ser Num
 		LV_ModifyCol(8,"100")																; Prov
+		CLV_%i% := new LV_Colors(HLV%i%,true,false)
 	}
 	WQlist()
 	
@@ -685,6 +687,17 @@ WQlist() {
 			;~ if (instr(e0.dev,"BG") && (dt < 30)) {										; skip BGH less than 30 days
 				;~ continue
 			;~ }
+			CLV_col := ""
+			if (instr(e0.dev,"Heart") && (dt > 45)) {
+				CLV_col := "red"
+			}
+			if (instr(e0.dev,"Mortara") && (dt > 21)) {
+				CLV_col := "red"
+			}
+			if (instr(e0.dev,"Mini") && (dt > 30)) {
+				CLV_col := "red"
+			}
+			
 			Gui, ListView, WQlv%i%
 			LV_Add(""
 				,id
@@ -696,6 +709,9 @@ WQlist() {
 				,e0.dev
 				,e0.prov
 				,e0.site)
+			if (CLV_col) {
+				CLV_%i%.Row(LV_GetCount(),,CLV_col)
+			}
 			Gui, ListView, WQlv_all														
 			LV_Add(""
 				,id
@@ -707,6 +723,9 @@ WQlist() {
 				,e0.dev
 				,e0.prov
 				,e0.site)
+			if (CLV_col) {
+				CLV_all.Row(LV_GetCount(),,CLV_col)
+			}
 		}
 		Gui, ListView, WQlv%i%
 		LV_ModifyCol(2,"Sort")
@@ -4680,6 +4699,7 @@ readIni(section) {
 
 #Include CMsgBox.ahk
 #Include InputBox.ahk
+#Include Class_LV_Colors.ahk
 #Include xml.ahk
 #Include sift3.ahk
 #Include hl7.ahk
