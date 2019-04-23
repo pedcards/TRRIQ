@@ -444,16 +444,22 @@ WQtask() {
 	pt := readWQ(idx)
 	idstr := "/root/pending/enroll[@id='" idx "']"
 	
-	choice := cmsgbox("Patient task"
-			,	"Which action on this patient?`n`n"
-			.	pt.Name "`n"
-			.	"  MRN: " pt.MRN "`n"
-			.	"  Date: " niceDate(pt.date) "`n"
-			.	"  Provider: " pt.prov "`n"
+	list :=
+	Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
+	{
+		k := notes.item(A_index-1)
+		dt := parsedate(k.getAttribute("date"))
+		list .= dt.mm "/" dt.dd ":" k.getAttribute("user") ": " k.text "`n"
+	}
+
+	choice := cmsgbox(pt.Name " " pt.MRN
+			,	"Date: " niceDate(pt.date) "`n"
+			.	"Provider: " pt.prov "`n"
 			.	strQ(pt.FedEx,"  FedEx: ###`n")
-			, "NOTE communication|"
+			.   strQ(list,"Notes: ========================`n###`n")
+			, "View/Add NOTE|"
 			. "Log UPLOAD to Preventice|"
-			. "Mark record as DONE"
+			. "Move to DONE list"
 			, "Q")
 	if (choice="xClose") {
 		return
@@ -477,14 +483,6 @@ WQtask() {
 		return
 	}
 	if instr(choice,"note") {
-		wq := new XML("worklist.xml")
-		list :=
-		Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
-		{
-			k := notes.item(A_index-1)
-			dt := parsedate(k.getAttribute("date"))
-			list .= dt.mm "/" dt.dd ":" k.getAttribute("user") ": " k.text "`n"
-		}
 		inputbox(note,"Communication note"
 			, strQ(list,"###====================================`n") "`nEnter a brief communication note:`n","")
 		if (note="") {
