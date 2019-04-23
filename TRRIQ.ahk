@@ -176,15 +176,18 @@ PhaseGUI:
 	
 	Gui, Add, Picture
 		, % "Y" but1Y+18 " X" but1X+(wksloc="Main Campus" ? 120 : 60)
+		. " w90 h50 "
 		. " +0x1000 vRegisterBGM gPhaseTask "
 		, .\BGMini.png
 	Gui, Add, Picture
 		, % "Y" but1Y+18 " X" but1X+(wksloc="Main Campus" ? 10 : 60)
+		. " w90 h50 "
 		. " +0x1000 vRegisterBGH gPhaseTask"
 		, .\BGHeart.png
 	
 	Gui, Add, Picture
 		, % "Y" but2Y+18 " X" but2X+60 
+		. " w90 h50 "
 		. " +0x1000 vUpload gPhaseTask"
 		, .\H3.png
 	
