@@ -3442,7 +3442,7 @@ Holter_BGM:
 	t0 := parseDate(fldval["dem-Test_date"]).ymd
 	;~ t1 := t0.YMD t0.hr t0.min t0.sec
 	
-	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS Complexes") "<<<end"
+	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS") "<<<end"
 	daycount(summary,t0)
 	
 	sumEvent := stregX(summary,"",1,0,"\s+Summary\R",1) "<<<end"
@@ -3451,7 +3451,7 @@ Holter_BGM:
 	sumTot := stregX(summary,"\s+Totals\R",1,1,"\s+Heart Rate\R",1)
 	
 	sumRate := sumTot "`n" stregX(summary,"\s+Heart Rate\R",1,1,"\s+Ventricular Event Information\R",1)
-	fields[1] := ["Total QRS Complexes","Minimum","Maximum","Average","Tachycardia","Bradycardia"]
+	fields[1] := ["Total QRS","Minimum","Maximum","Average","Tachycardia","Bradycardia"]
 	labels[1] := ["Total_beats","Min","Max","Avg","Longest_tachy","Longest_brady"]
 	scanParams(sumRate,1,"hrd",1)
 	
