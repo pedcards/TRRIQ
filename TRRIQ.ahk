@@ -3417,6 +3417,26 @@ CheckProc:
 return
 }
 
+Holter_BGM_HL7:
+{
+/*	Process newtxt from pdftotxt from HL7 extract
+*/
+	eventlog("Holter_BGMini_HL7")
+	monType := "Mini"
+	fullDisc := "i)60\s+s(ec)?/line"
+	
+	demog := stregX(newtxt,"Subject Data",1,0,"Summary",1)
+	fields[1] := ["Patient Name","MRN","Date Of Birth","Gender"
+				, "Test Start","Test End","Test Duration","Analysis Duration","Practice:"]
+	labels[1] := ["Name","MRN","DOB","Sex"
+				, "Test_date","Test_end","Recording_time","Analysis_time","Site"]
+	scanParams(demog,1,"dem",1)
+	
+	
+	
+return
+}
+
 Holter_BGM:
 {
 	eventlog("Holter_BGMini")
