@@ -3456,12 +3456,12 @@ Holter_BGM:
 	scanParams(sumRate,1,"hrd",1)
 	
 	sumVE := sumTot "`n" stregX(summary,"\s+Ventricular Event Information\R",1,1,"\s+Supraventricular Event Information\R",1)
-	fields[2] := ["Ventricular Ectopics","Isolated","Bigeminy","Couplets","Runs","Longest","Fastest"]
+	fields[2] := ["Ventricular","Isolated","Bigeminy","Couplets","Total Runs","Longest","Fastest"]
 	labels[2] := ["Total","SingleVE","Bigeminy","Couplets","Runs","Longest","Fastest"]
 	scanParams(sumVE,2,"ve",1)
 	
 	sumSVE := sumTot "`n" stregX(summary,"\s+Supraventricular Event Information\R",1,1,"\s+RR.Pause\R",1)
-	fields[3] := ["Supraventricular Ectopics","Isolated","Couplets","Runs","Longest","Fastest"]
+	fields[3] := ["Supraventricular","Isolated","Couplets","Total Runs","Longest","Fastest"]
 	labels[3] := ["Total","Single","Pairs","Runs","Longest","Fastest"]
 	scanParams(sumSVE,3,"sve",1)
 	
