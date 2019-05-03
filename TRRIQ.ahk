@@ -2697,7 +2697,7 @@ ProcessPDF:
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
  */
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt"				; convert PDF pages 1-2 to txt file
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min				; convert PDF pages 1-2 to txt file
 	newTxt:=""																			; clear the full txt variable
 	FileRead, maintxt, %filenam%.txt													; load into maintxt
 	FileDelete, %filenam%.txt
@@ -3432,12 +3432,12 @@ Holter_BGM:
 	
 	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
-	demog := stregX(newtxt,"Subject Data",1,0,"Summary",1)
+	demog := columns(newtxt,"Subject Data","Ventricular Tachycardia",,"Test Start")
 	fields[1] := ["Patient Name","Age","MRN","Date Of Birth","Gender","Site"
 				, "Test Start","Test End","Test Duration","Analysis Duration"]
 	labels[1] := ["Name","null","MRN","DOB","Sex","null"
 				, "Test_date","Test_end","Recording_time","Analysis_time"]
-	fieldvals(demog,1,"dem")
+	scanParams(demog,1,"dem",1)
 	
 	t0 := parseDate(fldval["dem-Test_date"]).ymd
 	;~ t1 := t0.YMD t0.hr t0.min t0.sec
