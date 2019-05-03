@@ -2678,7 +2678,7 @@ ProcessHl7PDF:
 	if (type~="CEM|EOS") {
 		gosub Event_BGH_Hl7
 	} else if (ftype="MINI") {
-		gosub Holter_BGM
+		gosub processPDF
 	} else if (type="Holter") {
 		gosub Holter_Pr_Hl7
 	} else {
