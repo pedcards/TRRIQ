@@ -3879,6 +3879,7 @@ fieldvals(x,bl,bl2) {
 	bl2	= label prefix
 */
 	global fields, labels, fldval
+	StringReplace, x, x, `r`n, `n, all
 	
 	for k, i in fields[bl]																; Step through each val "i" from fields[bl,k]
 	{
