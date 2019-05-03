@@ -3002,7 +3002,7 @@ fieldsToCSV() {
 */
 	global fldval, fileOut1, fileOut2, monType
 	
-	if (monType~="PR|Zio") {
+	if (monType~="PR|Zio|Mini") {
 		tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
 			. "dem-Hookup_tech	dem-VOID2	dem-Meds	dem-Ordering	dem-Scanned_by	dem-Reading	"
 			. "dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	dem-VOID3	"
