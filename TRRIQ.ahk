@@ -627,10 +627,11 @@ WQlist() {
 			, strQ(res.site,"###","???")												; site
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
-			, (res.dev~="BG|BodyGuardian Heart") ? "BGH"													; extracted
+			, (res.dev~="BG|BodyGuardian Heart") ? "BGH"								; extracted
 			: (res.dev~="Mortara") ? "HOL"
+			: (res.dev~="Mini") ? "MINI"
 			: "HL7"
-			, (full>2)||(res.dev~="BG|BodyGuardian Heart") ? "":"X")										; fulldisc if filesize >2 Meg
+			, (full>2)||(res.dev~="Mortara") ? "X":"")									; fulldisc if filesize >2 Meg
 		wqfiles.push(id)
 	}
 	
