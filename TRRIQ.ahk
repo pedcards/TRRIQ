@@ -627,10 +627,11 @@ WQlist() {
 			, strQ(res.site,"###","???")												; site
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
-			, (res.dev~="BG|BodyGuardian Heart") ? "BGH"													; extracted
+			, (res.dev~="BG|BodyGuardian Heart") ? "BGH"								; extracted
 			: (res.dev~="Mortara") ? "HOL"
+			: (res.dev~="Mini") ? "MINI"
 			: "HL7"
-			, (full>2)||(res.dev~="BG|BodyGuardian Heart") ? "":"X")										; fulldisc if filesize >2 Meg
+			, (full>2)||(res.dev~="Mortara") ? "X":"")									; fulldisc if filesize >2 Meg
 		wqfiles.push(id)
 	}
 	
@@ -2674,10 +2675,12 @@ ProcessHl7PDF:
 	
 	progress, off
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
-	if (type="Holter") {
-		gosub Holter_Pr_Hl7
-	} else if (type~="CEM|EOS") {
+	if (type~="CEM|EOS") {
 		gosub Event_BGH_Hl7
+	} else if (ftype="MINI") {
+		gosub processPDF
+	} else if (type="Holter") {
+		gosub Holter_Pr_Hl7
 	} else {
 		MsgBox % "No match!`n" type
 		return
@@ -2694,7 +2697,7 @@ ProcessPDF:
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
  */
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt"				; convert PDF pages 1-2 to txt file
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min				; convert PDF pages 1-2 to txt file
 	newTxt:=""																			; clear the full txt variable
 	FileRead, maintxt, %filenam%.txt													; load into maintxt
 	FileDelete, %filenam%.txt
@@ -2999,7 +3002,7 @@ fieldsToCSV() {
 */
 	global fldval, fileOut1, fileOut2, monType
 	
-	if (monType~="PR|Zio") {
+	if (monType~="PR|Zio|Mini") {
 		tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
 			. "dem-Hookup_tech	dem-VOID2	dem-Meds	dem-Ordering	dem-Scanned_by	dem-Reading	"
 			. "dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	dem-VOID3	"
@@ -3009,22 +3012,10 @@ fieldsToCSV() {
 			. "ve-Bigem(0)	ve-Trigem(0)	ve-SVE(0)	sve-Total(0)	sve-Total_per(0)	sve-Runs(0)	sve-Beats(0)	"
 			. "sve-Longest(0)	sve-Longest_time	sve-Fastest(0)	sve-Fastest_time	sve-Pairs(0)	sve-Drop(0)	sve-Late(0)	"
 			. "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
-		;~ tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	"			; for when we are full TRRIQ
-			;~ . "dem-Hookup_tech	dem-Ordering	dem-Scanned_by	"
-			;~ . "dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	"
-			;~ . "hrd-Total_beats(0)	hrd-Min(0)	hrd-Min_time	hrd-Avg(0)	hrd-Max(0)	hrd-Max_time	hrd-HRV	"
-			;~ . "ve-Total(0)	ve-Total_per(0)	ve-Runs(0)	ve-Beats(0)	ve-Longest(0)	ve-Longest_time	ve-Fastest(0)	ve-Fastest_time	"
-			;~ . "ve-Triplets(0)	ve-Couplets(0)	ve-SinglePVC(0)	ve-InterpPVC(0)	ve-R_on_T(0)	ve-SingleVE(0)	ve-LateVE(0)	"
-			;~ . "ve-Bigem(0)	ve-Trigem(0)	ve-SVE(0)	sve-Total(0)	sve-Total_per(0)	sve-Runs(0)	sve-Beats(0)	"
-			;~ . "sve-Longest(0)	sve-Longest_time	sve-Fastest(0)	sve-Fastest_time	sve-Pairs(0)	sve-Drop(0)	sve-Late(0)	"
-			;~ . "sve-LongRR(0)	sve-LongRR_time	sve-Single(0)	sve-Bigem(0)	sve-Trigem(0)	sve-AF(0)"
 	} else if (monType="BGH") {
 		tabs := "dem-Name_L	dem-Name_F	dem-MRN	dem-Ordering	dem-Sex(NA)	dem-DOB	dem-VOID_Practice	dem-Indication	"
 			. "dem-Test_date	dem-Test_end	dem-VOID	dem-Billing	"
 			. "counts-Critical(0)	counts-Total(0)	counts-Serious(0)	counts-Manual(0)	counts-Stable(0)	counts-Auto(0)"
-		;~ tabs := "dem-Name_L	dem-Name_F	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Ordering	dem-Site	dem-Billing	dem-Device_SN	"		; for when we are full TRRIQ
-			;~ . "dem-Test_date	dem-Test_end	dem-Indication	"
-			;~ . "counts-Critical	counts-Total	counts-Serious	counts-Manual	counts-Stable	counts-Auto"
 	}
 	fileOut1 := ""
 	fileOut2 := ""
@@ -3414,6 +3405,26 @@ CheckProc:
 return
 }
 
+Holter_BGM_HL7:
+{
+/*	Process newtxt from pdftotxt from HL7 extract
+*/
+	eventlog("Holter_BGMini_HL7")
+	monType := "Mini"
+	fullDisc := "i)60\s+s(ec)?/line"
+	
+	demog := stregX(newtxt,"Subject Data",1,0,"Summary",1)
+	fields[1] := ["Patient Name","MRN","Date Of Birth","Gender"
+				, "Test Start","Test End","Test Duration","Analysis Duration","Practice:"]
+	labels[1] := ["Name","MRN","DOB","Sex"
+				, "Test_date","Test_end","Recording_time","Analysis_time","Site"]
+	scanParams(demog,1,"dem",1)
+	
+	
+	
+return
+}
+
 Holter_BGM:
 {
 	eventlog("Holter_BGMini")
@@ -3422,15 +3433,16 @@ Holter_BGM:
 	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	demog := columns(newtxt,"Subject Data","Ventricular Tachycardia",,"Test Start")
-	fields[1] := ["Patient Name","MRN","Date Of Birth","Gender"
-				, "Test Start","Test End","Test Duration","Analysis Duration","Practice:"]
-	labels[1] := ["Name","MRN","DOB","Sex","Test_date","Test_end","Recording_time","Analysis_time","Site"]
+	fields[1] := ["Patient Name","Age","MRN","Date Of Birth","Gender","Site"
+				, "Test Start","Test End","Test Duration","Analysis Duration"]
+	labels[1] := ["Name","null","MRN","DOB","Sex","null"
+				, "Test_date","Test_end","Recording_time","Analysis_time"]
 	scanParams(demog,1,"dem",1)
 	
 	t0 := parseDate(fldval["dem-Test_date"]).ymd
 	;~ t1 := t0.YMD t0.hr t0.min t0.sec
 	
-	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS Complexes") "<<<end"
+	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS") "<<<end"
 	daycount(summary,t0)
 	
 	sumEvent := stregX(summary,"",1,0,"\s+Summary\R",1) "<<<end"
@@ -3439,17 +3451,17 @@ Holter_BGM:
 	sumTot := stregX(summary,"\s+Totals\R",1,1,"\s+Heart Rate\R",1)
 	
 	sumRate := sumTot "`n" stregX(summary,"\s+Heart Rate\R",1,1,"\s+Ventricular Event Information\R",1)
-	fields[1] := ["Total QRS Complexes","Minimum","Maximum","Average","Tachycardia","Bradycardia"]
+	fields[1] := ["Total QRS","Minimum","Maximum","Average","Tachycardia","Bradycardia"]
 	labels[1] := ["Total_beats","Min","Max","Avg","Longest_tachy","Longest_brady"]
 	scanParams(sumRate,1,"hrd",1)
 	
 	sumVE := sumTot "`n" stregX(summary,"\s+Ventricular Event Information\R",1,1,"\s+Supraventricular Event Information\R",1)
-	fields[2] := ["Ventricular Ectopics","Isolated","Bigeminy","Couplets","Runs","Longest","Fastest"]
+	fields[2] := ["Ventricular","Isolated","Bigeminy","Couplets","Total Runs","Longest","Fastest"]
 	labels[2] := ["Total","SingleVE","Bigeminy","Couplets","Runs","Longest","Fastest"]
 	scanParams(sumVE,2,"ve",1)
 	
 	sumSVE := sumTot "`n" stregX(summary,"\s+Supraventricular Event Information\R",1,1,"\s+RR.Pause\R",1)
-	fields[3] := ["Supraventricular Ectopics","Isolated","Couplets","Runs","Longest","Fastest"]
+	fields[3] := ["Supraventricular","Isolated","Couplets","Total Runs","Longest","Fastest"]
 	labels[3] := ["Total","Single","Pairs","Runs","Longest","Fastest"]
 	scanParams(sumSVE,3,"sve",1)
 	
@@ -3867,6 +3879,7 @@ fieldvals(x,bl,bl2) {
 	bl2	= label prefix
 */
 	global fields, labels, fldval
+	StringReplace, x, x, `r`n, `n, all
 	
 	for k, i in fields[bl]																; Step through each val "i" from fields[bl,k]
 	{
