@@ -2469,6 +2469,7 @@ getPatInfo() {
 			. "Legal guardian|"															; skip lines containing these strings
 			. "Birth certificate|"
 			. "Comment|"
+			. "\(Other|"
 			. "Custody|"
 			. "Work:|"
 			. "Mobile:|"
