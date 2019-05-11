@@ -2469,6 +2469,7 @@ getPatInfo() {
 			. "Legal guardian|"															; skip lines containing these strings
 			. "Birth certificate|"
 			. "Comment|"
+			. "\(.*\)|"
 			. "Custody|"
 			. "Work:|"
 			. "Mobile:|"
@@ -3408,6 +3409,7 @@ return
 Holter_BGM_HL7:
 {
 /*	Process newtxt from pdftotxt from HL7 extract
+	NOTE: this is just a placeholder. No DDE for Mini yet, but hopefully by Q3 2019!
 */
 	eventlog("Holter_BGMini_HL7")
 	monType := "Mini"
@@ -4162,6 +4164,11 @@ formatField(pre, lab, txt) {
 			res1 := RegExReplace(res1,"(\d+)\s*,\s*(\d+)","$1 beats, $2 bpm")
 			fieldColAdd(pre,lab,res1)
 			fieldColAdd(pre,lab "_time",res2)
+			return
+		}
+		if RegExMatch(txt,"(.*?)\((.*?%)\)",res) {
+			fieldColAdd(pre,lab,res1)
+			fieldColAdd(pre,lab "_per",res2)
 			return
 		}
 		if (lab~="_time" && RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res)) {		; convert DD:HH:MM:SS into Days & Hrs
