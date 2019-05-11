@@ -4166,6 +4166,11 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_time",res2)
 			return
 		}
+		if RegExMatch(txt,"(.*?)\((.*?%)\)",res) {
+			fieldColAdd(pre,lab,res1)
+			fieldColAdd(pre,lab "_per",res2)
+			return
+		}
 		if (lab~="_time" && RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res)) {		; convert DD:HH:MM:SS into Days & Hrs
 			txt := res1 " days, " res2 " hours"
 		}
