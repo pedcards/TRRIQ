@@ -12,9 +12,9 @@ SetWorkingDir %A_ScriptDir%
 SetTitleMatchMode, 2
 
 progress,,,TRRIQ intializing...
-FileInstall, pdftotext.exe, pdftotext.exe
-FileInstall, pdftk.exe, pdftk.exe
-FileInstall, libiconv2.dll, libiconv2.dll
+;~ FileInstall, pdftotext.exe, pdftotext.exe
+;~ FileInstall, pdftk.exe, pdftk.exe
+;~ FileInstall, libiconv2.dll, libiconv2.dll
 FileInstall, trriq.ini, trriq.ini
 FileInstall, hl7.ini, hl7.ini
 FileGetTime, wqfileDT, wqupdate
