@@ -6,15 +6,16 @@
 
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force  ; only allow one running instance per user
+#MaxMem 128
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 
 SetWorkingDir %A_ScriptDir%
 SetTitleMatchMode, 2
 
 progress,,,TRRIQ intializing...
-FileInstall, pdftotext.exe, pdftotext.exe
-FileInstall, pdftk.exe, pdftk.exe
-FileInstall, libiconv2.dll, libiconv2.dll
+;~ FileInstall, pdftotext.exe, pdftotext.exe
+;~ FileInstall, pdftk.exe, pdftk.exe
+;~ FileInstall, libiconv2.dll, libiconv2.dll
 FileInstall, trriq.ini, trriq.ini
 FileInstall, hl7.ini, hl7.ini
 FileGetTime, wqfileDT, wqupdate
@@ -631,7 +632,7 @@ WQlist() {
 			: (res.dev~="Mortara") ? "HOL"
 			: (res.dev~="Mini") ? "MINI"
 			: "HL7"
-			, (full>2)||(res.dev~="Mortara") ? "X":"")									; fulldisc if filesize >2 Meg
+			, (res.dev~="Mortara")&&(full<3) ? "X":"")									; flag FTP if Mortara but filesize <3 Meg
 		wqfiles.push(id)
 	}
 	
