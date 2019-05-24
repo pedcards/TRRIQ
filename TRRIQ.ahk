@@ -632,7 +632,7 @@ WQlist() {
 			: (res.dev~="Mortara") ? "HOL"
 			: (res.dev~="Mini") ? "MINI"
 			: "HL7"
-			, (full>2)||(res.dev~="Mortara") ? "X":"")									; fulldisc if filesize >2 Meg
+			, (res.dev~="Mortara")&&(full<3) ? "X":"")									; flag FTP if Mortara but filesize <3 Meg
 		wqfiles.push(id)
 	}
 	
