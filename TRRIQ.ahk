@@ -180,7 +180,7 @@ PhaseGUI:
 	Gui, Add, Picture
 		, % "Y" btn1Y+18 " X" btn1X+(wksloc="Main Campus" ? 120 : 60)
 		. " w" btnW " h" btnH " "
-		. " +0x1000 vRegisterBGM gPhaseTask"
+		. " +0x1000 vRegisterBGM " (wksloc="Main Campus" ? "gPhaseTask" : "")
 		, .\BGMini.png
 	Gui, Add, Picture
 		, % "Y" btn1Y+18 " X" btn1X+(wksloc="Main Campus" ? 10 : 60)
