@@ -2489,26 +2489,18 @@ getPatInfo() {
 	loop, % rel.MaxIndex()
 	{
 		i := A_index
-		loop, % rel.MaxIndex()															; compare against all other addresses
-		{
-			j := A_Index
-			if (i=j) {																	; do not compare to self
-				continue
-			}
-			if (rel[j].lives = true) {
-				ptDem.livesaddr := rel[j].addr
-				continue																; keep if "Lives here" is true
-			}
-			if (rel[j].phone != ptDem.phone) {
-				rel.delete(j)															; remove if doesn't match patient's home phone number
-			}
-			;~ if (rel[i].addr = rel[j].addr) {
-				;~ rel.delete(j)															; remove duplicate addresses
-			;~ }
+		if (rel[i].lives = true) {
+			ptDem.livesaddr := rel[i].addr
+			continue																	; keep if "Lives here" is true
+		}
+		if (rel[i].guardian = true) {
+			continue																	; keep if is guardian
 		}
 		if ((rel[i].addr="") && (rel[i].phone="")) {
 			rel.Delete(i)																; remove entries with no address or phone
+			continue
 		}
+		rel.Delete(i)																	; remove anyone who doesn't match
 	}
 	loop, % rel.MaxIndex()
 	{
