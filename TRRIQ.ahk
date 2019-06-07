@@ -2458,7 +2458,7 @@ getPatInfo() {
 			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
 			continue
 		}
-		if (i~="i)Lives with") {
+		if (i~="i)^Lives with") {
 			rel[ct].lives := true
 			continue
 		}
