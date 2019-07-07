@@ -9,17 +9,17 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%
 SetTitleMatchMode, 2
 
-		if (phase="Enrollment") {
-			eventlog("Update Preventice enrollments.")
-			CheckPreventiceWeb("Patient Enrollment")
-		}
-		if (phase="Inventory") {
-			eventlog("Update Preventice inventory.")
+Config: 
+{
+/*	Set config vals for script
+*/
+	site_enrollment := "https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
+	site_inventory := "https://secure.preventice.com/Facilities/"
 			CheckPreventiceWeb("Facilities")
 		}
 
-ExitApp
-
+	webStr := {}
+	webStr.Enrollment := {dlg:"Enrollment / Submitted Patients"
 CheckPreventiceWeb(win) {
 	global phase
 	SetTimer, idleTimer, Off
@@ -27,17 +27,37 @@ CheckPreventiceWeb(win) {
 	str := {}
 	str.Enrollment := {dlg:"Enrollment / Submitted Patients"
 		, url:"https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
+		, win:"Patient Enrollment"
 		, tbl:"ctl00_mainContent_PatientListSubmittedCtrl1_RadGridPatients_ctl00"
 		, changed:"ctl00_mainContent_PatientListSubmittedCtrl1_lblTotalCountMessage"
 		, btn:"ctl00_mainContent_PatientListSubmittedCtrl1_btnNextPage"
+		, click:"getElementById(btnStr).click()"
 		, fx:"ParsePreventiceEnrollment"}
-	str.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
+	webStr.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
 		, url:"https://secure.preventice.com/Facilities/"
+		, win:"Facilities"
 		, tbl:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00"
 		, changed:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00_Pager"
 		, btn:"rgPageNext"
+		, click:"getElementsByClassName(btnStr)[0].click()"
 		, fx:"ParsePreventiceInventory"}
 	
+	TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\Holter DB\TRRIQ"
+	
+	IfInString, A_ScriptDir, AhkProjects 
+	{
+		isAdmin := true
+		files_dir := A_ScriptDir "\files"
+		user_name := "test"
+		user_pass := "test"
+	} else {
+		isAdmin := false
+		files_dir := TRRIQ_path "\files"
+		user_name := "test"
+		user_pass := "test"
+	}
+}
+
 	while !(WinExist(win))																; expected IE window title not present
 	{
 		MsgBox,4161,Update Preventice %phase%
