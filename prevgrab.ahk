@@ -61,6 +61,25 @@ MainLoop:
 	ExitApp
 }
 
+PreventiceWebGrab(phase) {
+	global webStr
+	web := webStr[phase]
+	
+	openIE()
+	if !winExist("ahk_exe iexplore.exe") {
+		wb := ComObjCreate("InternetExplorer.application")
+	} else {
+		WinGetTitle, name, ahk_class IEFrame
+		wb := IEGet(name)
+	}
+	wb.visible := true
+	wb.Navigate(web.url)
+	while wb.busy {
+		sleep 10
+	}
+	;~ wb := ieGet(webStr[phase].win)
+	;~ SetTimer, idleTimer, Off
+	
 	while !(WinExist(win))																; expected IE window title not present
 	{
 		MsgBox,4161,Update Preventice %phase%
