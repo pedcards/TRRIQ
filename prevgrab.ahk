@@ -114,7 +114,7 @@ MainLoop:
 		PreventiceWebPager(wb,str[phase].changed,str[phase].btn)
 	}
 	
-	setwqupdate()
+	;~ setwqupdate()
 	
 	wb.navigate(str[phase].url)															; refresh first page
 	ComObjConnect(wb)																	; release wb object
@@ -151,7 +151,7 @@ parsePreventiceEnrollment(tbl) {
 	lbl := ["name","mrn","date","dev","prov"]
 	done := 0
 	checkdays := 21
-	fileCheck()
+	;~ fileCheck()
 	wq := new XML("worklist.xml")														; refresh WQ
 	FileOpen(".lock", "W")																; Create lock file.
 	
@@ -178,54 +178,54 @@ parsePreventiceEnrollment(tbl) {
 		
 	/*	Check whether any params match this device
 	*/
-		if enrollcheck("[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']") {		; MRN+DATE+S/N = perfect match
-			continue
-		}
-		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
-			en:=readWQ(id)
-			if (en.node="done") {
-				continue
-			}
-			wqSetVal(id,"date",date)
-			eventlog(en.name " (" id ") changed WQ date '" en.date "' ==> '" date "'")
-			continue
-		}
-		if (id:=enrollcheck("[mrn='" res.mrn "'][date='" date "']")) {					; MRN+DATE, no S/N
-			en:=readWQ(id)
-			if (en.node="done") {
-				continue
-			}
-			wqSetVal(id,"dev",res.dev)
-			eventlog(en.name " (" id ") changed WQ dev '" en.dev "' ==> '" res.dev "'")
-			continue
-		}
-		if (id:=enrollcheck("[date='" date "'][dev='" res.dev "']")) {					; DATE+S/N, no MRN
-			en:=readWQ(id)
-			if (en.node="done") {
-				continue
-			}
-			wqSetVal(id,"mrn",res.mrn)
-			eventlog(en.name " (" id ") changed WQ mrn '" en.mrn "' ==> '" res.mrn "'")
-			continue
-		} 
+		;~ if enrollcheck("[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']") {		; MRN+DATE+S/N = perfect match
+			;~ continue
+		;~ }
+		;~ if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
+			;~ en:=readWQ(id)
+			;~ if (en.node="done") {
+				;~ continue
+			;~ }
+			;~ wqSetVal(id,"date",date)
+			;~ eventlog(en.name " (" id ") changed WQ date '" en.date "' ==> '" date "'")
+			;~ continue
+		;~ }
+		;~ if (id:=enrollcheck("[mrn='" res.mrn "'][date='" date "']")) {					; MRN+DATE, no S/N
+			;~ en:=readWQ(id)
+			;~ if (en.node="done") {
+				;~ continue
+			;~ }
+			;~ wqSetVal(id,"dev",res.dev)
+			;~ eventlog(en.name " (" id ") changed WQ dev '" en.dev "' ==> '" res.dev "'")
+			;~ continue
+		;~ }
+		;~ if (id:=enrollcheck("[date='" date "'][dev='" res.dev "']")) {					; DATE+S/N, no MRN
+			;~ en:=readWQ(id)
+			;~ if (en.node="done") {
+				;~ continue
+			;~ }
+			;~ wqSetVal(id,"mrn",res.mrn)
+			;~ eventlog(en.name " (" id ") changed WQ mrn '" en.mrn "' ==> '" res.mrn "'")
+			;~ continue
+		;~ } 
 		
 	/*	No match (i.e. unique record)
 	 *	add new record to PENDING
 	 */
-		sleep 1																			; delay 1ms to ensure different tick time
-		id := A_TickCount 
-		newID := "/root/pending/enroll[@id='" id "']"
-		wq.addElement("enroll","/root/pending",{id:id})
-		wq.addElement("date",newID,date)
-		wq.addElement("name",newID,res.name)
-		wq.addElement("mrn",newID,res.mrn)
-		wq.addElement("dev",newID,res.dev)
-		wq.addElement("prov",newID,filterProv(res.prov).name)
-		wq.addElement("site",newID,filterProv(res.prov).site)
-		wq.addElement("webgrab",newID,A_now)
-		done ++
+		;~ sleep 1																			; delay 1ms to ensure different tick time
+		;~ id := A_TickCount 
+		;~ newID := "/root/pending/enroll[@id='" id "']"
+		;~ wq.addElement("enroll","/root/pending",{id:id})
+		;~ wq.addElement("date",newID,date)
+		;~ wq.addElement("name",newID,res.name)
+		;~ wq.addElement("mrn",newID,res.mrn)
+		;~ wq.addElement("dev",newID,res.dev)
+		;~ wq.addElement("prov",newID,filterProv(res.prov).name)
+		;~ wq.addElement("site",newID,filterProv(res.prov).site)
+		;~ wq.addElement("webgrab",newID,A_now)
+		;~ done ++
 		
-		eventlog("Added new registration " res.mrn " " res.name " " date ".")
+		;~ eventlog("Added new registration " res.mrn " " res.name " " date ".")
 	}
 	wq.selectSingleNode("/root/pending").setAttribute("update",A_now)					; set pending[@update] attr
 	wq.save("worklist.xml")
@@ -290,7 +290,7 @@ parsePreventiceInventory(tbl) {
 	
 	wq.selectSingleNode("/root/inventory").setAttribute("update",A_now)					; set pending[@update] attr
 	
-	writeout("/root","inventory")
+	;~ writeout("/root","inventory")
 	
 	return true
 }
