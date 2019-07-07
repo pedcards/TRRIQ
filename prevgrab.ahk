@@ -58,6 +58,17 @@ CheckPreventiceWeb(win) {
 	}
 }
 
+MainLoop:
+{
+	eventlog("Update Preventice enrollments.")
+	PreventiceWebGrab("Enrollment")
+	
+	eventlog("Update Preventice inventory.")
+	PreventiceWebGrab("Facilities")
+	
+	ExitApp
+}
+
 	while !(WinExist(win))																; expected IE window title not present
 	{
 		MsgBox,4161,Update Preventice %phase%
