@@ -15,17 +15,9 @@ Config:
 */
 	site_enrollment := "https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
 	site_inventory := "https://secure.preventice.com/Facilities/"
-			CheckPreventiceWeb("Facilities")
-		}
-
+	
 	webStr := {}
 	webStr.Enrollment := {dlg:"Enrollment / Submitted Patients"
-CheckPreventiceWeb(win) {
-	global phase
-	SetTimer, idleTimer, Off
-	
-	str := {}
-	str.Enrollment := {dlg:"Enrollment / Submitted Patients"
 		, url:"https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
 		, win:"Patient Enrollment"
 		, tbl:"ctl00_mainContent_PatientListSubmittedCtrl1_RadGridPatients_ctl00"
