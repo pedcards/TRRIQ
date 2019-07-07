@@ -309,15 +309,19 @@ parsePreventiceInventory(tbl) {
 IEopen() {
 /*	Use ComObj to open IE
 	If not open, create a new instance
-	If IE open, activate it and find a tab
+	If IE open, choose that windows object
 	Return the IE window object
 */
 	if !winExist("ahk_exe iexplore.exe") {
 		wb := ComObjCreate("InternetExplorer.application")
+		return wb
 	} 
 	else {
-		WinGetTitle, name, ahk_class IEFrame
-		wb := IEGet(name)
+		for wb in ComObjCreate("Shell.Application").Windows() {
+			if InStr(wb.FullName, "iexplore.exe") {
+				return wb
+			}
+		}
 	}
 }
 
