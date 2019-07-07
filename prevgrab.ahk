@@ -306,6 +306,21 @@ parsePreventiceInventory(tbl) {
 	return true
 }
 
+IEopen() {
+/*	Use ComObj to open IE
+	If not open, create a new instance
+	If IE open, activate it and find a tab
+	Return the IE window object
+*/
+	if !winExist("ahk_exe iexplore.exe") {
+		wb := ComObjCreate("InternetExplorer.application")
+	} 
+	else {
+		WinGetTitle, name, ahk_class IEFrame
+		wb := IEGet(name)
+	}
+}
+
 IEGet(name="") {
 /*	from the very helpful post by jethrow
 	https://autohotkey.com/board/topic/47052-basic-webpage-controls-with-javascript-com-tutorial/
