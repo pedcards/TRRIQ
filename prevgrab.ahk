@@ -65,20 +65,19 @@ PreventiceWebGrab(phase) {
 	global webStr
 	web := webStr[phase]
 	
-	openIE()
-	if !winExist("ahk_exe iexplore.exe") {
-		wb := ComObjCreate("InternetExplorer.application")
-	} else {
-		WinGetTitle, name, ahk_class IEFrame
-		wb := IEGet(name)
-	}
+	wb := IEopen()
 	wb.visible := true
 	wb.Navigate(web.url)
 	while wb.busy {
 		sleep 10
 	}
+	
 	;~ wb := ieGet(webStr[phase].win)
 	;~ SetTimer, idleTimer, Off
+	MsgBox end
+	ComObjConnect(wb)
+	WinKill, ahk_exe iexplore.exe
+	ExitApp
 	
 	while !(WinExist(win))																; expected IE window title not present
 	{
