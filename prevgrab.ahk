@@ -323,6 +323,23 @@ IEopen() {
 	}
 }
 
+IEurl(url) {
+/*	Open a URL
+*/
+	global wb
+	
+	wb.Navigate(url)																	; load URL
+	while wb.busy {																		; wait until done loading
+		sleep 10
+	}
+	
+	if instr(wb.LocationURL,"UserLogin") {
+		preventiceLogin()
+	}
+	
+	return
+}
+
 IEGet(name="") {
 /*	from the very helpful post by jethrow
 	https://autohotkey.com/board/topic/47052-basic-webpage-controls-with-javascript-com-tutorial/
