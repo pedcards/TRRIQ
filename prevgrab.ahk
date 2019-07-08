@@ -39,13 +39,16 @@ Config:
 	{
 		gl.isAdmin := true
 		gl.files_dir := A_ScriptDir "\files"
-		gl.user_name := "test"
-		gl.user_pass := "test"
 	} else {
 		gl.isAdmin := false
 		gl.files_dir := TRRIQ_path "\files"
-		gl.user_name := "test"
-		gl.user_pass := "test"
+	}
+	loop, read, prev.key
+	{
+		k := A_LoopReadLine
+		fld := strX(k,"",0,0,"=",1,1)
+		val := strX(k,"=",1,1,"",0)
+		gl[fld] := val
 	}
 }
 
