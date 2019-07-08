@@ -351,6 +351,30 @@ IEGet(name="") {
 			return wb
 }
 
+preventiceLogin() {
+/*	Need to populate and submit user login form
+*/
+	global wb
+	attr_user := "ctl00$PublicContent$Login1$UserName"
+	attr_pass := "ctl00$PublicContent$Login1$Password"
+	attr_btn := "ctl00$PublicContent$Login1$goButton"	
+	
+	wb.document
+		.getElementById(RegExReplace(attr_user,"\$","_"))
+		.value := gl.user_name
+	wb.document
+		.getElementById(RegExReplace(attr_pass,"\$","_"))
+		.value := gl.user_pass
+	wb.document
+		.getElementByID(RegExReplace(attr_btn,"\$","_"))
+		.click()
+	while wb.busy {																		; wait until done loading
+		sleep 10
+	}
+
+	return
+}
+
 httpComm(url:="",verb:="") {
 	global servFold
 	if (url="") {
