@@ -13,10 +13,9 @@ Config:
 {
 /*	Set config vals for script
 */
-	site_enrollment := "https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
-	site_inventory := "https://secure.preventice.com/Facilities/"
+	global webstr:={}
+		,  gl:={}
 	
-	webStr := {}
 	webStr.Enrollment := {dlg:"Enrollment / Submitted Patients"
 		, url:"https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
 		, win:"Patient Enrollment"
@@ -34,19 +33,19 @@ Config:
 		, click:"getElementsByClassName(btnStr)[0].click()"
 		, fx:"ParsePreventiceInventory"}
 	
-	TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\Holter DB\TRRIQ"
+	gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\Holter DB\TRRIQ"
 	
 	IfInString, A_ScriptDir, AhkProjects 
 	{
-		isAdmin := true
-		files_dir := A_ScriptDir "\files"
-		user_name := "test"
-		user_pass := "test"
+		gl.isAdmin := true
+		gl.files_dir := A_ScriptDir "\files"
+		gl.user_name := "test"
+		gl.user_pass := "test"
 	} else {
-		isAdmin := false
-		files_dir := TRRIQ_path "\files"
-		user_name := "test"
-		user_pass := "test"
+		gl.isAdmin := false
+		gl.files_dir := TRRIQ_path "\files"
+		gl.user_name := "test"
+		gl.user_pass := "test"
 	}
 }
 
