@@ -61,34 +61,48 @@ MainLoop:
 }
 
 PreventiceWebGrab(phase) {
-	global webStr
+	global webStr, wb
 	web := webStr[phase]
+	lbl_map := {"Patient Name":"name"
+		,"MRN":"mrn"
+		,"Created Date":"date"
+		,"Device":"dev"
+		,"Physician":"prov"}
+	lbl := []
 	
-	wb := IEopen()
+	wb := IEopen()																		; start/activate an IE instance
 	wb.visible := true
-	wb.Navigate(web.url)
-	while wb.busy {
-		sleep 10
+	
+	IEurl(web.url)																		; load URL, return DOM in wb
+	
+	mTbl := wb.document.getElementById(web.tbl)											; get MasterTable
+	
+	mTbl_head := mTbl.getElementsByTagName("thead")[0]									; get column names from table header
+	loop, % (th := mTbl_head.getElementsByTagName("th")).length
+	{
+		i := A_index-1
+		val := trim(th[i].innertext)
+		lbl[i] := lbl_map[val]
+	}
+	
+	mTbl_body := mTbl.getElementsByTagName("tbody")[0]									; read table body
+	loop, % (tr := mTbl_body.getElementsByTagName("tr")).Length
+	{
+		i := A_index-1
+		loop, % (td := tr[i].getElementsByTagName("td")).length
+		{
+			j := A_index-1
+			val := trim(td[j].innertext)
+			;~ MsgBox % lbl[j] ": " val
+		}
 	}
 	
 	;~ wb := ieGet(webStr[phase].win)
 	;~ SetTimer, idleTimer, Off
-	MsgBox end
-	ComObjConnect(wb)
-	WinKill, ahk_exe iexplore.exe
-	ExitApp
-	
-	while !(WinExist(win))																; expected IE window title not present
-	{
-		MsgBox,4161,Update Preventice %phase%
-			, % "Navigate on Preventice website to:`n`n"
-			.	str[phase].dlg "`n`n"
-			.	"Click OK when ready to proceed"
-		IfMsgBox, Cancel
-		{
-			return
-		}
-	}
+	;~ MsgBox % siteUrl
+	;~ ComObjConnect(wb)
+	;~ WinKill, ahk_exe iexplore.exe
+	;~ ExitApp
 	
 	prvFunc := str[phase].fx
 	wb := IEGet(win)
