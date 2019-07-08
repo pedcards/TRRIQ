@@ -55,7 +55,7 @@ MainLoop:
 	PreventiceWebGrab("Enrollment")
 	
 	eventlog("Update Preventice inventory.")
-	PreventiceWebGrab("Facilities")
+	PreventiceWebGrab("Inventory")
 	
 	ExitApp
 }
