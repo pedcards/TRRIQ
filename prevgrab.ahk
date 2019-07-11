@@ -330,6 +330,7 @@ preventiceLogin() {
 	attr_pass := "ctl00$PublicContent$Login1$Password"
 	attr_btn := "ctl00$PublicContent$Login1$goButton"	
 	
+	progress,,,User login ...
 	wb.document
 		.getElementById(RegExReplace(attr_user,"\$","_"))
 		.value := gl.user_name
@@ -340,6 +341,8 @@ preventiceLogin() {
 		.getElementByID(RegExReplace(attr_btn,"\$","_"))
 		.click()
 	while wb.busy {																		; wait until done loading
+		i += 0.5
+		progress, % i
 		sleep 10
 	}
 
