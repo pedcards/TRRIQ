@@ -66,12 +66,6 @@ MainLoop:
 PreventiceWebGrab(phase) {
 	global webStr, wb
 	web := webStr[phase]
-	lbl_map := {"Patient Name":"name"
-		,"MRN":"mrn"
-		,"Created Date":"date"
-		,"Device":"dev"
-		,"Physician":"prov"}
-	lbl := []
 	
 	wb := IEopen()																		; start/activate an IE instance
 	wb.visible := true
