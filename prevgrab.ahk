@@ -67,62 +67,34 @@ PreventiceWebGrab(phase) {
 	global webStr, wb
 	web := webStr[phase]
 	
+	progress,,,Opening IE ...
 	wb := IEopen()																		; start/activate an IE instance
 	wb.visible := true
 	
+	progress,,,Opening page ...
 	IEurl(web.url)																		; load URL, return DOM in wb
-	
-	mTbl := wb.document.getElementById(web.tbl)											; get MasterTable
-	
-	mTbl_head := mTbl.getElementsByTagName("thead")[0]									; get column names from table header
-	loop, % (th := mTbl_head.getElementsByTagName("th")).length
-	{
-		i := A_index-1
-		val := trim(th[i].innertext)
-		lbl[i] := lbl_map[val]
-	}
-	
-	mTbl_body := mTbl.getElementsByTagName("tbody")[0]									; read table body
-	loop, % (tr := mTbl_body.getElementsByTagName("tr")).Length
-	{
-		i := A_index-1
-		loop, % (td := tr[i].getElementsByTagName("td")).length
-		{
-			j := A_index-1
-			val := trim(td[j].innertext)
-			;~ MsgBox % lbl[j] ": " val
-		}
-	}
-	
-	;~ wb := ieGet(webStr[phase].win)
-	;~ SetTimer, idleTimer, Off
-	;~ MsgBox % siteUrl
-	;~ ComObjConnect(wb)
-	;~ WinKill, ahk_exe iexplore.exe
-	;~ ExitApp
-	
-	prvFunc := str[phase].fx
-	wb := IEGet(win)
+	prvFunc := web.fx
 	
 	loop
 	{
-		tbl := wb.document.getElementById(str[phase].tbl)
+		progress,,,Scanning page %A_index% ...
+		
+		tbl := wb.document.getElementById(web.tbl)											; get the Main Table
 		if !IsObject(tbl) {
 			progress, off
 			MsgBox No match
 			return
 		}
-		progress,,,Scanning page %A_index% ...
 		
-		tbl := tbl.getElementsByTagName("tbody")[0]
-		clip := tbl.innertext
+		body := tbl.getElementsByTagName("tbody")[0]
+		clip := body.innertext
 		if (clip=clip0) {																; no change since last clip
 			progress, off
 			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
 			break
 		}
 		
-		done := %prvFunc%(tbl)		; parsePreventiceEnrollment() or parsePreventiceInventory()
+		done := %prvFunc%(body)		; parsePreventiceEnrollment() or parsePreventiceInventory()
 		
 		if (done=0) {																	; no new records returned
 			progress, off
@@ -131,12 +103,10 @@ PreventiceWebGrab(phase) {
 		}
 		clip0 := clip																	; set the check for repeat copy
 		
-		PreventiceWebPager(wb,str[phase].changed,str[phase].btn)
+		PreventiceWebPager(phase,web.changed,web.btn)
 	}
 	
-	;~ setwqupdate()
-	
-	wb.navigate(str[phase].url)															; refresh first page
+	wb.navigate(web.url)																; refresh first page
 	ComObjConnect(wb)																	; release wb object
 	return
 }
