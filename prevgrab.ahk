@@ -239,16 +239,7 @@ parsePreventiceInventory(tbl) {
 	Add unique ser nums to /root/inventory/dev[@ser]
 	These will be removed when registered
 */
-	global wq
-	
 	lbl := ["button","model","ser"]
-	wq := new XML("worklist.xml")														; refresh WQ
-	
-	wqtime := wq.selectSingleNode("/root/inventory").getAttribute("update")
-	if !(wqTime) {
-		wq.addElement("inventory","/root")
-		eventlog("Created new Inventory node.")
-	}
 	
 	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
 	{
@@ -261,24 +252,21 @@ parsePreventiceInventory(tbl) {
 			c_idx := A_Index-1
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
-		if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" res.ser "']")) {	; already exists in Inventory
-			continue
-		}
-		wq.addElement("dev","/root/inventory",{model:res.model,ser:res.ser})
-		eventlog("Added new Inventory dev " res.ser)
+		;~ wq.addElement("dev","/root/inventory",{model:res.model,ser:res.ser})
+		;~ eventlog("Added new Inventory dev " res.ser)
 	}
 
-	loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
-	{
-		k := devs.item(A_Index-1)
-		ser := k.getAttribute("ser")
-		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='BodyGuardian Heart - " ser "']")) {	; exists in Pending
-			k.parentNode.removeChild(k)
-			eventlog("Removed inventory ser " ser)
-		}
-	}
+	;~ loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
+	;~ {
+		;~ k := devs.item(A_Index-1)
+		;~ ser := k.getAttribute("ser")
+		;~ if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='BodyGuardian Heart - " ser "']")) {	; exists in Pending
+			;~ k.parentNode.removeChild(k)
+			;~ eventlog("Removed inventory ser " ser)
+		;~ }
+	;~ }
 	
-	wq.selectSingleNode("/root/inventory").setAttribute("update",A_now)					; set pending[@update] attr
+	;~ wq.selectSingleNode("/root/inventory").setAttribute("update",A_now)					; set pending[@update] attr
 	
 	;~ writeout("/root","inventory")
 	
