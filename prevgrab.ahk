@@ -299,6 +299,8 @@ IEurl(url) {
 	
 	wb.Navigate(url)																	; load URL
 	while wb.busy {																		; wait until done loading
+		i += 0.5
+		progress, % i
 		sleep 10
 	}
 	
