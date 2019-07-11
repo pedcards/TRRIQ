@@ -22,7 +22,6 @@ Config:
 		, tbl:"ctl00_mainContent_PatientListSubmittedCtrl1_RadGridPatients_ctl00"
 		, changed:"ctl00_mainContent_PatientListSubmittedCtrl1_lblTotalCountMessage"
 		, btn:"ctl00_mainContent_PatientListSubmittedCtrl1_btnNextPage"
-		, click:"getElementById(btnStr).click()"
 		, fx:"ParsePreventiceEnrollment"}
 	webStr.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
 		, url:"https://secure.preventice.com/Facilities/"
@@ -30,7 +29,6 @@ Config:
 		, tbl:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00"
 		, changed:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00_Pager"
 		, btn:"rgPageNext"
-		, click:"getElementsByClassName(btnStr)[0].click()"
 		, fx:"ParsePreventiceInventory"}
 	
 	gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\Holter DB\TRRIQ"
