@@ -111,8 +111,8 @@ PreventiceWebGrab(phase) {
 	return
 }
 
-PreventiceWebPager(wb,chgStr,btnStr) {
-	global phase
+PreventiceWebPager(phase,chgStr,btnStr) {
+	global wb
 	
 	if (phase="Enrollment") {
 		wb.document.getElementById(btnStr).click() 										; click when id=btnStr
