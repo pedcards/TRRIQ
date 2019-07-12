@@ -67,15 +67,15 @@ PreventiceWebGrab(phase) {
 	
 	progress,,,Opening IE ...
 	wb := IEopen()																		; start/activate an IE instance
-	wb.visible := true
+	wb.visible := false
 	
-	progress,,,Opening page ...
+	progress,,,Opening page ..., % phase
 	IEurl(web.url)																		; load URL, return DOM in wb
 	prvFunc := web.fx
 	
 	loop
 	{
-		progress,,,Scanning page %A_index% ...
+		progress,,,Scanning page %A_index% ..., % phase
 		
 		tbl := wb.document.getElementById(web.tbl)											; get the Main Table
 		if !IsObject(tbl) {
