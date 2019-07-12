@@ -88,7 +88,7 @@ PreventiceWebGrab(phase) {
 		clip := body.innertext
 		if (clip=clip0) {																; no change since last clip
 			progress, off
-			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
+			;~ MsgBox,4144,, End of novel records.`n`n%phase% update complete!
 			break
 		}
 		
@@ -96,7 +96,7 @@ PreventiceWebGrab(phase) {
 		
 		if (done=0) {																	; no new records returned
 			progress, off
-			MsgBox,4144,, Reached the end of novel records.`n`n%phase% update complete!
+			;~ MsgBox,4144,, No results.`n`n%phase% update complete!
 			break
 		}
 		clip0 := clip																	; set the check for repeat copy
@@ -120,7 +120,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	}
 	pg0 := wb.document.getElementById(chgStr).innerText
 	
-	loop, 100																			; wait up to 100*0.05 = 5 sec
+	loop, 200																			; wait up to 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
 		progress,% A_index
