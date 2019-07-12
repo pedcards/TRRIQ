@@ -41,7 +41,7 @@ Config:
 		gl.isAdmin := false
 		gl.files_dir := TRRIQ_path "\files"
 	}
-	loop, read, prev.key
+	loop, read, % gl.files_dir "\prev.key"
 	{
 		k := A_LoopReadLine
 		fld := strX(k,"",0,0,"=",1,1)
