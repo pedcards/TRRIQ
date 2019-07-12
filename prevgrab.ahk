@@ -31,7 +31,7 @@ Config:
 		, btn:"rgPageNext"
 		, fx:"ParsePreventiceInventory"}
 	
-	gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\Holter DB\TRRIQ"
+	gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\HoltER Database\TRRIQ"
 	
 	IfInString, A_ScriptDir, AhkProjects 
 	{
