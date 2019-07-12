@@ -52,11 +52,11 @@ Config:
 
 MainLoop:
 {
-	eventlog("Update Preventice enrollments.")
 	PreventiceWebGrab("Enrollment")
 	
-	eventlog("Update Preventice inventory.")
 	PreventiceWebGrab("Inventory")
+	
+	
 	
 	ExitApp
 }
@@ -309,17 +309,6 @@ IEurl(url) {
 	return
 }
 
-IEGet(name="") {
-/*	from the very helpful post by jethrow
-	https://autohotkey.com/board/topic/47052-basic-webpage-controls-with-javascript-com-tutorial/
-*/
-	IfEqual, Name,, WinGetTitle, Name, ahk_class IEFrame     ;// Get active window if no parameter
-	Name := (Name="New Tab - Windows Internet Explorer")? "about:Tabs":RegExReplace(Name, " - (Windows|Microsoft)? ?Internet Explorer$")
-	for wb in ComObjCreate("Shell.Application").Windows()
-		if wb.LocationName=Name and InStr(wb.FullName, "iexplore.exe")
-			return wb
-}
-
 preventiceLogin() {
 /*	Need to populate and submit user login form
 */
@@ -345,43 +334,6 @@ preventiceLogin() {
 	}
 
 	return
-}
-
-httpComm(url:="",verb:="") {
-	global servFold
-	if (url="") {
-		url := "https://depts.washington.edu/pedcards/change/direct.php?" 
-				. ((servFold="testlist") ? "test=true&" : "") 
-				. "do=" . verb
-	}
-	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr
-		whr.Open("GET"															; set the http verb to GET file "change"
-			, url
-			, true)
-		whr.Send()																; SEND the command to the address
-		whr.WaitForResponse()													; and wait for
-	return whr.ResponseText														; the http response
-}
-
-eventlog(event) {
-	global user
-	comp := A_ComputerName
-	FormatTime, sessdate, A_Now, yyyy.MM
-	FormatTime, now, A_Now, yyyy.MM.dd||HH:mm:ss
-	name := "logs/" . sessdate . ".log"
-	txt := now " [" user "/" comp "] " event "`n"
-	filePrepend(txt,name)
-;	FileAppend, % timenow " ["  user "/" comp "] " event "`n", % "logs/" . sessdate . ".log"
-}
-
-FilePrepend( Text, Filename ) { 
-/*	from haichen http://www.autohotkey.com/board/topic/80342-fileprependa-insert-text-at-begin-of-file-ansi-text/?p=510640
-*/
-    file:= FileOpen(Filename, "rw")
-    text .= File.Read()
-    file.pos:=0
-    File.Write(text)
-    File.Close()
 }
 
 ParseName(x) {
