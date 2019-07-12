@@ -134,7 +134,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 }
 
 parsePreventiceEnrollment(tbl) {
-	global wq
+	global prevtxt
 	
 	lbl := ["name","mrn","date","dev","prov"]
 	done := 0
@@ -164,13 +164,13 @@ parsePreventiceEnrollment(tbl) {
 			done ++
 		}
 		
-	/*	Check whether any params match this device
-	*/
-		;~ if enrollcheck("[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']") {		; MRN+DATE+S/N = perfect match
-			;~ continue
-		;~ }
-		;~ if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
-			;~ en:=readWQ(id)
+		prevtxt .= "enroll|" 
+			. date "|"
+			. res.name "|"
+			. res.mrn "|"
+			. res.dev "|"
+			. res.prov "|"
+			. A_now "`n"
 			;~ if (en.node="done") {
 				;~ continue
 			;~ }
@@ -237,6 +237,8 @@ parsePreventiceInventory(tbl) {
 	Add unique ser nums to /root/inventory/dev[@ser]
 	These will be removed when registered
 */
+	global prevtxt
+	
 	lbl := ["button","model","ser"]
 	
 	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
@@ -250,7 +252,7 @@ parsePreventiceInventory(tbl) {
 			c_idx := A_Index-1
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
-		;~ wq.addElement("dev","/root/inventory",{model:res.model,ser:res.ser})
+		prevtxt .= "dev|" res.model "|" res.ser "`n"
 		;~ eventlog("Added new Inventory dev " res.ser)
 	}
 
