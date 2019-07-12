@@ -56,8 +56,10 @@ MainLoop:
 	
 	PreventiceWebGrab("Inventory")
 	
+	filedelete, % gl.files_dir "\prev.txt"
+	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
 	
-	
+	WinKill, ahk_exe iexplore.exe
 	ExitApp
 }
 
