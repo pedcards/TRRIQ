@@ -139,9 +139,6 @@ parsePreventiceEnrollment(tbl) {
 	lbl := ["name","mrn","date","dev","prov"]
 	done := 0
 	checkdays := 21
-	;~ fileCheck()
-	wq := new XML("worklist.xml")														; refresh WQ
-	FileOpen(".lock", "W")																; Create lock file.
 	
 	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
 	{
@@ -171,53 +168,7 @@ parsePreventiceEnrollment(tbl) {
 			. res.dev "|"
 			. res.prov "|"
 			. A_now "`n"
-			;~ if (en.node="done") {
-				;~ continue
-			;~ }
-			;~ wqSetVal(id,"date",date)
-			;~ eventlog(en.name " (" id ") changed WQ date '" en.date "' ==> '" date "'")
-			;~ continue
-		;~ }
-		;~ if (id:=enrollcheck("[mrn='" res.mrn "'][date='" date "']")) {					; MRN+DATE, no S/N
-			;~ en:=readWQ(id)
-			;~ if (en.node="done") {
-				;~ continue
-			;~ }
-			;~ wqSetVal(id,"dev",res.dev)
-			;~ eventlog(en.name " (" id ") changed WQ dev '" en.dev "' ==> '" res.dev "'")
-			;~ continue
-		;~ }
-		;~ if (id:=enrollcheck("[date='" date "'][dev='" res.dev "']")) {					; DATE+S/N, no MRN
-			;~ en:=readWQ(id)
-			;~ if (en.node="done") {
-				;~ continue
-			;~ }
-			;~ wqSetVal(id,"mrn",res.mrn)
-			;~ eventlog(en.name " (" id ") changed WQ mrn '" en.mrn "' ==> '" res.mrn "'")
-			;~ continue
-		;~ } 
-		
-	/*	No match (i.e. unique record)
-	 *	add new record to PENDING
-	 */
-		;~ sleep 1																			; delay 1ms to ensure different tick time
-		;~ id := A_TickCount 
-		;~ newID := "/root/pending/enroll[@id='" id "']"
-		;~ wq.addElement("enroll","/root/pending",{id:id})
-		;~ wq.addElement("date",newID,date)
-		;~ wq.addElement("name",newID,res.name)
-		;~ wq.addElement("mrn",newID,res.mrn)
-		;~ wq.addElement("dev",newID,res.dev)
-		;~ wq.addElement("prov",newID,filterProv(res.prov).name)
-		;~ wq.addElement("site",newID,filterProv(res.prov).site)
-		;~ wq.addElement("webgrab",newID,A_now)
-		;~ done ++
-		
-		;~ eventlog("Added new registration " res.mrn " " res.name " " date ".")
 	}
-	wq.selectSingleNode("/root/pending").setAttribute("update",A_now)					; set pending[@update] attr
-	wq.save("worklist.xml")
-	filedelete, .lock
 	
 	return done																			; returns number of matches, or 0 (error) if no matches
 }
@@ -253,23 +204,8 @@ parsePreventiceInventory(tbl) {
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
 		prevtxt .= "dev|" res.model "|" res.ser "`n"
-		;~ eventlog("Added new Inventory dev " res.ser)
 	}
 
-	;~ loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
-	;~ {
-		;~ k := devs.item(A_Index-1)
-		;~ ser := k.getAttribute("ser")
-		;~ if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='BodyGuardian Heart - " ser "']")) {	; exists in Pending
-			;~ k.parentNode.removeChild(k)
-			;~ eventlog("Removed inventory ser " ser)
-		;~ }
-	;~ }
-	
-	;~ wq.selectSingleNode("/root/inventory").setAttribute("update",A_now)					; set pending[@update] attr
-	
-	;~ writeout("/root","inventory")
-	
 	return true
 }
 
