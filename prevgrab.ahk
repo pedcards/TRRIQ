@@ -39,19 +39,12 @@ Config:
 		gl.files_dir := A_ScriptDir "\files"
 	} else {
 		gl.isAdmin := false
-		gl.files_dir := TRRIQ_path "\files"
+		gl.files_dir := gl.TRRIQ_path "\files"
 	}
-	FileRead, tmp, % gl.files_dir "\pub.key"
-	gl.pubkey := tmp
+	;~ FileRead, tmp, % gl.files_dir "\pub.key"
+	;~ gl.pubkey := tmp
 	
-	FileRead, tmp, % gl.files_dir "\prev.key"
-	k:= encode(tmp)
-	clipboard := k
-	
-	MsgBox % k "`n" encode(k)
-	
-	ExitApp
-	
+	loop, read, % gl.files_dir "\prev.key"
 	{
 		k := A_LoopReadLine
 		fld := strX(k,"",0,0,"=",1,1)
@@ -79,7 +72,7 @@ PreventiceWebGrab(phase) {
 	
 	progress,,,Opening IE ...
 	wb := IEopen()																		; start/activate an IE instance
-	wb.visible := true
+	wb.visible := false
 	
 	progress,,,Opening page ..., % phase
 	IEurl(web.url)																		; load URL, return DOM in wb
@@ -404,18 +397,6 @@ ParseDate(x) {
 zDigit(x) {
 ; Add leading zero to a number
 	return SubStr("0" . x, -1)
-}
-
-encode(txt) {
-/*	from https://www.autohotkey.com/boards/viewtopic.php?t=63534#p272057
-*/
-	global gl
-	Loop, Parse, txt
-	{
-		Encrypt .= Chr(((Asc(A_LoopField)-32)^(Asc(SubStr(gl.pubkey,A_Index,1))-32))+32)
-	}
-	
-	return encrypt
 }
 
 ObjHasValue(aObj, aValue, rx:="") {
