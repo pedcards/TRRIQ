@@ -63,6 +63,8 @@ MainLoop:
 	filedelete, % gl.files_dir "\prev.txt"
 	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
 	
+	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ".")
+	
 	WinKill, ahk_exe iexplore.exe
 	ExitApp
 }
@@ -85,7 +87,7 @@ PreventiceWebGrab(phase) {
 		
 		tbl := wb.document.getElementById(web.tbl)											; get the Main Table
 		if !IsObject(tbl) {
-			progress, off
+			eventlog("PREVGRAB ERR: *** No matching table.")
 			MsgBox No match
 			return
 		}
