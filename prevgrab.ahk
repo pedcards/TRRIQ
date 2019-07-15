@@ -494,3 +494,24 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 	*/
 }
 
+eventlog(event) {
+	global gl
+	user := A_UserName
+	comp := A_ComputerName
+	FormatTime, sessdate, A_Now, yyyy.MM
+	FormatTime, now, A_Now, yyyy.MM.dd||HH:mm:ss
+	name := gl.TRRIQ_path "\logs\" . sessdate . ".log"
+	txt := now " [" user "/" comp "] " event "`n"
+	filePrepend(txt,name)
+}
+
+FilePrepend( Text, Filename ) { 
+/*	from haichen http://www.autohotkey.com/board/topic/80342-fileprependa-insert-text-at-begin-of-file-ansi-text/?p=510640
+*/
+    file:= FileOpen(Filename, "rw")
+    text .= File.Read()
+    file.pos:=0
+    File.Write(text)
+    File.Close()
+}
+
