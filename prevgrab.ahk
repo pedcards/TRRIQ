@@ -49,6 +49,9 @@ Config:
 		val := strX(k,"=",1,1,"",0)
 		gl[fld] := val
 	}
+	
+	gl.enroll_ct := 0
+	gl.inv_ct := 0
 }
 
 MainLoop:
@@ -137,7 +140,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 }
 
 parsePreventiceEnrollment(tbl) {
-	global prevtxt
+	global prevtxt, gl
 	
 	lbl := ["name","mrn","date","dev","prov"]
 	done := 0
@@ -171,6 +174,8 @@ parsePreventiceEnrollment(tbl) {
 			. res.dev "|"
 			. res.prov "|"
 			. A_now "`n"
+		
+		gl.enroll_ct ++
 	}
 	
 	return done																			; returns number of matches, or 0 (error) if no matches
@@ -191,7 +196,7 @@ parsePreventiceInventory(tbl) {
 	Add unique ser nums to /root/inventory/dev[@ser]
 	These will be removed when registered
 */
-	global prevtxt
+	global prevtxt, gl
 	
 	lbl := ["button","model","ser"]
 	
@@ -207,6 +212,7 @@ parsePreventiceInventory(tbl) {
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
 		prevtxt .= "dev|" res.model "|" res.ser "`n"
+		gl.inv_ct ++
 	}
 
 	return true
