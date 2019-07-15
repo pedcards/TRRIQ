@@ -180,7 +180,7 @@ PhaseGUI:
 	Gui, Add, Picture
 		, % "Y" btn1Y+18 " X" btn1X+(wksloc="Main Campus" ? 120 : 60)
 		. " w" btnW " h" btnH " "
-		. " +0x1000 vRegisterBGM gPhaseTask"
+		. " +0x1000 vRegisterBGM " (wksloc="Main Campus" ? "gPhaseTask" : "")
 		, .\BGMini.png
 	Gui, Add, Picture
 		, % "Y" btn1Y+18 " X" btn1X+(wksloc="Main Campus" ? 10 : 60)
@@ -2422,6 +2422,7 @@ getPatInfo() {
 		}
 	}
 	
+;	Parse out basic patient demographics from the text blob
 	ptInfo := cleanBlank(stregX(txt,"i)Patient contact info.*?\R+",1,1,"i)Family contact info",1))
 	nameLine := strX(ptInfo,"",1,0,"`n",1)
 	prefName := trim(stregX(nameLine,"i)Pref.*? name:",1,1,"\R+",1))
@@ -2434,7 +2435,8 @@ getPatInfo() {
 	homePhoneLine := stregX(ptInfo,"i)Home Phone:",1,1,"\R+",1)
 	RegExMatch(homePhoneLine,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
 	ptDem.phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
-
+	
+;	Now separate the "Family contact" members, grab relevant contact info from each parsed line
 	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
 	relStr := "Father|Mother|Grand|Aunt|Uncle|Foster|Parent|Sibling|Cousin|Relative|Step|Adult"
 	rel := Object()
@@ -2450,15 +2452,15 @@ getPatInfo() {
 		}
 		if (i~="Home:") {
 			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
-			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
+			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)				; ensure is in "aaa-bbb-cccc" format for Preventice
 			continue
 		}
 		if ((i~="Mobile:") && (rel[ct].phone="")) {
 			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
-			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
+			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)				; Preventice registration message requires aaa-bbb-cccc format
 			continue
 		}
-		if (i~="i)Lives with") {
+		if (i~="i)^Lives with") {
 			rel[ct].lives := true
 			continue
 		}
@@ -2484,35 +2486,31 @@ getPatInfo() {
 			continue
 		}
 		
-		rel[ct].addr .= i "`n"															; add address lines to each relative index string
+		rel[ct].addr .= i "`n"															; everything else is added as address lines to this relative
 	}
+	
+;	Filter out contacts who are not likely guarantors or parents
 	loop, % rel.MaxIndex()
 	{
 		i := A_index
-		loop, % rel.MaxIndex()															; compare against all other addresses
-		{
-			j := A_Index
-			if (i=j) {																	; do not compare to self
-				continue
-			}
-			if (rel[j].lives = true) {
-				ptDem.livesaddr := rel[j].addr
-				continue																; keep if "Lives here" is true
-			}
-			if (rel[j].phone != ptDem.phone) {
-				rel.delete(j)															; remove if doesn't match patient's home phone number
-			}
-			;~ if (rel[i].addr = rel[j].addr) {
-				;~ rel.delete(j)															; remove duplicate addresses
-			;~ }
+		if (rel[i].lives = true) {
+			ptDem.livesaddr := rel[i].addr
+			continue																	; keep if "Lives here" is true
+		}
+		if (rel[i].guardian = true) {
+			continue																	; keep if is guardian
 		}
 		if ((rel[i].addr="") && (rel[i].phone="")) {
 			rel.Delete(i)																; remove entries with no address or phone
+			continue
 		}
+		rel.Delete(i)																	; remove anyone who doesn't match
 	}
+	
+;	Generate parent name menu for cmsgbox selection
 	loop, % rel.MaxIndex()
 	{
-		nm .= A_index ") " rel[A_index].name "|"										; generate parent name menu for cmsgbox
+		nm .= A_index ") " rel[A_index].name "|"
 	}
 	if (rel.MaxIndex() > 1) {
 		eventlog("Multiple potential parent matches (" rel.MaxIndex() ").")
