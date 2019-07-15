@@ -41,8 +41,6 @@ Config:
 		gl.isAdmin := false
 		gl.files_dir := gl.TRRIQ_path "\files"
 	}
-	;~ FileRead, tmp, % gl.files_dir "\pub.key"
-	;~ gl.pubkey := tmp
 	
 	loop, read, % gl.files_dir "\prev.key"
 	{
