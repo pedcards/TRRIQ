@@ -73,38 +73,29 @@ PreventiceWebGrab(phase) {
 	global webStr, wb
 	web := webStr[phase]
 	
-	progress,,% " ",Opening IE ...
 	wb := IEopen()																		; start/activate an IE instance
 	wb.visible := false
 	
-	progress,,,% "Opening " phase " page"
 	IEurl(web.url)																		; load URL, return DOM in wb
 	prvFunc := web.fx
 	
 	loop
 	{
-		progress,,% "Page " A_index " ...",% "Scanning " phase
-		
-		tbl := wb.document.getElementById(web.tbl)											; get the Main Table
+		tbl := wb.document.getElementById(web.tbl)										; get the Main Table
 		if !IsObject(tbl) {
 			eventlog("PREVGRAB ERR: *** No matching table.")
-			MsgBox No match
 			return
 		}
 		
 		body := tbl.getElementsByTagName("tbody")[0]
 		clip := body.innertext
 		if (clip=clip0) {																; no change since last clip
-			progress, off
-			;~ MsgBox,4144,, End of novel records.`n`n%phase% update complete!
 			break
 		}
 		
 		done := %prvFunc%(body)		; parsePreventiceEnrollment() or parsePreventiceInventory()
 		
 		if (done=0) {																	; no new records returned
-			progress, off
-			;~ MsgBox,4144,, No results.`n`n%phase% update complete!
 			break
 		}
 		clip0 := clip																	; set the check for repeat copy
@@ -131,7 +122,6 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	loop, 200																			; wait up to 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
-		progress,% A_index
 		if (pg != pg0) {
 			break
 		}
@@ -246,8 +236,6 @@ IEurl(url) {
 	
 	wb.Navigate(url)																	; load URL
 	while wb.busy {																		; wait until done loading
-		i += 0.5
-		progress, % i
 		sleep 10
 	}
 	
@@ -266,7 +254,6 @@ preventiceLogin() {
 	attr_pass := "ctl00$PublicContent$Login1$Password"
 	attr_btn := "ctl00$PublicContent$Login1$goButton"	
 	
-	progress,,,User login ...
 	wb.document
 		.getElementById(RegExReplace(attr_user,"\$","_"))
 		.value := gl.user_name
@@ -277,8 +264,6 @@ preventiceLogin() {
 		.getElementByID(RegExReplace(attr_btn,"\$","_"))
 		.click()
 	while wb.busy {																		; wait until done loading
-		i += 0.5
-		progress, % i
 		sleep 10
 	}
 
@@ -321,7 +306,6 @@ ParseName(x) {
 			}
 			q .= x0 "|"																	; add to button q
 		}
-		;~ last := cmsgbox("Name check",x "`n" RegExReplace(x,".","--") "`nWhat is the patient's`nLAST NAME?",q)
 		if (last~="close|xClose") {
 			return {first:"",last:x}
 		}
