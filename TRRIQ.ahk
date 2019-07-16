@@ -557,7 +557,11 @@ WQlist() {
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
+	
 	wq := new XML("worklist.xml")														; refresh WQ
+	
+	readPrevTxt()																		; read prev.txt from website
+	
 	loop, parse, sites0, |																; move studies from sites0 to DONE
 	{
 		site := A_LoopField
