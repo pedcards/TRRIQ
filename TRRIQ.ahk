@@ -161,13 +161,14 @@ PhaseGUI:
 	Gui, Font, Bold
 	Gui, Add, Button
 		, Y+10 wp h40 gWQlist
-		, Refresh files
-	Gui, Add, Button
-		, Y+10 wp h40 vEnrollment gPhaseTask
-		, Grab Preventice enrollments
-	Gui, Add, Button
-		, Y+10 wp h40 vInventory gPhaseTask
-		, Grab Preventice inventory
+		, Refresh inbox
+	;~ Gui, Add, Button
+		;~ , Y+10 wp h40 vEnrollment gPhaseTask Disabled
+		;~ , ;Grab Preventice enrollments
+	;~ Gui, Add, Button
+		;~ , Y+10 wp h40 vInventory gPhaseTask Disabled
+		;~ , ;Grab Preventice inventory
+	Gui, Add, Text, wp h100
 	Gui, Add, Text, Y+20 wp h80 Center, Register BodyGuardian MONITOR
 	Gui, Add, Text, Y+20 wp h80 Center, Prepare/Upload MORTARA HOLTER
 	Gui, Font, Normal
@@ -740,8 +741,7 @@ WQlist() {
 	
 	GuiControl, Text, PhaseNumbers
 		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n"
-		.	"Last Inventory update: " niceDate(wq.selectSingleNode("/root/inventory").getAttribute("update")) 
+		.	"Last Preventice update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n"
 	
 	progress, off
 	return
