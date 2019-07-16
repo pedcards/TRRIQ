@@ -751,6 +751,50 @@ WQlist() {
 	return
 }
 
+readPrevTxt() {
+	global wq
+	
+	filenm := ".\files\prev.txt"
+	prevdt := wq.selectSingleNode("/root/pending").getAttribute("update")
+	FileGetTime, filedt, % filenm
+	if (filedt=prevdt) {																; update matches filedt means no change
+		return
+	}
+	
+	Progress,,% " ",Updating Preventice data...
+	FileRead, txt, % filenm
+	StringReplace txt, txt, `n, `n, All UseErrorLevel
+	n := ErrorLevel
+
+	loop, read, % ".\files\prev.txt"
+	{
+		Progress, % 100*A_Index/n
+		
+		k := A_LoopReadLine
+		if (k~="^enroll\|") {
+			parsePrevEnroll(k)
+		}
+		else if (k~="^dev\|") {
+			parsePrevDev(k)
+		}
+	}
+	
+	loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
+	{
+		k := devs.item(A_Index-1)
+		dev := k.getAttribute("dev")
+		ser := k.getAttribute("ser")
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" dev " - " ser "']")) {	; exists in Pending
+			k.parentNode.removeChild(k)
+			eventlog("Removed inventory ser " ser)
+		}
+	}
+	wq.selectSingleNode("/root/pending").setAttribute("update",filedt)					; set pending[@update] attr
+	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set pending[@update] attr
+	
+return	
+}
+
 WQfindlost() {
 	global wq
 	MsgBox, 4132, Find devices, Scan database for duplicate devices?`n`n(this can take a while)
