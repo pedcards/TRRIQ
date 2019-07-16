@@ -795,6 +795,86 @@ readPrevTxt() {
 return	
 }
 
+parsePrevEnroll(txt) {
+	global wq
+	el := StrSplit(txt,"|")
+	res := {  date:parseDate(el.2).YMD
+			, name:parsename(el.3).lastfirst
+			, mrn:el.4
+			, dev:el.5
+			, prov:el.6 }
+	
+	/*	Check whether any params match this device
+	*/
+		if enrollcheck("[mrn='" res.mrn "'][date='" res.date "'][dev='" res.dev "']") {	; MRN+DATE+S/N = perfect match
+			return
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			wqSetVal(id,"date",res.date)
+			eventlog(en.name " (" id ") changed WQ date '" en.date "' ==> '" res.date "'")
+			return
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "'][date='" res.date "']")) {				; MRN+DATE, no S/N
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			wqSetVal(id,"dev",res.dev)
+			eventlog(en.name " (" id ") changed WQ dev '" en.dev "' ==> '" res.dev "'")
+			return
+		}
+		if (id:=enrollcheck("[date='" res.date "'][dev='" res.dev "']")) {				; DATE+S/N, no MRN
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			wqSetVal(id,"mrn",res.mrn)
+			eventlog(en.name " (" id ") changed WQ mrn '" en.mrn "' ==> '" res.mrn "'")
+			return
+		} 
+		
+	/*	No match (i.e. unique record)
+	 *	add new record to PENDING
+	 */
+		sleep 1																			; delay 1ms to ensure different tick time
+		id := A_TickCount 
+		newID := "/root/pending/enroll[@id='" id "']"
+		wq.addElement("enroll","/root/pending",{id:id})
+		wq.addElement("date",newID,res.date)
+		wq.addElement("name",newID,res.name)
+		wq.addElement("mrn",newID,res.mrn)
+		wq.addElement("dev",newID,res.dev)
+		wq.addElement("prov",newID,filterProv(res.prov).name)
+		wq.addElement("site",newID,filterProv(res.prov).site)
+		wq.addElement("webgrab",newID,A_now)
+		
+		eventlog("Added new registration " res.mrn " " res.name " " res.date ".")
+	
+	return
+}
+
+parsePrevDev(txt) {
+	global wq
+	el := StrSplit(txt,"|")
+	dev := el.2
+	ser := el.3
+	res := dev " - " ser
+
+	if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" ser "']")) {			; already exists in Inventory
+		return
+	}
+	
+	wq.addElement("dev","/root/inventory",{model:dev,ser:ser})
+	eventlog("Added new Inventory dev " ser)
+	
+	return
+}
+
+
 WQfindlost() {
 	global wq
 	MsgBox, 4132, Find devices, Scan database for duplicate devices?`n`n(this can take a while)
@@ -857,6 +937,8 @@ WQfindreturned() {
 	}
 	return "clean"
 }
+
+
 
 readWQ(idx) {
 	global wq
