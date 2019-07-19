@@ -231,7 +231,7 @@ IEurl(url) {
 	loop, 3
 	{
 		wb.Navigate(url)																	; load URL
-		while ((wb.busy) ||	(wb.ReadyState < 3)) {											; wait until done loading
+		while wb.busy {																		; wait until done loading
 			if (gl.settings.isVisible) {
 				progress,,% wb.ReadyState
 			}
