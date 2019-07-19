@@ -272,6 +272,7 @@ IEclose() {
 	{
 		i := A_index
 		Process, Close, iexplore.exe
+		sleep 500
 	}
 	eventlog("PREVGRAB: Closed " i " IE windows.")
 	
