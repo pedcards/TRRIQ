@@ -106,7 +106,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	pg0 := wb.document.getElementById(chgStr).innerText
 	
 	t0 := A_TickCount
-	loop, 200																			; wait up to 100*0.05 = 5 sec
+	loop, 300																			; wait each 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
 		if (gl.settings.isVisible) {
