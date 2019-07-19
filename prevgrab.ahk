@@ -77,7 +77,9 @@ PreventiceWebGrab(phase) {
 	global webStr, wb
 	web := webStr[phase]
 	
-	progress,,% " ",% phase
+	if (isAdmin) {
+		progress,,% " ",% phase
+	}
 	IEurl(web.url)																		; load URL, return DOM in wb
 	prvFunc := web.fx
 	
@@ -125,7 +127,9 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	loop, 200																			; wait up to 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
-		progress,,% wb.ReadyState, % phase " (" A_index ")"
+		if (isAdmin) {
+			progress,,% wb.ReadyState, % phase " (" A_index ")"
+		}
 		if (pg != pg0) {
 			;~ MsgBox Finished!
 			break
@@ -241,7 +245,9 @@ IEurl(url) {
 	
 	wb.Navigate(url)																	; load URL
 	while ((wb.busy) ||	(wb.ReadyState < 3)) {											; wait until done loading
-		progress,,% wb.ReadyState
+		if (isAdmin) {
+			progress,,% wb.ReadyState
+		}
 		sleep 10
 	}
 	
