@@ -68,7 +68,8 @@ MainLoop:
 	
 	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ".")
 	
-	WinKill, ahk_exe iexplore.exe
+	IEclose()
+	
 	ExitApp
 }
 
@@ -245,6 +246,18 @@ IEurl(url) {
 	if instr(wb.LocationURL,"UserLogin") {
 		preventiceLogin()
 	}
+	
+	return
+}
+
+IEclose() {
+	DetectHiddenWindows, On
+	while WinExist("ahk_class IEFrame")
+	{
+		i := A_index
+		Process, Close, iexplore.exe
+	}
+	eventlog("PREVGRAB: Closed " i " IE windows.")
 	
 	return
 }
