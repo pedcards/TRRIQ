@@ -290,12 +290,18 @@ preventiceLogin() {
 	wb.document
 		.getElementById(RegExReplace(attr_user,"\$","_"))
 		.value := gl.user_name
+	sleep 500
+	
 	wb.document
 		.getElementById(RegExReplace(attr_pass,"\$","_"))
 		.value := gl.user_pass
+	sleep 500
+	
 	wb.document
 		.getElementByID(RegExReplace(attr_btn,"\$","_"))
 		.click()
+	sleep 500
+	
 	while wb.busy {																		; wait until done loading
 		sleep 10
 	}
