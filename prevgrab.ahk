@@ -34,6 +34,7 @@ Config:
 	
 	gl.enroll_ct := 0
 	gl.inv_ct := 0
+	gl.t0 := A_TickCount
 }
 
 MainLoop:
@@ -48,9 +49,8 @@ MainLoop:
 	filedelete, % gl.files_dir "\prev.txt"
 	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
 	
-	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ".")
-	
 	IEclose()
+	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
 	ExitApp
 }
