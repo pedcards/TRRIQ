@@ -265,22 +265,19 @@ preventiceLogin() {
 /*	Need to populate and submit user login form
 */
 	global wb, gl
-	attr_user := "ctl00$PublicContent$Login1$UserName"
-	attr_pass := "ctl00$PublicContent$Login1$Password"
-	attr_btn := "ctl00$PublicContent$Login1$goButton"	
 	
 	wb.document
-		.getElementById(RegExReplace(attr_user,"\$","_"))
-		.value := gl.user_name
+		.getElementById(gl.login.attr_user)
+		.value := gl.login.user_name
 	sleep 500
 	
 	wb.document
-		.getElementById(RegExReplace(attr_pass,"\$","_"))
-		.value := gl.user_pass
+		.getElementById(gl.login.attr_pass)
+		.value := gl.login.user_pass
 	sleep 500
 	
 	wb.document
-		.getElementByID(RegExReplace(attr_btn,"\$","_"))
+		.getElementByID(gl.login.attr_btn)
 		.click()
 	sleep 500
 	
