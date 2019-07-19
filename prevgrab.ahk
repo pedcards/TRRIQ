@@ -48,7 +48,7 @@ Config:
 		val := strX(k,"=",1,1,"",0)
 		gl[fld] := val
 	}
-	eventlog("PREVGRAB: user (" strlen(gl.user_name) "), pass (" strlen(gl.user_pass) ")")
+	;~ eventlog("PREVGRAB: user (" strlen(gl.user_name) "), pass (" strlen(gl.user_pass) ")")
 	
 	gl.enroll_ct := 0
 	gl.inv_ct := 0
