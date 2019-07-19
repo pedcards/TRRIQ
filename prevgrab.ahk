@@ -97,13 +97,16 @@ PreventiceWebGrab(phase) {
 PreventiceWebPager(phase,chgStr,btnStr) {
 	global wb
 	
+	pg0 := wb.document.getElementById(chgStr).innerText
+	
 	if (phase="Enrollment") {
+		pgNum := gl.enroll_ct
 		wb.document.getElementById(btnStr).click() 										; click when id=btnStr
 	}
 	if (phase="Inventory") {
+		pgNum := gl.inv_ct
 		wb.document.getElementsByClassName(btnStr)[0].click() 							; click when class=btnstr
 	}
-	pg0 := wb.document.getElementById(chgStr).innerText
 	
 	t0 := A_TickCount
 	loop, 300																			; wait each 100*0.05 = 5 sec
@@ -114,7 +117,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 		}
 		if (pg != pg0) {
 			eventlog("PREVGRAB: " phase " " pgNum " pager (" A_TickCount-t0 " ms)",0)
-			break
+			return
 		}
 		sleep 50
 	}
