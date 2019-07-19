@@ -31,16 +31,15 @@ Config:
 		, btn:"rgPageNext"
 		, fx:"ParsePreventiceInventory"}
 	
-	gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\HoltER Database\TRRIQ"
-	
 	IfInString, A_ScriptDir, AhkProjects 
 	{
 		gl.isAdmin := true
-		gl.files_dir := A_ScriptDir "\files"
+		gl.TRRIQ_path := A_ScriptDir
 	} else {
 		gl.isAdmin := false
-		gl.files_dir := gl.TRRIQ_path "\files"
+		gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\HoltER Database\TRRIQ"
 	}
+	gl.files_dir := gl.TRRIQ_path "\files"
 	
 	loop, read, % gl.files_dir "\prev.key"
 	{
