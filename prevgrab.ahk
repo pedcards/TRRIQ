@@ -56,6 +56,9 @@ Config:
 
 MainLoop:
 {
+	wb := IEopen()																		; start/activate an IE instance
+	wb.visible := false
+	
 	PreventiceWebGrab("Enrollment")
 	
 	PreventiceWebGrab("Inventory")
