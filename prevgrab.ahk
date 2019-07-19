@@ -105,7 +105,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	}
 	pg0 := wb.document.getElementById(chgStr).innerText
 	
-	;~ While ((wb.busy) || (wb.ReadyState < 3))
+	t0 := A_TickCount
 	loop, 200																			; wait up to 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
@@ -113,12 +113,12 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 			progress,,% wb.ReadyState, % phase " (" A_index ")"
 		}
 		if (pg != pg0) {
-			;~ MsgBox Finished!
+			eventlog("PREVGRAB: " phase " " pgNum " pager (" A_TickCount-t0 " ms)",0)
 			break
 		}
 		sleep 50
 	}
-	;~ MsgBox Timed out!
+	eventlog("PREVGRAB: " phase " " pgNum " timed out! (" A_TickCount-t0 " ms)")
 	return
 }
 
