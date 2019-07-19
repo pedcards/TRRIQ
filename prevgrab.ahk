@@ -121,6 +121,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	}
 	pg0 := wb.document.getElementById(chgStr).innerText
 	
+	;~ While ((wb.busy) || (wb.ReadyState < 3))
 	loop, 200																			; wait up to 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
@@ -239,7 +240,7 @@ IEurl(url) {
 	global wb
 	
 	wb.Navigate(url)																	; load URL
-	while wb.busy {																		; wait until done loading
+	while ((wb.busy) ||	(wb.ReadyState < 3)) {											; wait until done loading
 		progress,,% wb.ReadyState
 		sleep 10
 	}
