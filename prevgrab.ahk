@@ -77,9 +77,7 @@ PreventiceWebGrab(phase) {
 	global webStr, wb
 	web := webStr[phase]
 	
-	wb := IEopen()																		; start/activate an IE instance
-	wb.visible := false
-	
+	progress,,% " ",% phase
 	IEurl(web.url)																		; load URL, return DOM in wb
 	prvFunc := web.fx
 	
@@ -126,12 +124,14 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	loop, 200																			; wait up to 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
+		progress,,% wb.ReadyState, % phase " (" A_index ")"
 		if (pg != pg0) {
+			;~ MsgBox Finished!
 			break
 		}
 		sleep 50
 	}
-
+	;~ MsgBox Timed out!
 	return
 }
 
@@ -240,6 +240,7 @@ IEurl(url) {
 	
 	wb.Navigate(url)																	; load URL
 	while wb.busy {																		; wait until done loading
+		progress,,% wb.ReadyState
 		sleep 10
 	}
 	
