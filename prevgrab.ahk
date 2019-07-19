@@ -272,17 +272,14 @@ preventiceLogin() {
 	wb.document
 		.getElementById(gl.login.attr_user)
 		.value := gl.login.user_name
-	sleep 500
 	
 	wb.document
 		.getElementById(gl.login.attr_pass)
 		.value := gl.login.user_pass
-	sleep 500
 	
 	wb.document
 		.getElementByID(gl.login.attr_btn)
 		.click()
-	sleep 500
 	
 	while wb.busy {																		; wait until done loading
 		sleep 10
