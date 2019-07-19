@@ -504,8 +504,17 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 	*/
 }
 
-eventlog(event) {
+eventlog(event,verbosity:=1) {
+/*	verbose 1 or 0 from ini
+	verbosity default 1
+	verbosity set 0 if only during verbose
+*/
 	global gl
+	
+	score := verbosity + gl.settings.verbose
+	if (score<1) {
+		return
+	}
 	user := A_UserName
 	comp := A_ComputerName
 	FormatTime, sessdate, A_Now, yyyy.MM
