@@ -69,7 +69,7 @@ PreventiceWebGrab(phase) {
 	{
 		tbl := wb.document.getElementById(web.tbl)										; get the Main Table
 		if !IsObject(tbl) {
-			eventlog("PREVGRAB ERR: *** No matching table.")
+			eventlog("PREVGRAB: *** " phase " *** No matching table.")
 			return
 		}
 		
@@ -239,11 +239,11 @@ IEurl(url) {
 		}
 		
 		if instr(wb.LocationURL,"UserLogin") {
+			eventlog("PREVGRAB: Login " A_index,0)
 			preventiceLogin()
 		}
-		else
-		{
-			eventlog("PREVGRAB: Successful load " url)
+		else {
+			eventlog("PREVGRAB: " url,0)
 			return
 		}
 	}
@@ -259,7 +259,7 @@ IEclose() {
 		Process, Close, iexplore.exe
 		sleep 500
 	}
-	eventlog("PREVGRAB: Closed " i " IE windows.")
+	eventlog("PREVGRAB: Closed " i " IE windows.",0)
 	
 	return
 }
