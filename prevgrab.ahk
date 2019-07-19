@@ -49,6 +49,7 @@ Config:
 		val := strX(k,"=",1,1,"",0)
 		gl[fld] := val
 	}
+	eventlog("PREVGRAB: user (" strlen(gl.user_name) "), pass (" strlen(gl.user_pass) ")")
 	
 	gl.enroll_ct := 0
 	gl.inv_ct := 0
@@ -249,7 +250,7 @@ IEurl(url) {
 preventiceLogin() {
 /*	Need to populate and submit user login form
 */
-	global wb
+	global wb, gl
 	attr_user := "ctl00$PublicContent$Login1$UserName"
 	attr_pass := "ctl00$PublicContent$Login1$Password"
 	attr_btn := "ctl00$PublicContent$Login1$goButton"	
