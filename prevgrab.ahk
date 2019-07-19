@@ -16,21 +16,6 @@ Config:
 	global webstr:={}
 		,  gl:={}
 	
-	webStr.Enrollment := {dlg:"Enrollment / Submitted Patients"
-		, url:"https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
-		, win:"Patient Enrollment"
-		, tbl:"ctl00_mainContent_PatientListSubmittedCtrl1_RadGridPatients_ctl00"
-		, changed:"ctl00_mainContent_PatientListSubmittedCtrl1_lblTotalCountMessage"
-		, btn:"ctl00_mainContent_PatientListSubmittedCtrl1_btnNextPage"
-		, fx:"ParsePreventiceEnrollment"}
-	webStr.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
-		, url:"https://secure.preventice.com/Facilities/"
-		, win:"Facilities"
-		, tbl:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00"
-		, changed:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00_Pager"
-		, btn:"rgPageNext"
-		, fx:"ParsePreventiceInventory"}
-	
 	IfInString, A_ScriptDir, AhkProjects 
 	{
 		gl.isAdmin := true
@@ -41,14 +26,11 @@ Config:
 	}
 	gl.files_dir := gl.TRRIQ_path "\files"
 	
-	loop, read, % gl.files_dir "\prev.key"
-	{
-		k := A_LoopReadLine
-		fld := strX(k,"",0,0,"=",1,1)
-		val := strX(k,"=",1,1,"",0)
-		gl[fld] := val
-	}
-	;~ eventlog("PREVGRAB: user (" strlen(gl.user_name) "), pass (" strlen(gl.user_pass) ")")
+	webStr.Enrollment := readIni("str_Enrollment")
+	webStr.Inventory := readIni("str_Inventory")
+	
+	gl.login := readIni("str_Login")
+	gl.settings := readIni("settings")
 	
 	gl.enroll_ct := 0
 	gl.inv_ct := 0
