@@ -39,7 +39,7 @@ Config:
 MainLoop:
 {
 	wb := IEopen()																		; start/activate an IE instance
-	wb.visible := false
+	wb.visible := gl.settings.isVisible
 	
 	PreventiceWebGrab("Enrollment")
 	
@@ -59,7 +59,7 @@ PreventiceWebGrab(phase) {
 	global webStr, wb
 	web := webStr[phase]
 	
-	if (gl.isAdmin) {
+	if (gl.settings.isVisible) {
 		progress,,% " ",% phase
 	}
 	IEurl(web.url)																		; load URL, return DOM in wb
@@ -109,7 +109,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	loop, 200																			; wait up to 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
-		if (gl.isAdmin) {
+		if (gl.settings.isVisible) {
 			progress,,% wb.ReadyState, % phase " (" A_index ")"
 		}
 		if (pg != pg0) {
@@ -229,7 +229,7 @@ IEurl(url) {
 	{
 		wb.Navigate(url)																	; load URL
 		while ((wb.busy) ||	(wb.ReadyState < 3)) {											; wait until done loading
-			if (gl.isAdmin) {
+			if (gl.settings.isVisible) {
 				progress,,% wb.ReadyState
 			}
 			sleep 10
