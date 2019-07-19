@@ -243,18 +243,26 @@ IEurl(url) {
 */
 	global wb
 	
-	wb.Navigate(url)																	; load URL
-	while ((wb.busy) ||	(wb.ReadyState < 3)) {											; wait until done loading
-		if (gl.isAdmin) {
-			progress,,% wb.ReadyState
+	loop, 3
+	{
+		wb.Navigate(url)																	; load URL
+		while ((wb.busy) ||	(wb.ReadyState < 3)) {											; wait until done loading
+			if (gl.isAdmin) {
+				progress,,% wb.ReadyState
+			}
+			sleep 10
 		}
-		sleep 10
+		
+		if instr(wb.LocationURL,"UserLogin") {
+			preventiceLogin()
+		}
+		else
+		{
+			eventlog("PREVGRAB: Successful load " url)
+			return
+		}
 	}
-	
-	if instr(wb.LocationURL,"UserLogin") {
-		preventiceLogin()
-	}
-	
+	eventlog("PREVGRAB: Failed login.")
 	return
 }
 
