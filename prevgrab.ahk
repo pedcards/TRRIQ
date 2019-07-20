@@ -207,6 +207,13 @@ parsePreventiceInventory(tbl) {
 			c_idx := A_Index-1
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
+		
+		if IsObject(wq.selectSingleNode("/root/pending/enroll"
+					. "[dev='" res.model " - " res.ser "']")) {							; exists in Pending
+			eventlog("PREVGRAB: " res.model " - " res.ser " - already in use.",0)
+			continue
+		}
+		
 		prevtxt .= "dev|" res.model "|" res.ser "`n"
 		gl.inv_ct ++
 	}
