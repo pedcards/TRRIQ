@@ -148,6 +148,13 @@ parsePreventiceEnrollment(tbl) {
 		}
 		res.name := parsename(res.name).lastfirst
 		date := parseDate(res.date).YMD
+		
+		if IsObject(wq.selectSingleNode("/root/pending/enroll"
+					. "[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']")) {		; MRN+DATE+S/N = perfect match
+			eventlog("PREVGRAB: " res.mrn " " date " " res.dev " - perfect match.",0)
+			continue
+		}
+		
 		dt := A_Now
 		dt -= date, Days
 		if (dt>checkdays) {																; if days > threshold, break loop
