@@ -25,6 +25,7 @@ Config:
 		gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\HoltER Database\TRRIQ"
 	}
 	gl.files_dir := gl.TRRIQ_path "\files"
+	wq := new XML(gl.TRRIQ_path "\worklist.xml")
 	
 	webStr.Enrollment := readIni("str_Enrollment")
 	webStr.Inventory := readIni("str_Inventory")
@@ -128,7 +129,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 }
 
 parsePreventiceEnrollment(tbl) {
-	global prevtxt, gl
+	global prevtxt, gl, wq
 	
 	lbl := ["name","mrn","date","dev","prov"]
 	done := 0
@@ -184,7 +185,7 @@ parsePreventiceInventory(tbl) {
 	Add unique ser nums to /root/inventory/dev[@ser]
 	These will be removed when registered
 */
-	global prevtxt, gl
+	global prevtxt, gl, wq
 	
 	lbl := ["button","model","ser"]
 	
@@ -595,3 +596,5 @@ readIni(section) {
 	}
 	return i_res
 }
+
+#Include xml.ahk
