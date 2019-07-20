@@ -116,12 +116,14 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 			progress,,% wb.ReadyState, % phase " (" A_index ")"
 		}
 		if (pg != pg0) {
-			eventlog("PREVGRAB: " phase " " pgNum " pager (" A_TickCount-t0 " ms)",0)
+			t1:=A_TickCount-t0
+			eventlog("PREVGRAB: " phase " " pgNum " pager (" round(t1/1000,2) " s)"
+					, (t1>5000) ? 1 : 0)
 			return
 		}
 		sleep 50
 	}
-	eventlog("PREVGRAB: " phase " " pgNum " timed out! (" A_TickCount-t0 " ms)")
+	eventlog("PREVGRAB: " phase " " pgNum " timed out! (" round((A_TickCount-t0)/1000,2) " s)")
 	return
 }
 
