@@ -117,6 +117,9 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	}
 	if (phase="Inventory") {
 		pgNum := gl.inv_ct
+		if (wb.document.getElementsByClassName(btnStr)[0].getAttribute("onClick") ~= "return") {
+			return
+		}
 		wb.document.getElementsByClassName(btnStr)[0].click() 							; click when class=btnstr
 	}
 	
@@ -125,7 +128,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	{
 		pg := wb.document.getElementById(chgStr).innerText
 		if (gl.settings.isVisible) {
-			progress,,% wb.ReadyState, % phase " (" A_index ")"
+			progress,,% onclick, % phase " (" A_index ")"
 		}
 		if (pg != pg0) {
 			t1:=A_TickCount-t0
