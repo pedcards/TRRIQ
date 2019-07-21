@@ -161,13 +161,14 @@ PhaseGUI:
 	Gui, Font, Bold
 	Gui, Add, Button
 		, Y+10 wp h40 gWQlist
-		, Refresh files
-	Gui, Add, Button
-		, Y+10 wp h40 vEnrollment gPhaseTask
-		, Grab Preventice enrollments
-	Gui, Add, Button
-		, Y+10 wp h40 vInventory gPhaseTask
-		, Grab Preventice inventory
+		, Refresh inbox
+	;~ Gui, Add, Button
+		;~ , Y+10 wp h40 vEnrollment gPhaseTask Disabled
+		;~ , ;Grab Preventice enrollments
+	;~ Gui, Add, Button
+		;~ , Y+10 wp h40 vInventory gPhaseTask Disabled
+		;~ , ;Grab Preventice inventory
+	Gui, Add, Text, wp h100
 	Gui, Add, Text, Y+20 wp h80 Center, Register BodyGuardian MONITOR
 	Gui, Add, Text, Y+20 wp h80 Center, Prepare/Upload MORTARA HOLTER
 	Gui, Font, Normal
@@ -556,7 +557,11 @@ WQlist() {
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
+	
 	wq := new XML("worklist.xml")														; refresh WQ
+	
+	readPrevTxt()																		; read prev.txt from website
+	
 	loop, parse, sites0, |																; move studies from sites0 to DONE
 	{
 		site := A_LoopField
@@ -738,14 +743,138 @@ WQlist() {
 	Gui, ListView, WQlv_all														
 	LV_ModifyCol(2,"Sort")
 	
+	tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update"))
 	GuiControl, Text, PhaseNumbers
 		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n"
-		.	"Last Inventory update: " niceDate(wq.selectSingleNode("/root/inventory").getAttribute("update")) 
+		.	"Preventice update: " tmp.mm "/" tmp.dd " @ " tmp.time "`n"
 	
 	progress, off
 	return
 }
+
+readPrevTxt() {
+	global wq
+	
+	filenm := ".\files\prev.txt"
+	prevdt := wq.selectSingleNode("/root/pending").getAttribute("update")
+	FileGetTime, filedt, % filenm
+	if (filedt=prevdt) {																; update matches filedt means no change
+		return
+	}
+	
+	Progress,,% " ",Updating Preventice data...
+	FileRead, txt, % filenm
+	StringReplace txt, txt, `n, `n, All UseErrorLevel
+	n := ErrorLevel
+
+	loop, read, % ".\files\prev.txt"
+	{
+		Progress, % 100*A_Index/n
+		
+		k := A_LoopReadLine
+		if (k~="^enroll\|") {
+			parsePrevEnroll(k)
+		}
+		else if (k~="^dev\|") {
+			parsePrevDev(k)
+		}
+	}
+	
+	loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
+	{
+		k := devs.item(A_Index-1)
+		dev := k.getAttribute("dev")
+		ser := k.getAttribute("ser")
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" dev " - " ser "']")) {	; exists in Pending
+			k.parentNode.removeChild(k)
+			eventlog("Removed inventory ser " ser)
+		}
+	}
+	wq.selectSingleNode("/root/pending").setAttribute("update",filedt)					; set pending[@update] attr
+	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set pending[@update] attr
+	
+return	
+}
+
+parsePrevEnroll(txt) {
+	global wq
+	el := StrSplit(txt,"|")
+	res := {  date:parseDate(el.2).YMD
+			, name:parsename(el.3).lastfirst
+			, mrn:el.4
+			, dev:el.5
+			, prov:el.6 }
+	
+	/*	Check whether any params match this device
+	*/
+		if enrollcheck("[mrn='" res.mrn "'][date='" res.date "'][dev='" res.dev "']") {	; MRN+DATE+S/N = perfect match
+			return
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			wqSetVal(id,"date",res.date)
+			eventlog(en.name " (" id ") changed WQ date '" en.date "' ==> '" res.date "'")
+			return
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "'][date='" res.date "']")) {				; MRN+DATE, no S/N
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			wqSetVal(id,"dev",res.dev)
+			eventlog(en.name " (" id ") changed WQ dev '" en.dev "' ==> '" res.dev "'")
+			return
+		}
+		if (id:=enrollcheck("[date='" res.date "'][dev='" res.dev "']")) {				; DATE+S/N, no MRN
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			wqSetVal(id,"mrn",res.mrn)
+			eventlog(en.name " (" id ") changed WQ mrn '" en.mrn "' ==> '" res.mrn "'")
+			return
+		} 
+		
+	/*	No match (i.e. unique record)
+	 *	add new record to PENDING
+	 */
+		sleep 1																			; delay 1ms to ensure different tick time
+		id := A_TickCount 
+		newID := "/root/pending/enroll[@id='" id "']"
+		wq.addElement("enroll","/root/pending",{id:id})
+		wq.addElement("date",newID,res.date)
+		wq.addElement("name",newID,res.name)
+		wq.addElement("mrn",newID,res.mrn)
+		wq.addElement("dev",newID,res.dev)
+		wq.addElement("prov",newID,filterProv(res.prov).name)
+		wq.addElement("site",newID,filterProv(res.prov).site)
+		wq.addElement("webgrab",newID,A_now)
+		
+		eventlog("Added new registration " res.mrn " " res.name " " res.date ".")
+	
+	return
+}
+
+parsePrevDev(txt) {
+	global wq
+	el := StrSplit(txt,"|")
+	dev := el.2
+	ser := el.3
+	res := dev " - " ser
+
+	if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" ser "']")) {			; already exists in Inventory
+		return
+	}
+	
+	wq.addElement("dev","/root/inventory",{model:dev,ser:ser})
+	eventlog("Added new Inventory dev " ser)
+	
+	return
+}
+
 
 WQfindlost() {
 	global wq
@@ -809,6 +938,8 @@ WQfindreturned() {
 	}
 	return "clean"
 }
+
+
 
 readWQ(idx) {
 	global wq
@@ -2744,8 +2875,8 @@ outputfiles:
 	impSub := (monType~="BGH") ? "Event\" : "Holter\"										; Import subfolder Event or Holter
 	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%%impSub%*.*, 1						; copy CSV from tempfiles to importFld\impSub
 	
-	if (FileExist(fileIn "sh.pdf")) {														; filename for OnbaseDir
-		fileHIM := fileIn "sh.pdf"															; prefer shortened if it exists
+	if (FileExist(fileIn "-sh.pdf")) {														; filename for OnbaseDir
+		fileHIM := fileIn "-sh.pdf"															; prefer shortened if it exists
 	} else {
 		fileHIM := fileIn
 	}
@@ -2753,9 +2884,9 @@ outputfiles:
 	FileCopy, % fileHIM, % OnbaseDir2 filenameOut ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
 	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; Copy the original PDF to holterDir Archive
-	FileCopy, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; Copy the shortened PDF, if it exists
+	FileCopy, %fileIn%-sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
-	FileDelete, %fileIn%sh.pdf																;	was never completing filemove
+	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
 	FileDelete, % hl7dir fileNam ".hl7"														; We can delete the original HL7, if exists
@@ -3050,13 +3181,13 @@ shortenPDF(find) {
 	pgpos := instr(fulltxt,"Page ",,findpos-strlen(fulltxt))
 	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
 	pgpos := pgs.value(1)
-	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%sh.pdf",,min
-	if !FileExist(fileIn "sh.pdf") {
-		FileCopy, %fileIn%, %fileIn%sh.pdf
+	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%-sh.pdf",,min
+	if !FileExist(fileIn "-sh.pdf") {
+		FileCopy, %fileIn%, %fileIn%-sh.pdf
 	}
 	filedelete, %fullnam%
 	FileGetSize, sizeIn, %fileIn%
-	FileGetSize, sizeOut, %fileIn%sh.pdf
+	FileGetSize, sizeOut, %fileIn%-sh.pdf
 	eventlog("IN: " thousandsSep(sizeIn) ", OUT: " thousandsSep(sizeOut))
 	progress, off
 return	
@@ -3081,9 +3212,9 @@ findFullPdf(wqid:="") {
 		progress, % 100*A_index/fileCount, % fname, Scanning PDFs folder
 		
 		;---Skip any PDFs that have already been processed or are in the middle of being processed
-		if (fname~="i)(sh|-short)\.pdf") 
+		if (fname~="i)(-sh|-short)\.pdf") 
 			continue
-		if FileExist(fname "sh.pdf") 
+		if FileExist(fname "-sh.pdf") 
 			continue
 		if FileExist(fnam "-short.pdf") 
 			continue
@@ -3127,7 +3258,7 @@ findFullPdf(wqid:="") {
 		}
 		
 		if (fnID.1 == wqid) {															; filename WQID matches wqid arg
-			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "sh.pdf"		; rename the pdf in hl7dir to -short.pdf
+			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "-sh.pdf"		; rename the pdf in hl7dir to -short.pdf
 			FileMove, % holterDir fName , % hl7dir fldval.filename 						; move this full disclosure PDF into hl7dir
 			progress, off
 			eventlog(fName " moved to hl7dir.")
@@ -3622,7 +3753,7 @@ Zio:
 	fieldcoladd("","INTERP",zinterp)
 	fieldcoladd("","Mon_type","Holter")
 	
-	FileCopy, %fileIn%, %fileIn%sh.pdf
+	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
 	fldval.done := true
 
@@ -3706,7 +3837,7 @@ Event_BGH_Hl7:
 	
 	fieldcoladd("","Mon_type","Event")
 	
-	FileCopy, %fileIn%, %fileIn%sh.pdf
+	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
 	fldval.done := true
 	
@@ -3759,7 +3890,7 @@ Event_BGH:
 	
 	fieldcoladd("","Mon_type","Event")
 	
-	FileCopy, %fileIn%, %fileIn%sh.pdf
+	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
 	fldval.done := true
 	

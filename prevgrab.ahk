@@ -16,66 +16,63 @@ Config:
 	global webstr:={}
 		,  gl:={}
 	
-	webStr.Enrollment := {dlg:"Enrollment / Submitted Patients"
-		, url:"https://secure.preventice.com/Enrollments/EnrollPatients.aspx?step=2"
-		, win:"Patient Enrollment"
-		, tbl:"ctl00_mainContent_PatientListSubmittedCtrl1_RadGridPatients_ctl00"
-		, changed:"ctl00_mainContent_PatientListSubmittedCtrl1_lblTotalCountMessage"
-		, btn:"ctl00_mainContent_PatientListSubmittedCtrl1_btnNextPage"
-		, fx:"ParsePreventiceEnrollment"}
-	webStr.Inventory := {dlg:"Facility`nInventory Status`nDevice in Hand (Enrollment not linked)"
-		, url:"https://secure.preventice.com/Facilities/"
-		, win:"Facilities"
-		, tbl:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00"
-		, changed:"ctl00_mainContent_InventoryStatus_userControl_gvInventoryStatus_ctl00_Pager"
-		, btn:"rgPageNext"
-		, fx:"ParsePreventiceInventory"}
-	
-	gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\HoltER Database\TRRIQ"
-	
 	IfInString, A_ScriptDir, AhkProjects 
 	{
 		gl.isAdmin := true
-		gl.files_dir := A_ScriptDir "\files"
+		gl.TRRIQ_path := A_ScriptDir
 	} else {
 		gl.isAdmin := false
-		gl.files_dir := gl.TRRIQ_path "\files"
+		gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\HoltER Database\TRRIQ"
 	}
+	gl.files_dir := gl.TRRIQ_path "\files"
+	wq := new XML(gl.TRRIQ_path "\worklist.xml")
 	
-	loop, read, % gl.files_dir "\prev.key"
-	{
-		k := A_LoopReadLine
-		fld := strX(k,"",0,0,"=",1,1)
-		val := strX(k,"=",1,1,"",0)
-		gl[fld] := val
-	}
+	webStr.Enrollment := readIni("str_Enrollment")
+	webStr.Inventory := readIni("str_Inventory")
+	
+	gl.login := readIni("str_Login")
+	gl.settings := readIni("settings")
 	
 	gl.enroll_ct := 0
 	gl.inv_ct := 0
+	gl.t0 := A_TickCount
 }
 
 MainLoop:
 {
+	wb := IEopen()																		; start/activate an IE instance
+	wb.visible := gl.settings.isVisible
+	
 	PreventiceWebGrab("Enrollment")
+	if (gl.enroll_ct < 12) {
+		gl.FAIL := true
+	}
 	
 	PreventiceWebGrab("Inventory")
+	if (gl.inv_ct < 12) {
+		gl.FAIL := true
+	}
 	
-	filedelete, % gl.files_dir "\prev.txt"
-	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
+	if !(gl.FAIL) {
+		filedelete, % gl.files_dir "\prev.txt"
+		FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
+		eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
+	} else {
+		eventlog("PREVGRAB: Critical hit. Abort update.")
+	}
 	
-	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ".")
+	IEclose()
 	
-	WinKill, ahk_exe iexplore.exe
 	ExitApp
 }
 
 PreventiceWebGrab(phase) {
-	global webStr, wb
+	global webStr, wb, gl
 	web := webStr[phase]
 	
-	wb := IEopen()																		; start/activate an IE instance
-	wb.visible := false
-	
+	if (gl.settings.isVisible) {
+		progress,,% " ",% phase
+	}
 	IEurl(web.url)																		; load URL, return DOM in wb
 	prvFunc := web.fx
 	
@@ -83,7 +80,8 @@ PreventiceWebGrab(phase) {
 	{
 		tbl := wb.document.getElementById(web.tbl)										; get the Main Table
 		if !IsObject(tbl) {
-			eventlog("PREVGRAB ERR: *** No matching table.")
+			eventlog("PREVGRAB: *** " phase " *** No matching table.")
+			gl.FAIL := true
 			return
 		}
 		
@@ -111,28 +109,41 @@ PreventiceWebGrab(phase) {
 PreventiceWebPager(phase,chgStr,btnStr) {
 	global wb
 	
+	pg0 := wb.document.getElementById(chgStr).innerText
+	
 	if (phase="Enrollment") {
+		pgNum := gl.enroll_ct
 		wb.document.getElementById(btnStr).click() 										; click when id=btnStr
 	}
 	if (phase="Inventory") {
+		pgNum := gl.inv_ct
+		if (wb.document.getElementsByClassName(btnStr)[0].getAttribute("onClick") ~= "return") {
+			return
+		}
 		wb.document.getElementsByClassName(btnStr)[0].click() 							; click when class=btnstr
 	}
-	pg0 := wb.document.getElementById(chgStr).innerText
 	
-	loop, 200																			; wait up to 100*0.05 = 5 sec
+	t0 := A_TickCount
+	loop, 300																			; wait each 100*0.05 = 5 sec
 	{
 		pg := wb.document.getElementById(chgStr).innerText
+		if (gl.settings.isVisible) {
+			progress,,% onclick, % phase " (" A_index ")"
+		}
 		if (pg != pg0) {
-			break
+			t1:=A_TickCount-t0
+			eventlog("PREVGRAB: " phase " " pgNum " pager (" round(t1/1000,2) " s)"
+					, (t1>5000) ? 1 : 0)
+			return
 		}
 		sleep 50
 	}
-
+	eventlog("PREVGRAB: " phase " " pgNum " timed out! (" round((A_TickCount-t0)/1000,2) " s)")
 	return
 }
 
 parsePreventiceEnrollment(tbl) {
-	global prevtxt, gl
+	global prevtxt, gl, wq
 	
 	lbl := ["name","mrn","date","dev","prov"]
 	done := 0
@@ -151,6 +162,13 @@ parsePreventiceEnrollment(tbl) {
 		}
 		res.name := parsename(res.name).lastfirst
 		date := parseDate(res.date).YMD
+		
+		if IsObject(wq.selectSingleNode("/root/pending/enroll"
+					. "[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']")) {		; MRN+DATE+S/N = perfect match
+			eventlog("PREVGRAB: " res.mrn " " date " " res.dev " - perfect match.",0)
+			continue
+		}
+		
 		dt := A_Now
 		dt -= date, Days
 		if (dt>checkdays) {																; if days > threshold, break loop
@@ -188,7 +206,7 @@ parsePreventiceInventory(tbl) {
 	Add unique ser nums to /root/inventory/dev[@ser]
 	These will be removed when registered
 */
-	global prevtxt, gl
+	global prevtxt, gl, wq
 	
 	lbl := ["button","model","ser"]
 	
@@ -203,6 +221,13 @@ parsePreventiceInventory(tbl) {
 			c_idx := A_Index-1
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
+		
+		if IsObject(wq.selectSingleNode("/root/pending/enroll"
+					. "[dev='" res.model " - " res.ser "']")) {							; exists in Pending
+			eventlog("PREVGRAB: " res.model " - " res.ser " - already in use.",0)
+			continue
+		}
+		
 		prevtxt .= "dev|" res.model "|" res.ser "`n"
 		gl.inv_ct ++
 	}
@@ -234,14 +259,38 @@ IEurl(url) {
 */
 	global wb
 	
-	wb.Navigate(url)																	; load URL
-	while wb.busy {																		; wait until done loading
-		sleep 10
+	loop, 3
+	{
+		wb.Navigate(url)																	; load URL
+		while wb.busy {																		; wait until done loading
+			if (gl.settings.isVisible) {
+				progress,,% wb.ReadyState
+			}
+			sleep 10
+		}
+		
+		if instr(wb.LocationURL,"UserLogin") {
+			eventlog("PREVGRAB: Login " A_index,0)
+			preventiceLogin()
+		}
+		else {
+			eventlog("PREVGRAB: " url,0)
+			return
+		}
 	}
-	
-	if instr(wb.LocationURL,"UserLogin") {
-		preventiceLogin()
+	eventlog("PREVGRAB: Failed login.")
+	return
+}
+
+IEclose() {
+	DetectHiddenWindows, On
+	while WinExist("ahk_class IEFrame")
+	{
+		i := A_index
+		Process, Close, iexplore.exe
+		sleep 500
 	}
+	eventlog("PREVGRAB: Closed " i " IE windows.",0)
 	
 	return
 }
@@ -249,20 +298,20 @@ IEurl(url) {
 preventiceLogin() {
 /*	Need to populate and submit user login form
 */
-	global wb
-	attr_user := "ctl00$PublicContent$Login1$UserName"
-	attr_pass := "ctl00$PublicContent$Login1$Password"
-	attr_btn := "ctl00$PublicContent$Login1$goButton"	
+	global wb, gl
 	
 	wb.document
-		.getElementById(RegExReplace(attr_user,"\$","_"))
-		.value := gl.user_name
+		.getElementById(gl.login.attr_user)
+		.value := gl.login.user_name
+	
 	wb.document
-		.getElementById(RegExReplace(attr_pass,"\$","_"))
-		.value := gl.user_pass
+		.getElementById(gl.login.attr_pass)
+		.value := gl.login.user_pass
+	
 	wb.document
-		.getElementByID(RegExReplace(attr_btn,"\$","_"))
+		.getElementByID(gl.login.attr_btn)
 		.click()
+	
 	while wb.busy {																		; wait until done loading
 		sleep 10
 	}
@@ -486,8 +535,17 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 	*/
 }
 
-eventlog(event) {
+eventlog(event,verbosity:=1) {
+/*	verbose 1 or 0 from ini
+	verbosity default 1
+	verbosity set 0 if only during verbose
+*/
 	global gl
+	
+	score := verbosity + gl.settings.verbose
+	if (score<1) {
+		return
+	}
 	user := A_UserName
 	comp := A_ComputerName
 	FormatTime, sessdate, A_Now, yyyy.MM
@@ -507,3 +565,64 @@ FilePrepend( Text, Filename ) {
     File.Close()
 }
 
+readIni(section) {
+/*	Reads a set of variables
+	[section]					==	 		var1 := res1, var2 := res2
+	var1=res1
+	var2=res2
+	
+	[array]						==			array := ["ccc","bbb","aaa"]
+	=ccc
+	bbb
+	=aaa
+	
+	[objet]						==	 		objet := {aaa:10,bbb:27,ccc:31}
+	aaa:10
+	bbb:27
+	ccc:31
+*/
+	global
+	local x, i, key, val
+		, i_res := object()
+		, i_type := []
+		, i_lines := []
+	i_type.var := i_type.obj := i_type.arr := false
+	IniRead,x,% gl.files_dir "\prevgrab.ini",%section%
+	Loop, parse, x, `n,`r																; analyze section struction
+	{
+		i := A_LoopField
+		if (i~="^(?<!"")\w+:") {														; starts with abc: is an object
+			i_type.obj := true
+		}
+		else if (i~="^(?<!"")\w+=") {													; starts with abc= is a var declaration
+			i_type.var := true
+		}
+		else {																			; anything else is an array list
+			i_type.arr := true
+		}
+	}
+	if ((i_type.obj) + (i_type.arr) + (i_type.var)) > 1 {								; too many types, return error
+		return error
+	}
+	Loop, parse, x, `n,`r																; now loop through lines
+	{
+		i := A_LoopField
+		if (i_type.var) {
+			key := strX(i,"",1,0,"=",1,1)
+			val := strX(i,"=",1,1,"",0)
+			%key% := trim(val,"""")
+		}
+		if (i_type.obj) {
+			key := strX(i,"",1,0,":",1,1)
+			val := strX(i,":",1,1,"",0)
+			i_res[key] := trim(val,"""")
+		}
+		if (i_type.arr) {
+			i := RegExReplace(i,"^=")													; remove preceding =
+			i_res.push(trim(i,""""))
+		}
+	}
+	return i_res
+}
+
+#Include xml.ahk
