@@ -25,6 +25,7 @@ Config:
 		gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\HoltER Database\TRRIQ"
 	}
 	gl.files_dir := gl.TRRIQ_path "\files"
+	wq := new XML(gl.TRRIQ_path "\worklist.xml")
 	
 	webStr.Enrollment := readIni("str_Enrollment")
 	webStr.Inventory := readIni("str_Inventory")
@@ -116,17 +117,19 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 			progress,,% wb.ReadyState, % phase " (" A_index ")"
 		}
 		if (pg != pg0) {
-			eventlog("PREVGRAB: " phase " " pgNum " pager (" A_TickCount-t0 " ms)",0)
+			t1:=A_TickCount-t0
+			eventlog("PREVGRAB: " phase " " pgNum " pager (" round(t1/1000,2) " s)"
+					, (t1>5000) ? 1 : 0)
 			return
 		}
 		sleep 50
 	}
-	eventlog("PREVGRAB: " phase " " pgNum " timed out! (" A_TickCount-t0 " ms)")
+	eventlog("PREVGRAB: " phase " " pgNum " timed out! (" round((A_TickCount-t0)/1000,2) " s)")
 	return
 }
 
 parsePreventiceEnrollment(tbl) {
-	global prevtxt, gl
+	global prevtxt, gl, wq
 	
 	lbl := ["name","mrn","date","dev","prov"]
 	done := 0
@@ -145,6 +148,13 @@ parsePreventiceEnrollment(tbl) {
 		}
 		res.name := parsename(res.name).lastfirst
 		date := parseDate(res.date).YMD
+		
+		if IsObject(wq.selectSingleNode("/root/pending/enroll"
+					. "[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']")) {		; MRN+DATE+S/N = perfect match
+			eventlog("PREVGRAB: " res.mrn " " date " " res.dev " - perfect match.",0)
+			continue
+		}
+		
 		dt := A_Now
 		dt -= date, Days
 		if (dt>checkdays) {																; if days > threshold, break loop
@@ -182,7 +192,7 @@ parsePreventiceInventory(tbl) {
 	Add unique ser nums to /root/inventory/dev[@ser]
 	These will be removed when registered
 */
-	global prevtxt, gl
+	global prevtxt, gl, wq
 	
 	lbl := ["button","model","ser"]
 	
@@ -197,6 +207,13 @@ parsePreventiceInventory(tbl) {
 			c_idx := A_Index-1
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
+		
+		if IsObject(wq.selectSingleNode("/root/pending/enroll"
+					. "[dev='" res.model " - " res.ser "']")) {							; exists in Pending
+			eventlog("PREVGRAB: " res.model " - " res.ser " - already in use.",0)
+			continue
+		}
+		
 		prevtxt .= "dev|" res.model "|" res.ser "`n"
 		gl.inv_ct ++
 	}
@@ -593,3 +610,5 @@ readIni(section) {
 	}
 	return i_res
 }
+
+#Include xml.ahk
