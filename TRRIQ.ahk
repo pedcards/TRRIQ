@@ -161,13 +161,14 @@ PhaseGUI:
 	Gui, Font, Bold
 	Gui, Add, Button
 		, Y+10 wp h40 gWQlist
-		, Refresh files
-	Gui, Add, Button
-		, Y+10 wp h40 vEnrollment gPhaseTask
-		, Grab Preventice enrollments
-	Gui, Add, Button
-		, Y+10 wp h40 vInventory gPhaseTask
-		, Grab Preventice inventory
+		, Refresh inbox
+	;~ Gui, Add, Button
+		;~ , Y+10 wp h40 vEnrollment gPhaseTask Disabled
+		;~ , ;Grab Preventice enrollments
+	;~ Gui, Add, Button
+		;~ , Y+10 wp h40 vInventory gPhaseTask Disabled
+		;~ , ;Grab Preventice inventory
+	Gui, Add, Text, wp h100
 	Gui, Add, Text, Y+20 wp h80 Center, Register BodyGuardian MONITOR
 	Gui, Add, Text, Y+20 wp h80 Center, Prepare/Upload MORTARA HOLTER
 	Gui, Font, Normal
@@ -556,7 +557,11 @@ WQlist() {
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
+	
 	wq := new XML("worklist.xml")														; refresh WQ
+	
+	readPrevTxt()																		; read prev.txt from website
+	
 	loop, parse, sites0, |																; move studies from sites0 to DONE
 	{
 		site := A_LoopField
@@ -738,14 +743,138 @@ WQlist() {
 	Gui, ListView, WQlv_all														
 	LV_ModifyCol(2,"Sort")
 	
+	tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update"))
 	GuiControl, Text, PhaseNumbers
 		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	"Last Enrollments update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n"
-		.	"Last Inventory update: " niceDate(wq.selectSingleNode("/root/inventory").getAttribute("update")) 
+		.	"Last Preventice update: " tmp.mm "/" tmp.dd " @ " tmp.time "`n"
 	
 	progress, off
 	return
 }
+
+readPrevTxt() {
+	global wq
+	
+	filenm := ".\files\prev.txt"
+	prevdt := wq.selectSingleNode("/root/pending").getAttribute("update")
+	FileGetTime, filedt, % filenm
+	if (filedt=prevdt) {																; update matches filedt means no change
+		return
+	}
+	
+	Progress,,% " ",Updating Preventice data...
+	FileRead, txt, % filenm
+	StringReplace txt, txt, `n, `n, All UseErrorLevel
+	n := ErrorLevel
+
+	loop, read, % ".\files\prev.txt"
+	{
+		Progress, % 100*A_Index/n
+		
+		k := A_LoopReadLine
+		if (k~="^enroll\|") {
+			parsePrevEnroll(k)
+		}
+		else if (k~="^dev\|") {
+			parsePrevDev(k)
+		}
+	}
+	
+	loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
+	{
+		k := devs.item(A_Index-1)
+		dev := k.getAttribute("dev")
+		ser := k.getAttribute("ser")
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" dev " - " ser "']")) {	; exists in Pending
+			k.parentNode.removeChild(k)
+			eventlog("Removed inventory ser " ser)
+		}
+	}
+	wq.selectSingleNode("/root/pending").setAttribute("update",filedt)					; set pending[@update] attr
+	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set pending[@update] attr
+	
+return	
+}
+
+parsePrevEnroll(txt) {
+	global wq
+	el := StrSplit(txt,"|")
+	res := {  date:parseDate(el.2).YMD
+			, name:parsename(el.3).lastfirst
+			, mrn:el.4
+			, dev:el.5
+			, prov:el.6 }
+	
+	/*	Check whether any params match this device
+	*/
+		if enrollcheck("[mrn='" res.mrn "'][date='" res.date "'][dev='" res.dev "']") {	; MRN+DATE+S/N = perfect match
+			return
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			wqSetVal(id,"date",res.date)
+			eventlog(en.name " (" id ") changed WQ date '" en.date "' ==> '" res.date "'")
+			return
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "'][date='" res.date "']")) {				; MRN+DATE, no S/N
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			wqSetVal(id,"dev",res.dev)
+			eventlog(en.name " (" id ") changed WQ dev '" en.dev "' ==> '" res.dev "'")
+			return
+		}
+		if (id:=enrollcheck("[date='" res.date "'][dev='" res.dev "']")) {				; DATE+S/N, no MRN
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			wqSetVal(id,"mrn",res.mrn)
+			eventlog(en.name " (" id ") changed WQ mrn '" en.mrn "' ==> '" res.mrn "'")
+			return
+		} 
+		
+	/*	No match (i.e. unique record)
+	 *	add new record to PENDING
+	 */
+		sleep 1																			; delay 1ms to ensure different tick time
+		id := A_TickCount 
+		newID := "/root/pending/enroll[@id='" id "']"
+		wq.addElement("enroll","/root/pending",{id:id})
+		wq.addElement("date",newID,res.date)
+		wq.addElement("name",newID,res.name)
+		wq.addElement("mrn",newID,res.mrn)
+		wq.addElement("dev",newID,res.dev)
+		wq.addElement("prov",newID,filterProv(res.prov).name)
+		wq.addElement("site",newID,filterProv(res.prov).site)
+		wq.addElement("webgrab",newID,A_now)
+		
+		eventlog("Added new registration " res.mrn " " res.name " " res.date ".")
+	
+	return
+}
+
+parsePrevDev(txt) {
+	global wq
+	el := StrSplit(txt,"|")
+	dev := el.2
+	ser := el.3
+	res := dev " - " ser
+
+	if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" ser "']")) {			; already exists in Inventory
+		return
+	}
+	
+	wq.addElement("dev","/root/inventory",{model:dev,ser:ser})
+	eventlog("Added new Inventory dev " ser)
+	
+	return
+}
+
 
 WQfindlost() {
 	global wq
@@ -809,6 +938,8 @@ WQfindreturned() {
 	}
 	return "clean"
 }
+
+
 
 readWQ(idx) {
 	global wq
