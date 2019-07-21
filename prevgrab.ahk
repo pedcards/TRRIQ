@@ -44,20 +44,30 @@ MainLoop:
 	wb.visible := gl.settings.isVisible
 	
 	PreventiceWebGrab("Enrollment")
+	if (gl.enroll_ct < 12) {
+		gl.FAIL := true
+	}
 	
 	PreventiceWebGrab("Inventory")
+	if (gl.inv_ct < 12) {
+		gl.FAIL := true
+	}
 	
-	filedelete, % gl.files_dir "\prev.txt"
-	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
+	if !(gl.FAIL) {
+		filedelete, % gl.files_dir "\prev.txt"
+		FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
+		eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
+	} else {
+		eventlog("PREVGRAB: Critical hit. Abort update.")
+	}
 	
 	IEclose()
-	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
 	ExitApp
 }
 
 PreventiceWebGrab(phase) {
-	global webStr, wb
+	global webStr, wb, gl
 	web := webStr[phase]
 	
 	if (gl.settings.isVisible) {
@@ -71,6 +81,7 @@ PreventiceWebGrab(phase) {
 		tbl := wb.document.getElementById(web.tbl)										; get the Main Table
 		if !IsObject(tbl) {
 			eventlog("PREVGRAB: *** " phase " *** No matching table.")
+			gl.FAIL := true
 			return
 		}
 		
