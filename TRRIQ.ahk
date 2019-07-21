@@ -2744,8 +2744,8 @@ outputfiles:
 	impSub := (monType~="BGH") ? "Event\" : "Holter\"										; Import subfolder Event or Holter
 	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%%impSub%*.*, 1						; copy CSV from tempfiles to importFld\impSub
 	
-	if (FileExist(fileIn "sh.pdf")) {														; filename for OnbaseDir
-		fileHIM := fileIn "sh.pdf"															; prefer shortened if it exists
+	if (FileExist(fileIn "-sh.pdf")) {														; filename for OnbaseDir
+		fileHIM := fileIn "-sh.pdf"															; prefer shortened if it exists
 	} else {
 		fileHIM := fileIn
 	}
@@ -2753,9 +2753,9 @@ outputfiles:
 	FileCopy, % fileHIM, % OnbaseDir2 filenameOut ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
 	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; Copy the original PDF to holterDir Archive
-	FileCopy, %fileIn%sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; Copy the shortened PDF, if it exists
+	FileCopy, %fileIn%-sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
-	FileDelete, %fileIn%sh.pdf																;	was never completing filemove
+	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
 	FileDelete, % hl7dir fileNam ".hl7"														; We can delete the original HL7, if exists
@@ -3050,13 +3050,13 @@ shortenPDF(find) {
 	pgpos := instr(fulltxt,"Page ",,findpos-strlen(fulltxt))
 	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
 	pgpos := pgs.value(1)
-	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%sh.pdf",,min
-	if !FileExist(fileIn "sh.pdf") {
-		FileCopy, %fileIn%, %fileIn%sh.pdf
+	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%-sh.pdf",,min
+	if !FileExist(fileIn "-sh.pdf") {
+		FileCopy, %fileIn%, %fileIn%-sh.pdf
 	}
 	filedelete, %fullnam%
 	FileGetSize, sizeIn, %fileIn%
-	FileGetSize, sizeOut, %fileIn%sh.pdf
+	FileGetSize, sizeOut, %fileIn%-sh.pdf
 	eventlog("IN: " thousandsSep(sizeIn) ", OUT: " thousandsSep(sizeOut))
 	progress, off
 return	
@@ -3081,9 +3081,9 @@ findFullPdf(wqid:="") {
 		progress, % 100*A_index/fileCount, % fname, Scanning PDFs folder
 		
 		;---Skip any PDFs that have already been processed or are in the middle of being processed
-		if (fname~="i)(sh|-short)\.pdf") 
+		if (fname~="i)(-sh|-short)\.pdf") 
 			continue
-		if FileExist(fname "sh.pdf") 
+		if FileExist(fname "-sh.pdf") 
 			continue
 		if FileExist(fnam "-short.pdf") 
 			continue
@@ -3127,7 +3127,7 @@ findFullPdf(wqid:="") {
 		}
 		
 		if (fnID.1 == wqid) {															; filename WQID matches wqid arg
-			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "sh.pdf"		; rename the pdf in hl7dir to -short.pdf
+			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "-sh.pdf"		; rename the pdf in hl7dir to -short.pdf
 			FileMove, % holterDir fName , % hl7dir fldval.filename 						; move this full disclosure PDF into hl7dir
 			progress, off
 			eventlog(fName " moved to hl7dir.")
@@ -3622,7 +3622,7 @@ Zio:
 	fieldcoladd("","INTERP",zinterp)
 	fieldcoladd("","Mon_type","Holter")
 	
-	FileCopy, %fileIn%, %fileIn%sh.pdf
+	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
 	fldval.done := true
 
@@ -3706,7 +3706,7 @@ Event_BGH_Hl7:
 	
 	fieldcoladd("","Mon_type","Event")
 	
-	FileCopy, %fileIn%, %fileIn%sh.pdf
+	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
 	fldval.done := true
 	
@@ -3759,7 +3759,7 @@ Event_BGH:
 	
 	fieldcoladd("","Mon_type","Event")
 	
-	FileCopy, %fileIn%, %fileIn%sh.pdf
+	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
 	fldval.done := true
 	
