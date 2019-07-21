@@ -746,7 +746,7 @@ WQlist() {
 	tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update"))
 	GuiControl, Text, PhaseNumbers
 		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	"Last Preventice update: " tmp.mm "/" tmp.dd " @ " tmp.time "`n"
+		.	"Preventice update: " tmp.mm "/" tmp.dd " @ " tmp.time "`n"
 	
 	progress, off
 	return
