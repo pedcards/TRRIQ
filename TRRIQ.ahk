@@ -743,9 +743,10 @@ WQlist() {
 	Gui, ListView, WQlv_all														
 	LV_ModifyCol(2,"Sort")
 	
+	tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update"))
 	GuiControl, Text, PhaseNumbers
 		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	"Last Preventice update: " niceDate(wq.selectSingleNode("/root/pending").getAttribute("update")) "`n"
+		.	"Last Preventice update: " tmp.mm "/" tmp.dd " @ " tmp.time "`n"
 	
 	progress, off
 	return
