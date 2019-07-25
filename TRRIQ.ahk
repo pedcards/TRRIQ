@@ -783,7 +783,7 @@ readPrevTxt() {
 	loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
 	{
 		k := devs.item(A_Index-1)
-		dev := k.getAttribute("dev")
+		dev := k.getAttribute("model")
 		ser := k.getAttribute("ser")
 		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" dev " - " ser "']")) {	; exists in Pending
 			k.parentNode.removeChild(k)
