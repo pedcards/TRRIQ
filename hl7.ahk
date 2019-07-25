@@ -97,7 +97,7 @@ hl7line(seg) {
 			File := FileOpen( hl7Dir . res.Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
-			seg := "OBX|" fld.2 "|ED|PDFReport"
+			;~ seg := "OBX|" fld.2 "|ED|PDFReport"
 		} else {
 			label := res.resCode													; result value
 			result := strQ(res.resValue, "###")
