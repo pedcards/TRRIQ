@@ -270,8 +270,8 @@ IEurl(url) {
 		}
 		
 		if instr(wb.LocationURL,"UserLogin") {
-			eventlog("PREVGRAB: Login " A_index,0)
 			preventiceLogin()
+			eventlog("PREVGRAB: Login try " A_index)
 		}
 		else {
 			eventlog("PREVGRAB: " url,0)
