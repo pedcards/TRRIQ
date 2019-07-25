@@ -2889,7 +2889,8 @@ outputfiles:
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
-	FileDelete, % hl7dir fileNam ".hl7"														; We can delete the original HL7, if exists
+	;~ FileDelete, % hl7dir fileNam ".hl7"														; We can delete the original HL7, if exists
+	FileMove, % hl7dir fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
 	fileWQ := ma_date "," user "," 															; date processed and MA user
