@@ -1029,7 +1029,7 @@ readWQlv:
 		Gui, phase:Hide
 		
 		progress, 25 , % fnam, Extracting data
-		processHL7(fnam)																; extract DDE to fldVal, and PDF into hl7Dir
+		processHL7(hl7Dir . fnam)														; extract DDE to fldVal, and PDF into hl7Dir
 		moveHL7dem()																	; prepopulate the fldval["dem-"] values
 		
 		progress, 50 , % fnam, Processing PDF
