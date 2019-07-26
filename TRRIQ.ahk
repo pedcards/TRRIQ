@@ -161,7 +161,7 @@ PhaseGUI:
 	Gui, Font, Bold
 	Gui, Add, Button
 		, Y+10 wp h40 gWQlist
-		, Refresh inbox
+		, Refresh lists
 	;~ Gui, Add, Button
 		;~ , Y+10 wp h40 vEnrollment gPhaseTask Disabled
 		;~ , ;Grab Preventice enrollments
