@@ -202,12 +202,14 @@ getSites(wksName) {
 	wksNode := wksList.selectSingleNode(m_strXmlLocationName "[site='" wksName "']")
 	codeName := wksNode.selectSingleNode("hl7name").text
 	codeNum := wksNode.selectSingleNode("hl7num").text
+	tabname := wksnode.selectSingleNode("tabname").text
 	
 	return {  tracked:trim(locationList[1],"|")
 			, ignored:trim(locationList[0],"|")
 			, long:locationLong
 			, code:codeNum
-			, facility:codeName}
+			, facility:codeName
+			, tab:tabname}
 }	
 
 
