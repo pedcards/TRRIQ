@@ -202,9 +202,13 @@ PhaseGUI:
 		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
 		, Grab Preventice inventory
 	
-	Gui, Add, Tab3
+	tmpsite := RegExReplace(sites,"TRI\|")
+	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
+	Gui, Add, Tab3																		; add Tab bar with tracked sites
 		, -Wrap x10 y10 w640 h400 vWQtab +HwndWQtab
-		, % (wksloc="Main Campus" ? "INBOX|" : "") "ALL|" RegExReplace(sites,"TRI\|")	; add Tab bar with tracked sites
+		, % "ORDERS|" 
+		. (wksloc="Main Campus" ? "INBOX||" : "") 
+		. "ALL|" tmpsite
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
