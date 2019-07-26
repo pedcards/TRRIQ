@@ -571,6 +571,7 @@ WQlist() {
 		, late_BGM := 21
 		, late_Mortara := 14
 	wqfiles := []
+	fldval := {}
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
@@ -769,6 +770,21 @@ WQlist() {
 		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
 		.	"Preventice update: " tmp.mm "/" tmp.dd " @ " tmp.time "`n"
 	
+/*	Now scan Incoming ORDERS
+*/
+	Gui, ListView, WQlv_orders
+	LV_Delete()
+	loop, Files, % hl7InDir "*.hl7"
+	{
+		fileIn := A_LoopFileName
+		x := StrSplit(fileIn,"_")
+		processhl7(A_LoopFileFullPath)
+		MsgBox % fldval["PID_PatMRN"]
+		. fldval["MSH_CtrlID"]
+		. fldval["PID_NameL"]
+	}
+	
+	fileIn :=
 	progress, off
 	return
 }
