@@ -231,7 +231,7 @@ PhaseGUI:
 	
 	Gui, Tab, ORDERS
 	Gui, Add, Listview
-		, % "-Multi Grid BackgroundSilver ColorRed " lvDim " gWQtask vWQlv_orders hwndHLV_orders"
+		, % "-Multi Grid BackgroundSilver ColorRed " lvDim " greadWQorder vWQlv_orders hwndHLV_orders"
 		, filename|Order Date|Name|MRN|Provider
 	Gui, ListView, WQlv_orders
 	LV_ModifyCol(1,"0")																	; filename and path (hidden)
@@ -1098,6 +1098,51 @@ readWQlv:
 		epRead()																		; find out which EP is reading today
 		gosub outputfiles																; generate and save output CSV, rename and move PDFs
 	}
+	
+	return
+}
+
+readWQorder:
+{
+/*	Retrieve info from WQlist line
+*/
+	agc := A_GuiControl
+	if !instr(agc,"WQlv") {																; Must be in WQlv listview
+		return
+	}
+	if !(A_GuiEvent="DoubleClick") {													; Must be double click
+		return
+	}
+	Gui, ListView, %agc%
+	if !(x := LV_GetNext()) {															; Must be on actual row
+		return
+	}
+	LV_GetText(fileIn,x,1)																; selection filename
+	SplitPath,fileIn,fnam,,fExt,fileNam
+	
+	Gui, phase:Destroy
+	
+	tmp := cMsgBox("Title","Message","Mortara`n24 hr Holter|BG Mini`n14-day monitor|BG Heart`n30-day event recorder","Q")
+	if instr(tmp,"xClose") {
+		return
+	}
+	wq := new XML("worklist.xml")														; refresh WQ
+	blocks := Object()																	; clear all objects
+	fields := Object()
+	labels := Object()
+	blk := Object()
+	blk2 := Object()
+	ptDem := Object()
+	pt := Object()
+	chk := Object()
+	matchProv := Object()
+	fileOut := fileOut1 := fileOut2 := ""
+	summBl := summ := ""
+	fullDisc := ""
+	monType := ""
+	obxval := Object()
+	
+	processhl7(fileIn)
 	
 	return
 }
