@@ -787,24 +787,32 @@ WQlist() {
 			e0.attgL := x.4
 		} 
 		else {
-		processhl7(A_LoopFileFullPath)
-		e0.mrn := fldval["PID_PatMRN"]
+			processhl7(A_LoopFileFullPath)
+			e0.mrn := fldval["PID_PatMRN"]
 			;~ e0.uid := fldval["MSH_CtrlID"]
-		e0.date := fldval["MSH_DateTIme"]
-		e0.nameL := fldval["PID_NameL"]
-		e0.nameF := fldval["PID_NameF"]
-		e0.attgL := fldval["PV1_AttgNameL"]
+			e0.date := fldval["MSH_DateTIme"]
+			e0.nameL := fldval["PID_NameL"]
+			e0.nameF := fldval["PID_NameF"]
+			e0.attgL := fldval["PV1_AttgNameL"]
 			;~ e0.attgF := fldval["PV1_AttgNameF"]
-		
+			
 			fileIn := e0.MRN "_" 
-			. e0.nameL "^" e0.nameF "_"
-			. substr(e0.date,1,8) "_"
-			. e0.attgL "_"
-			. "Z.hl7"
+				. e0.nameL "^" e0.nameF "_"
+				. substr(e0.date,1,8) "_"
+				. e0.attgL "_"
+				. "Z.hl7"
 				
 			FileMove, %A_LoopFileFullPath%
 				, % hl7InDir . fileIn
 		}
+		LV_Add(""
+			, hl7InDir . fileIn															; filename and path to HolterDir
+			, e0.date																	; date
+			, e0.nameL ", " e0.nameF													; name
+			, e0.mrn																	; mrn
+			, e0.AttgL																	; prov
+			, "")																		; fulldisc present, make blank
+		
 	}
 	fileIn :=
 	progress, off
