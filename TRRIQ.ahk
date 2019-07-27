@@ -232,17 +232,16 @@ PhaseGUI:
 	Gui, Tab, ORDERS
 	Gui, Add, Listview
 		, % "-Multi Grid BackgroundSilver ColorRed " lvDim " gWQtask vWQlv_orders hwndHLV_orders"
-		, filename|Order Date|Name|MRN|DOB|Ordering Provider|Location|Study Type
-		;~ , ID|Enrolled|FedEx|Uploaded|Notes|MRN|Enrolled Name|Device|Provider|Site
+		, filename|Order Date|Name|MRN|Provider
 	Gui, ListView, WQlv_orders
 	LV_ModifyCol(1,"0")																	; filename and path (hidden)
 	LV_ModifyCol(2,"80")																; date
 	LV_ModifyCol(3,"140")																; Name
 	LV_ModifyCol(4,"60")																; MRN
-	LV_ModifyCol(5,"80")																; DOB
-	LV_ModifyCol(6,"100")																; Provider
-	LV_ModifyCol(7,"80")																; Site
-	LV_ModifyCol(8,"70")																; Type
+	LV_ModifyCol(5,"100")																; Prov
+	;~ LV_ModifyCol(6,"100")																; Provider
+	;~ LV_ModifyCol(7,"80")																; Site
+	;~ LV_ModifyCol(8,"70")																; Type
 	
 	
 	Gui, Tab, ALL
