@@ -786,22 +786,25 @@ WQlist() {
 			e0.date := x.3
 			e0.attgL := x.4
 		} 
+		else {
 		processhl7(A_LoopFileFullPath)
 		e0.mrn := fldval["PID_PatMRN"]
-		e0.uid := fldval["MSH_CtrlID"]
+			;~ e0.uid := fldval["MSH_CtrlID"]
 		e0.date := fldval["MSH_DateTIme"]
 		e0.nameL := fldval["PID_NameL"]
 		e0.nameF := fldval["PID_NameF"]
 		e0.attgL := fldval["PV1_AttgNameL"]
-		e0.attgF := fldval["PV1_AttgNameF"]
+			;~ e0.attgF := fldval["PV1_AttgNameF"]
 		
-		FileMove, %A_LoopFileFullPath%
-			, % hl7InDir 
-			. e0.MRN "_" 
+			fileIn := e0.MRN "_" 
 			. e0.nameL "^" e0.nameF "_"
 			. substr(e0.date,1,8) "_"
 			. e0.attgL "_"
 			. "Z.hl7"
+				
+			FileMove, %A_LoopFileFullPath%
+				, % hl7InDir . fileIn
+		}
 	}
 	fileIn :=
 	progress, off
