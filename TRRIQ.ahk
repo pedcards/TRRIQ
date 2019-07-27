@@ -778,6 +778,14 @@ WQlist() {
 		e0 := {}
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
+		if (x.5="Z.hl7") {
+			e0.mrn := x.1
+			e0.name := x.2
+			e0.nameL := strX(e0.name,"",1,0,"^",1)
+			e0.nameF := strX(e0.name,"^",1,1,"",0)
+			e0.date := x.3
+			e0.attgL := x.4
+		} 
 		processhl7(A_LoopFileFullPath)
 		e0.mrn := fldval["PID_PatMRN"]
 		e0.uid := fldval["MSH_CtrlID"]
