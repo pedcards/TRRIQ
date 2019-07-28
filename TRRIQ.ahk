@@ -1105,7 +1105,10 @@ readWQlv:
 readWQorder() {
 /*	Retrieve info from WQlist line
 */
-	global wq, fldval
+	global wq, fldval, ptDem
+	ptDem := {}
+	pt := {}
+	
 	
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {																; Must be in WQlv listview
@@ -1131,8 +1134,27 @@ readWQorder() {
 		return
 	}
 	wq := new XML("worklist.xml")														; refresh WQ
-	
-	processhl7(fileIn)
+	processhl7(fileIn)																	; read HL7 OBX into fldval
+		ptDem.nameL := fldval.PID_NameL
+		ptDem.nameF := fldval.PID_NameF
+		ptDem.sex := fldval.PID_sex
+		ptDem.DOB := parseDate(fldval.PID_DOB).MDY
+		ptDem.mrn := fldval.PID_PatMRN
+		ptDem.UID := fldval.MSH_CtrlID
+		ptDem.encDate := parseDate(fldval.MSH_DateTime).MDY
+		ptDem.Account := fldval.ORC_ReqNum
+		ptDem.provider := fldval.PV1_AttgNameL ", " fldval.PV1_AttgNameF
+		ptDem.loc := fldval.PV1_PtLoc
+		ptDem.type := "x"
+	if instr(tmp,"Holter") {
+		
+	} 
+	else if instr(tmp,"monitor") {
+		BGregister("BGM")
+	}
+	else if instr(tmp,"recorder") {
+		BGregister("BGH")
+	}
 	
 	return
 }
