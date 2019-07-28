@@ -789,12 +789,10 @@ WQlist() {
 		else {
 			processhl7(A_LoopFileFullPath)
 			e0.mrn := fldval["PID_PatMRN"]
-			;~ e0.uid := fldval["MSH_CtrlID"]
-			e0.date := fldval["MSH_DateTIme"]
 			e0.nameL := fldval["PID_NameL"]
 			e0.nameF := fldval["PID_NameF"]
+			e0.date := fldval["MSH_DateTIme"]
 			e0.attgL := fldval["PV1_AttgNameL"]
-			;~ e0.attgF := fldval["PV1_AttgNameF"]
 			
 			fileIn := e0.MRN "_" 
 				. e0.nameL "^" e0.nameF "_"
@@ -1146,13 +1144,13 @@ readWQorder() {
 		ptDem.provider := fldval.PV1_AttgNameL ", " fldval.PV1_AttgNameF
 		ptDem.loc := fldval.PV1_PtLoc
 		ptDem.type := "x"
-	if instr(tmp,"Holter") {
+	if instr(tmp,"Holter") {															; for Mortara Holter
 		
 	} 
-	else if instr(tmp,"monitor") {
+	else if instr(tmp,"monitor") {														; for BG Mini (and eventually Zio)
 		BGregister("BGM")
 	}
-	else if instr(tmp,"recorder") {
+	else if instr(tmp,"recorder") {														; for BG Heart
 		BGregister("BGH")
 	}
 	
