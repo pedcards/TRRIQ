@@ -1122,7 +1122,10 @@ readWQorder:
 	
 	Gui, phase:Destroy
 	
-	tmp := cMsgBox("Title","Message","Mortara`n24 hr Holter|BG Mini`n14-day monitor|BG Heart`n30-day event recorder","Q")
+	tmp := cMsgBox("Register ambulatory monitor"
+		,"`nSelect which type of`ndevice to register."
+		,"`nMORTARA`n24 hr Holter`n`n|`nBG MINI or ZIO`n7/14-day monitor`n`n|`nBG HEART`n30-day event recorder`n`n"
+		,"Q","v")
 	if instr(tmp,"xClose") {
 		return
 	}
