@@ -1102,10 +1102,11 @@ readWQlv:
 	return
 }
 
-readWQorder:
-{
+readWQorder() {
 /*	Retrieve info from WQlist line
 */
+	global wq, fldval
+	
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {																; Must be in WQlv listview
 		return
@@ -1130,20 +1131,6 @@ readWQorder:
 		return
 	}
 	wq := new XML("worklist.xml")														; refresh WQ
-	blocks := Object()																	; clear all objects
-	fields := Object()
-	labels := Object()
-	blk := Object()
-	blk2 := Object()
-	ptDem := Object()
-	pt := Object()
-	chk := Object()
-	matchProv := Object()
-	fileOut := fileOut1 := fileOut2 := ""
-	summBl := summ := ""
-	fullDisc := ""
-	monType := ""
-	obxval := Object()
 	
 	processhl7(fileIn)
 	
