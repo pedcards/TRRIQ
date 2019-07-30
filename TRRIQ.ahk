@@ -1502,6 +1502,9 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		if (ptDem.Indication) {													; loop until we have filled indChoices
 			break
 		}
+		if (fetchquit=true) {
+			break
+		}
 		gosub indGUI
 		WinWaitClose, Enter indications
 	}
@@ -1520,7 +1523,7 @@ indGUI:
 	return
 }
 
-indClose:
+indGUIClose:
 {
 	Gui, ind:Destroy
 	fetchQuit := true
@@ -1541,7 +1544,6 @@ indSubmit:
 
 getDem:
 {
-	;~ ptDem := Object()																	; New enroll needs demographics
 	gosub fetchGUI																		; Grab it first
 	gosub fetchDem
 	if (fetchQuit=true) {
@@ -1550,6 +1552,9 @@ getDem:
 	Loop
 	{
 		if (ptDem.Indication) {															; loop until we have filled indChoices
+			break
+		}
+		if (fetchQuit=true) {
 			break
 		}
 		gosub indGUI
@@ -2496,13 +2501,12 @@ BGregister(type) {
 		return
 	}
 	
-	;~ ptDem := object()																	; need to initialize ptDem
 	fetchQuit := false
 	gosub getDem																		; need to grab CIS demographics
-	;~ if (fetchQuit=true) {
-		;~ eventlog("Cancelled getDem.")
-		;~ return
-	;~ }
+	if (fetchQuit=true) {
+		eventlog("Cancelled getDem.")
+		return
+	}
 	;~ getPatInfo()																		; grab remaining demographics for Preventice registration
 	;~ if (fetchQuit=true) {
 		;~ eventlog("Cancelled getPatInfo.")
