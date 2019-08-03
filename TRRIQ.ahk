@@ -868,14 +868,38 @@ parsePrevEnroll(txt) {
 			, name:parsename(el.3).lastfirst
 			, mrn:el.4
 			, dev:el.5
-			, prov:el.6 }
+			, prov:filterProv(el.6).name
+			, site:filterProv(el.6).site }
 	
 	/*	Check whether any params match this device
 	*/
-		if enrollcheck("[mrn='" res.mrn "'][date='" res.date "'][dev='" res.dev "']") {	; MRN+DATE+S/N = perfect match
+		if enrollcheck("[name='" res.name "']"											; 6/6 perfect match
+			. "[mrn='" res.mrn "']"
+			. "[date='" res.date "']"
+			. "[dev='" res.dev "']"
+			. "[prov='" res.prov "']"
+			. "[site='" res.site "']" ) {
 			return
 		}
-		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
+		if (id:=enrollcheck("[name='" res.name "']"										; 5/6 perfect match
+			. "[mrn='" res.mrn "']"														; everything but SITE
+			. "[date='" res.date "']"
+			. "[dev='" res.dev "']"
+			. "[prov='" res.prov "']" )) {
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			wqSetVal(id,"site",res.site)
+			eventlog(en.name " (" id ") changed WQ site to '" res.site "'")
+			return
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "']"										; Probably perfect MRN+S/N+DATE
+			. "[date='" res.date "']"
+			. "[dev='" res.dev "']" )) {
+			return
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
 			en:=readWQ(id)
 			if (en.node="done") {
 				return
@@ -914,8 +938,8 @@ parsePrevEnroll(txt) {
 		wq.addElement("name",newID,res.name)
 		wq.addElement("mrn",newID,res.mrn)
 		wq.addElement("dev",newID,res.dev)
-		wq.addElement("prov",newID,filterProv(res.prov).name)
-		wq.addElement("site",newID,filterProv(res.prov).site)
+		wq.addElement("prov",newID,res.prov)
+		wq.addElement("site",newID,res.site)
 		wq.addElement("webgrab",newID,A_now)
 		
 		eventlog("Added new registration " res.mrn " " res.name " " res.date ".")

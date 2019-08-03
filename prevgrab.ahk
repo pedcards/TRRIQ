@@ -44,14 +44,8 @@ MainLoop:
 	wb.visible := gl.settings.isVisible
 	
 	PreventiceWebGrab("Enrollment")
-	if (gl.enroll_ct < 12) {
-		gl.FAIL := true
-	}
 	
 	PreventiceWebGrab("Inventory")
-	if (gl.inv_ct < 12) {
-		gl.FAIL := true
-	}
 	
 	if !(gl.FAIL) {
 		filedelete, % gl.files_dir "\prev.txt"
@@ -180,11 +174,11 @@ parsePreventiceEnrollment(tbl) {
 		res.name := parsename(res.name).lastfirst
 		date := parseDate(res.date).YMD
 		
-		if IsObject(wq.selectSingleNode("/root/pending/enroll"
-					. "[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']")) {		; MRN+DATE+S/N = perfect match
-			eventlog("PREVGRAB: " res.mrn " " date " " res.dev " - perfect match.",0)
-			continue
-		}
+		;~ if IsObject(wq.selectSingleNode("/root/pending/enroll"
+					;~ . "[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']")) {		; MRN+DATE+S/N = perfect match
+			;~ eventlog("PREVGRAB: " res.mrn " " date " " res.dev " - perfect match.",0)
+			;~ continue
+		;~ }
 		
 		dt := A_Now
 		dt -= date, Days
