@@ -803,7 +803,8 @@ parsePrevEnroll(txt) {
 			, name:parsename(el.3).lastfirst
 			, mrn:el.4
 			, dev:el.5
-			, prov:el.6 }
+			, prov:filterProv(el.6).name
+			, site:filterProv(el.6).site }
 	
 	/*	Check whether any params match this device
 	*/
