@@ -44,14 +44,8 @@ MainLoop:
 	wb.visible := gl.settings.isVisible
 	
 	PreventiceWebGrab("Enrollment")
-	if (gl.enroll_ct < 12) {
-		gl.FAIL := true
-	}
 	
 	PreventiceWebGrab("Inventory")
-	if (gl.inv_ct < 12) {
-		gl.FAIL := true
-	}
 	
 	if !(gl.FAIL) {
 		filedelete, % gl.files_dir "\prev.txt"
