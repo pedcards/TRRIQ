@@ -808,7 +808,12 @@ parsePrevEnroll(txt) {
 	
 	/*	Check whether any params match this device
 	*/
-		if enrollcheck("[mrn='" res.mrn "'][date='" res.date "'][dev='" res.dev "']") {	; MRN+DATE+S/N = perfect match
+		if enrollcheck("[name='" res.name "']"											; 6/6 perfect match
+			. "[mrn='" res.mrn "']"
+			. "[date='" res.date "']"
+			. "[dev='" res.dev "']"
+			. "[prov='" res.prov "']"
+			. "[site='" res.site "']" ) {
 			return
 		}
 		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
