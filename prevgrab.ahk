@@ -147,7 +147,7 @@ parsePreventiceEnrollment(tbl) {
 	lbl_prov := {"prov":"PROVIDER:"}
 	
 	done := 0
-	checkdays := 21
+	checkdays := gl.settings.checkdays
 	
 	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
 	{
@@ -173,12 +173,6 @@ parsePreventiceEnrollment(tbl) {
 		
 		res.name := parsename(res.name).lastfirst
 		date := parseDate(res.date).YMD
-		
-		;~ if IsObject(wq.selectSingleNode("/root/pending/enroll"
-					;~ . "[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']")) {		; MRN+DATE+S/N = perfect match
-			;~ eventlog("PREVGRAB: " res.mrn " " date " " res.dev " - perfect match.",0)
-			;~ continue
-		;~ }
 		
 		dt := A_Now
 		dt -= date, Days
