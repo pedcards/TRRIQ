@@ -145,10 +145,10 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 parsePreventiceEnrollment(tbl) {
 	global prevtxt, gl, wq
 	
-	lbl_rx := {"demo":"MRN:","dev":"Location:","prov":"GB-SCH-"}
-	lbl_pre := {"demo":"NAME:","dev":"SERIAL:","prov":"PROVIDER:"}
+	lbl_rx := {"demo":"MRN:","dev":"Location:","prov":"GB-SCH-"}						; regex to find blocks
+	lbl_pre := {"demo":"NAME:","dev":"SERIAL:","prov":"PROVIDER:"}						; prefix to attach to strings
 	
-	lbl_demo := {"name":"NAME:","mrn":"MRN:","date":"Created Date:"}
+	lbl_demo := {"name":"NAME:","mrn":"MRN:","date":"Created Date:"}					; regex for necessary fields
 	lbl_dev := {"dev":"SERIAL:"}
 	lbl_prov := {"prov":"PROVIDER:"}
 	
