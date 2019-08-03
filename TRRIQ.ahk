@@ -850,8 +850,8 @@ parsePrevEnroll(txt) {
 		wq.addElement("name",newID,res.name)
 		wq.addElement("mrn",newID,res.mrn)
 		wq.addElement("dev",newID,res.dev)
-		wq.addElement("prov",newID,filterProv(res.prov).name)
-		wq.addElement("site",newID,filterProv(res.prov).site)
+		wq.addElement("prov",newID,res.prov)
+		wq.addElement("site",newID,res.site)
 		wq.addElement("webgrab",newID,A_now)
 		
 		eventlog("Added new registration " res.mrn " " res.name " " res.date ".")
