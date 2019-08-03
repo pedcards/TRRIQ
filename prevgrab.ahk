@@ -159,12 +159,14 @@ parsePreventiceEnrollment(tbl) {
 	{
 		r_idx := A_index-1
 		trow := trows[r_idx]
+		if (trow.getAttribute("id")="") {												; skip the buffer rows
+			continue
+		}
 		res := []
 		loop % (tcols := trow.getElementsByTagName("td")).length						; loop through cols
 		{
-			if !(txt := tcols[A_Index-1].innertext) {										; text contents of tcell
-				continue
-			}
+			c_idx := A_Index-1
+			txt := tcols[c_idx].innertext
 			type := ObjHasValue(lbl_rx,txt,1)											; get type of cell based on regex object
 			txt := lbl_pre[type] " " txt "`n"										
 			
