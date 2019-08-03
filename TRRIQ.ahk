@@ -816,17 +816,22 @@ parsePrevEnroll(txt) {
 			. "[site='" res.site "']" ) {
 			return
 		}
-		if (id:=enrollcheck("[name='" res.name "']"										; 5/6 perfect match
-			. "[mrn='" res.mrn "']"														; everything but SITE
+		if (id:=enrollcheck("[name='" res.name "']"										; 4/6 perfect match
+			. "[mrn='" res.mrn "']"														; everything but PROV or SITE
 			. "[date='" res.date "']"
-			. "[dev='" res.dev "']"
-			. "[prov='" res.prov "']" )) {
+			. "[dev='" res.dev "']" )) {
 			en:=readWQ(id)
 			if (en.node="done") {
 				return
 			}
-			wqSetVal(id,"site",res.site)
-			eventlog(en.name " (" id ") changed WQ site to '" res.site "'")
+			if !(res.prov=en.prov) {
+				wqSetVal(id,"prov",res.prov)
+				eventlog(en.name " (" id ") changed WQ prov '" en.prov "' ==> '" res.prov "'")
+			}
+			if !(res.site=en.site) {
+				wqSetVal(id,"site",res.site)
+				eventlog(en.name " (" id ") changed WQ site '" en.site "' ==> '" res.site "'")
+			}
 			return
 		}
 		if (id:=enrollcheck("[mrn='" res.mrn "']"										; Probably perfect MRN+S/N+DATE
