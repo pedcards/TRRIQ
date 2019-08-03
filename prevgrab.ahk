@@ -145,7 +145,13 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 parsePreventiceEnrollment(tbl) {
 	global prevtxt, gl, wq
 	
-	lbl := ["name","mrn","date","dev","prov"]
+	lbl_rx := {"demo":"MRN:","dev":"Location:","prov":"GB-SCH-"}
+	lbl_pre := {"demo":"NAME:","dev":"SERIAL:","prov":"PROVIDER:"}
+	
+	lbl_demo := {"name":"NAME:","mrn":"MRN:","date":"Created Date:"}
+	lbl_dev := {"dev":"SERIAL:"}
+	lbl_prov := {"prov":"PROVIDER:"}
+	
 	done := 0
 	checkdays := 21
 	
@@ -153,13 +159,22 @@ parsePreventiceEnrollment(tbl) {
 	{
 		r_idx := A_index-1
 		trow := trows[r_idx]
-		tcols := trow.getElementsByTagName("td")
 		res := []
-		loop % lbl.length()																; loop through cols
+		loop % (tcols := trow.getElementsByTagName("td")).length						; loop through cols
 		{
-			c_idx := A_Index-1
-			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
+			if !(txt := tcols[A_Index-1].innertext) {										; text contents of tcell
+				continue
+			}
+			type := ObjHasValue(lbl_rx,txt,1)											; get type of cell based on regex object
+			txt := lbl_pre[type] " " txt "`n"										
+			
+			for key,val in lbl_%type%													; loop through expected fields in lbl_type
+			{
+				i := stregX(txt,val,1,1,"\R",1)											; string between lbl and \R
+				res[key] := trim(i,": `r`n")
+			}
 		}
+		
 		res.name := parsename(res.name).lastfirst
 		date := parseDate(res.date).YMD
 		
