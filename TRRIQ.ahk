@@ -828,19 +828,20 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			if !(res.prov=en.prov) {
-				wqSetVal(id,"prov",res.prov)
-				eventlog(en.name " (" id ") changed WQ prov '" en.prov "' ==> '" res.prov "'")
-			}
-			if !(res.site=en.site) {
-				wqSetVal(id,"site",res.site)
-				eventlog(en.name " (" id ") changed WQ site '" en.site "' ==> '" res.site "'")
-			}
+			parsePrevElement(id,en,res,"prov")
+			parsePrevElement(id,en,res,"site")
 			return
 		}
 		if (id:=enrollcheck("[mrn='" res.mrn "']"										; Probably perfect MRN+S/N+DATE
 			. "[date='" res.date "']"
 			. "[dev='" res.dev "']" )) {
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			parsePrevElement(id,en,res,"name")
+			parsePrevElement(id,en,res,"prov")
+			parsePrevElement(id,en,res,"site")
 			return
 		}
 		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
@@ -887,6 +888,19 @@ parsePrevEnroll(txt) {
 		wq.addElement("webgrab",newID,A_now)
 		
 		eventlog("Added new registration " res.mrn " " res.name " " res.date ".")
+	
+	return
+}
+
+parsePrevElement(id,en,res,el) {
+	global wq
+	
+	if (res[el]=en[el]) {																; Attr[el] is same in EN (wq) as RES (txt)
+		return																			; don't do anything
+	}
+	
+	wqSetVal(id,el,res[el])
+	eventlog(en.name " (" id ") changed WQ " el " '" en[el] "' ==> '" res[el] "'")
 	
 	return
 }
