@@ -831,7 +831,11 @@ readPrevTxt() {
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel
 	n := ErrorLevel
-
+	
+	k := wq.selectSingleNode("/root/inventory")											; create fresh inventory node
+	k.parentNode.removeChild(k)
+	wq.addElement("inventory","/root")
+	
 	loop, read, % ".\files\prev.txt"
 	{
 		Progress, % 100*A_Index/n
@@ -881,22 +885,28 @@ parsePrevEnroll(txt) {
 			. "[site='" res.site "']" ) {
 			return
 		}
-		if (id:=enrollcheck("[name='" res.name "']"										; 5/6 perfect match
-			. "[mrn='" res.mrn "']"														; everything but SITE
+		if (id:=enrollcheck("[name='" res.name "']"										; 4/6 perfect match
+			. "[mrn='" res.mrn "']"														; everything but PROV or SITE
 			. "[date='" res.date "']"
-			. "[dev='" res.dev "']"
-			. "[prov='" res.prov "']" )) {
+			. "[dev='" res.dev "']" )) {
 			en:=readWQ(id)
 			if (en.node="done") {
 				return
 			}
-			wqSetVal(id,"site",res.site)
-			eventlog(en.name " (" id ") changed WQ site to '" res.site "'")
+			parsePrevElement(id,en,res,"prov")
+			parsePrevElement(id,en,res,"site")
 			return
 		}
 		if (id:=enrollcheck("[mrn='" res.mrn "']"										; Probably perfect MRN+S/N+DATE
 			. "[date='" res.date "']"
 			. "[dev='" res.dev "']" )) {
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			parsePrevElement(id,en,res,"name")
+			parsePrevElement(id,en,res,"prov")
+			parsePrevElement(id,en,res,"site")
 			return
 		}
 		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
@@ -947,6 +957,19 @@ parsePrevEnroll(txt) {
 	return
 }
 
+parsePrevElement(id,en,res,el) {
+	global wq
+	
+	if (res[el]=en[el]) {																; Attr[el] is same in EN (wq) as RES (txt)
+		return																			; don't do anything
+	}
+	
+	wqSetVal(id,el,res[el])
+	eventlog(en.name " (" id ") changed WQ " el " '" en[el] "' ==> '" res[el] "'")
+	
+	return
+}
+
 parsePrevDev(txt) {
 	global wq
 	el := StrSplit(txt,"|")
@@ -959,7 +982,7 @@ parsePrevDev(txt) {
 	}
 	
 	wq.addElement("dev","/root/inventory",{model:dev,ser:ser})
-	eventlog("Added new Inventory dev " ser)
+	;~ eventlog("Added new Inventory dev " ser)
 	
 	return
 }
