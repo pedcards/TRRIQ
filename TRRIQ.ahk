@@ -3736,7 +3736,7 @@ Holter_BGM:
 	
 	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
-	demog := columns(newtxt,"Subject Data","Ventricular Tachycardia",,"Test Start")
+	demog := columns(newtxt,"Patient\s+Information","Ventricular Tachycardia",,"Test Start")
 	fields[1] := ["Patient Name","Age","MRN","Date Of Birth","Gender","Site"
 				, "Test Start","Test End","Test Duration","Analysis Duration"]
 	labels[1] := ["Name","null","MRN","DOB","Sex","null"
