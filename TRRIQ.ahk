@@ -917,7 +917,7 @@ parsePrevDev(txt) {
 	}
 	
 	wq.addElement("dev","/root/inventory",{model:dev,ser:ser})
-	eventlog("Added new Inventory dev " ser)
+	;~ eventlog("Added new Inventory dev " ser)
 	
 	return
 }
