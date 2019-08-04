@@ -766,7 +766,11 @@ readPrevTxt() {
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel
 	n := ErrorLevel
-
+	
+	k := wq.selectSingleNode("/root/inventory")											; create fresh inventory node
+	k.parentNode.removeChild(k)
+	wq.addElement("inventory","/root")
+	
 	loop, read, % ".\files\prev.txt"
 	{
 		Progress, % 100*A_Index/n
