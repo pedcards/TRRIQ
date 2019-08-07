@@ -137,7 +137,8 @@ MainLoop: ; ===================== This is the main part ========================
 		;~ }
 		if (phase~="Register") {
 			eventlog("Start " phase ".")
-			BGregister(RegExReplace(phase,"Register"))
+			MsgBox here
+			;~ BGregister(RegExReplace(phase,"Register"))
 		}
 		if (phase="Upload") {
 			MsgBox, 33, Verify, Do you want to upload a MORTARA HOLTER to Preventice?
@@ -169,7 +170,7 @@ PhaseGUI:
 	Gui, Add, Text, wp h70
 	Gui, Add, Text, Y+10 wp h24 Center, Register/activate a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
-		, Y+10 wp h40 vInventory gPhaseTask Disabled
+		, Y+10 wp h40 vRegister gPhaseTask DISABLED
 		, Go to ORDERS tab
 	Gui, Add, Text, wp h30
 	Gui, Add, Text, Y+10 wp h100 Center, Transmit MORTARA HOLTER`nto Preventice
