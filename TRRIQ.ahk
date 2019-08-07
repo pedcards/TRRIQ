@@ -166,13 +166,13 @@ PhaseGUI:
 	
 	Gui, Font, Bold
 	Gui, Add, Button
-		, Y+10 wp h40 gWQlist
+		, Y+10 wp h40 gPhaseRefresh
 		, Refresh lists
 	Gui, Add, Text, wp h70
 	Gui, Add, Text, Y+10 wp h24 Center, Register/activate a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
-		, Y+10 wp h40 vRegister gPhaseTask DISABLED
-		, Go to ORDERS tab
+		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
+		, No active orders
 	Gui, Add, Text, wp h30
 	Gui, Add, Text, Y+10 wp h100 Center, Transmit MORTARA HOLTER`nto Preventice
 	Gui, Font, Normal
@@ -358,6 +358,20 @@ PhaseTask:
 	phase := A_GuiControl
 	Gui, phase:Hide
 	return
+}
+
+PhaseOrder:
+{
+	phase := "Register"
+	GuiControl, phase:Choose, WQtab, ORDERS
+	return
+}
+
+PhaseRefresh:
+{
+	GuiControl, Text, ORDERS, No active orders
+	GuiControl, Disable, orders
+	WQlist()
 }
 
 idleTimer() {
@@ -797,7 +811,8 @@ WQlist() {
 			, e0.mrn																	; mrn
 			, e0.AttgL																	; prov
 			, "")																		; fulldisc present, make blank
-		
+		GuiControl, Enable, Register
+		GuiControl, Text, Register, Go to ORDERS tab
 	}
 	fileIn :=
 	progress, off
