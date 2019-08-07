@@ -362,7 +362,6 @@ PhaseTask:
 
 PhaseOrder:
 {
-	phase := "Register"
 	GuiControl, phase:Choose, WQtab, ORDERS
 	return
 }
@@ -1176,7 +1175,8 @@ readWQorder() {
 	tmp := cMsgBox("Register ambulatory monitor"
 		,"`nSelect which type of`ndevice to register."
 		,"`nMORTARA`n24 hr Holter`n`n|`nBG MINI or ZIO`n7/14-day monitor`n`n|`nBG HEART`n30-day event recorder`n`n"
-		,"Q","v")
+		,"Q", "" , 0
+		, ".\H3.png" , ".\BGmini.png", ".\BGheart.png")
 	if instr(tmp,"xClose") {
 		return
 	}
@@ -5024,7 +5024,7 @@ readIni(section) {
 	return i_res
 }
 
-#Include CMsgBox.ahk
+#Include CMsgBox-img.ahk
 #Include InputBox.ahk
 #Include Class_LV_Colors.ahk
 #Include xml.ahk
