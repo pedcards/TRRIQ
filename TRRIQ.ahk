@@ -162,45 +162,26 @@ PhaseGUI:
 	Gui, Add, Button
 		, Y+10 wp h40 gWQlist
 		, Refresh lists
-	;~ Gui, Add, Button
-		;~ , Y+10 wp h40 vEnrollment gPhaseTask Disabled
-		;~ , ;Grab Preventice enrollments
-	;~ Gui, Add, Button
-		;~ , Y+10 wp h40 vInventory gPhaseTask Disabled
-		;~ , ;Grab Preventice inventory
-	Gui, Add, Text, wp h100
-	Gui, Add, Text, Y+20 wp h80 Center, Register BodyGuardian MONITOR
-	Gui, Add, Text, Y+20 wp h80 Center, Prepare/Upload MORTARA HOLTER
+	Gui, Add, Text, wp h70
+	Gui, Add, Text, Y+10 wp h24 Center, Register/activate a`nHOLTER or EVENT MONITOR
+	Gui, Add, Button
+		, Y+10 wp h40 vInventory gPhaseTask Disabled
+		, Go to ORDERS tab
+	Gui, Add, Text, wp h30
+	Gui, Add, Text, Y+10 wp h100 Center, Transmit MORTARA HOLTER`nto Preventice
 	Gui, Font, Normal
 	
-	GuiControlGet, btn1, Pos, BodyGuardian
+	;~ GuiControlGet, btn1, Pos, BodyGuardian
 	GuiControlGet, btn2, Pos, MORTARA
 	
 	btnW := 90
 	btnH := 50
-	Gui, Add, Picture
-		, % "Y" btn1Y+18 " X" btn1X+(wksloc="Main Campus" ? 120 : 60)
-		. " w" btnW " h" btnH " "
-		. " +0x1000 vRegisterBGM " (wksloc="Main Campus" ? "gPhaseTask" : "")
-		, .\BGMini.png
-	Gui, Add, Picture
-		, % "Y" btn1Y+18 " X" btn1X+(wksloc="Main Campus" ? 10 : 60)
-		. " w" btnW " h" btnH " "
-		. " +0x1000 vRegisterBGH gPhaseTask"
-		, .\BGHeart.png
 	
 	Gui, Add, Picture
-		, % "Y" btn2Y+18 " X" btn2X+60 
+		, % "Y" btn2Y+36 " X" btn2X+60 
 		. " w" btnW " h" btnH " "
 		. " +0x1000 vUpload gPhaseTask"
 		, .\H3.png
-	
-	GuiControl
-		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
-		, Grab Preventice enrollments
-	GuiControl
-		, % (wksloc="Main Campus" ? "Enable" : "Disable") 
-		, Grab Preventice inventory
 	
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
