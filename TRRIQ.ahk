@@ -127,21 +127,25 @@ MainLoop: ; ===================== This is the main part ========================
 		Gosub PhaseGUI
 		WinWaitClose, TRRIQ Dashboard
 		
-		if (phase="Enrollment") {
-			eventlog("Update Preventice enrollments.")
-			CheckPreventiceWeb("Patient Enrollment")
-		}
-		if (phase="Inventory") {
-			eventlog("Update Preventice inventory.")
-			CheckPreventiceWeb("Facilities")
-		}
+		;~ if (phase="Enrollment") {
+			;~ eventlog("Update Preventice enrollments.")
+			;~ CheckPreventiceWeb("Patient Enrollment")
+		;~ }
+		;~ if (phase="Inventory") {
+			;~ eventlog("Update Preventice inventory.")
+			;~ CheckPreventiceWeb("Facilities")
+		;~ }
 		if (phase~="Register") {
 			eventlog("Start " phase ".")
 			BGregister(RegExReplace(phase,"Register"))
 		}
 		if (phase="Upload") {
-			eventlog("Start Mortara preparation/upload.")
-			MortaraUpload()
+			MsgBox, 33, Verify, Do you want to upload a MORTARA HOLTER to Preventice?
+			IfMsgBox, Yes
+			{
+				eventlog("Start Mortara upload.")
+				MortaraUpload()
+			}
 		}
 	}
 	
