@@ -141,8 +141,9 @@ MainLoop: ; ===================== This is the main part ========================
 			;~ BGregister(RegExReplace(phase,"Register"))
 		}
 		if (phase="Upload") {
-			MsgBox, 33, Verify, Do you want to upload a MORTARA HOLTER to Preventice?
-			IfMsgBox, Yes
+			MsgBox, 262177, Verify, % "Ready to upload a MORTARA HOLTER to Preventice?`n`n"
+				. "Be sure to select the ""TRANSFER"" activity`nin the Mortara Web Upload window."
+			IfMsgBox, OK
 			{
 				eventlog("Start Mortara upload.")
 				MortaraUpload()
