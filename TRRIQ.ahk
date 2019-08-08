@@ -2539,17 +2539,6 @@ BGregister(type) {
 	SetTimer, idleTimer, Off
 	checkCitrix()
 	
-	MsgBox, 262177
-		, BodyGuardian MONITOR
-		, % "Start " 
-		. (type="BGH" ? "30-day BG Heart" : "")
-		. (type="BGM" ? "14-day BG Mini" : "")
-		. " registration?"
-	IfMsgBox, Cancel
-	{
-		return
-	}
-	
 	fetchQuit := false
 	gosub getDem																		; need to grab CIS demographics
 	if (fetchQuit=true) {
