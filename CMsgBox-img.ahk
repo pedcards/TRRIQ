@@ -76,7 +76,7 @@ CMsgBox( title, text, buttons, icon="", vert="", owner=0, img* ) {
     
     Gui %GuiID%:Add, Button, % ((vert="v") 
       ? "" 
-      : "xs+60 ys " ) 
+      : "xs+90 ys " ) 
           . ( InStr( Button%A_Index%, "*" ) 
             ? "Default " 
             : " " ) 
