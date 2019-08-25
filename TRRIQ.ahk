@@ -410,10 +410,10 @@ checkCitrix() {
 	if (A_UserName="tchun1") {
 		return
 	}
-	if (A_ComputerName~="EWCS") {														; running on a local machine
+	if (A_ComputerName~="EWC") {														; running on a local machine
 		return																			; return successfully
 	}
-	else if (A_ComputerName~="PPWC") {
+	else if (A_ComputerName~="PPW") {
 		MsgBox, 4112, Environment error, TRRIQ cannot be run from Citrix/VDI`nWill now exit...
 		IfMsgBox, OK
 		{
