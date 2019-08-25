@@ -430,10 +430,10 @@ checkCitrix() {
 	if (A_UserName="tchun1") {
 		return
 	}
-	if (A_ComputerName~="EWCS") {														; running on a local machine
+	if (A_ComputerName~="EWC") {														; running on a local machine
 		return																			; return successfully
 	}
-	else if (A_ComputerName~="PPWC") {
+	else if (A_ComputerName~="PPW") {
 		MsgBox, 4112, Environment error, TRRIQ cannot be run from Citrix/VDI`nWill now exit...
 		IfMsgBox, OK
 		{
@@ -822,9 +822,9 @@ readPrevTxt() {
 	global wq
 	
 	filenm := ".\files\prev.txt"
-	prevdt := wq.selectSingleNode("/root/pending").getAttribute("update")
+	prevtxtdt := wq.selectSingleNode("/root/pending").getAttribute("update")
 	FileGetTime, filedt, % filenm
-	if (filedt=prevdt) {																; update matches filedt means no change
+	if (filedt=prevtxtdt) {																; update matches filedt means no change
 		return
 	}
 	
