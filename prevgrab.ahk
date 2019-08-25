@@ -182,13 +182,14 @@ parsePreventiceEnrollment(tbl) {
 			done ++
 		}
 		
-		prevtxt .= "enroll|" 
-			. date "|"
+		prevtxt := "enroll|" 															; prepends enroll item so will be read in chronologic
+			. date "|"																	; rather than reverse chronologic order
 			. res.name "|"
 			. res.mrn "|"
 			. res.dev "|"
 			. res.prov "|"
 			. A_now "`n"
+			. prevtxt
 		
 		gl.enroll_ct ++
 	}
