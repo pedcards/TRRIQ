@@ -756,9 +756,9 @@ readPrevTxt() {
 	global wq
 	
 	filenm := ".\files\prev.txt"
-	prevdt := wq.selectSingleNode("/root/pending").getAttribute("update")
+	prevtxtdt := wq.selectSingleNode("/root/pending").getAttribute("update")
 	FileGetTime, filedt, % filenm
-	if (filedt=prevdt) {																; update matches filedt means no change
+	if (filedt=prevtxtdt) {																; update matches filedt means no change
 		return
 	}
 	
