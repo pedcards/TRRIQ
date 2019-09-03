@@ -62,7 +62,10 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 progress,,,Scanning providers...
 Docs := Object()
 tmpChk := false
-Loop, Read, %chipDir%outdocs.csv
+if FileExist(chipDir "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
+	FileCopy, %chipDir%outdocs.csv, .\files\outdocs.csv, 1
+}
+Loop, Read, .\files\outdocs.csv
 {
 	tmp := StrSplit(A_LoopReadLine,",","""")
 	if (tmp.1="Name" or tmp.1="end" or tmp.1="") {				; header, end, or blank lines
