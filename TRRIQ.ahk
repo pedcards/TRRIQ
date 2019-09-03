@@ -2649,6 +2649,8 @@ getPatInfo() {
 		if (i~="i)("
 			. "Legal guardian|"															; skip lines containing these strings
 			. "Birth certificate|"
+			. "Power of Attorney|"
+			. "Legal documentation|"
 			. "Comment|"
 			. "\(.*\)|"
 			. "Custody|"
