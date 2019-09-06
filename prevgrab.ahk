@@ -44,22 +44,15 @@ MainLoop:
 	wb.visible := gl.settings.isVisible
 	
 	PreventiceWebGrab("Enrollment")
-	if (gl.enroll_ct < 12) {
-		gl.FAIL := true
-	}
 	
 	PreventiceWebGrab("Inventory")
-	if (gl.inv_ct < 12) {
-		gl.FAIL := true
-	}
 	
-	if !(gl.FAIL) {
-		filedelete, % gl.files_dir "\prev.txt"
-		FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
-		eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
-	} else {
-		eventlog("PREVGRAB: Critical hit. Abort update.")
+	if (gl.FAIL) {																		; Note when a table had failed to load
+		eventlog("PREVGRAB: Critical hit.")
 	}
+	filedelete, % gl.files_dir "\prev.txt"												; writeout each one regardless
+	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
+	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
 	IEclose()
 	
@@ -145,29 +138,40 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 parsePreventiceEnrollment(tbl) {
 	global prevtxt, gl, wq
 	
-	lbl := ["name","mrn","date","dev","prov"]
+	lbl_rx := {"demo":"MRN:","dev":"Location:","prov":"GB-SCH-"}						; regex to find blocks
+	lbl_pre := {"demo":"NAME:","dev":"SERIAL:","prov":"PROVIDER:"}						; prefix to attach to strings
+	
+	lbl_demo := {"name":"NAME:","mrn":"MRN:","date":"Created Date:"}					; regex for necessary fields
+	lbl_dev := {"dev":"SERIAL:"}
+	lbl_prov := {"prov":"PROVIDER:"}
+	
 	done := 0
-	checkdays := 21
+	checkdays := gl.settings.checkdays
 	
 	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
 	{
 		r_idx := A_index-1
 		trow := trows[r_idx]
-		tcols := trow.getElementsByTagName("td")
-		res := []
-		loop % lbl.length()																; loop through cols
-		{
-			c_idx := A_Index-1
-			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
-		}
-		res.name := parsename(res.name).lastfirst
-		date := parseDate(res.date).YMD
-		
-		if IsObject(wq.selectSingleNode("/root/pending/enroll"
-					. "[mrn='" res.mrn "'][date='" date "'][dev='" res.dev "']")) {		; MRN+DATE+S/N = perfect match
-			eventlog("PREVGRAB: " res.mrn " " date " " res.dev " - perfect match.",0)
+		if (trow.getAttribute("id")="") {												; skip the buffer rows
 			continue
 		}
+		res := []
+		loop % (tcols := trow.getElementsByTagName("td")).length						; loop through cols
+		{
+			c_idx := A_Index-1
+			txt := tcols[c_idx].innertext
+			type := ObjHasValue(lbl_rx,txt,1)											; get type of cell based on regex object
+			txt := lbl_pre[type] " " txt "`n"										
+			
+			for key,val in lbl_%type%													; loop through expected fields in lbl_type
+			{
+				i := stregX(txt,val,1,1,"\R",1)											; string between lbl and \R
+				res[key] := trim(i,": `r`n")
+			}
+		}
+		
+		res.name := parsename(res.name).lastfirst
+		date := parseDate(res.date).YMD
 		
 		dt := A_Now
 		dt -= date, Days
@@ -177,13 +181,14 @@ parsePreventiceEnrollment(tbl) {
 			done ++
 		}
 		
-		prevtxt .= "enroll|" 
-			. date "|"
+		prevtxt := "enroll|" 															; prepends enroll item so will be read in chronologic
+			. date "|"																	; rather than reverse chronologic order
 			. res.name "|"
 			. res.mrn "|"
 			. res.dev "|"
 			. res.prov "|"
 			. A_now "`n"
+			. prevtxt
 		
 		gl.enroll_ct ++
 	}
@@ -270,8 +275,8 @@ IEurl(url) {
 		}
 		
 		if instr(wb.LocationURL,"UserLogin") {
-			eventlog("PREVGRAB: Login " A_index,0)
 			preventiceLogin()
+			eventlog("PREVGRAB: Login try " A_index)
 		}
 		else {
 			eventlog("PREVGRAB: " url,0)

@@ -22,8 +22,8 @@ initHL7() {
 }
 
 processHL7(fnam) {
-	global hl7Dir, fldval
-	FileRead, txt, % hl7Dir . fnam
+	global fldval
+	FileRead, txt, % fnam
 	StringReplace, txt, txt, `r`n, `r														; convert `r`n to `r
 	StringReplace, txt, txt, `n, `r															; convert `n to `r
 	loop, parse, txt, `r, `n																; parse HL7 message, split on `r, ignore `n
@@ -97,7 +97,7 @@ hl7line(seg) {
 			File := FileOpen( hl7Dir . res.Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
-			seg := "OBX|" fld.2 "|ED|PDFReport"
+			;~ seg := "OBX|" fld.2 "|ED|PDFReport"
 		} else {
 			label := res.resCode													; result value
 			result := strQ(res.resValue, "###")

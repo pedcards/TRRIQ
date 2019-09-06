@@ -62,7 +62,10 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 progress,,,Scanning providers...
 Docs := Object()
 tmpChk := false
-Loop, Read, %chipDir%outdocs.csv
+if FileExist(chipDir "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
+	FileCopy, %chipDir%outdocs.csv, .\files\outdocs.csv, 1
+}
+Loop, Read, .\files\outdocs.csv
 {
 	tmp := StrSplit(A_LoopReadLine,",","""")
 	if (tmp.1="Name" or tmp.1="end" or tmp.1="") {				; header, end, or blank lines
@@ -144,6 +147,8 @@ MainLoop: ; ===================== This is the main part ========================
 			MortaraUpload()
 		}
 	}
+	
+	checkHl7Orders()
 	
 	ExitApp
 }
@@ -410,10 +415,10 @@ checkCitrix() {
 	if (A_UserName="tchun1") {
 		return
 	}
-	if (A_ComputerName~="EWCS") {														; running on a local machine
+	if (A_ComputerName~="EWC") {														; running on a local machine
 		return																			; return successfully
 	}
-	else if (A_ComputerName~="PPWC") {
+	else if (A_ComputerName~="PPW") {
 		MsgBox, 4112, Environment error, TRRIQ cannot be run from Citrix/VDI`nWill now exit...
 		IfMsgBox, OK
 		{
@@ -576,6 +581,8 @@ WQlist() {
 	}
 	wq.save("worklist.xml")
 	FileDelete, .lock
+	
+	checkHl7Orders()
 	
 	if (wksloc="Main Campus") {
 		
@@ -752,13 +759,27 @@ WQlist() {
 	return
 }
 
+CheckHl7Orders() {
+	global hl7OutDir
+	
+	loop, files, % hl7OutDir "Failed\*.hl7"
+	{
+		filenm := A_LoopFileName
+		filenmfull := A_LoopFileFullPath
+		eventlog("Resending failed registration: " filenm)
+		FileMove, % filenmfull, % hl7OutDir filenm
+	}
+	
+	return
+}
+
 readPrevTxt() {
 	global wq
 	
 	filenm := ".\files\prev.txt"
-	prevdt := wq.selectSingleNode("/root/pending").getAttribute("update")
+	prevtxtdt := wq.selectSingleNode("/root/pending").getAttribute("update")
 	FileGetTime, filedt, % filenm
-	if (filedt=prevdt) {																; update matches filedt means no change
+	if (filedt=prevtxtdt) {																; update matches filedt means no change
 		return
 	}
 	
@@ -766,7 +787,11 @@ readPrevTxt() {
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel
 	n := ErrorLevel
-
+	
+	k := wq.selectSingleNode("/root/inventory")											; create fresh inventory node
+	k.parentNode.removeChild(k)
+	wq.addElement("inventory","/root")
+	
 	loop, read, % ".\files\prev.txt"
 	{
 		Progress, % 100*A_Index/n
@@ -783,7 +808,7 @@ readPrevTxt() {
 	loop, % (devs := wq.selectNodes("/root/inventory/dev")).length						; Find dev that already exist in Pending
 	{
 		k := devs.item(A_Index-1)
-		dev := k.getAttribute("dev")
+		dev := k.getAttribute("model")
 		ser := k.getAttribute("ser")
 		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" dev " - " ser "']")) {	; exists in Pending
 			k.parentNode.removeChild(k)
@@ -803,14 +828,44 @@ parsePrevEnroll(txt) {
 			, name:parsename(el.3).lastfirst
 			, mrn:el.4
 			, dev:el.5
-			, prov:el.6 }
+			, prov:filterProv(el.6).name
+			, site:filterProv(el.6).site }
 	
 	/*	Check whether any params match this device
 	*/
-		if enrollcheck("[mrn='" res.mrn "'][date='" res.date "'][dev='" res.dev "']") {	; MRN+DATE+S/N = perfect match
+		if enrollcheck("[name='" res.name "']"											; 6/6 perfect match
+			. "[mrn='" res.mrn "']"
+			. "[date='" res.date "']"
+			. "[dev='" res.dev "']"
+			. "[prov='" res.prov "']"
+			. "[site='" res.site "']" ) {
 			return
 		}
-		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE
+		if (id:=enrollcheck("[name='" res.name "']"										; 4/6 perfect match
+			. "[mrn='" res.mrn "']"														; everything but PROV or SITE
+			. "[date='" res.date "']"
+			. "[dev='" res.dev "']" )) {
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			parsePrevElement(id,en,res,"prov")
+			parsePrevElement(id,en,res,"site")
+			return
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "']"										; Probably perfect MRN+S/N+DATE
+			. "[date='" res.date "']"
+			. "[dev='" res.dev "']" )) {
+			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			parsePrevElement(id,en,res,"name")
+			parsePrevElement(id,en,res,"prov")
+			parsePrevElement(id,en,res,"site")
+			return
+		}
+		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
 			en:=readWQ(id)
 			if (en.node="done") {
 				return
@@ -849,11 +904,24 @@ parsePrevEnroll(txt) {
 		wq.addElement("name",newID,res.name)
 		wq.addElement("mrn",newID,res.mrn)
 		wq.addElement("dev",newID,res.dev)
-		wq.addElement("prov",newID,filterProv(res.prov).name)
-		wq.addElement("site",newID,filterProv(res.prov).site)
+		wq.addElement("prov",newID,res.prov)
+		wq.addElement("site",newID,res.site)
 		wq.addElement("webgrab",newID,A_now)
 		
-		eventlog("Added new registration " res.mrn " " res.name " " res.date ".")
+		eventlog("Found new registration " res.mrn " " res.name " " res.date ".")
+	
+	return
+}
+
+parsePrevElement(id,en,res,el) {
+	global wq
+	
+	if (res[el]=en[el]) {																; Attr[el] is same in EN (wq) as RES (txt)
+		return																			; don't do anything
+	}
+	
+	wqSetVal(id,el,res[el])
+	eventlog(en.name " (" id ") changed WQ " el " '" en[el] "' ==> '" res[el] "'")
 	
 	return
 }
@@ -870,7 +938,7 @@ parsePrevDev(txt) {
 	}
 	
 	wq.addElement("dev","/root/inventory",{model:dev,ser:ser})
-	eventlog("Added new Inventory dev " ser)
+	;~ eventlog("Added new Inventory dev " ser)
 	
 	return
 }
@@ -1008,7 +1076,7 @@ readWQlv:
 		Gui, phase:Hide
 		
 		progress, 25 , % fnam, Extracting data
-		processHL7(fnam)																; extract DDE to fldVal, and PDF into hl7Dir
+		processHL7(hl7Dir . fnam)														; extract DDE to fldVal, and PDF into hl7Dir
 		moveHL7dem()																	; prepopulate the fldval["dem-"] values
 		
 		progress, 50 , % fnam, Processing PDF
@@ -2602,6 +2670,8 @@ getPatInfo() {
 		if (i~="i)("
 			. "Legal guardian|"															; skip lines containing these strings
 			. "Birth certificate|"
+			. "Power of Attorney|"
+			. "Legal documentation|"
 			. "Comment|"
 			. "\(.*\)|"
 			. "Custody|"
@@ -2889,7 +2959,8 @@ outputfiles:
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
-	FileDelete, % hl7dir fileNam ".hl7"														; We can delete the original HL7, if exists
+	;~ FileDelete, % hl7dir fileNam ".hl7"														; We can delete the original HL7, if exists
+	FileMove, % hl7dir fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
 	fileWQ := ma_date "," user "," 															; date processed and MA user
@@ -3564,7 +3635,7 @@ Holter_BGM:
 	
 	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
-	demog := columns(newtxt,"Subject Data","Ventricular Tachycardia",,"Test Start")
+	demog := columns(newtxt,"Patient\s+Information","Ventricular Tachycardia",,"Test Start")
 	fields[1] := ["Patient Name","Age","MRN","Date Of Birth","Gender","Site"
 				, "Test Start","Test End","Test Duration","Analysis Duration"]
 	labels[1] := ["Name","null","MRN","DOB","Sex","null"
