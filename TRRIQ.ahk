@@ -762,7 +762,7 @@ WQlist() {
 CheckHl7Orders() {
 	global hl7OutDir
 	
-	loop, files, % hl7OutDir "failed\*.hl7"
+	loop, files, % hl7OutDir "Failed\*.hl7"
 	{
 		filenm := A_LoopFileName
 		filenmfull := A_LoopFileFullPath
