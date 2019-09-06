@@ -148,6 +148,8 @@ MainLoop: ; ===================== This is the main part ========================
 		}
 	}
 	
+	checkHl7Orders()
+	
 	ExitApp
 }
 
@@ -579,6 +581,8 @@ WQlist() {
 	}
 	wq.save("worklist.xml")
 	FileDelete, .lock
+	
+	checkHl7Orders()
 	
 	if (wksloc="Main Campus") {
 		
