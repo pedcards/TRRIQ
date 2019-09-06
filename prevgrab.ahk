@@ -47,13 +47,12 @@ MainLoop:
 	
 	PreventiceWebGrab("Inventory")
 	
-	if !(gl.FAIL) {
-		filedelete, % gl.files_dir "\prev.txt"
-		FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
-		eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
-	} else {
-		eventlog("PREVGRAB: Critical hit. Abort update.")
+	if (gl.FAIL) {																		; Note when a table had failed to load
+		eventlog("PREVGRAB: Critical hit.")
 	}
+	filedelete, % gl.files_dir "\prev.txt"												; writeout each one regardless
+	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
+	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
 	IEclose()
 	
@@ -182,13 +181,14 @@ parsePreventiceEnrollment(tbl) {
 			done ++
 		}
 		
-		prevtxt .= "enroll|" 
-			. date "|"
+		prevtxt := "enroll|" 															; prepends enroll item so will be read in chronologic
+			. date "|"																	; rather than reverse chronologic order
 			. res.name "|"
 			. res.mrn "|"
 			. res.dev "|"
 			. res.prov "|"
 			. A_now "`n"
+			. prevtxt
 		
 		gl.enroll_ct ++
 	}

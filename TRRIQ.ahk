@@ -62,7 +62,10 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 progress,,,Scanning providers...
 Docs := Object()
 tmpChk := false
-Loop, Read, %chipDir%outdocs.csv
+if FileExist(chipDir "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
+	FileCopy, %chipDir%outdocs.csv, .\files\outdocs.csv, 1
+}
+Loop, Read, .\files\outdocs.csv
 {
 	tmp := StrSplit(A_LoopReadLine,",","""")
 	if (tmp.1="Name" or tmp.1="end" or tmp.1="") {				; header, end, or blank lines
@@ -150,6 +153,8 @@ MainLoop: ; ===================== This is the main part ========================
 			}
 		}
 	}
+	
+	checkHl7Orders()
 	
 	ExitApp
 }
@@ -598,6 +603,8 @@ WQlist() {
 	wq.save("worklist.xml")
 	FileDelete, .lock
 	
+	checkHl7Orders()
+	
 	if (wksloc="Main Campus") {
 		
 	Gui, ListView, WQlv_in
@@ -818,6 +825,20 @@ WQlist() {
 	return
 }
 
+CheckHl7Orders() {
+	global hl7OutDir
+	
+	loop, files, % hl7OutDir "Failed\*.hl7"
+	{
+		filenm := A_LoopFileName
+		filenmfull := A_LoopFileFullPath
+		eventlog("Resending failed registration: " filenm)
+		FileMove, % filenmfull, % hl7OutDir filenm
+	}
+	
+	return
+}
+
 readPrevTxt() {
 	global wq
 	
@@ -953,7 +974,7 @@ parsePrevEnroll(txt) {
 		wq.addElement("site",newID,res.site)
 		wq.addElement("webgrab",newID,A_now)
 		
-		eventlog("Added new registration " res.mrn " " res.name " " res.date ".")
+		eventlog("Found new registration " res.mrn " " res.name " " res.date ".")
 	
 	return
 }
@@ -2764,6 +2785,8 @@ getPatInfo() {
 		if (i~="i)("
 			. "Legal guardian|"															; skip lines containing these strings
 			. "Birth certificate|"
+			. "Power of Attorney|"
+			. "Legal documentation|"
 			. "Comment|"
 			. "\(.*\)|"
 			. "Custody|"
