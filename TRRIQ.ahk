@@ -755,6 +755,20 @@ WQlist() {
 	return
 }
 
+CheckHl7Orders() {
+	global hl7OutDir
+	
+	loop, files, % hl7OutDir "failed\*.hl7"
+	{
+		filenm := A_LoopFileName
+		filenmfull := A_LoopFileFullPath
+		eventlog("Resending failed registration: " filenm)
+		FileMove, % filenmfull, % hl7OutDir filenm
+	}
+	
+	return
+}
+
 readPrevTxt() {
 	global wq
 	
