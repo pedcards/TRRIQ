@@ -1193,14 +1193,6 @@ readWQorder() {
 	
 	Gui, phase:Destroy
 	
-	tmp := cMsgBox("Register ambulatory monitor"
-		,"`nSelect which type of`ndevice to register."
-		,"`nMORTARA`n24 hr Holter`n`n|`nBG MINI or ZIO`n7/14-day monitor`n`n|`nBG HEART`n30-day event recorder`n`n"
-		,"Q", "" , 0
-		, ".\H3.png" , ".\BGmini.png", ".\BGheart.png")
-	if instr(tmp,"xClose") {
-		return
-	}
 	wq := new XML("worklist.xml")														; refresh WQ
 	processhl7(fileIn)																	; read HL7 OBX into fldval
 		ptDem.nameL := fldval.PID_NameL
@@ -1214,14 +1206,23 @@ readWQorder() {
 		ptDem.provider := fldval.PV1_AttgNameL strQ(fldval.PV1_AttgNameF,", ###")
 		ptDem.loc := fldval.PV1_PtLoc
 		ptDem.type := fldval.OBR_TestName
-	if instr(tmp,"Holter") {															; for Mortara Holter
+	
+	if (ptDem.type~-"i)HR HOLTER") {													; for Mortara Holter
 		
 	} 
-	else if instr(tmp,"monitor") {														; for BG Mini (and eventually Zio)
+	else if (ptDem.type~="i)DAY HOLTER") {												; for BG Mini (and maybe Zio)
 		BGregister("BGM")
 	}
-	else if instr(tmp,"recorder") {														; for BG Heart
+	else if (ptDem.type~="i)RECORDER") {												; for BG Heart
 		BGregister("BGH")
+	}
+	tmp := cMsgBox("Register ambulatory monitor"
+		,"`nSelect which type of`ndevice to register."
+		,"`nMORTARA`n24 hr Holter`n`n|`nBG MINI or ZIO`n7/14-day monitor`n`n|`nBG HEART`n30-day event recorder`n`n"
+		,"Q", "" , 0
+		, ".\H3.png" , ".\BGmini.png", ".\BGheart.png")
+	if instr(tmp,"xClose") {
+		return
 	}
 	
 	return
