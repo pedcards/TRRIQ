@@ -1208,12 +1208,12 @@ readWQorder() {
 		ptDem.sex := fldval.PID_sex
 		ptDem.DOB := parseDate(fldval.PID_DOB).MDY
 		ptDem.mrn := fldval.PID_PatMRN
-		ptDem.UID := fldval.MSH_CtrlID
+		ptDem.UID := fldval.ORC_FillerNum
 		ptDem.encDate := parseDate(fldval.MSH_DateTime).MDY
 		ptDem.Account := fldval.ORC_ReqNum
-		ptDem.provider := fldval.PV1_AttgNameL ", " fldval.PV1_AttgNameF
+		ptDem.provider := fldval.PV1_AttgNameL strQ(fldval.PV1_AttgNameF,", ###")
 		ptDem.loc := fldval.PV1_PtLoc
-		ptDem.type := "x"
+		ptDem.type := fldval.OBR_TestName
 	if instr(tmp,"Holter") {															; for Mortara Holter
 		
 	} 
