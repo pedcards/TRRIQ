@@ -2554,6 +2554,8 @@ BGregister(type) {
 	SetTimer, idleTimer, Off
 	checkCitrix()
 	
+	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini" : "")
+	
 	tmp:=CMsgBox(ptDem.Recorder
 		, "Register type`n"
 			. (type="BGH" ? "BodyGuardian Heart`n30-day Event Recorder" : "")
