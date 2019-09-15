@@ -1194,7 +1194,7 @@ readWQorder() {
 		ptDem.loc := siteslong[fldval.PV1_Location]
 		ptDem.type := (ptDem.loc) ? "Outpatient" : "Other"
 		ptDem.monitor := fldval.OBR_TestName
-		ptDem.ind := fldval.OBR_ReasonText
+		ptDem.indication := fldval.OBR_ReasonText
 	
 	if (ptDem.monitor~-"i)HR HOLTER") {													; for Mortara Holter
 		
