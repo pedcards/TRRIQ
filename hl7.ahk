@@ -82,6 +82,9 @@ hl7line(seg) {
 			}
 			x := segPre . map[j]														; res.pre_map
 			
+			if (map.length()=1) {														; for seg with only 1 map, ensure val is at least popuated with str
+				val[j] := str
+			}
 			res[x] := val[j]															; add each mapped result as subelement, res.mapped_name
 			
 			if !(isOBX)  {																; non-OBX results
