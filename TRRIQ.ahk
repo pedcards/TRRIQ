@@ -1217,14 +1217,6 @@ readWQorder() {
 	else if (ptDem.monitor~="i)RECORDER") {												; for BG Heart
 		BGregister("BGH")
 	}
-	tmp := cMsgBox("Register ambulatory monitor"
-		,"`nSelect which type of`ndevice to register."
-		,"`nMORTARA`n24 hr Holter`n`n|`nBG MINI or ZIO`n7/14-day monitor`n`n|`nBG HEART`n30-day event recorder`n`n"
-		,"Q", "" , 0
-		, ".\H3.png" , ".\BGmini.png", ".\BGheart.png")
-	if instr(tmp,"xClose") {
-		return
-	}
 	
 	return
 }
