@@ -130,11 +130,6 @@ MainLoop: ; ===================== This is the main part ========================
 		Gosub PhaseGUI
 		WinWaitClose, TRRIQ Dashboard
 		
-		if (phase~="Register") {
-			eventlog("Start " phase ".")
-			MsgBox here
-			;~ BGregister(RegExReplace(phase,"Register"))
-		}
 		if (phase="Upload") {
 			MsgBox, 262177, Verify, % "Ready to upload a MORTARA HOLTER to Preventice?`n`n"
 				. "Be sure to select the ""TRANSFER"" activity`nin the Mortara Web Upload window."
