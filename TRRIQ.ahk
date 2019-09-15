@@ -2562,6 +2562,19 @@ BGregister(type) {
 	SetTimer, idleTimer, Off
 	checkCitrix()
 	
+	tmp:=CMsgBox(ptDem.Recorder
+		, "Register type`n"
+			. (type="BGH" ? "BodyGuardian Heart`n30-day Event Recorder" : "")
+			. (type="BGM" ? "BodyGuardian Mini`n14-day Holter" : "")
+		, "Yes|No"
+		, "Q"
+		, ""
+		, 
+		, (type="BGH" ? "BGHeart.png" : "") . (type="BGM" ? "BGMini.png" : "") )
+	if (tmp!="Yes") {
+		return
+	}
+	
 	fetchQuit := false
 	gosub getDem																		; need to grab CIS demographics
 	if (fetchQuit=true) {
