@@ -2590,22 +2590,27 @@ BGregister(type) {
 		ptDem["hookup"] := "Home"
 		ptDem["model"] := typeLong
 		eventlog(type " home registration for " ptDem["mrn"] " " ptDem["nameL"] ".") 
-	} else {																			; either Office or [X]
+	} 
+	else {																				; either Office or [X]
 		ptDem["hookup"] := "Office"
-		ptDem.ser := selectDev()														; need to grab a BGH ser num
+		ptDem.ser := selectDev()														; need to grab a ser num from inventory
 		if (ptDem.ser="") {
 			eventlog("Cancelled selectDev.")
 			return
 		}
 		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
-		if !(ptDem.model) {
+		
+		if !(ptDem.model) {																; Types in an ad hoc number
 			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart|BodyGuardian Mini")
 			if (i="xClose") {
+				eventlog("Cancelled ad hoc S/N.")
 				return
 			} else {
 				ptDem.model := i
+				eventlog("User typed ad hoc S/N " ptDem.ser ", type " i ".")
 			}
 		}
+		
 		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
 		writeOut("/root","inventory")
 		eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
