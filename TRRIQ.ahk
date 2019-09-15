@@ -130,14 +130,6 @@ MainLoop: ; ===================== This is the main part ========================
 		Gosub PhaseGUI
 		WinWaitClose, TRRIQ Dashboard
 		
-		;~ if (phase="Enrollment") {
-			;~ eventlog("Update Preventice enrollments.")
-			;~ CheckPreventiceWeb("Patient Enrollment")
-		;~ }
-		;~ if (phase="Inventory") {
-			;~ eventlog("Update Preventice inventory.")
-			;~ CheckPreventiceWeb("Facilities")
-		;~ }
 		if (phase~="Register") {
 			eventlog("Start " phase ".")
 			MsgBox here
