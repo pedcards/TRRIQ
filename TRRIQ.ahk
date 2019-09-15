@@ -2557,12 +2557,12 @@ BGregister(type) {
 	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini" : "")
 	
 	tmp:=CMsgBox(ptDem.Recorder
-		, "Register type`n"
-			. (type="BGH" ? "BodyGuardian Heart`n30-day Event Recorder" : "")
-			. (type="BGM" ? "BodyGuardian Mini`n14-day Holter" : "")
+		, "Register type`n`n" typeLong
+			. (type="BGH" ? "`n30-day Event Recorder" : "")
+			. (type="BGM" ? "`n14-day Holter" : "")
 		, "Yes|No"
 		, "Q"
-		, ""
+		, "V"
 		, 
 		, (type="BGH" ? "BGHeart.png" : "") . (type="BGM" ? "BGMini.png" : "") )
 	if (tmp!="Yes") {
