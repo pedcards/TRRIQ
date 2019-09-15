@@ -2582,9 +2582,13 @@ BGregister(type) {
 	;~ }
 	
 	i := cMsgBox("Hook-up","Delivery type","Office|Home")
+	if (i="xClose") {
+		eventlog("Cancelled delivery type.")
+		return
+	}
 	if (i="Home") {
 		ptDem["hookup"] := "Home"
-		ptDem["model"] := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini" : "")
+		ptDem["model"] := typeLong
 		eventlog(type " home registration for " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	} else {																			; either Office or [X]
 		ptDem["hookup"] := "Office"
