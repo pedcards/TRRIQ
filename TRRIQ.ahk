@@ -2611,6 +2611,32 @@ BGregister(type) {
 			}
 		}
 		
+		if (ptDem.model != typeLong) {													; Selects mismatched device
+			MsgBox, 262161, SELECTION MISMATCH
+				, % "Selected device " ptDem.model
+				. "`ndoes not match `n"
+				. "ordered device " typeLong "."
+				. "`n`nAre you sure you want to proceed?"
+			IfMsgBox, OK
+			{
+				selReason := cMsgBox("Order override","Reason to override order:"
+					, "Provider requests change|"
+					. "Inventory problem|"
+					. "Wrong device"
+					, "Q")
+				if (selReason="xClose") {
+					MsgBox Cancelled order processing
+					eventlog("Cancelled user override.")
+					return
+				}
+				eventlog("User override '" selReason "'. " typeLong " => " ptDem.model ".")
+			}
+			else {
+				eventlog("Selection mismatch cancelled.")
+				return
+			}
+		}
+		
 		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
 		writeOut("/root","inventory")
 		eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
