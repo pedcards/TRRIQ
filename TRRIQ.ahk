@@ -1172,7 +1172,7 @@ readWQlv:
 readWQorder() {
 /*	Retrieve info from WQlist line
 */
-	global wq, fldval, ptDem
+	global wq, fldval, ptDem, sitesLong
 	ptDem := {}
 	pt := {}
 	
@@ -1204,8 +1204,8 @@ readWQorder() {
 		ptDem.Account := fldval.ORC_ReqNum
 		ptDem.provider := fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
 		ptDem.encDate := parseDate(fldval.PV1_DateTime).MDY
-		ptDem.loc := fldval.PV1_PtLoc
-		ptDem.type := fldval.ORC_Location
+		ptDem.loc := siteslong[fldval.PV1_Location]
+		ptDem.type := (ptDem.loc) ? "Outpatient" : "Other"
 		ptDem.monitor := fldval.OBR_TestName
 		ptDem.ind := fldval.OBR_ReasonText
 	
