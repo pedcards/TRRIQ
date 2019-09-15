@@ -1536,7 +1536,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy												; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
 	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 		; valid names
-			&& (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account"]~="\d{8,}") 				; valid MRN and Acct numbers
+			;~ && (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account"]~="\d{8,}") 				; valid MRN and Acct numbers
 			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="^[MF]") 		; valid DOB and Sex
 			&& (ptDem["Loc"]) && (ptDem["Type"])										; Loc and type is not null
 			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])					; prov any string, encDate not null
