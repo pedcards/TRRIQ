@@ -1207,6 +1207,7 @@ readWQorder() {
 		ptDem.loc := fldval.PV1_PtLoc
 		ptDem.type := fldval.ORC_Location
 		ptDem.monitor := fldval.OBR_TestName
+		ptDem.ind := fldval.OBR_Reason
 	
 	if (ptDem.monitor~-"i)HR HOLTER") {													; for Mortara Holter
 		
