@@ -1201,19 +1201,20 @@ readWQorder() {
 		ptDem.DOB := parseDate(fldval.PID_DOB).MDY
 		ptDem.mrn := fldval.PID_PatMRN
 		ptDem.UID := fldval.ORC_FillerNum
-		ptDem.encDate := parseDate(fldval.MSH_DateTime).MDY
 		ptDem.Account := fldval.ORC_ReqNum
-		ptDem.provider := fldval.PV1_AttgNameL strQ(fldval.PV1_AttgNameF,", ###")
+		ptDem.provider := fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
+		ptDem.encDate := parseDate(fldval.PV1_DateTime).MDY
 		ptDem.loc := fldval.PV1_PtLoc
-		ptDem.type := fldval.OBR_TestName
+		ptDem.type := fldval.ORC_Location
+		ptDem.monitor := fldval.OBR_TestName
 	
-	if (ptDem.type~-"i)HR HOLTER") {													; for Mortara Holter
+	if (ptDem.monitor~-"i)HR HOLTER") {													; for Mortara Holter
 		
 	} 
-	else if (ptDem.type~="i)DAY HOLTER") {												; for BG Mini (and maybe Zio)
+	else if (ptDem.monitor~="i)DAY HOLTER") {												; for BG Mini (and maybe Zio)
 		BGregister("BGM")
 	}
-	else if (ptDem.type~="i)RECORDER") {												; for BG Heart
+	else if (ptDem.monitor~="i)RECORDER") {												; for BG Heart
 		BGregister("BGH")
 	}
 	tmp := cMsgBox("Register ambulatory monitor"
