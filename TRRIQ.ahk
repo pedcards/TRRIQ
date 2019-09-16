@@ -2074,25 +2074,6 @@ MortaraUpload(tabnum="")
 	if (Tabnum="Prepare") {																; PREPARE MEDIA TAB
 		eventlog("Prepare media selected.")
 		
-		gosub getDem
-		if (fetchQuit=true) {
-			fetchQuit:=false
-			eventlog("Cancelled getDem.")
-			WinActivate, ahk_id %muWinID%
-			ControlGet, clkbut, HWND,, Back
-			sleep 200
-			ControlClick,, ahk_id %clkbut%,,,,NA
-			return
-		}
-		getPatInfo()																	; grab remaining demographics for Preventice registration
-		if (fetchQuit=true) {
-			eventlog("Cancelled getPatInfo.")
-			WinActivate, ahk_id %muWinID%
-			ControlGet, clkbut, HWND,, Back
-			sleep 200
-			ControlClick,, ahk_id %clkbut%,,,,NA
-			return
-		}
 		InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
 		if (RegExMatch(note,"((\d\s*){12})",fedex)) {
 			fedex := RegExReplace(fedex1," ")
