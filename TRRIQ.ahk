@@ -211,17 +211,14 @@ PhaseGUI:
 	Gui, Tab, ORDERS
 	Gui, Add, Listview
 		, % "-Multi Grid BackgroundSilver ColorRed " lvDim " greadWQorder vWQlv_orders hwndHLV_orders"
-		, filename|Order Date|Name|MRN|Provider
+		, filename|Order Date|Name|MRN|Provider|Monitor
 	Gui, ListView, WQlv_orders
 	LV_ModifyCol(1,"0")																	; filename and path (hidden)
 	LV_ModifyCol(2,"80")																; date
 	LV_ModifyCol(3,"140")																; Name
 	LV_ModifyCol(4,"60")																; MRN
 	LV_ModifyCol(5,"100")																; Prov
-	;~ LV_ModifyCol(6,"100")																; Provider
-	;~ LV_ModifyCol(7,"80")																; Site
-	;~ LV_ModifyCol(8,"70")																; Type
-	
+	LV_ModifyCol(6,"70")																; Type
 	
 	Gui, Tab, ALL
 	Gui, Add, Listview
@@ -772,13 +769,14 @@ WQlist() {
 		e0 := {}
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
-		if (x.5="Z.hl7") {
+		if (x.6="Z.hl7") {
 			e0.mrn := x.1
 			e0.name := x.2
 			e0.nameL := strX(e0.name,"",1,0,"^",1)
 			e0.nameF := strX(e0.name,"^",1,1,"",0)
 			e0.date := x.3
 			e0.attgL := x.4
+			e0.mon := x.5
 		} 
 		else {
 			processhl7(A_LoopFileFullPath)
@@ -786,12 +784,20 @@ WQlist() {
 			e0.nameL := fldval["PID_NameL"]
 			e0.nameF := fldval["PID_NameF"]
 			e0.date := fldval["MSH_DateTIme"]
-			e0.attgL := fldval["PV1_AttgNameL"]
+			e0.attgL := fldval["ORC_ProvNameL"]
+			e0.mon := (tmp:=fldval["OBR_TestName"])~="i)DAY HOLTER"
+					? "BGM"
+					: tmp~="i)HOUR HOLTER"
+					? "HOL"
+					: tmp~="i)RECORDER"
+					? "BGH"
+					: ""
 			
 			fileIn := e0.MRN "_" 
 				. e0.nameL "^" e0.nameF "_"
 				. substr(e0.date,1,8) "_"
 				. e0.attgL "_"
+				. e0.mon "_"
 				. "Z.hl7"
 				
 			FileMove, %A_LoopFileFullPath%
@@ -803,6 +809,7 @@ WQlist() {
 			, e0.nameL ", " e0.nameF													; name
 			, e0.mrn																	; mrn
 			, e0.AttgL																	; prov
+			, e0.mon																	; monitor type
 			, "")																		; fulldisc present, make blank
 		GuiControl, Enable, Register
 		GuiControl, Text, Register, Go to ORDERS tab
