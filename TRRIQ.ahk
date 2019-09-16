@@ -2074,25 +2074,16 @@ MortaraUpload(tabnum="")
 	if (Tabnum="Prepare") {																; PREPARE MEDIA TAB
 		eventlog("Prepare media selected.")
 		
-		InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
-		if (RegExMatch(note,"((\d\s*){12})",fedex)) {
-			fedex := RegExReplace(fedex1," ")
-			ptDem["fedex"] := fedex
-			eventlog("Fedex number entered.")
-		} else {
-			eventlog("Fedex ignored.")
-		}
+		MorUIfill(mu_UI.PRct,muWinID)													; Fill UI fields from ptDem
 		
-		WinActivate, ahk_id %muWinID%
+		WinActivate, ahk_id %muWinID%													; Make sure clock button is set
 		sleep 500
 		ControlGet, clkbut, HWND,, Set Clock...
 		sleep 200
 		ControlClick,, ahk_id %clkbut%,,,,NA
 		WinWaitClose, Set Recorder Time
 		
-		MorUIfill(mu_UI.PRct,muWinID)
-		
-		loop
+		loop											
 		{
 			winget, x, ProcessName, A													; Dialog has no title
 			if !instr(x,"WebUpload") {													; so find the WebUpload
@@ -2105,6 +2096,15 @@ MortaraUpload(tabnum="")
 			}
 		}
 		Winwaitclose, ahk_id %finOK%													; Now we can wait until it is closed
+		
+		InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
+		if (RegExMatch(note,"((\d\s*){12})",fedex)) {
+			fedex := RegExReplace(fedex1," ")
+			ptDem["fedex"] := fedex
+			eventlog("Fedex number entered.")
+		} else {
+			eventlog("Fedex ignored.")
+		}
 		
 		wq := new XML("worklist.xml")													; refresh WQ
 		ptDem["muphase"] := "prepare"
