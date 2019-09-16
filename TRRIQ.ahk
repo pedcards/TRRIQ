@@ -1203,10 +1203,10 @@ readWQorder() {
 		ptDem.monitor := fldval.OBR_TestName
 		ptDem.indication := fldval.OBR_ReasonText
 	
-	if (ptDem.monitor~-"i)HR HOLTER") {													; for Mortara Holter
-		
+	if (ptDem.monitor~="i)HOUR HOLTER") {													; for Mortara Holter
+		mortaraUpload()
 	} 
-	else if (ptDem.monitor~="i)DAY HOLTER") {												; for BG Mini (and maybe Zio)
+	else if (ptDem.monitor~="i)DAY HOLTER") {											; for BG Mini (and maybe Zio)
 		BGregister("BGM")
 	}
 	else if (ptDem.monitor~="i)RECORDER") {												; for BG Heart
