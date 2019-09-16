@@ -822,7 +822,7 @@ WQlist() {
 CheckHl7Orders() {
 	global hl7OutDir
 	
-	loop, files, % hl7OutDir "Failed\*.hl7"
+	loop, files, % hl7OutDir "Failed\*.txt"
 	{
 		filenm := A_LoopFileName
 		filenmfull := A_LoopFileFullPath
@@ -3311,7 +3311,7 @@ Holter_Pr_Hl7:
 				Eml.BodyFormat := 2														; HTML format
 				
 				Eml.To := "HolterNotificationGroup@preventice.com"
-				Eml.cc := "EkgMaInbox@seattlechildrens.org"
+				Eml.cc := "EkgMaInbox@seattlechildrens.org; terrence.chun@seattlechildrens.org"
 				Eml.Subject := "Missing full disclosure PDF"
 				Eml.Display																; Display first to get default signature
 				Eml.HTMLBody := "Please upload the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
@@ -3319,6 +3319,7 @@ Holter_Pr_Hl7:
 					. " to the eCardio FTP site.<br><br>Thank you!<br>"
 					. Eml.HTMLBody														; Prepend to existing default message
 				progress, off
+				ObjRelease(Eml)															; or Eml:=""
 				eventlog("Email sent to Preventice.")
 			}
 		}
