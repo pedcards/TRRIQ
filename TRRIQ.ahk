@@ -584,6 +584,64 @@ WQlist() {
 			eventlog("Moved " site " record " k.selectSingleNode("mrn").text " " k.selectSingleNode("name").text)
 		}
 	}
+	
+	/*	Now scan Incoming ORDERS
+	*/
+	Gui, ListView, WQlv_orders
+	LV_Delete()
+	loop, Files, % hl7InDir "*.hl7"
+	{
+		e0 := {}
+		fileIn := A_LoopFileName
+		if RegExMatch(fileIn,"_\d{4,}Z.hl7",i) {													; hl7 file has been parsed already
+			e0 := readWQ(i1)
+		}
+		;~ x := StrSplit(fileIn,"_")
+		;~ if (x.6="Z.hl7") {
+			;~ e0.mrn := x.1
+			;~ e0.name := x.2
+			;~ e0.nameL := strX(e0.name,"",1,0,"^",1)
+			;~ e0.nameF := strX(e0.name,"^",1,1,"",0)
+			;~ e0.date := x.3
+			;~ e0.attgL := x.4
+			;~ e0.mon := x.5
+		;~ } 
+		else {
+			processhl7(A_LoopFileFullPath)
+			e0.mrn := fldval["PID_PatMRN"]
+			e0.name := fldval["PID_NameL"] strQ(fldval["PID_NameF"],", ###")
+			e0.date := fldval["MSH_DateTIme"]
+			e0.prov := fldval["ORC_ProvNameL"] strQ(fldval["ORC_ProvNameF"],", ###")
+			e0.mon := (tmp:=fldval["OBR_TestName"])~="i)DAY HOLTER"
+					? "BGM"
+					: tmp~="i)HOUR HOLTER"
+					? "HOL"
+					: tmp~="i)RECORDER"
+					? "BGH"
+					: ""
+			
+			fileIn := e0.MRN "_" 
+				. e0.nameL "^" e0.nameF "_"
+				. substr(e0.date,1,8) "_"
+				. e0.attgL "_"
+				. e0.mon "_"
+				. "Z.hl7"
+				
+			FileMove, %A_LoopFileFullPath%
+				, % hl7InDir . fileIn
+		}
+		LV_Add(""
+			, hl7InDir . fileIn															; filename and path to HolterDir
+			, e0.date																	; date
+			, e0.name																	; name
+			, e0.mrn																	; mrn
+			, e0.prov																	; prov
+			, e0.mon																	; monitor type
+			, "")																		; fulldisc present, make blank
+		GuiControl, Enable, Register
+		GuiControl, Text, Register, Go to ORDERS tab
+	}
+	
 	wq.save("worklist.xml")
 	FileDelete, .lock
 	
@@ -760,60 +818,6 @@ WQlist() {
 		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
 		.	"Preventice update: " tmp.mm "/" tmp.dd " @ " tmp.time "`n"
 	
-/*	Now scan Incoming ORDERS
-*/
-	Gui, ListView, WQlv_orders
-	LV_Delete()
-	loop, Files, % hl7InDir "*.hl7"
-	{
-		e0 := {}
-		fileIn := A_LoopFileName
-		x := StrSplit(fileIn,"_")
-		if (x.6="Z.hl7") {
-			e0.mrn := x.1
-			e0.name := x.2
-			e0.nameL := strX(e0.name,"",1,0,"^",1)
-			e0.nameF := strX(e0.name,"^",1,1,"",0)
-			e0.date := x.3
-			e0.attgL := x.4
-			e0.mon := x.5
-		} 
-		else {
-			processhl7(A_LoopFileFullPath)
-			e0.mrn := fldval["PID_PatMRN"]
-			e0.nameL := fldval["PID_NameL"]
-			e0.nameF := fldval["PID_NameF"]
-			e0.date := fldval["MSH_DateTIme"]
-			e0.attgL := fldval["ORC_ProvNameL"]
-			e0.mon := (tmp:=fldval["OBR_TestName"])~="i)DAY HOLTER"
-					? "BGM"
-					: tmp~="i)HOUR HOLTER"
-					? "HOL"
-					: tmp~="i)RECORDER"
-					? "BGH"
-					: ""
-			
-			fileIn := e0.MRN "_" 
-				. e0.nameL "^" e0.nameF "_"
-				. substr(e0.date,1,8) "_"
-				. e0.attgL "_"
-				. e0.mon "_"
-				. "Z.hl7"
-				
-			FileMove, %A_LoopFileFullPath%
-				, % hl7InDir . fileIn
-		}
-		LV_Add(""
-			, hl7InDir . fileIn															; filename and path to HolterDir
-			, e0.date																	; date
-			, e0.nameL ", " e0.nameF													; name
-			, e0.mrn																	; mrn
-			, e0.AttgL																	; prov
-			, e0.mon																	; monitor type
-			, "")																		; fulldisc present, make blank
-		GuiControl, Enable, Register
-		GuiControl, Text, Register, Go to ORDERS tab
-	}
 	fileIn :=
 	progress, off
 	return
