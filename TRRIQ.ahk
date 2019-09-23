@@ -593,25 +593,18 @@ WQlist() {
 	{
 		e0 := {}
 		fileIn := A_LoopFileName
-		if RegExMatch(fileIn,"_\d{4,}Z.hl7",i) {													; hl7 file has been parsed already
+		if RegExMatch(fileIn,"_(\d{4,})Z.hl7",i) {													; hl7 file has been parsed already
 			e0 := readWQ(i1)
 		}
-		;~ x := StrSplit(fileIn,"_")
-		;~ if (x.6="Z.hl7") {
-			;~ e0.mrn := x.1
-			;~ e0.name := x.2
-			;~ e0.nameL := strX(e0.name,"",1,0,"^",1)
-			;~ e0.nameF := strX(e0.name,"^",1,1,"",0)
-			;~ e0.date := x.3
-			;~ e0.attgL := x.4
-			;~ e0.mon := x.5
-		;~ } 
 		else {
 			processhl7(A_LoopFileFullPath)
-			e0.mrn := fldval["PID_PatMRN"]
+			e0.date := parseDate(fldval["MSH_DateTIme"]).YMD
 			e0.name := fldval["PID_NameL"] strQ(fldval["PID_NameF"],", ###")
-			e0.date := fldval["MSH_DateTIme"]
-			e0.prov := fldval["ORC_ProvNameL"] strQ(fldval["ORC_ProvNameF"],", ###")
+			e0.mrn := fldval["PID_PatMRN"]
+			e0.sex := fldval["PID_sex"]="F" 
+					? "Female"
+					: "Male"
+			e0.dob := parseDate(fldval["PID_DOB"]).MDY
 			e0.mon := (tmp:=fldval["OBR_TestName"])~="i)DAY HOLTER"
 					? "BGM"
 					: tmp~="i)HOUR HOLTER"
@@ -619,17 +612,36 @@ WQlist() {
 					: tmp~="i)RECORDER"
 					? "BGH"
 					: ""
+			e0.prov := fldval["ORC_ProvNameL"] strQ(fldval["ORC_ProvNameF"],", ###")
+			e0.site := sitesLong[fldval.PV1_Location]
+			e0.acct := fldval["PV1_Location"] fldval["ORC_FillerNum"]
+			e0.UID := fldval["ORC_ReqNum"]
+			e0.ind := fldval["OBR_ReasonText"]
+			
+			newID := "/root/orders/enroll[@id='" e0.UID "']"
+			wq.addElement("enroll","/root/orders",{id:e0.UID})
+			wq.addElement("date",newID,e0.date)
+			wq.addElement("name",newID,e0.name)
+			wq.addElement("mrn",newID,e0.mrn)
+			wq.addElement("sex",newID,e0.sex)
+			wq.addElement("dob",newID,e0.dob)
+			wq.addElement("mon",newID,e0.mon)
+			wq.addElement("prov",newID,e0.prov)
+			wq.addElement("site",newID,e0.site)
+			wq.addElement("acct",newID,e0.acct)
+			wq.addElement("ind",newID,e0.ind)
 			
 			fileIn := e0.MRN "_" 
-				. e0.nameL "^" e0.nameF "_"
-				. substr(e0.date,1,8) "_"
-				. e0.attgL "_"
+				. fldval["PID_nameL"] "^" fldval["PID_nameF"] "_"
+				. e0.date "_"
+				. fldval["ORC_ProvNameL"] "_"
 				. e0.mon "_"
-				. "Z.hl7"
+				. e0.uid "Z.hl7"
 				
 			FileMove, %A_LoopFileFullPath%
 				, % hl7InDir . fileIn
 		}
+		
 		LV_Add(""
 			, hl7InDir . fileIn															; filename and path to HolterDir
 			, e0.date																	; date
