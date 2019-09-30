@@ -605,9 +605,9 @@ WQlist() {
 					? "Female"
 					: "Male"
 			e0.dob := parseDate(fldval["PID_DOB"]).MDY
-			e0.mon := (tmp:=fldval["OBR_TestName"])~="i)DAY HOLTER"
+			e0.mon := (tmp:=fldval["OBR_TestName"])~="i)14 DAY"
 					? "BGM"
-					: tmp~="i)HOUR HOLTER"
+					: tmp~="i)24 HOUR"
 					? "HOL"
 					: tmp~="i)RECORDER"
 					? "BGH"
@@ -1219,10 +1219,10 @@ readWQorder() {
 		ptDem.monitor := fldval.OBR_TestName
 		ptDem.indication := fldval.OBR_ReasonText
 	
-	if (ptDem.monitor~="i)HOUR HOLTER") {													; for Mortara Holter
+	if (ptDem.monitor~="i)24 HOUR") {													; for Mortara Holter
 		mortaraUpload()
 	} 
-	else if (ptDem.monitor~="i)DAY HOLTER") {											; for BG Mini (and maybe Zio)
+	else if (ptDem.monitor~="i)14 DAY") {												; for BG Mini (and maybe Zio)
 		BGregister("BGM")
 	}
 	else if (ptDem.monitor~="i)RECORDER") {												; for BG Heart
