@@ -45,9 +45,11 @@ hl7line(seg) {
 	attempt to map each field to recognized structure for that field element
 */
 	global hl7, fldVal, hl7Dir, obxVal
+	multiSeg := "NK1|DG1"																; segments that may have multiple lines, e.g. NK1
 	res := Object()
 	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
 	segName := fld.1																	; first array element should be NAME
+	segNum := fld.2
 	if !IsObject(hl7[segName]) {														; no matching hl7 map?
 		MsgBox,,% A_Index, % seg "-" segName "`nBAD SEGMENT NAME"
 		return error																	; fail if segment name not allowed
@@ -55,7 +57,8 @@ hl7line(seg) {
 	
 	isOBX := (segName == "OBX")
 	segMap := hl7[segName]
-	segPre := (isOBX) ? "" : segName "_"
+	segPre := (isOBX) ? "" 
+		: segName "_" . (instr(multiSeg,segName) ? segNum "_" : "")
 	
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
