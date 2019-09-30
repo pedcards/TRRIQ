@@ -593,10 +593,10 @@ WQlist() {
 	{
 		e0 := {}
 		fileIn := A_LoopFileName
-		if RegExMatch(fileIn,"_(\d{4,})Z.hl7",i) {													; hl7 file has been parsed already
+		if RegExMatch(fileIn,"_(\d{4,})Z.hl7",i) {													; hl7 file appears to have been parsed already
 			e0 := readWQ(i1)
 		}
-		else {
+		if !(e0.name) {																				; either HL7 has never been parsed or bad filename
 			processhl7(A_LoopFileFullPath)
 			e0.date := parseDate(fldval["MSH_DateTIme"]).YMD
 			e0.name := fldval["PID_NameL"] strQ(fldval["PID_NameF"],", ###")
