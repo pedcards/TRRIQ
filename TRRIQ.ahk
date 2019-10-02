@@ -2740,8 +2740,13 @@ getPatInfo() {
 	{
 		i := A_Index
 		pre := "NK1_" i "_"
-		
-		
+		name := fldval[pre "NameL"] . strQ(fldval[pre "NameF"],", ###")
+		if (name="") {
+			break
+		}
+		rel[i] := object()
+		rel[i].name := name
+		rel[i].relation := fldval[pre "Relation"]
 		
 	}
 	
