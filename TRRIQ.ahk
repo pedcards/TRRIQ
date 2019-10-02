@@ -1207,7 +1207,7 @@ readWQorder() {
 	processhl7(fileIn)																	; read HL7 OBX into fldval
 		ptDem.nameL := fldval.PID_NameL
 		ptDem.nameF := fldval.PID_NameF
-		ptDem.sex := fldval.PID_sex
+		ptDem.sex := (fldval.PID_sex="F") ? "Female" : "Male"
 		ptDem.DOB := parseDate(fldval.PID_DOB).MDY
 		ptDem.mrn := fldval.PID_PatMRN
 		ptDem.UID := fldval.ORC_FillerNum
@@ -1218,6 +1218,7 @@ readWQorder() {
 		ptDem.type := (ptDem.loc) ? "Outpatient" : "Other"
 		ptDem.monitor := fldval.OBR_TestName
 		ptDem.indication := fldval.OBR_ReasonText
+		ptDem.indicationCode := fldval.OBR_ReasonCode
 	
 	if (ptDem.monitor~="i)24 HOUR") {													; for Mortara Holter
 		mortaraUpload()
