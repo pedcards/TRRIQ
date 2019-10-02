@@ -67,32 +67,41 @@ hl7line(seg) {
 			continue
 		}
 		str := fld[i]																	; each segment field
-		strMap := segMap[i-1]															; get hl7 substring that maps to this 
-		val := StrSplit(str,"^")														; array of subelements
+		strSub := StrSplit(str,"~")														; break multiple subs into sub fields
+		isStrMult := (strSub.length()>1)
+			
+		val := StrSplit(strSub[1],"^")													; array of subelements
 		
+		strMap := segMap[i-1]															; get hl7 substring that maps to this 
 		if (strMap=="") {																; no mapped fields
 			loop, % val.length()														; create strMap "^^^" based on subelements in val
 			{
 				strMap .= "z" i "_" A_Index "^"
 			}
 		}
+		
 		map := StrSplit(strMap,"^")														; array of substring map
-		loop, % map.length()
+		loop, % strSub.length()															; iterate for each substr field
 		{
-			j := A_Index
-			if (map[j]=="") {															; skip if map value is null
-				continue
-			}
-			x := segPre . map[j]														; res.pre_map
-			
-			if (map.length()=1) {														; for seg with only 1 map, ensure val is at least popuated with str
-				val[j] := str
-			}
-			res[x] := val[j]															; add each mapped result as subelement, res.mapped_name
-			
-			if !(isOBX)  {																; non-OBX results
-				fldVal[x] := val[j]														; populate all fldVal.mapped_name
-				obxVal[x] := val[j]
+			k := A_Index
+			loop, % map.length()
+			{
+				j := A_Index
+				if (map[j]=="") {														; skip if map value is null
+					continue
+				}
+				x := segPre	. map[j]													; res.pre_map
+					. ((isStrMult) ? "_" k : "")											; add sub num if present
+				
+				if (map.length()=1) {													; for seg with only 1 map, ensure val is at least popuated with str
+					val[j] := strSub[k]
+				}
+				res[x] := val[j]														; add each mapped result as subelement, res.mapped_name
+				
+				if !(isOBX)  {															; non-OBX results
+					fldVal[x] := val[j]													; populate all fldVal.mapped_name
+					obxVal[x] := val[j]
+				}
 			}
 		}
 	}
