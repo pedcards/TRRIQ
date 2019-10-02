@@ -2725,69 +2725,11 @@ selectDev() {
 }
 
 getPatInfo() {
-/*	Identify Patient Info page in CIS
-	Get window dimensions, activate window H50% X80%, copy to clipboard
-	Parse address block
+/*	Parse guardians from NK1 segments
 */
-	global wq, ptDem, fetchQuit
+	global wq, ptDem, fetchQuit, fldval
 	
-;	Make sure a CIS patient window exists
-	Loop
-	{
-		if (winID := WinExist("Opened by")) {											; break out if so
-			break
-		}
-		MsgBox, 4149, Window error, Must open CIS to proper patient
-		IfMsgBox, Retry
-		{
-			continue																	; try again
-		} else {
-			fetchQuit := true
-			return
-		}
-	}
-	MouseGetPos,mouseX,mouseY															; get original mouse coords
-	WinActivate, ahk_id %winID%															; activate the CIS patient window
-	WinGetActiveStats, winTitle, winW, winH, winX, winY									; and get dimensions
-	
-;	Make sure we are on Patient Summary / Contacts, either inpatient or outpatient
-	Loop
-	{
-		WinActivate, ahk_id %winID%
-		clipboard := 
-		MouseClick, Left, % winW-40, % 0.6*winH											; click just inside window
-		
-		Send, ^a^c																		; Select All, Copy
-		sleep 500																		; need to pause to fill clipboard
-		txt := Clipboard
-		MouseClick, Left, % winW-40, % 0.6*winH+10										; click again to deselect all
-		MouseMove, mouseX, mouseY														; move back to original coords
-		if instr(txt,"Patient contact info") {
-			break																		; break out of this loop
-		}
-		MsgBox, 4149, Window error, Navigate to:`n   * Patient Summary / Contacts
-		IfMsgBox, Retry
-		{
-			continue
-		} else {
-			fetchQuit := true
-			return
-		}
-	}
-	
-;	Parse out basic patient demographics from the text blob
-	ptInfo := cleanBlank(stregX(txt,"i)Patient contact info.*?\R+",1,1,"i)Family contact info",1))
-	nameLine := strX(ptInfo,"",1,0,"`n",1)
-	prefName := trim(stregX(nameLine,"i)Pref.*? name:",1,1,"\R+",1))
-	if !instr(nameLine, ptDem.Name) {													; fetched ptInfo must contain ptDem.name
-		MsgBox, 4149, Name error, % "Fetched name """ prefName """`ndoes not match """ ptDem.Name """"
-		fetchQuit := true
-		eventlog("Fetched info does not match " ptDem.Name)
-		return
-	}
-	homePhoneLine := stregX(ptInfo,"i)Home Phone:",1,1,"\R+",1)
-	RegExMatch(homePhoneLine,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
-	ptDem.phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)
+	ptDem.phone := fldval.PID_phone
 	
 ;	Now separate the "Family contact" members, grab relevant contact info from each parsed line
 	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
