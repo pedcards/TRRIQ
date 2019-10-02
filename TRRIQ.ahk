@@ -1621,7 +1621,9 @@ indSubmit:
 getDem:
 {
 	gosub fetchGUI																		; Grab it first
-	gosub fetchDem
+	WinWaitClose, Patient Demographics
+	/*	Need to get demo validating code from fetchDem
+	*/
 	if (fetchQuit=true) {
 		return
 	}
