@@ -2551,19 +2551,7 @@ BGregister(type) {
 	
 	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini" : "")
 	
-	fetchQuit := false
-	gosub getDem																		; need to grab CIS demographics
-	if (fetchQuit=true) {
-		eventlog("Cancelled getDem.")
-		return
-	}
-	;~ getPatInfo()																		; grab remaining demographics for Preventice registration
-	;~ if (fetchQuit=true) {
-		;~ eventlog("Cancelled getPatInfo.")
-		;~ return
-	;~ }
-	
-	tmp:=CMsgBox(ptDem.Recorder
+	tmp:=CMsgBox(ptDem.Monitor
 		, "Register type`n`n" typeLong
 			. (type="BGH" ? "`n30-day Event Recorder" : "")
 			. (type="BGM" ? "`n14-day Holter" : "")
@@ -2573,6 +2561,18 @@ BGregister(type) {
 		, 
 		, (type="BGH" ? "BGHeart.png" : "") . (type="BGM" ? "BGMini.png" : "") )
 	if (tmp!="Yes") {
+		return
+	}
+	
+	fetchQuit := false
+	gosub getDem																		; need to grab CIS demographics
+	if (fetchQuit=true) {
+		eventlog("Cancelled getDem.")
+		return
+	}
+	getPatInfo()																		; grab remaining demographics for Preventice registration
+	if (fetchQuit=true) {
+		eventlog("Cancelled getPatInfo.")
 		return
 	}
 	
