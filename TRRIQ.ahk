@@ -2729,12 +2729,22 @@ getPatInfo() {
 */
 	global wq, ptDem, fetchQuit, fldval
 	
-	ptDem.phone := fldval.PID_phone
+	ptDem.phone := fldval.PID_phone														; get phone num from PID
 	
 ;	Now separate the "Family contact" members, grab relevant contact info from each parsed line
 	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
 	relStr := "Father|Mother|Grand|Aunt|Uncle|Foster|Parent|Sibling|Cousin|Relative|Step|Adult"
 	rel := Object()
+	
+	loop
+	{
+		i := A_Index
+		pre := "NK1_" i "_"
+		
+		
+		
+	}
+	
 	loop, parse, famInfo, `n,`r
 	{
 		i := A_LoopField
