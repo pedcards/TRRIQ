@@ -4860,6 +4860,11 @@ ThousandsSep(x, s=",") {
 	return RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
 }
 
+formatPhone(txt) {
+; format phone as aaa-bbb-cccc
+	return RegExReplace(txt,".*?(\d{3}).*?(\d{3}).*?(\d{4})","$1-$2-$3")
+}
+
 WriteOut(path,node) {
 	global wq
 	
