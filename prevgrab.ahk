@@ -71,6 +71,9 @@ PreventiceWebGrab(phase) {
 	
 	loop
 	{
+		if (gl.settings.isVisible) {
+			progress,,% "Page " A_index,
+		}
 		tbl := wb.document.getElementById(web.tbl)										; get the Main Table
 		if !IsObject(tbl) {
 			eventlog("PREVGRAB: *** " phase " *** No matching table.")
@@ -119,10 +122,13 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	t0 := A_TickCount
 	loop, 300																			; wait each 100*0.05 = 5 sec
 	{
-		pg := wb.document.getElementById(chgStr).innerText
-		if (gl.settings.isVisible) {
-			progress,,% onclick, % phase " (" A_index ")"
+		if (substr(A_index,0)="0") {
+			elipse .= "."
+			if (gl.settings.isVisible) {
+				progress,% A_index,, % phase " " elipse
+			}
 		}
+		pg := wb.document.getElementById(chgStr).innerText
 		if (pg != pg0) {
 			t1:=A_TickCount-t0
 			eventlog("PREVGRAB: " phase " " pgNum " pager (" round(t1/1000,2) " s)"
@@ -262,28 +268,29 @@ IEopen() {
 IEurl(url) {
 /*	Open a URL
 */
-	global wb
+	global wb,gl
 	
 	loop, 3
 	{
 		wb.Navigate(url)																	; load URL
 		while wb.busy {																		; wait until done loading
-			if (gl.settings.isVisible) {
-				progress,,% wb.ReadyState
-			}
 			sleep 10
 		}
 		
-		if instr(wb.LocationURL,"UserLogin") {
+		if instr(wb.LocationURL,gl.login.string) {
 			preventiceLogin()
 			eventlog("PREVGRAB: Login try " A_index)
 		}
-		else {
+		if (wb.LocationURL=url) {
 			eventlog("PREVGRAB: " url,0)
 			return
 		}
+		else {
+			eventlog("PREVGRAB: Stuck on " wb.LocationURL,0)
+			sleep 500
+		}
 	}
-	eventlog("PREVGRAB: Failed login.")
+	eventlog("PREVGRAB: Failed to load page.")
 	return
 }
 
