@@ -92,9 +92,9 @@ hl7line(seg) {
 			}
 			res[x] := val[j]														; add each mapped result as subelement, res.mapped_name
 			
-				if !(isOBX)  {															; non-OBX results
-					fldVal[x] := val[j]													; populate all fldVal.mapped_name
-					obxVal[x] := val[j]
+			if !(isOBX)  {															; non-OBX results
+				fldVal[x] := val[j]													; populate all fldVal.mapped_name
+				obxVal[x] := val[j]
 			}
 		}
 	}
@@ -117,6 +117,31 @@ hl7line(seg) {
 	}
 	fldval.hl7 .= seg "`n"
 	
+	return res
+}
+
+segField(fld,lbl="") {
+	res := new XML("<root/>")
+	split := StrSplit(fld,"~")
+	loop, % split.length()
+	{
+		i := A_index
+		res.addElement("idx","root",{num:i})
+		id := "/root/idx[@num='" i "']"
+		subfld := StrSplit(split[i],"^")
+		sublbl := StrSplit(lbl,"^")
+		loop, % subfld.length()
+		{
+			j := A_Index
+			k := sublbl[j]
+			if (k="") {
+				res.addElement("node",id,{num:j},subfld[j])
+			} 
+			else {
+				res.addElement(k,id,subfld[j])
+			}
+		}
+	}
 	return res
 }
 
