@@ -2725,11 +2725,11 @@ selectDev() {
 }
 
 getPatInfo() {
-/*	Parse guardians from NK1 segments
+/*	Parse guardians from Epic NK1 segments
 */
 	global wq, ptDem, fetchQuit, fldval
 	
-	ptDem.phone := fldval.PID_phone														; get phone num from PID
+	ptDem.phone := formatPhone(fldval.PID_phone)														; get phone num from PID
 	
 ;	Now separate the "Family contact" members, grab relevant contact info from each parsed line
 	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
@@ -2747,60 +2747,17 @@ getPatInfo() {
 		rel[i] := object()
 		rel[i].name := name
 		rel[i].relation := fldval[pre "Relation"]
-		
+		tmp := segField(fldval[pre "Phone"],"num^type^equipment")
+		rel[i].phoneHome := formatPhone(tmp.selectSingleNode("//idx[equipment/text()='HOME']/num").text)
+		rel[i].phoneMobile := formatPhone(tmp.selectSingleNode("//idx[equipment/text()='MOBILE']/num").text)
+		tmp := fldval[pre "Role"]
+		rel[i].lives := instr(tmp,"Y^LW") ? true : false
+		rel[i].legal := instr(tmp,"Y^LG") ? true : false
+		rel[i].addr := strQ(fldval[pre "Addr1"],"###`n")
+			. strQ(fldval[pre "Addr2"],"###`n")
+			. strQ(strQ(fldval[pre "City"],"###") strQ(fldval[pre "State"],", ###") strQ(fldval[pre "Zip"]," ###"),"###`n")
 	}
-	
-	loop, parse, famInfo, `n,`r
-	{
-		i := A_LoopField
-		if RegExMatch(i,"O)\([" relStr "].*?\)",val) {									; line contains "(Mother"
-			ct ++																		; increment counter
-			rel[ct] := object()															; create a rel index object
-			rel[ct].name := strX(i,"",1,1,"(",1,1)										; get name string
-			rel[ct].relation := val.0
-			continue
-		}
-		if (i~="Home:") {
-			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
-			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)				; ensure is in "aaa-bbb-cccc" format for Preventice
-			continue
-		}
-		if ((i~="Mobile:") && (rel[ct].phone="")) {
-			RegExMatch(i,"O)(\d{3})[^\d]+(\d{3})[^\d]+(\d{4})",ph)
-			rel[ct].phone := ph.value(1) "-" ph.value(2) "-" ph.value(3)				; Preventice registration message requires aaa-bbb-cccc format
-			continue
-		}
-		if (i~="i)^Lives with") {
-			rel[ct].lives := true
-			continue
-		}
-		if (i~="i)^Legal guardian") {
-			rel[ct].guardian := true
-			continue
-		}
-		if (i~="i)("
-			. "Legal guardian|"															; skip lines containing these strings
-			. "Birth certificate|"
-			. "Power of Attorney|"
-			. "Legal documentation|"
-			. "Comment|"
-			. "\(.*\)|"
-			. "Custody|"
-			. "Work:|"
-			. "Mobile:|"
-			. "Home:|"
-			. "Inpatient|"
-			. "Emergency|"
-			. "Adoption|"
-			. "^\s*$|"
-			. "^>)")
-		{
-			continue
-		}
 		
-		rel[ct].addr .= i "`n"															; everything else is added as address lines to this relative
-	}
-	
 ;	Filter out contacts who are not likely guarantors or parents
 	loop, % rel.MaxIndex()
 	{
