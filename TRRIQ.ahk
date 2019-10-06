@@ -1219,6 +1219,7 @@ readWQorder() {
 		ptDem.monitor := fldval.OBR_TestName
 		ptDem.indication := fldval.OBR_ReasonText
 		ptDem.indicationCode := fldval.OBR_ReasonCode
+		ptDem.filename := fileIn
 	
 	if (ptDem.monitor~="i)24 HOUR") {													; for Mortara Holter
 		mortaraUpload()
@@ -2556,9 +2557,7 @@ BGregister(type) {
 			. (type="BGH" ? "`n30-day Event Recorder" : "")
 			. (type="BGM" ? "`n14-day Holter" : "")
 		, "Yes|No"
-		, "Q"
-		, "V"
-		, 
+		, "Q", "V", 
 		, (type="BGH" ? "BGHeart.png" : "") . (type="BGM" ? "BGMini.png" : "") )
 	if (tmp!="Yes") {
 		return
@@ -2639,6 +2638,11 @@ BGregister(type) {
 	bghWqSave(ptDem.ser)																; write to worklist.xml
 	
 	registerPreventice()
+	
+	SplitPath,% ptDem.filename,fnam,,fExt,fileNam
+	FileMove,% ptDem.filename, .\tempfiles\%fnam%
+	
+	return
 }
 
 selectDev() {
