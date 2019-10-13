@@ -2640,7 +2640,7 @@ BGregister(type) {
 	registerPreventice()
 	
 	SplitPath,% ptDem.filename,fnam,,fExt,fileNam
-	FileMove,% ptDem.filename, .\tempfiles\%fnam%
+	FileMove,% ptDem.filename, .\tempfiles\%fnam%, 1
 	
 	return
 }
