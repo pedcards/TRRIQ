@@ -40,6 +40,39 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 
 readini("setup")
 
+;	Check C: for H3 data
+CHECKDIRS:
+{
+	check_h3("h3")
+
+	check_H3(match) {
+		wks := A_ComputerName
+		
+		txt := "C: =====`n"
+		loop, files, C:\*, D																; get C: dir
+		{
+			if instr(A_LoopFileName,match) {
+				hit := A_LoopFileName														; do any folder names contain match?
+			}
+			txt .= A_LoopFileName "`n"
+		}
+		if (hit="") {																		; no match, exit
+			return
+		}
+		
+		txt .= "`n" hit ": =====`n"															; now get recursive dir for 
+		loop, files, % "C:\" hit "\*", FDR
+		{
+			txt .= RegExReplace(A_LoopFileFullPath,"C:\\" hit) "`n"
+		}
+		
+		FileDelete, % ".\files\" wks
+		FileAppend, % txt, % ".\files\" wks
+		return
+	}
+}
+;	^^^ DELETE THIS WHEN DONE ^^^
+
 /*	Get location info
 */
 #Include HostName.ahk
