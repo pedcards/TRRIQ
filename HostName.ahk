@@ -171,6 +171,8 @@ AddWorkstation(location)
 	
     locationData.TransformXML()
 	locationData.saveXML()
+	
+	eventlog("New machine " wsnameNode.Text " assigned to location " location)
 }
 
 getSites(wksName) {
