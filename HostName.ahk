@@ -212,5 +212,32 @@ getSites(wksName) {
 			, facility:codeName}
 }	
 
-
-
+check_H3(match) {
+/*	Each machine potentially has Mortara Web Upload data files stored in a different location
+	If not already defined, scan C: drive for deepest h3.preventice.com folder
+	Still not sure why some machines are not returning proper RECORD.LOG and DEVICE.LOG files
+*/
+	wks := A_ComputerName
+	
+	txt := "C: =====`n"
+	loop, files, C:\*, D																; get C: dir
+	{
+		if instr(A_LoopFileName,match) {
+			hit := A_LoopFileName														; do any folder names contain match?
+		}
+		txt .= A_LoopFileName "`n"
+	}
+	if (hit="") {																		; no match, exit
+		return
+	}
+	
+	txt .= "`n" hit ": =====`n"															; now get recursive dir for 
+	loop, files, % "C:\" hit "\*", FDR
+	{
+		txt .= RegExReplace(A_LoopFileFullPath,"C:\\" hit) "`n"
+	}
+	
+	FileDelete, % ".\files\" wks
+	FileAppend, % txt, % ".\files\" wks
+	return
+}
