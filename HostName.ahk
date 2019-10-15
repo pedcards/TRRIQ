@@ -219,25 +219,38 @@ check_H3(match) {
 */
 	wks := A_ComputerName
 	
-	txt := "C: =====`n"
-	loop, files, C:\*, D																; get C: dir
+	m := new XML(m_strXmlFilename)
+	node := "//workstations/workstation[wsname='" wks "']"
+	if (path := m.selectSingleNode(node "/h3path").text) {
+		return path
+	}
+	
+	hit := "C:"																				; start at C:
+	while (find := checkH3Dir(hit,match))
+	{
+		hit := find
+	}
+	if (hit="C:") {
+		eventlog("ERROR: Can't find H3 data files.")
+		return error
+	}
+	else {
+		m.addElement("h3path",node,hit)
+		m.transformXML()
+		m.saveXML()
+		eventlog("Found new H3 data path for " wks ".")
+		return hit
+	}
+}
+
+checkH3Dir(base,match) {
+/*	Find a matching dir name in base
+*/
+	Loop, files, % base "\*", D
 	{
 		if instr(A_LoopFileName,match) {
-			hit := A_LoopFileName														; do any folder names contain match?
+			return A_LoopFileFullPath													; found a result
 		}
-		txt .= A_LoopFileName "`n"
 	}
-	if (hit="") {																		; no match, exit
-		return
-	}
-	
-	txt .= "`n" hit ": =====`n"															; now get recursive dir for 
-	loop, files, % "C:\" hit "\*", FDR
-	{
-		txt .= RegExReplace(A_LoopFileFullPath,"C:\\" hit) "`n"
-	}
-	
-	FileDelete, % ".\files\" wks
-	FileAppend, % txt, % ".\files\" wks
-	return
+	return error																		; no match found
 }
