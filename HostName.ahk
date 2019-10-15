@@ -171,6 +171,8 @@ AddWorkstation(location)
 	
     locationData.TransformXML()
 	locationData.saveXML()
+	
+	eventlog("New machine " wsnameNode.Text " assigned to location " location)
 }
 
 getSites(wksName) {
@@ -210,5 +212,45 @@ getSites(wksName) {
 			, facility:codeName}
 }	
 
+check_H3(match) {
+/*	Each machine potentially has Mortara Web Upload data files stored in a different location
+	If not already defined, scan C: drive for deepest h3.preventice.com folder
+	Still not sure why some machines are not returning proper RECORD.LOG and DEVICE.LOG files
+*/
+	wks := A_ComputerName
+	
+	m := new XML(m_strXmlFilename)
+	node := "//workstations/workstation[wsname='" wks "']"
+	if (path := m.selectSingleNode(node "/h3path").text) {
+		return path
+	}
+	
+	hit := "C:"																				; start at C:
+	while (find := checkH3Dir(hit,match))
+	{
+		hit := find
+	}
+	if (hit="C:") {
+		eventlog("ERROR: Can't find H3 data files.")
+		return error
+	}
+	else {
+		m.addElement("h3path",node,hit)
+		m.transformXML()
+		m.saveXML()
+		eventlog("Found new H3 data path for " wks ".")
+		return hit
+	}
+}
 
-
+checkH3Dir(base,match) {
+/*	Find a matching dir name in base
+*/
+	Loop, files, % base "\*", D
+	{
+		if instr(A_LoopFileName,match) {
+			return A_LoopFileFullPath													; found a result
+		}
+	}
+	return error																		; no match found
+}
