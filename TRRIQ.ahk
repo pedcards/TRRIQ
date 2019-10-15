@@ -39,8 +39,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 }
 
 readini("setup")
-
-check_h3("h3")																			; Find the location of H3 data files
+webUploadDir := check_h3("WebUploadApplication")										; Find the location of H3 data files
 
 /*	Get location info
 */
