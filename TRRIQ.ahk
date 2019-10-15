@@ -39,7 +39,6 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 }
 
 readini("setup")
-webUploadDir := check_h3("WebUploadApplication")										; Find the location of H3 data files
 
 /*	Get location info
 */
@@ -57,6 +56,10 @@ sites0 := site.ignored																	; sites we are not tracking <tracked>N</t
 sitesLong := site.long																	; {CIS:TAB}
 sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
 sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
+
+/*	Get valid WebUploadDir
+*/
+webUploadDir := check_h3("WebUploadApplication")										; Find the location of H3 data files
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
