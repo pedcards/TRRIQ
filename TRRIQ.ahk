@@ -1864,7 +1864,16 @@ MortaraUpload(tabnum="")
 				wuDir.Full := loopName
 			}
 		}
-		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)
+		if (wuDir.Full="") {															; no transfer files found
+			eventlog("No transfer files found.")
+			MsgBox, 262160, Device error, No transfer files found!`n`nTry again.
+			WinActivate, ahk_id %muWinID%
+			ControlGet, clkbut, HWND,, Back
+			sleep 200
+			ControlClick,, ahk_id %clkbut%,,,,NA
+			return
+		}
+		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)									; transfer files found
 		eventlog("Found WebUploadDir " wuDir.Short )
 		FileReadLine, wuRecord, % wuDir.Full "\RECORD.LOG", 1
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
