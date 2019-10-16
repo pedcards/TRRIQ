@@ -1822,7 +1822,7 @@ MortaraUpload(tabnum="")
 	SetTimer, idleTimer, Off
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
-		wb := ComObjCreate("InternetExplorer.Application")								; webbrowser object
+		wb := IEopen()
 		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
 		ComObjConnect(wb)																; disconnect the webbrowser object
 		
@@ -4551,6 +4551,37 @@ IEGet(name="") {
 	for wb in ComObjCreate("Shell.Application").Windows()
 		if wb.LocationName=Name and InStr(wb.FullName, "iexplore.exe")
 			return wb
+}
+
+IEopen() {
+/*	Use ComObj to open IE
+	If not open, create a new instance
+	If IE open, choose that windows object
+	Return the IE window object
+*/
+	if !winExist("ahk_exe iexplore.exe") {
+		wb := ComObjCreate("InternetExplorer.application")
+		return wb
+	} 
+	else {
+		for wb in ComObjCreate("Shell.Application").Windows() {
+			if InStr(wb.FullName, "iexplore.exe") {
+				return wb
+			}
+		}
+	}
+}
+
+IEclose() {
+	DetectHiddenWindows, On
+	while WinExist("ahk_class IEFrame")
+	{
+		i := A_index
+		Process, Close, iexplore.exe
+		sleep 500
+	}
+	
+	return
 }
 
 httpComm(url:="",verb:="") {
