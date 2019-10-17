@@ -1823,8 +1823,9 @@ MortaraUpload(tabnum="")
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
 		wb := IEopen()
+		sleep 500
 		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
-		ComObjConnect(wb)																; disconnect the webbrowser object
+		;~ ComObjConnect(wb)																; disconnect the webbrowser object
 		
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
@@ -4571,6 +4572,7 @@ IEopen() {
 */
 	if !winExist("ahk_exe iexplore.exe") {
 		wb := ComObjCreate("InternetExplorer.application")
+		wb.visible := false
 		return wb
 	} 
 	else {
