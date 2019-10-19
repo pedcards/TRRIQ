@@ -39,7 +39,6 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 }
 
 readini("setup")
-webUploadDir := check_h3("WebUploadApplication")										; Find the location of H3 data files
 
 /*	Get location info
 */
@@ -57,6 +56,10 @@ sites0 := site.ignored																	; sites we are not tracking <tracked>N</t
 sitesLong := site.long																	; {CIS:TAB}
 sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
 sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
+
+/*	Get valid WebUploadDir
+*/
+webUploadDir := check_h3(webUploadRoot,webUploadStr) "\"												; Find the location of H3 data files
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -1955,9 +1958,10 @@ MortaraUpload(tabnum="")
 	SetTimer, idleTimer, Off
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
-		wb := ComObjCreate("InternetExplorer.Application")								; webbrowser object
+		wb := IEopen()
+		sleep 500
 		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
-		ComObjConnect(wb)																; disconnect the webbrowser object
+		;~ ComObjConnect(wb)																; disconnect the webbrowser object
 		
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
@@ -1985,6 +1989,7 @@ MortaraUpload(tabnum="")
 	
 	if (Tabnum="Transfer") {															; TRANSFER RECORDING TAB
 		eventlog("Transfer recording selected.")
+		sleep 1000
 		
 		wuDir := {}
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
@@ -1996,7 +2001,16 @@ MortaraUpload(tabnum="")
 				wuDir.Full := loopName
 			}
 		}
-		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)
+		if (wuDir.Full="") {															; no transfer files found
+			eventlog("No transfer files found.")
+			MsgBox, 262160, Device error, No transfer files found!`n`nTry again.
+			WinActivate, ahk_id %muWinID%
+			ControlGet, clkbut, HWND,, Back
+			sleep 200
+			ControlClick,, ahk_id %clkbut%,,,,NA
+			return
+		}
+		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)									; transfer files found
 		eventlog("Found WebUploadDir " wuDir.Short )
 		FileReadLine, wuRecord, % wuDir.Full "\RECORD.LOG", 1
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
@@ -4620,6 +4634,38 @@ IEGet(name="") {
 	for wb in ComObjCreate("Shell.Application").Windows()
 		if wb.LocationName=Name and InStr(wb.FullName, "iexplore.exe")
 			return wb
+}
+
+IEopen() {
+/*	Use ComObj to open IE
+	If not open, create a new instance
+	If IE open, choose that windows object
+	Return the IE window object
+*/
+	if !winExist("ahk_exe iexplore.exe") {
+		wb := ComObjCreate("InternetExplorer.application")
+		wb.visible := false
+		return wb
+	} 
+	else {
+		for wb in ComObjCreate("Shell.Application").Windows() {
+			if InStr(wb.FullName, "iexplore.exe") {
+				return wb
+			}
+		}
+	}
+}
+
+IEclose() {
+	DetectHiddenWindows, On
+	while WinExist("ahk_class IEFrame")
+	{
+		i := A_index
+		Process, Close, iexplore.exe
+		sleep 500
+	}
+	
+	return
 }
 
 httpComm(url:="",verb:="") {

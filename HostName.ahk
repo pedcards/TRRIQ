@@ -214,7 +214,7 @@ getSites(wksName) {
 			, tab:tabname}
 }	
 
-check_H3(match) {
+check_H3(root,match) {
 /*	Each machine potentially has Mortara Web Upload data files stored in a different location
 	If not already defined, scan C: drive for deepest h3.preventice.com folder
 	Still not sure why some machines are not returning proper RECORD.LOG and DEVICE.LOG files
@@ -227,12 +227,12 @@ check_H3(match) {
 		return path
 	}
 	
-	hit := "C:"																				; start at C:
+	hit := root																			; start at C: or .
 	while (find := checkH3Dir(hit,match))
 	{
 		hit := find
 	}
-	if (hit="C:") {
+	if (hit=root) {
 		eventlog("ERROR: Can't find H3 data files.")
 		return error
 	}
