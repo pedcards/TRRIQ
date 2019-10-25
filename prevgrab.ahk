@@ -40,6 +40,9 @@ Config:
 
 MainLoop:
 {
+	eventlog("PREVGRAB: Initializing.")
+	IEclose()																			; Start by closing all IE windows
+	
 	wb := IEopen()																		; start/activate an IE instance
 	wb.visible := gl.settings.isVisible
 	
