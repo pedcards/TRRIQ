@@ -278,6 +278,13 @@ IEurl(url) {
 		wb.Navigate(url)																	; load URL
 		while wb.busy {																		; wait until done loading
 			sleep 10
+			if WinExist("Message from webpage") {
+				WinActivate
+				WinGetText, ieText
+				eventlog("PREVGRAB: Closing dialog.")
+				eventlog("PREVGRAB: Encountered webpage dialog: `n" ieText)
+				Send, {Esc}
+			}
 		}
 		
 		if instr(wb.LocationURL,gl.login.string) {
