@@ -296,7 +296,7 @@ IEurl(url) {
 
 IEclose() {
 	DetectHiddenWindows, On
-	while WinExist("ahk_class IEFrame")
+	while WinExist("ahk_exe iexplore.exe")
 	{
 		i := A_index
 		Process, Close, iexplore.exe
