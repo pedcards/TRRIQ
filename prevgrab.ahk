@@ -40,6 +40,9 @@ Config:
 
 MainLoop:
 {
+	eventlog("PREVGRAB: Initializing.")
+	IEclose()																			; Start by closing all IE windows
+	
 	wb := IEopen()																		; start/activate an IE instance
 	wb.visible := gl.settings.isVisible
 	
@@ -275,6 +278,13 @@ IEurl(url) {
 		wb.Navigate(url)																	; load URL
 		while wb.busy {																		; wait until done loading
 			sleep 10
+			if WinExist("Message from webpage") {
+				WinActivate
+				WinGetText, ieText
+				eventlog("PREVGRAB: Closing dialog.")
+				eventlog("PREVGRAB: Encountered webpage dialog: `n" ieText)
+				Send, {Esc}
+			}
 		}
 		
 		if instr(wb.LocationURL,gl.login.string) {
@@ -296,7 +306,7 @@ IEurl(url) {
 
 IEclose() {
 	DetectHiddenWindows, On
-	while WinExist("ahk_class IEFrame")
+	while WinExist("ahk_exe iexplore.exe")
 	{
 		i := A_index
 		Process, Close, iexplore.exe
