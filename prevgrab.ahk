@@ -276,14 +276,18 @@ IEurl(url) {
 	loop, 3
 	{
 		wb.Navigate(url)																	; load URL
+		attemptErr:=0
 		while wb.busy {																		; wait until done loading
-			sleep 10
+			if (attemptErr > 20) {
+				break
+			}
+			sleep 200
 			if WinExist("Message from webpage") {
+				attemptErr ++
 				WinActivate
-				WinGetText, ieText
-				eventlog("PREVGRAB: Closing dialog.")
-				eventlog("PREVGRAB: Encountered webpage dialog: `n" ieText)
+				sleep 200
 				Send, {Esc}
+				eventlog("PREVGRAB: IE dialog close " attemptErr)
 			}
 		}
 		
