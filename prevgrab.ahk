@@ -275,20 +275,22 @@ IEurl(url) {
 	
 	loop, 3
 	{
-		wb.Navigate(url)																	; load URL
-		attemptErr:=0
-		while wb.busy {																		; wait until done loading
-			if (attemptErr > 20) {
-				break
+		try 
+		{
+			eventlog("PREVGRAB: Navigating to " url " (attempt " A_index ").")
+			wb.Navigate(url)															; load URL
+			if !(wb.LocationURL = url) {
+				eventlog("PREVGRAB: Redirected.",0)
 			}
-			sleep 200
-			if WinExist("Message from webpage") {
-				attemptErr ++
-				WinActivate
-				sleep 200
-				Send, {Esc}
-				eventlog("PREVGRAB: IE dialog close " attemptErr)
+			if !(IEwaitBusy(10000)) {													; msec before fails
+				eventlog("PREVGRAB: Failed to load.")
+				return
 			}
+		}
+		catch e
+		{
+			eventlog("PREVGRAB: IEurl failed with msg: " stregX(e.message,"^",1,0,"[\r\n]"))
+			return
 		}
 		
 		if instr(wb.LocationURL,gl.login.string) {
