@@ -321,6 +321,15 @@ IEclose() {
 	return
 }
 
+checkBtn(txt,btn) {
+	if (errHWND:=WinExist(txt)) {
+		ControlClick,%btn%,ahk_id %errHWND%
+		eventlog("PREVGRAB: Message dialog clicked '" btn "'.")
+		sleep 200
+	}
+	return
+}
+
 preventiceLogin() {
 /*	Need to populate and submit user login form
 */
