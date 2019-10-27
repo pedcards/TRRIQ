@@ -273,7 +273,7 @@ IEurl(url) {
 */
 	global wb,gl
 	
-	loop, 3
+	loop, 3																				; Number of attempts to permit redirects
 	{
 		try 
 		{
@@ -294,19 +294,19 @@ IEurl(url) {
 		}
 		
 		if instr(wb.LocationURL,gl.login.string) {
-			preventiceLogin()
-			eventlog("PREVGRAB: Login try " A_index)
+			loginErr := preventiceLogin()
+			eventlog("PREVGRAB: Login " ((loginErr) ? "submitted." : "attempted."))
 		}
 		if (wb.LocationURL=url) {
-			eventlog("PREVGRAB: " url,0)
+			eventlog("PREVGRAB: Succeeded.",0)
 			return
 		}
 		else {
-			eventlog("PREVGRAB: Stuck on " wb.LocationURL,0)
+			eventlog("PREVGRAB: Landed on " wb.LocationURL)
 			sleep 500
 		}
 	}
-	eventlog("PREVGRAB: Failed to load page.")
+	eventlog("PREVGRAB: Failed all attempts " url)
 	return
 }
 
