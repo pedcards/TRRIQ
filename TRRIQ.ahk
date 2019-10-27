@@ -1883,6 +1883,8 @@ MortaraUpload(tabnum="")
 		eventlog("Data files: wuDirSer " wuDir.Ser ", MRN " wuDir.MRN)
 		if !(serNum=wuDir.Ser) {
 			eventlog("Serial number mismatch.")
+			eventlog("RECORD: '" wuRecord "'")
+			eventlog("DEVICE: '" wuDevice "'")
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			WinActivate, ahk_id %muWinID%
 			ControlGet, clkbut, HWND,, Back
