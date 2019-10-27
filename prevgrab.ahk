@@ -364,11 +364,12 @@ preventiceLogin() {
 		.getElementByID(gl.login.attr_btn)
 		.click()
 	
-	while wb.busy {																		; wait until done loading
-		sleep 10
+	if !(IEwaitBusy(10000)) {															; wait until done loading
+		return false
 	}
-
-	return
+	else {
+		return true
+	}
 }
 
 ParseName(x) {
