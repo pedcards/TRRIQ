@@ -321,6 +321,21 @@ IEclose() {
 	return
 }
 
+IEwaitBusy(maxTick) {
+	global wb
+	startTick:=A_TickCount
+	
+	while wb.busy {																		; wait until done loading
+		if (A_TickCount-startTick > maxTick) {
+			eventlog("PREVGRAB: " wb.LocationURL " timed out.")
+			return false																; break loop if time exceeds maxTick
+		}
+		checkBtn("Message from webpage","OK")											; check if err window present and click OK button
+		sleep 200
+	}
+	return true
+}
+
 checkBtn(txt,btn) {
 	if (errHWND:=WinExist(txt)) {
 		ControlClick,%btn%,ahk_id %errHWND%
