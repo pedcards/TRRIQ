@@ -282,7 +282,7 @@ IEurl(url) {
 			if !(wb.LocationURL = url) {
 				eventlog("PREVGRAB: Redirected.",0)
 			}
-			if !(IEwaitBusy(10000)) {													; msec before fails
+			if !(IEwaitBusy(gl.settings.webwait)) {													; msec before fails
 				eventlog("PREVGRAB: Failed to load.")
 				return
 			}
@@ -364,7 +364,7 @@ preventiceLogin() {
 		.getElementByID(gl.login.attr_btn)
 		.click()
 	
-	if !(IEwaitBusy(10000)) {															; wait until done loading
+	if !(IEwaitBusy(gl.login.webwait)) {															; wait until done loading
 		return false
 	}
 	else {
