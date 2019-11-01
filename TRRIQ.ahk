@@ -2752,7 +2752,7 @@ getPatInfo() {
 	
 ;	Now separate the "Family contact" members, grab relevant contact info from each parsed line
 	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
-	relStr := "Father|Mother|Grand|Aunt|Uncle|Foster|Parent|Sibling|Cousin|Relative|Step|Adult"
+	relStr := "Father|Dad|Mother|Mom|Grand|Aunt|Uncle|Foster|Parent|Sibling|Cousin|Relative|Step|Adult"
 	rel := Object()
 	
 	loop
@@ -2770,8 +2770,8 @@ getPatInfo() {
 		rel[i].phoneHome := formatPhone(tmp.selectSingleNode("//idx[equipment/text()='HOME']/num").text)
 		rel[i].phoneMobile := formatPhone(tmp.selectSingleNode("//idx[equipment/text()='MOBILE']/num").text)
 		tmp := fldval[pre "Role"]
-		rel[i].lives := instr(tmp,"Y^LW") ? true : false
-		rel[i].legal := instr(tmp,"Y^LG") ? true : false
+		rel[i].lives := instr(tmp,"Yes^LIVESWITH") ? true : false
+		rel[i].legal := instr(tmp,"Yes^GUARDIAN") ? true : false
 		rel[i].addr := strQ(fldval[pre "Addr1"],"###`n")
 			. strQ(fldval[pre "Addr2"],"###`n")
 			. strQ(strQ(fldval[pre "City"],"###") strQ(fldval[pre "State"],", ###") strQ(fldval[pre "Zip"]," ###"),"###`n")
@@ -2815,6 +2815,12 @@ getPatInfo() {
 	ptDem.parent := rel[choice].Name
 	ptDem.parentL := parseName(ptDem.parent).last
 	ptDem.parentF := parseName(ptDem.parent).first
+	
+	ptDem.phone := (rel[choice].phoneHome) 
+		? rel[choice].phoneHome
+		: (rel[choice].phoneMobile)
+			? rel[choice].phoneMobile
+			: ""
 	
 	if (rel[choice].addr="") {
 		rel[choice].addr := ptDem.livesaddr
