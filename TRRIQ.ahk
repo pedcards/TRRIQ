@@ -593,7 +593,7 @@ WQlist() {
 	*/
 	Gui, ListView, WQlv_orders
 	LV_Delete()
-	loop, Files, % hl7InDir "*.hl7"
+	loop, Files, % hl7InDir "*"
 	{
 		e0 := {}
 		fileIn := A_LoopFileName
