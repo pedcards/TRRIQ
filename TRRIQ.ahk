@@ -620,7 +620,7 @@ WQlist() {
 			e0.site := sitesLong[fldval.PV1_Location]
 			e0.acct := fldval["PV1_Location"] strQ(fldval.ORC_ReqNum,"-###") strQ(fldval.ORC_FillerNum,"-###")
 			e0.UID := tobase(fldval["ORC_ReqNum"] fldval["ORC_FillerNum"],36)
-			e0.ind := fldval["OBR_ReasonText"]
+			e0.ind := fldval["OBR_ReasonCode"] strQ(fldval["OBR_ReasonText"],"^###")
 			
 			if !IsObject(wq.selectSingleNode("/root/orders")) {
 				wq.addElement("orders","/root")
