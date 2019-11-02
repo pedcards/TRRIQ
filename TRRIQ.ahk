@@ -4917,6 +4917,13 @@ ThousandsSep(x, s=",") {
 	return RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
 }
 
+ToBase(n,b) {
+/*	from https://autohotkey.com/board/topic/15951-base-10-to-base-36-conversion/
+	n >= 0, 1 < b <= 36
+*/
+   Return (n < b ? "" : ToBase(n//b,b)) . ((d:=mod(n,b)) < 10 ? d : Chr(d+55))
+}
+
 formatPhone(txt) {
 ; format phone as aaa-bbb-cccc
 	return RegExReplace(txt,".*?(\d{3}).*?(\d{3}).*?(\d{4})","$1-$2-$3")
