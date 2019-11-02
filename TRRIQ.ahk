@@ -622,6 +622,10 @@ WQlist() {
 			e0.UID := fldval["ORC_ReqNum"]
 			e0.ind := fldval["OBR_ReasonText"]
 			
+			if !IsObject(wq.selectSingleNode("/root/orders")) {
+				wq.addElement("orders","/root")
+			}
+			
 			newID := "/root/orders/enroll[@id='" e0.UID "']"
 			wq.addElement("enroll","/root/orders",{id:e0.UID})
 			wq.addElement("date",newID,e0.date)
