@@ -642,8 +642,6 @@ WQlist() {
 			fileIn := e0.MRN "_" 
 				. fldval["PID_nameL"] "^" fldval["PID_nameF"] "_"
 				. e0.date "_"
-				. fldval["ORC_ProvNameL"] "_"
-				. e0.mon "_"
 				. e0.uid "Z.hl7"
 				
 			FileMove, %A_LoopFileFullPath%
