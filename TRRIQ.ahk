@@ -654,7 +654,11 @@ WQlist() {
 			, e0.name																	; name
 			, e0.mrn																	; mrn
 			, e0.prov																	; prov
-			, e0.mon																	; monitor type
+			, (e0.mon="HOL" ? "24-hr "													; monitor type
+				: e0.mon="BGH" ? "30-day "
+				: e0.mon~="BGM|ZIO" ? "14-day "
+				: "")
+				. e0.mon
 			, "")																		; fulldisc present, make blank
 		GuiControl, Enable, Register
 		GuiControl, Text, Register, Go to ORDERS tab
