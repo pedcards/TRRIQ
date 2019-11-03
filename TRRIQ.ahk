@@ -597,7 +597,7 @@ WQlist() {
 	{
 		e0 := {}
 		fileIn := A_LoopFileName
-		if RegExMatch(fileIn,"_(\d{4,})Z.hl7",i) {													; hl7 file appears to have been parsed already
+		if RegExMatch(fileIn,"_([a-zA-Z0-9]{4,})Z.hl7",i) {													; hl7 file appears to have been parsed already
 			e0 := readWQ(i1)
 		}
 		if !(e0.name) {																				; either HL7 has never been parsed or bad filename
