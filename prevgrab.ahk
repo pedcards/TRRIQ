@@ -41,7 +41,6 @@ Config:
 MainLoop:
 {
 	eventlog("PREVGRAB: Initializing.")
-	IEclose()																			; Start by closing all IE windows
 	
 	wb := IEopen()																		; start/activate an IE instance
 	wb.visible := gl.settings.isVisible
@@ -57,7 +56,9 @@ MainLoop:
 	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
 	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
-	IEclose()
+	if (gl.IEnew=true) {
+		IEclose()
+	}
 	
 	ExitApp
 }
@@ -255,15 +256,17 @@ IEopen() {
 	If IE open, choose that windows object
 	Return the IE window object
 */
+	global gl
+	
 	if !winExist("ahk_exe iexplore.exe") {
 		wb := ComObjCreate("InternetExplorer.application")
+		gl.IEnew := true
 		return wb
 	} 
-	else {
-		for wb in ComObjCreate("Shell.Application").Windows() {
-			if InStr(wb.FullName, "iexplore.exe") {
-				return wb
-			}
+	for wb in ComObjCreate("Shell.Application").Windows() {
+		if InStr(wb.FullName, "iexplore.exe") {
+			gl.IEnew := false
+			return wb
 		}
 	}
 }
@@ -273,47 +276,74 @@ IEurl(url) {
 */
 	global wb,gl
 	
-	loop, 3
+	loop, 3																				; Number of attempts to permit redirects
 	{
-		wb.Navigate(url)																	; load URL
-		while wb.busy {																		; wait until done loading
-			sleep 10
-			if WinExist("Message from webpage") {
-				WinActivate
-				WinGetText, ieText
-				eventlog("PREVGRAB: Closing dialog.")
-				eventlog("PREVGRAB: Encountered webpage dialog: `n" ieText)
-				Send, {Esc}
+		try 
+		{
+			eventlog("PREVGRAB: Navigating to " url " (attempt " A_index ").")
+			wb.Navigate(url)															; load URL
+			if !(wb.LocationURL = url) {
+				eventlog("PREVGRAB: Redirected.",0)
 			}
+			if !(IEwaitBusy(gl.settings.webwait)) {													; msec before fails
+				eventlog("PREVGRAB: Failed to load.")
+				return
+			}
+		}
+		catch e
+		{
+			eventlog("PREVGRAB: IEurl failed with msg: " stregX(e.message,"^",1,0,"[\r\n]"))
+			return
 		}
 		
 		if instr(wb.LocationURL,gl.login.string) {
-			preventiceLogin()
-			eventlog("PREVGRAB: Login try " A_index)
+			loginErr := preventiceLogin()
+			eventlog("PREVGRAB: Login " ((loginErr) ? "submitted." : "attempted."))
 		}
 		if (wb.LocationURL=url) {
-			eventlog("PREVGRAB: " url,0)
+			eventlog("PREVGRAB: Succeeded.",0)
 			return
 		}
 		else {
-			eventlog("PREVGRAB: Stuck on " wb.LocationURL,0)
+			eventlog("PREVGRAB: Landed on " wb.LocationURL)
 			sleep 500
 		}
 	}
-	eventlog("PREVGRAB: Failed to load page.")
+	eventlog("PREVGRAB: Failed all attempts " url)
 	return
 }
 
 IEclose() {
 	DetectHiddenWindows, On
-	while WinExist("ahk_exe iexplore.exe")
-	{
-		i := A_index
-		Process, Close, iexplore.exe
-		sleep 500
-	}
-	eventlog("PREVGRAB: Closed " i " IE windows.",0)
 	
+	Process, Close, iexplore.exe
+	
+	eventlog("PREVGRAB: Attempted to close IE.",0)
+	
+	return
+}
+
+IEwaitBusy(maxTick) {
+	global wb
+	startTick:=A_TickCount
+	
+	while wb.busy {																		; wait until done loading
+		if (A_TickCount-startTick > maxTick) {
+			eventlog("PREVGRAB: " wb.LocationURL " timed out.")
+			return false																; break loop if time exceeds maxTick
+		}
+		checkBtn("Message from webpage","OK")											; check if err window present and click OK button
+		sleep 200
+	}
+	return true
+}
+
+checkBtn(txt,btn) {
+	if (errHWND:=WinExist(txt)) {
+		ControlClick,%btn%,ahk_id %errHWND%
+		eventlog("PREVGRAB: Message dialog clicked '" btn "'.")
+		sleep 200
+	}
 	return
 }
 
@@ -334,11 +364,12 @@ preventiceLogin() {
 		.getElementByID(gl.login.attr_btn)
 		.click()
 	
-	while wb.busy {																		; wait until done loading
-		sleep 10
+	if !(IEwaitBusy(gl.login.webwait)) {															; wait until done loading
+		return false
 	}
-
-	return
+	else {
+		return true
+	}
 }
 
 ParseName(x) {

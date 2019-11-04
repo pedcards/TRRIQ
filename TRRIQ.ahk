@@ -164,7 +164,10 @@ PhaseGUI:
 	Gui, Add, Button
 		, Y+10 wp h40 gPhaseRefresh
 		, Refresh lists
-	Gui, Add, Text, wp h70
+	Gui, Add, Button
+		, Y+10 wp h40 vEnrollment gPrevGrab Disabled
+		, Grab Preventice enrollments
+	Gui, Add, Text, wp h40																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/activate a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
 		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
@@ -1649,6 +1652,12 @@ getDem:
 	return
 }
 
+PrevGrab:
+{
+	Run, PrevGrab.exe
+	return
+}
+
 CheckPreventiceWeb(win) {
 	global phase
 	SetTimer, idleTimer, Off
@@ -2021,6 +2030,8 @@ MortaraUpload(tabnum="")
 		eventlog("Data files: wuDirSer " wuDir.Ser ", MRN " wuDir.MRN)
 		if !(serNum=wuDir.Ser) {
 			eventlog("Serial number mismatch.")
+			eventlog("RECORD: '" wuRecord "'")
+			eventlog("DEVICE: '" wuDevice "'")
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			WinActivate, ahk_id %muWinID%
 			ControlGet, clkbut, HWND,, Back
