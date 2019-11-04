@@ -171,13 +171,13 @@ PhaseGUI:
 	Gui, Add, Button
 		, Y+10 wp h40 gWQlist
 		, Refresh inbox
-	;~ Gui, Add, Button
-		;~ , Y+10 wp h40 vEnrollment gPhaseTask Disabled
-		;~ , ;Grab Preventice enrollments
+	Gui, Add, Button
+		, Y+10 wp h40 vEnrollment gPrevGrab Disabled
+		, Grab Preventice enrollments
 	;~ Gui, Add, Button
 		;~ , Y+10 wp h40 vInventory gPhaseTask Disabled
 		;~ , ;Grab Preventice inventory
-	Gui, Add, Text, wp h100
+	Gui, Add, Text, wp h40																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+20 wp h80 Center, Register BodyGuardian MONITOR
 	Gui, Add, Text, Y+20 wp h80 Center, Prepare/Upload MORTARA HOLTER
 	Gui, Font, Normal
@@ -1508,6 +1508,12 @@ getDem:
 		WinWaitClose, Enter indications
 	}
 	
+	return
+}
+
+PrevGrab:
+{
+	Run, PrevGrab.exe
 	return
 }
 
