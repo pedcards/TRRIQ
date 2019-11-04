@@ -605,16 +605,12 @@ WQlist() {
 			e0.date := parseDate(fldval["MSH_DateTIme"]).YMD
 			e0.name := fldval["PID_NameL"] strQ(fldval["PID_NameF"],", ###")
 			e0.mrn := fldval["PID_PatMRN"]
-			e0.sex := fldval["PID_sex"]="F" 
-					? "Female"
+			e0.sex := fldval["PID_sex"]="F" ? "Female"
 					: "Male"
 			e0.dob := parseDate(fldval["PID_DOB"]).MDY
-			e0.mon := (tmp:=fldval["OBR_TestName"])~="i)14 DAY"
-					? "BGM"
-					: tmp~="i)24 HOUR"
-					? "HOL"
-					: tmp~="i)RECORDER"
-					? "BGH"
+			e0.mon := (tmp:=fldval["OBR_TestName"])~="i)14 DAY" ? "BGM"
+					: tmp~="i)24 HOUR" ? "HOL"
+					: tmp~="i)RECORDER" ? "BGH"
 					: ""
 			e0.prov := fldval["ORC_ProvNameL"] strQ(fldval["ORC_ProvNameF"],", ###")
 			e0.site := sitesLong[fldval.PV1_Location]
