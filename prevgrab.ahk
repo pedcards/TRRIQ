@@ -41,7 +41,6 @@ Config:
 MainLoop:
 {
 	eventlog("PREVGRAB: Initializing.")
-	IEclose()																			; Start by closing all IE windows
 	
 	wb := IEopen()																		; start/activate an IE instance
 	wb.visible := gl.settings.isVisible
@@ -57,7 +56,9 @@ MainLoop:
 	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
 	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
-	IEclose()
+	if (gl.IEnew=true) {
+		IEclose()
+	}
 	
 	ExitApp
 }
@@ -255,15 +256,17 @@ IEopen() {
 	If IE open, choose that windows object
 	Return the IE window object
 */
+	global gl
+	
 	if !winExist("ahk_exe iexplore.exe") {
 		wb := ComObjCreate("InternetExplorer.application")
+		gl.IEnew := true
 		return wb
 	} 
-	else {
-		for wb in ComObjCreate("Shell.Application").Windows() {
-			if InStr(wb.FullName, "iexplore.exe") {
-				return wb
-			}
+	for wb in ComObjCreate("Shell.Application").Windows() {
+		if InStr(wb.FullName, "iexplore.exe") {
+			gl.IEnew := false
+			return wb
 		}
 	}
 }
@@ -312,13 +315,10 @@ IEurl(url) {
 
 IEclose() {
 	DetectHiddenWindows, On
-	while WinExist("ahk_exe iexplore.exe")
-	{
-		i := A_index
-		Process, Close, iexplore.exe
-		sleep 500
-	}
-	eventlog("PREVGRAB: Closed " i " IE windows.",0)
+	
+	Process, Close, iexplore.exe
+	
+	eventlog("PREVGRAB: Attempted to close IE.",0)
 	
 	return
 }
