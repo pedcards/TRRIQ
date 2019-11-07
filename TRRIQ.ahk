@@ -2783,8 +2783,8 @@ getPatInfo() {
 		rel[i].phoneHome := formatPhone(tmp.selectSingleNode("//idx[equipment/text()='HOME']/num").text)
 		rel[i].phoneMobile := formatPhone(tmp.selectSingleNode("//idx[equipment/text()='MOBILE']/num").text)
 		tmp := fldval[pre "Role"]
-		rel[i].lives := instr(tmp,"Yes^LIVESWITH") ? true : false
-		rel[i].legal := instr(tmp,"Yes^GUARDIAN") ? true : false
+		rel[i].lives := instr(tmp,"Y^LW") ? true : false
+		rel[i].legal := instr(tmp,"Y^LG") ? true : false
 		rel[i].addr := strQ(fldval[pre "Addr1"],"###`n")
 			. strQ(fldval[pre "Addr2"],"###`n")
 			. strQ(strQ(fldval[pre "City"],"###") strQ(fldval[pre "State"],", ###") strQ(fldval[pre "Zip"]," ###"),"###`n")
