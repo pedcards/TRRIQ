@@ -869,22 +869,12 @@ parsePrevEnroll(txt) {
 			parsePrevElement(id,en,res,"site")
 			return
 		}
-		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
-			en:=readWQ(id)
-			if (en.node="done") {
-				return
-			}
-			wqSetVal(id,"date",res.date)
-			eventlog(en.name " (" id ") changed WQ date '" en.date "' ==> '" res.date "'")
-			return
-		}
 		if (id:=enrollcheck("[mrn='" res.mrn "'][date='" res.date "']")) {				; MRN+DATE, no S/N
 			en:=readWQ(id)
 			if (en.node="done") {
 				return
 			}
-			wqSetVal(id,"dev",res.dev)
-			eventlog(en.name " (" id ") changed WQ dev '" en.dev "' ==> '" res.dev "'")
+			parsePrevElement(id,en,res,"dev")
 			return
 		}
 		if (id:=enrollcheck("[date='" res.date "'][dev='" res.dev "']")) {				; DATE+S/N, no MRN
@@ -892,10 +882,19 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			wqSetVal(id,"mrn",res.mrn)
-			eventlog(en.name " (" id ") changed WQ mrn '" en.mrn "' ==> '" res.mrn "'")
+			parsePrevElement(id,en,res,"mrn")
 			return
 		} 
+		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
+			en:=readWQ(id)
+			dt0:=res.date
+			dt0 -= en.date, days
+			
+			if abs(dt0) < 5 {															; res.date less than 5d from en.date
+				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
+				return
+			}
+		}																				; anything else is probably a new registration
 		
 	/*	No match (i.e. unique record)
 	 *	add new record to PENDING
