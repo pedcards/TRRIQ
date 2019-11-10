@@ -1225,7 +1225,7 @@ readWQorder() {
 		ptDem.loc := siteslong[fldval.PV1_Location]
 		ptDem.type := (ptDem.loc) ? "Outpatient" : "Other"
 		ptDem.monitor := fldval.OBR_TestName
-		ptDem.indication := fldval.OBR_ReasonText
+		ptDem.indication := strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")
 		ptDem.indicationCode := fldval.OBR_ReasonCode
 		ptDem.filename := fileIn
 	
