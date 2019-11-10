@@ -2020,10 +2020,7 @@ MortaraUpload(tabnum="")
 		if (wuDir.Full="") {															; no transfer files found
 			eventlog("No transfer files found.")
 			MsgBox, 262160, Device error, No transfer files found!`n`nTry again.
-			WinActivate, ahk_id %muWinID%
-			ControlGet, clkbut, HWND,, Back
-			sleep 200
-			ControlClick,, ahk_id %clkbut%,,,,NA
+			muPushButton(muWinID,"Back")
 			return
 		}
 		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)									; transfer files found
@@ -2043,10 +2040,7 @@ MortaraUpload(tabnum="")
 			eventlog("RECORD: '" wuRecord "'")
 			eventlog("DEVICE: '" wuDevice "'")
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
-			WinActivate, ahk_id %muWinID%
-			ControlGet, clkbut, HWND,, Back
-			sleep 200
-			ControlClick,, ahk_id %clkbut%,,,,NA
+			muPushButton(muWinID,"Back")
 			return
 		}
 		
@@ -2074,10 +2068,7 @@ MortaraUpload(tabnum="")
 			IfMsgBox, Cancel
 			{
 				eventlog("Cancelled GUI.")
-				WinActivate, ahk_id %muWinID%
-				ControlGet, clkbut, HWND,, Back
-				sleep 200
-				ControlClick,, ahk_id %clkbut%,,,,NA
+				muPushButton(muWinID,"Back")
 				return
 			}
 		} else {																		; no valid S/N exists
@@ -2085,10 +2076,7 @@ MortaraUpload(tabnum="")
 			if (fetchQuit=true) {
 				fetchQuit:=false
 				eventlog("Cancelled getDem.")
-				WinActivate, ahk_id %muWinID%
-				ControlGet, clkbut, HWND,, Back
-				sleep 200
-				ControlClick,, ahk_id %clkbut%,,,,NA
+				muPushButton(muWinID,"Back")
 				return
 			}
 			ptDem["muphase"] := "upload"
