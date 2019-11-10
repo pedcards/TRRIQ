@@ -1989,7 +1989,6 @@ MortaraUpload(tabnum="")
 	
 	muWinID := WinExist("Mortara Web Upload")
 
-	ptDem := Object()
 	fetchQuit := false
 	MtCt := ""
 	mu_UI := MorUIgrab()
@@ -2006,6 +2005,7 @@ MortaraUpload(tabnum="")
 	if (Tabnum="Transfer") {															; TRANSFER RECORDING TAB
 		eventlog("Transfer recording selected.")
 		sleep 1000
+		ptDem := Object()
 		
 		wuDir := {}
 		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
