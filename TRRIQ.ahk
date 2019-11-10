@@ -2136,31 +2136,21 @@ MortaraUpload(tabnum="")
 		if (fetchQuit=true) {
 			fetchQuit:=false
 			eventlog("Cancelled getDem.")
-			WinActivate, ahk_id %muWinID%
-			ControlGet, clkbut, HWND,, Back
-			sleep 200
-			ControlClick,, ahk_id %clkbut%,,,,NA
+			muPushButton(muWinID,"Back")
 			return
 		}
 		getPatInfo()																	; grab remaining demographics for Preventice registration
 		if (fetchQuit=true) {
 			fetchQuit:=false
 			eventlog("Cancelled getPatInfo.")
-			WinActivate, ahk_id %muWinID%
-			ControlGet, clkbut, HWND,, Back
-			sleep 200
-			ControlClick,, ahk_id %clkbut%,,,,NA
+			muPushButton(muWinID,"Back")
 			return
 		}
 		
 		MorUIfill(mu_UI.PRct,muWinID)													; Fill UI fields from ptDem
 		
 /*
-		WinActivate, ahk_id %muWinID%													; Make sure clock button is set
-		sleep 500
-		ControlGet, clkbut, HWND,, Set Clock...
-		sleep 200
-		ControlClick,, ahk_id %clkbut%,,,,NA
+		muPushButton(muWinID,"Set Clock...")											; Make sure clock button is set
 		WinWaitClose, Set Recorder Time
 		
 		loop											
@@ -2195,6 +2185,16 @@ MortaraUpload(tabnum="")
 		
 		registerPreventice()
 	}
+	
+	return
+}
+
+muPushButton(muWinID,btn) {
+	WinActivate, ahk_id %muWinID%
+	sleep 500
+	ControlGet, clkbut, HWND,, %btn%
+	sleep 200
+	ControlClick,, ahk_id %clkbut%,,,,NA
 	
 	return
 }
