@@ -1968,11 +1968,12 @@ MortaraUpload(tabnum="")
 	checkCitrix()
 	SetTimer, idleTimer, Off
 	
+/*	comment out for debugging
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
 		wb := IEopen()
 		sleep 500
 		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
-		;~ ComObjConnect(wb)																; disconnect the webbrowser object
+		;ComObjConnect(wb)																; disconnect the webbrowser object
 		
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
@@ -1985,6 +1986,7 @@ MortaraUpload(tabnum="")
 		}
 		return
 	}
+*/
 	
 	muWinID := WinExist("Mortara Web Upload")
 
@@ -1996,6 +1998,10 @@ MortaraUpload(tabnum="")
 	
 	SerNum := substr(stregX(muWintxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-6)		; Get S/N on visible page
 	SerNum := SerNum ? trim(SerNum," `r`n") : ""
+;***
+	SerNum:="12345"
+	TabNum:="Prepare"
+;***
 	eventlog("Device S/N " sernum " attached.")
 	
 	if (Tabnum="Transfer") {															; TRANSFER RECORDING TAB
@@ -2124,6 +2130,7 @@ MortaraUpload(tabnum="")
 		
 		MorUIfill(mu_UI.PRct,muWinID)													; Fill UI fields from ptDem
 		
+/*
 		WinActivate, ahk_id %muWinID%													; Make sure clock button is set
 		sleep 500
 		ControlGet, clkbut, HWND,, Set Clock...
@@ -2144,6 +2151,7 @@ MortaraUpload(tabnum="")
 			}
 		}
 		Winwaitclose, ahk_id %finOK%													; Now we can wait until it is closed
+*/
 		
 		InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
 		if (RegExMatch(note,"((\d\s*){12})",fedex)) {
