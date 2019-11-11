@@ -618,7 +618,7 @@ WQlist() {
 				eventlog("Order msg " fileIn " is outdated.")
 				continue
 			}
-			if (e0.orderCtrl="CA") {
+			if (e0.orderCtrl="CA") {													; CAncel an order
 				FileDelete, % hl7InDir fileIn											; delete this order message
 				FileDelete, % hl7InDir "*_" e0.UID "Z.hl7"								; and the previously processed hl7 file
 				removeNode(e0.orderNode)												; and the accompanying node
@@ -629,9 +629,19 @@ WQlist() {
 			removeNode(e0.orderNode)													; and the accompanying node
 			eventlog("Cleared order " e0.order " node.")
 		}
-		newID := "/root/orders/enroll[@id='" e0.UID "']"
+		if (e0.orderCtrl="XO") {														; change an order
+			e0.orderNode := "/root/orders/enroll[accession='" e0.accession "']"
+			k := wq.selectSingleNode(e0.orderNode)
+			e0.nodeUID := k.getAttribute("id")
+			FileDelete, % hl7InDir "*_" e0.nodeUID "Z.hl7"
+			removeNode(e0.orderNode)
+			eventlog("Removed node id " e0.nodeUID " for replacement.")
+		}
+		
+		newID := "/root/orders/enroll[@id='" e0.UID "']"								; otherwise create a new node
 		wq.addElement("enroll","/root/orders",{id:e0.UID})
 		wq.addElement("ordernum",newID,e0.order)
+		wq.addElement("accession",newID,e0.accession)
 		wq.addElement("ctrlID",newID,e0.CtrlID)
 		wq.addElement("date",newID,e0.date)
 		wq.addElement("name",newID,e0.name)
@@ -643,16 +653,18 @@ WQlist() {
 		wq.addElement("site",newID,e0.loc)
 		wq.addElement("acct",newID,e0.acct)
 		wq.addElement("ind",newID,e0.ind)
+		eventlog("Added order ID " e0.UID ".")
 		
 		fileOut := e0.MRN "_" 
 			. fldval["PID_nameL"] "^" fldval["PID_nameF"] "_"
 			. e0.date "_"
 			. e0.uid "Z.hl7"
 			
-		FileMove, %A_LoopFileFullPath%
+		FileMove, %A_LoopFileFullPath%													; and rename ORM file
 			, % hl7InDir . fileOut
 		
 	}
+	
 	loop, Files, % hl7InDir "*Z.hl7"
 	{
 		e0 := {}
