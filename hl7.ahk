@@ -63,7 +63,7 @@ hl7line(seg) {
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
 		i := A_Index
-		if (i<=2) {																		; skip first 2 elements in OBX|2|TX
+		if (i<=1) {																		; skip first 2 elements in OBX|2|TX
 			continue
 		}
 		str := fld[i]																	; each segment field
