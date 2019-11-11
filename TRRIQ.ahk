@@ -665,7 +665,7 @@ WQlist() {
 		
 	}
 	
-	loop, Files, % hl7InDir "*Z.hl7"
+	loop, Files, % hl7InDir "*Z.hl7"													; Second pass: scan *Z.hl7 files
 	{
 		e0 := {}
 		fileIn := A_LoopFileName
