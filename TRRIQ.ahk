@@ -605,21 +605,7 @@ WQlist() {
 		}
 		if !(e0.name) {																				; either HL7 has never been parsed or bad filename
 			processhl7(A_LoopFileFullPath)
-			e0.date := parseDate(fldval["MSH_DateTIme"]).YMD
-			e0.name := fldval["PID_NameL"] strQ(fldval["PID_NameF"],", ###")
-			e0.mrn := fldval["PID_PatMRN"]
-			e0.sex := fldval["PID_sex"]="F" ? "Female"
-					: "Male"
-			e0.dob := parseDate(fldval["PID_DOB"]).MDY
-			e0.mon := (tmp:=fldval["OBR_TestName"])~="i)14 DAY" ? "BGM"
-					: tmp~="i)24 HOUR" ? "HOL"
-					: tmp~="i)RECORDER" ? "BGH"
-					: ""
-			e0.prov := fldval["ORC_ProvNameL"] strQ(fldval["ORC_ProvNameF"],", ###")
-			e0.site := sitesLong[fldval.PV1_Location]
-			e0.acct := fldval["PV1_Location"] strQ(fldval.ORC_ReqNum,"-###") strQ(fldval.ORC_FillerNum,"-###")
-			e0.UID := tobase(fldval["ORC_ReqNum"] fldval["ORC_FillerNum"],36)
-			e0.ind := fldval["OBR_ReasonCode"] strQ(fldval["OBR_ReasonText"],"^###")
+			e0:=parseORM()
 			
 			if !IsObject(wq.selectSingleNode("/root/orders")) {
 				wq.addElement("orders","/root")
@@ -634,7 +620,7 @@ WQlist() {
 			wq.addElement("dob",newID,e0.dob)
 			wq.addElement("mon",newID,e0.mon)
 			wq.addElement("prov",newID,e0.prov)
-			wq.addElement("site",newID,e0.site)
+			wq.addElement("site",newID,e0.loc)
 			wq.addElement("acct",newID,e0.acct)
 			wq.addElement("ind",newID,e0.ind)
 			
@@ -1240,6 +1226,41 @@ readWQorder() {
 	}
 	
 	return
+}
+
+parseORM() {
+/*	parse fldval values to values
+*/
+	global fldval, sitesLong
+	
+	return {date:parseDate(fldval.PV1_DateTime).YMD
+		, encDate:parseDate(fldval.PV1_DateTime).YMD
+		, nameL:fldval.PID_NameL
+		, nameF:fldval.PID_NameF
+		, name:fldval.PID_NameL strQ(fldval.PID_NameF,", ###")
+		, mrn:fldval.PID_PatMRN
+		, sex:(fldval_.PID_sex~="F") ? "Female" : "Male"
+		, DOB:parseDate(fldval.PID_DOB).MDY
+		, monitor:(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
+			: tmp~="i)24 HOUR" ? "HOL"
+			: tmp~="i)RECORDER" ? "BGH"
+			: ""
+		, mon:(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
+			: tmp~="i)24 HOUR" ? "HOL"
+			: tmp~="i)RECORDER" ? "BGH"
+			: ""
+		, provider:fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
+		, prov:fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
+		, type:(fldval.PV1_PtClass="O") ? "Outpatient" : "Other"
+		, loc:sitesLong[fldval.PV1_Location]
+		, Account:fldval.ORC_ReqNum
+		, order:fldval.ORC_ReqNum
+		, accession:fldval.ORC_FillerNum
+		, acct:fldval.PV1_Location strQ(fldval.ORC_ReqNum,"-###") strQ(fldval.ORC_FillerNum,"-###")
+		, UID:tobase(fldval.ORC_ReqNum fldval.ORC_FillerNum,36)
+		, ind:strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")
+		, indication:strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")
+		, indicationCode:fldval.OBR_ReasonCode}
 }
 
 FetchDem:
