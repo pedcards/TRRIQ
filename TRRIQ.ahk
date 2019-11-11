@@ -1230,6 +1230,7 @@ readWQorder() {
 
 parseORM() {
 /*	parse fldval values to values
+	including aliases for both WQlist and readWQorder
 */
 	global fldval, sitesLong
 	
@@ -1251,7 +1252,9 @@ parseORM() {
 			: ""
 		, provider:fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
 		, prov:fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
-		, type:(fldval.PV1_PtClass="O") ? "Outpatient" : "Other"
+		, type:(tmp:=fldval.PV1_PtClass)="O" ? "Outpatient" 
+			: tmp~="I" ? "Inpatient"
+			: "Other"
 		, loc:sitesLong[fldval.PV1_Location]
 		, Account:fldval.ORC_ReqNum
 		, order:fldval.ORC_ReqNum
