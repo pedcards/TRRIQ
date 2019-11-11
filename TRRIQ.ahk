@@ -596,41 +596,71 @@ WQlist() {
 	*/
 	Gui, ListView, WQlv_orders
 	LV_Delete()
-	loop, Files, % hl7InDir "*"
+	
+	if !IsObject(wq.selectSingleNode("/root/orders")) {
+		wq.addElement("orders","/root")
+	}
+	
+	Loop, files, % hl7InDir "*"															; First pass: process new files
 	{
 		e0 := {}
 		fileIn := A_LoopFileName
-		if RegExMatch(fileIn,"_([a-zA-Z0-9]{4,})Z.hl7",i) {													; hl7 file appears to have been parsed already
-			e0 := readWQ(i1)
+		if RegExMatch(fileIn,"_([a-zA-Z0-9]{4,})Z.hl7",i) {								; skip old files
+			continue
 		}
-		if !(e0.name) {																				; either HL7 has never been parsed or bad filename
-			processhl7(A_LoopFileFullPath)
-			e0:=parseORM()
-			
-			if !IsObject(wq.selectSingleNode("/root/orders")) {
-				wq.addElement("orders","/root")
+		processhl7(A_LoopFileFullPath)
+		e0:=parseORM()
+		e0.orderNode := "/root/orders/enroll[ordernum='" e0.order "']"
+		if IsObject(k:=wq.selectSingleNode(e0.orderNode)) {								; ordernum node exists
+			e0.nodeCtrlID := k.selectSingleNode("ctrlID").text
+			if (e0.CtrlID < e0.nodeCtrlID) {											; order CtrlID is older than existing, somehow
+				FileDelete, % hl7InDir fileIn
+				eventlog("Order msg " fileIn " is outdated.")
+				continue
 			}
+			if (e0.orderCtrl="CA") {
+				FileDelete, % hl7InDir fileIn											; delete this order message
+				FileDelete, % hl7InDir "*_" e0.UID "Z.hl7"								; and the previously processed hl7 file
+				removeNode(e0.orderNode)												; and the accompanying node
+				eventlog("Cancelled order " e0.order ".")
+				continue
+			}
+			FileDelete, % hl7InDir "*_" e0.UID "Z.hl7"									; delete previously processed hl7 file
+			removeNode(e0.orderNode)													; and the accompanying node
+			eventlog("Cleared order " e0.order " node.")
+		}
+		newID := "/root/orders/enroll[@id='" e0.UID "']"
+		wq.addElement("enroll","/root/orders",{id:e0.UID})
+		wq.addElement("ordernum",newID,e0.order)
+		wq.addElement("ctrlID",newID,e0.CtrlID)
+		wq.addElement("date",newID,e0.date)
+		wq.addElement("name",newID,e0.name)
+		wq.addElement("mrn",newID,e0.mrn)
+		wq.addElement("sex",newID,e0.sex)
+		wq.addElement("dob",newID,e0.dob)
+		wq.addElement("mon",newID,e0.mon)
+		wq.addElement("prov",newID,e0.prov)
+		wq.addElement("site",newID,e0.loc)
+		wq.addElement("acct",newID,e0.acct)
+		wq.addElement("ind",newID,e0.ind)
+		
+		fileOut := e0.MRN "_" 
+			. fldval["PID_nameL"] "^" fldval["PID_nameF"] "_"
+			. e0.date "_"
+			. e0.uid "Z.hl7"
 			
-			newID := "/root/orders/enroll[@id='" e0.UID "']"
-			wq.addElement("enroll","/root/orders",{id:e0.UID})
-			wq.addElement("date",newID,e0.date)
-			wq.addElement("name",newID,e0.name)
-			wq.addElement("mrn",newID,e0.mrn)
-			wq.addElement("sex",newID,e0.sex)
-			wq.addElement("dob",newID,e0.dob)
-			wq.addElement("mon",newID,e0.mon)
-			wq.addElement("prov",newID,e0.prov)
-			wq.addElement("site",newID,e0.loc)
-			wq.addElement("acct",newID,e0.acct)
-			wq.addElement("ind",newID,e0.ind)
-			
-			fileIn := e0.MRN "_" 
-				. fldval["PID_nameL"] "^" fldval["PID_nameF"] "_"
-				. e0.date "_"
-				. e0.uid "Z.hl7"
-				
-			FileMove, %A_LoopFileFullPath%
-				, % hl7InDir . fileIn
+		FileMove, %A_LoopFileFullPath%
+			, % hl7InDir . fileOut
+		
+	}
+	loop, Files, % hl7InDir "*Z.hl7"
+	{
+		e0 := {}
+		fileIn := A_LoopFileName
+		if RegExMatch(fileIn,"_([a-zA-Z0-9]{4,})Z.hl7",i) {								; file appears to have been parsed
+			e0 := readWQ(i1)
+		} else {
+			continue
 		}
 		
 		LV_Add(""
