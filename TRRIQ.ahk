@@ -1221,6 +1221,29 @@ parseORM() {
 */
 	global fldval, sitesLong
 	
+	monType:=(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
+		: tmp~="i)24 HOUR" ? "HOL"
+		: tmp~="i)RECORDER" ? "BGH"
+		: ""
+	encType:=(tmp:=fldval.PV1_PtClass)="O" ? "Outpatient" 
+		: tmp="I" ? "Inpatient"
+		: "Other"
+	;~ switch encType
+	;~ {
+		;~ case "Outpatient":
+			;~ location := sitesLong[fldval.PV1_Location]
+		;~ case "Inpatient":
+			;~ location := "Inpatient"
+		;~ case "SurgCntr":
+			;~ location := "SurgCntr"
+		;~ case "Emergency":
+			;~ location := "Emergency"
+		;~ default:
+			;~ location := encType
+	;~ }
+	location := (encType="Outpatient") ? sitesLong[fldval.PV1_Location]
+		: encType
+	
 	return {date:parseDate(fldval.PV1_DateTime).YMD
 		, encDate:parseDate(fldval.PV1_DateTime).YMD
 		, nameL:fldval.PID_NameL
@@ -1229,28 +1252,22 @@ parseORM() {
 		, mrn:fldval.PID_PatMRN
 		, sex:(fldval_.PID_sex~="F") ? "Female" : "Male"
 		, DOB:parseDate(fldval.PID_DOB).MDY
-		, monitor:(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
-			: tmp~="i)24 HOUR" ? "HOL"
-			: tmp~="i)RECORDER" ? "BGH"
-			: ""
-		, mon:(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
-			: tmp~="i)24 HOUR" ? "HOL"
-			: tmp~="i)RECORDER" ? "BGH"
-			: ""
+		, monitor:monType
+		, mon:monType
 		, provider:fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
 		, prov:fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
-		, type:(tmp:=fldval.PV1_PtClass)="O" ? "Outpatient" 
-			: tmp~="I" ? "Inpatient"
-			: "Other"
-		, loc:sitesLong[fldval.PV1_Location]
+		, type:encType
+		, loc:location
 		, Account:fldval.ORC_ReqNum
 		, order:fldval.ORC_ReqNum
 		, accession:fldval.ORC_FillerNum
-		, acct:fldval.PV1_Location strQ(fldval.ORC_ReqNum,"-###") strQ(fldval.ORC_FillerNum,"-###")
+		, acct:location strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
 		, UID:tobase(fldval.ORC_ReqNum fldval.ORC_FillerNum,36)
 		, ind:strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")
 		, indication:strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")
-		, indicationCode:fldval.OBR_ReasonCode}
+		, indicationCode:fldval.OBR_ReasonCode
+		, orderCtrl:fldval.ORC_OrderCtrl
+		, ctrlID:fldval.MSH_CtrlID}
 }
 
 FetchDem:
