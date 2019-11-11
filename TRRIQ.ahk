@@ -1199,29 +1199,16 @@ readWQorder() {
 	
 	wq := new XML("worklist.xml")														; refresh WQ
 	processhl7(fileIn)																	; read HL7 OBX into fldval
-		ptDem.nameL := fldval.PID_NameL
-		ptDem.nameF := fldval.PID_NameF
-		ptDem.sex := (fldval.PID_sex="F") ? "Female" : "Male"
-		ptDem.DOB := parseDate(fldval.PID_DOB).MDY
-		ptDem.mrn := fldval.PID_PatMRN
-		ptDem.UID := fldval.ORC_FillerNum
-		ptDem.Account := fldval.ORC_ReqNum
-		ptDem.provider := fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
-		ptDem.encDate := parseDate(fldval.PV1_DateTime).MDY
-		ptDem.loc := siteslong[fldval.PV1_Location]
-		ptDem.type := (ptDem.loc) ? "Outpatient" : "Other"
-		ptDem.monitor := fldval.OBR_TestName
-		ptDem.indication := strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")
-		ptDem.indicationCode := fldval.OBR_ReasonCode
-		ptDem.filename := fileIn
+	ptDem:=parseORM()																	; read fldval into ptDem
+	ptDem.filename := fileIn
 	
-	if (ptDem.monitor~="i)24 HOUR") {													; for Mortara Holter
+	if (ptDem.monitor~="i)HOL") {														; for Mortara Holter
 		mortaraUpload()
 	} 
-	else if (ptDem.monitor~="i)14 DAY") {												; for BG Mini (and maybe Zio)
+	else if (ptDem.monitor~="i)BGM") {													; for BG Mini (and maybe Zio)
 		BGregister("BGM")
 	}
-	else if (ptDem.monitor~="i)RECORDER") {												; for BG Heart
+	else if (ptDem.monitor~="i)BGH") {													; for BG Heart
 		BGregister("BGH")
 	}
 	
