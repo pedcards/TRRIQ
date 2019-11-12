@@ -1275,21 +1275,21 @@ parseORM() {
 	encType:=(tmp:=fldval.PV1_PtClass)="O" ? "Outpatient" 
 		: tmp="I" ? "Inpatient"
 		: "Other"
-	;~ switch encType
-	;~ {
-		;~ case "Outpatient":
-			;~ location := sitesLong[fldval.PV1_Location]
-		;~ case "Inpatient":
-			;~ location := "Inpatient"
-		;~ case "SurgCntr":
-			;~ location := "SurgCntr"
-		;~ case "Emergency":
-			;~ location := "Emergency"
-		;~ default:
-			;~ location := encType
-	;~ }
-	location := (encType="Outpatient") ? sitesLong[fldval.PV1_Location]
-		: encType
+	switch encType
+	{
+		case "Outpatient":
+			location := sitesLong[fldval.PV1_Location]
+		case "Inpatient":
+			location := fldval.PV1_Location
+		case "SurgCntr":
+			location := "SurgCntr"
+		case "Emergency":
+			location := "Emergency"
+		default:
+			location := encType
+	}
+	;~ location := (encType="Outpatient") ? sitesLong[fldval.PV1_Location]
+		;~ : encType
 	
 	return {date:parseDate(fldval.PV1_DateTime).YMD
 		, encDate:parseDate(fldval.PV1_DateTime).YMD
