@@ -2327,6 +2327,8 @@ muWqSave(sernum) {
 	wq.addElement("prov",ptDem.newID,ptDem.Provider)
 	wq.addElement("site",ptDem.newID,ptDem.loc)										; need to transform site abbrevs
 	wq.addElement("acct",ptDem.newID,ptDem.acct)
+	wq.addElement("order",ptDem.newID,ptDem.order)
+	wq.addElement("accession",ptDem.newID,ptDem.accession)
 	wq.addElement("ind",ptDem.newID,ptDem.indication)
 	if (ptDem.fedex) {
 		wq.addElement("fedex",ptDem.newID,ptDem.fedex)
@@ -3019,6 +3021,8 @@ bgWqSave(sernum) {
 	wq.addElement("prov",ptDem.newID,ptDem.Provider)
 	wq.addElement("site",ptDem.newID,ptDem.loc)										; need to transform site abbrevs
 	wq.addElement("acct",ptDem.newID,ptDem.acct)
+	wq.addElement("order",ptDem.newID,ptDem.order)
+	wq.addElement("accession",ptDem.newID,ptDem.accession)
 	wq.addElement("ind",ptDem.newID,ptDem.indication)
 	if (ptDem.fedex) {
 		wq.addElement("fedex",ptDem.newID,ptDem.fedex)
