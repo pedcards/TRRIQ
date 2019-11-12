@@ -1618,6 +1618,8 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		}
 		gosub getMD
 	}
+	
+	ptDem.acct := ptDem.loc strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
 	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
 	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
 	ptDem["Account"] := EncNum															; make sure array has submitted EncNum value
