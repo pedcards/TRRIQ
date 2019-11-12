@@ -2763,12 +2763,15 @@ BGregister(type) {
 		writeOut("/root","inventory")
 		eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	}
+	wq := new XML("worklist.xml")														; refresh WQ
 	bghWqSave(ptDem.ser)																; write to worklist.xml
+	eventlog(type " " ptDem.ser " registered to " ptDem.mrn " " ptDem.nameL ".")
 	
+	removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
+	writeOut("root","orders")
+	FileMove, % ptDem.filename, .\tempfiles, 1
+		
 	registerPreventice()
-	
-	SplitPath,% ptDem.filename,fnam,,fExt,fileNam
-	FileMove,% ptDem.filename, .\tempfiles\%fnam%, 1
 	
 	return
 }
@@ -2997,27 +3000,30 @@ getPatInfo() {
 bghWqSave(sernum) {
 	global wq, ptDem, user, sitesLong
 	
-	id := A_TickCount 
-	ptDem["date"] := parsedate(ptDem["EncDate"]).YMD
-	ptDem["dev"] := ptDem.model " - " ptDem.ser
+	id := ptDem.UID
+	ptDem["dev"] := ptDem.model " - " sernum
 	ptDem["wqid"] := id
+	ptDem["date"] := parsedate(ptDem["EncDate"]).YMD									; make sure ptDem.date in proper format
 	
 	wq.addElement("enroll","/root/pending",{id:id})
-	newID := "/root/pending/enroll[@id='" id "']"
-	wq.addElement("date",newID,(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
-	wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
-	wq.addElement("mrn",newID,ptDem["mrn"])
-	wq.addElement("sex",newID,ptDem["Sex"])
-	wq.addElement("dob",newID,ptDem["dob"])
-	wq.addElement("dev",newID,ptDem["dev"])
+	ptDem.newID := "/root/pending/enroll[@id='" id "']"
+	wq.addElement("date",ptDem.newID,ptDem.date)
+	wq.addElement("name",ptDem.newID,ptDem.name)
+	wq.addElement("mrn",ptDem.newID,ptDem.mrn)
+	wq.addElement("sex",ptDem.newID,ptDem.sex)
+	wq.addElement("dob",ptDem.newID,ptDem.dob)
+	wq.addElement("dev",ptDem.newID,ptDem.dev)
 	if (ptDem.fellow) {
-		wq.addElement("fellow",newID,ptDem["fellow"])
+		wq.addElement("fellow",ptDem.newID,ptDem.fellow)
 	}
-	wq.addElement("prov",newID,ptDem["Provider"])
-	wq.addElement("site",newID,sitesLong[ptDem["loc"]])										; need to transform site abbrevs
-	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
-	wq.addElement("ind",newID,ptDem["Indication"])
-	wq.addElement("register",newID,{user:A_UserName},A_now)
+	wq.addElement("prov",ptDem.newID,ptDem.Provider)
+	wq.addElement("site",ptDem.newID,ptDem.loc)										; need to transform site abbrevs
+	wq.addElement("acct",ptDem.newID,ptDem.acct)
+	wq.addElement("ind",ptDem.newID,ptDem.indication)
+	if (ptDem.fedex) {
+		wq.addElement("fedex",ptDem.newID,ptDem.fedex)
+	}
+	wq.addElement("register",ptDem.newID,{user:A_UserName},A_now)
 	
 	writeOut("/root/pending","enroll[@id='" id "']")
 	
