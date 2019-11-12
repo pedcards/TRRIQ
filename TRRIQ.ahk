@@ -2246,6 +2246,10 @@ MortaraUpload(tabnum="")
 		muWqSave(SerNum)
 		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 		
+		removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
+		writeOut("root","orders")
+		FileMove, % ptDem.filename, .\tempfiles, 1
+		
 		registerPreventice()
 	}
 	
@@ -2302,7 +2306,7 @@ muWqSave(sernum) {
 		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
 	}
 	
-	id := A_TickCount
+	id := ptDem.UID
 	ptDem["model"] := "Mortara H3+"
 	ptDem["ser"] := sernum
 	ptDem["dev"] := ptDem.model " - " sernum
@@ -2310,24 +2314,24 @@ muWqSave(sernum) {
 	ptDem["date"] := parsedate(ptDem["EncDate"]).YMD									; make sure ptDem.date in proper format
 	
 	wq.addElement("enroll","/root/pending",{id:id})
-	newID := "/root/pending/enroll[@id='" id "']"
-	wq.addElement("date",newID,(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
-	wq.addElement("name",newID,ptDem["nameL"] ", " ptDem["nameF"])
-	wq.addElement("mrn",newID,ptDem["mrn"])
-	wq.addElement("sex",newID,ptDem["Sex"])
-	wq.addElement("dob",newID,ptDem["dob"])
-	wq.addElement("dev",newID,ptDem["dev"])
+	ptDem.newID := "/root/pending/enroll[@id='" id "']"
+	wq.addElement("date",ptDem.newID,ptDem.date)
+	wq.addElement("name",ptDem.newID,ptDem.name)
+	wq.addElement("mrn",ptDem.newID,ptDem.mrn)
+	wq.addElement("sex",ptDem.newID,ptDem.sex)
+	wq.addElement("dob",ptDem.newID,ptDem.dob)
+	wq.addElement("dev",ptDem.newID,ptDem.dev)
 	if (ptDem.fellow) {
-		wq.addElement("fellow",newID,ptDem["fellow"])
+		wq.addElement("fellow",ptDem.newID,ptDem.fellow)
 	}
-	wq.addElement("prov",newID,ptDem["Provider"])
-	wq.addElement("site",newID,sitesLong[ptDem["loc"]])									; need to transform site abbrevs
-	wq.addElement("acct",newID,ptDem["loc"] ptDem["Account"])
-	wq.addElement("ind",newID,ptDem["Indication"])
+	wq.addElement("prov",ptDem.newID,ptDem.Provider)
+	wq.addElement("site",ptDem.newID,ptDem.loc)										; need to transform site abbrevs
+	wq.addElement("acct",ptDem.newID,ptDem.acct)
+	wq.addElement("ind",ptDem.newID,ptDem.indication)
 	if (ptDem.fedex) {
-		wq.addElement("fedex",newID,ptDem["fedex"])
+		wq.addElement("fedex",ptDem.newID,ptDem.fedex)
 	}
-	wq.addElement(ptDem["muphase"],newID,{user:A_UserName},A_now)
+	wq.addElement(ptDem["muphase"],ptDem.newID,{user:A_UserName},A_now)
 	
 	filedelete, .lock
 	writeOut("/root/pending","enroll[@id='" id "']")
