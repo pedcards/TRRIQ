@@ -3282,8 +3282,13 @@ assignMD:
 	if !(ptDem.date) {																	; must have a date to figure it out
 		return
 	}
-	ptDem.Loc := "Inpatient"															; set default Loc so it won't fail
-	ymatch := y.selectSingleNode("//call[@date='" ptDem.date "']/Ward_A").text			; get ward attg from chipotle call schedule
+	yNode := "//call[@date='" ptDem.date "']"
+	ymatch := (ptDem.loc~="ICU") 
+		? y.selectSingleNode(yNode "/ICU_A").text										; if order came from ICU
+		: y.selectSingleNode(yNode "/Ward_A").text										; everything else
+	if !(ymatch) {
+		ymatch := y.selectSingleNode(yNode "/PM_We_A").text								; no match, must be a weekend
+	}
 	if (ymatch) {
 		inptMD := checkCrd(ymatch)
 		if (inptMD.fuzz<0.15) {															; close enough match
