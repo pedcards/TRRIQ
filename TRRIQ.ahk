@@ -2764,7 +2764,7 @@ BGregister(type) {
 		eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	}
 	wq := new XML("worklist.xml")														; refresh WQ
-	bghWqSave(ptDem.ser)																; write to worklist.xml
+	bgWqSave(ptDem.ser)																; write to worklist.xml
 	eventlog(type " " ptDem.ser " registered to " ptDem.mrn " " ptDem.nameL ".")
 	
 	removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
@@ -2997,7 +2997,7 @@ getPatInfo() {
 	return
 }
 
-bghWqSave(sernum) {
+bgWqSave(sernum) {
 	global wq, ptDem, user, sitesLong
 	
 	id := ptDem.UID
