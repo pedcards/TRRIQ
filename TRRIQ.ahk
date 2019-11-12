@@ -674,6 +674,11 @@ WQlist() {
 		} else {
 			continue
 		}
+		if (e0.node != "orders") {														; remnant orders file
+			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
+			eventlog("Leftover HL7 file " fileIn " moved to tempfiles.")
+			continue
+		}
 		
 		LV_Add(""
 			, hl7InDir . fileIn															; filename and path to HolterDir
