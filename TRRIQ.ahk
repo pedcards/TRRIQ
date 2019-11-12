@@ -1581,12 +1581,12 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	Gui, fetch:Destroy
 	
 	gotMD := false
-	ptDem.Provider := parseName(ptDem.Provider).lastfirst								; ensure provider name is in proper format
 	matchProv := checkCrd(ptDem.Provider)
 	if (ptDem.Type~="i)(Inpatient|Observation|Emergency|Day Surg)") {					; encounter is an inpatient type (Inpt, ER, DaySurg, etc)
-		encDT := ptDem.date := substr(A_now,1,8)										; Set date to today
+		encDT := ptDem.date
 		ptDem.EncDate := niceDate(ptDem.date)											; set formatted EncDate
 		gosub assignMD																	; find who recommended it from the Chipotle schedule
+		ptDem.loc:="Inpatient"
 		eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
 	}
 	else if (matchProv.group="FELLOWS") {												; using fellow encounter
