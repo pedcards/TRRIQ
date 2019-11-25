@@ -3132,6 +3132,9 @@ epRead() {
 	fieldcoladd("","EP_date",niceDate(dlDate))
 	fieldcoladd("","MA",user)
 	fieldcoladd("","MA_date",ma_date)
+	fieldcoladd("TRRIQ","UID",fldval.wqid)
+	fieldcoladd("TRRIQ","order",fldval.order)
+	fieldcoladd("TRRIQ","accession",fldval.accession)
 return
 }
 
