@@ -1013,8 +1013,7 @@ parsePrevEnroll(txt) {
 	/*	No match (i.e. unique record)
 	 *	add new record to PENDING
 	 */
-		sleep 1																			; delay 1ms to ensure different tick time
-		id := A_TickCount 
+		id := A_Now
 		newID := "/root/pending/enroll[@id='" id "']"
 		wq.addElement("enroll","/root/pending",{id:id})
 		wq.addElement("date",newID,res.date)
@@ -1023,9 +1022,9 @@ parsePrevEnroll(txt) {
 		wq.addElement("dev",newID,res.dev)
 		wq.addElement("prov",newID,res.prov)
 		wq.addElement("site",newID,res.site)
-		wq.addElement("webgrab",newID,A_now)
+		wq.addElement("webgrab",newID,id)
 		
-		eventlog("Found new registration " res.mrn " " res.name " " res.date ".")
+		eventlog("Found new web registration " res.mrn " " res.name " " res.date ".")
 	
 	return
 }
