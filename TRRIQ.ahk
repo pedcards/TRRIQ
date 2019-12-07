@@ -1213,6 +1213,7 @@ readWQlv:
 	
 	if (fldval.done) {
 		epRead()																		; find out which EP is reading today
+		makeORU()
 		gosub outputfiles																; generate and save output CSV, rename and move PDFs
 	}
 	
@@ -3156,6 +3157,81 @@ fieldsToCSV() {
 	eventlog("Fields mapping complete.")
 	
 return	
+}
+
+makeORU(wqid) {
+	global xl, fldval, hl7out, docs, reportDir, filenam, isRemote
+	dict:=readIni("EpicResult")
+	
+	order := readWQ(wqid)
+	
+	hl7time := A_Now
+	hl7out := Object()
+	
+	buildHL7("MSH"
+		,{1:"^~\&"
+		, 2:"CVTRREAT"
+		, 3:"CVTRREAT"
+		, 4:"HS"
+		, 6:hl7time
+		, 8:"ORU^R01"
+		, 9:wqid
+		, 10:"T"
+		, 11:"2.5.1"})
+	
+	buildHL7("PID"
+		,{2:order.mrn
+		, 3:order.mrn "^^^^CHRMC"
+		, 5:parseName(order.name).last "^" parseName(order.name).first
+		, 7:parseDate(order.dob).YMD
+		, 8:substr(order.sex,1,1)
+		, 18:order.accountnum})
+	
+	buildHL7("PV1"
+		,{19:order.encnum
+		, 50:wqid})
+	
+	buildHL7("OBR"
+		,{2:order.ordernum
+		, 3:order.accession
+		, 4:((isRemote) 
+			? "CVCAR602^Cardiac Device Check - Remote^IMGEAP" 
+			: "CVCAR601^Cardiac Device Check - In Clinic^IMGEAP")
+		, 7:order.date
+		, 16:order.prov "^^^^^^MSOW_ORG_ID"
+		, 25:"F"
+		, 32:docs[A_UserName]})
+	
+	buildHL7("OBX"
+		,{2:"TX"
+		, 3:"PACEMAKER^Pacemaker Check^^^^"
+		, 11:"F"
+		, 14:hl7time})
+	
+	File := reportDir fileNam ".rtf"
+	FileGetSize, nBytes, %File%
+	FileRead, Bin, *c %File%
+	B64Data := Base64Enc( Bin, nBytes,,0)
+	buildHL7("OBX"
+		,{2:"ED"
+		, 3:"RTFReport^RTF Report^^^^"
+		, 4:"TESTER^" fileNam ".rtf"
+		, 5:B64Data
+		, 11:"F"
+		, 14:hl7time})
+	
+	for key,val in dict																	; Loop through all values in Dict (from ini)
+	{
+		str:=StrSplit(val,"^")
+		buildHL7("OBX"																	; generate OBX for each value
+			,{2:"TX"
+			, 3:key "^" str[1] "^IMGLRR"
+			, 5:order[str[2]] 
+			, 11:"F"
+			, 14:hl7time})
+	}
+	
+	return
 }
 
 shortenPDF(find) {
