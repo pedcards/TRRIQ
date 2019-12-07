@@ -2258,130 +2258,54 @@ registerPreventice() {
 	hl7time := A_Now
 	hl7out := Object()
 	buildHL7("MSH"
-		,"^~\&"
-		,"TRRIQ"
-		,sitesCode
-		,sitesFacility
-		,"PREVENTICE"
-		,hl7time
-		,"TECH"
-		,"ORM^O01"
-		,ptDem["wqid"]
-		,"T"
-		,"2.3")
+		,{1:"^~\&"
+		, 2:"TRRIQ"
+		, 3:sitesCode
+		, 4:sitesFacility
+		, 5:"PREVENTICE"
+		, 6:hl7time
+		, 7:"TECH"
+		, 8:"ORM^O01"
+		, 9:ptDem["wqid"]
+		, 10:"T"
+		, 11:"2.3" })
 	
 	buildHL7("PID"
-		, ptDem.MRN
-		, ptDem.MRN
-		, ""
-		, parseName(ptDem.nameL).apostr "^" parseName(ptDem.nameF).apostr . strQ(ptDem.nameMI,"^###")
-		, ""
-		, parseDate(ptDem.dob).YMD
-		, substr(ptDem.sex,1,1)
-		, ""
-		, ""
-		, ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
-		, ""
-		, ptDem.phone
-		, ""
-		, ""
-		, ""
-		, ""
-		, ptDem.account
-		, "")
+		,{2:ptDem.MRN
+		, 3:ptDem.MRN
+		, 5:parseName(ptDem.nameL).apostr "^" parseName(ptDem.nameF).apostr . strQ(ptDem.nameMI,"^###")
+		, 7:parseDate(ptDem.dob).YMD
+		, 8:substr(ptDem.sex,1,1)
+		, 11:ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
+		, 13:ptDem.phone
+		, 18:ptDem.account })
 	
 	tmpPrv := parseName(ptDem.provider)
 	buildHL7("PV1"
-		, ptDem.type
-		, ptDem.loc
-		, ""
-		, ""
-		, ""
-		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
-		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
-		, ""
-		, ""
-		, ""
-		, ""
-		, ""
-		, ""
-		, ""
-		, ""
-		, ""
-		, ""
-		, ptDem.wqid)
+		,{2:ptDem.type
+		, 3:ptDem.loc
+		, 7:ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, 8:ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, 19:ptDem.wqid })
 	
-	buildHL7("IN1",
-		, "N/A"
-		, "" ;"Insurance Company ID"
-		, "Seattle Childrens - GB" ;"Insurance Company Name"
-		, "" ;"Insurance Company Address"
-		, "" ;"Insurance Co Contact Person"
-		, "" ;"Insurance Co Phone Number"
-		, "" ;"Group Number"
-		, "" ;"Group Name"
-		, "" ;"Insureds Group Emp ID"
-		, "" ;"Insureds Group Emp Name"
-		, "" ;"Plan Effective Date"
-		, "" ;"Plan Expiration Date"
-		, "" ;"Authorization Information"
-		, "" ;"Plan Type"
-		;~ , ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
-		, parseName(ptDem.parentL).apostr "^" parseName(ptDem.parentF).apostr
-		, "Legal Guardian"
-		, parseDate(ptDem.dob).YMD
-		, "" ;ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
-		, "" ;"Assignment of Benefits"
-		, "" ;"Coordination of Benefits"
-		, "" ;"Primary Payor"
-		, "" ;"Notice of Admission Code"
-		, "" ;"Notice of Admission Date"
-		, "" ;"Report of Eligibility Flag"
-		, "" ;"Report of Eligibility Date"
-		, "" ;"Release Information Code"
-		, "" ;"Pre-Admit Cert (PAC)"
-		, "" ;"Verification Date/Time"
-		, "" ;"Verification By"
-		, "" ;"Type of Agreement Code"
-		, "" ;"Billing Status"
-		, "" ;"Lifetime Reserve Days"
-		, "" ;"Delay Before L R Day"
-		, "" ;"Company Plan Code"
-		, "" ;"Policy Number"
-		, "" ;"Bill Type"
-		, "" ;"Blank"
-		, "" ;"Blank"
-		, "" ;"Blank"
-		, "" ;"Blank"
-		, "" ;"Blank"
-		, "" ;"Blank"
-		, "" ;"Blank"
-		, "" ;"Blank"
-		, "" ;"Blank"
-		, "")
+	buildHL7("IN1"
+		,{2:"N/A"
+		, 4:"Seattle Childrens - GB" ;"Insurance Company Name"
+		, 16:parseName(ptDem.parentL).apostr "^" parseName(ptDem.parentF).apostr
+		, 17:"Legal Guardian"
+		, 18:parseDate(ptDem.dob).YMD })
 	
-	buildHL7("ORC","")
+	buildHL7("ORC",{2:""})
 	
 	buildHL7("OBR"
-		, ptDem.wqid
-		, ""
-		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter^Holter")
-		. strQ((ptDem.model~="Heart") ? 1 : "","CEM^CEM")
-		. strQ((ptDem.model~="Mini") ? 1 : "","Holter^Holter")
-		, ""
-		, ""
-		, hl7time
-		, ""
-		, ""
-		, ""
-		, "ANCILLARY"
-		, ""
-		, ""
-		, ""
-		, ""
-		, ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
-		, "206-987-2015"
-		, "","","","","","","","","","","")
+		,{2:ptDem.wqid
+		, 4:strQ((ptDem.model~="Mortara") ? 1 : "","Holter^Holter")
+			. strQ((ptDem.model~="Heart") ? 1 : "","CEM^CEM")
+			. strQ((ptDem.model~="Mini") ? 1 : "","Holter^Holter")
+		, 7:hl7time
+		, 11:"ANCILLARY"
+		, 16:ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, 17:"206-987-2015" })
 	
 	tmpInd := ptDem.indication
 	loop, parse, tmpInd, |
@@ -2399,31 +2323,38 @@ registerPreventice() {
 		}
 		
 		buildHL7("DG1"
-			, ""
-			, indIdx
-			, indSeg)
+			,{3:indIdx
+			, 4:indSeg })
 	}
 	
 	buildHL7("OBX"
-		, "ST", "12915^Service Type", ""
-		, strQ((ptDem.model~="Mortara") ? 1 : "","Holter")
-		. strQ((ptDem.model~="Heart") ? 1 : "","CEM")
-		. strQ((ptDem.model~="Mini") ? 1 : "","Holter") )
+		,{2:"ST"
+		, 3:"12915^Service Type"
+		, 5:strQ((ptDem.model~="Mortara") ? 1 : "","Holter")
+			. strQ((ptDem.model~="Heart") ? 1 : "","CEM")
+			. strQ((ptDem.model~="Mini") ? 1 : "","Holter") })
 	
 	buildHL7("OBX"
-		, "ST", "12916^Device", "", ptDem.model)
+		,{2:"ST"
+		, 3:"12916^Device"
+		, 5:ptDem.model })
 	
 	buildHL7("OBX"
-		, "ST", "12919^Serial Number", "", ptDem.ser)
+		,{2:"ST"
+		, 3:"12919^Serial Number"
+		, 5:ptDem.ser })
 	
 	buildHL7("OBX"
-		, "ST", "12917^Hookup Location", "", ptDem.Hookup)
+		,{2:"ST"
+		, 3:"12917^Hookup Location"
+		, 5:ptDem.Hookup })
 	
 	buildHL7("OBX"
-		, "ST", "12918^Deploy Duration (In Days)", ""
-		, (ptDem.model~="Mortara" ? "1" : "")
-		. (ptDem.model~="Heart" ? "30" : "")
-		. (ptDem.model~="Mini" ? "14" : "") )
+		,{2:"ST"
+		, 3:"12918^Deploy Duration (In Days)"
+		, 5:(ptDem.model~="Mortara" ? "1" : "")
+			. (ptDem.model~="Heart" ? "30" : "")
+			. (ptDem.model~="Mini" ? "14" : "") })
 	
 	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
