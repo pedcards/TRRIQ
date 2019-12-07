@@ -1300,11 +1300,17 @@ parseORM() {
 		, DOB:parseDate(fldval.PID_DOB).MDY
 		, monitor:monType
 		, mon:monType
-		, provider:fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
-		, prov:fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF,", ###")
+		, provider:strQ(fldval.ORC_ProvCode
+			, fldval.ORC_ProvCode "^" fldval.ORC_ProvNameL "^" fldval.ORC_ProvNameF
+			, fldval.OBR_ProviderCode "^" fldval.OBR_ProviderNameL "^" fldval.OBR_ProviderNameF)
+		, prov:strQ(fldval.ORC_ProvCode
+			, fldval.ORC_ProvCode "^" fldval.ORC_ProvNameL "^" fldval.ORC_ProvNameF
+			, fldval.OBR_ProviderCode "^" fldval.OBR_ProviderNameL "^" fldval.OBR_ProviderNameF)
 		, type:encType
 		, loc:location
 		, Account:fldval.ORC_ReqNum
+		, accountnum:fldval.PID_AcctNum
+		, encnum:fldval.PV1_VisitNum
 		, order:fldval.ORC_ReqNum
 		, accession:fldval.ORC_FillerNum
 		, acct:location strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
