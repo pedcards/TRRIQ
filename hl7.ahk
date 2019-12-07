@@ -169,24 +169,28 @@ Local Rqd := 0, B64, B := "", N := 0 - LineLength + 1  ; CRYPT_STRING_BASE64 := 
 Return RTrim( B,"`n" )    
 }
 
-buildHL7(seg,params*) {
+buildHL7(seg,params) {
 /*	creates hl7out.msg = "seg|idx|param1|param2|param3|param4|..."
 	keeps seg counts in hl7out[seg] = idx
+	params is a sparse object with {2:"TX", 3:str1, 5:value, 11:"F", 14:A_now}
 */
 	global hl7out
 	
 	txt := seg
 	
-	if (seg!="MSH") {
-		seqnum := hl7out[seg]															; get last sequence number for this segment
-		seqnum ++
-		hl7out[seg] := seqnum
-		txt .= "|" seqnum
-	}
-	
-	for index,param in params															; append params
+	Loop, % params.MaxIndex()
 	{
+		param := params[A_index]
+		
+		if (seg!="MSH")&&(A_index=1) {
+			seqnum := hl7out[seg]														; get last sequence number for this segment
+			seqnum ++
+			hl7out[seg] := seqnum
+			param := seqnum
+		}
+		
 		txt .= "|" param
+		
 	}
 	
 	hl7out.msg .= txt "`n"																; append result to hl7out.msg
