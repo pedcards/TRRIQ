@@ -3015,6 +3015,7 @@ epRead() {
 	if (RegExMatch(fldval["dem-Ordering"], "Oi)(Chun|Salerno|Seslar)", epOrder))  {
 		ep := epOrder.value()
 	}
+	fldval["dem-Reading"] := ep
 	
 	FormatTime, ma_date, A_Now, MM/dd/yyyy
 	fieldcoladd("","EP_read",ep)
