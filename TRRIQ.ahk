@@ -1213,7 +1213,7 @@ readWQlv:
 	
 	if (fldval.done) {
 		epRead()																		; find out which EP is reading today
-		makeORU()
+		makeORU(wqid)
 		gosub outputfiles																; generate and save output CSV, rename and move PDFs
 	}
 	
@@ -3163,15 +3163,13 @@ makeORU(wqid) {
 	global xl, fldval, hl7out, docs, reportDir, filenam, isRemote
 	dict:=readIni("EpicResult")
 	
-	order := readWQ(wqid)
-	
 	hl7time := A_Now
 	hl7out := Object()
 	
 	buildHL7("MSH"
 		,{1:"^~\&"
-		, 2:"CVTRREAT"
-		, 3:"CVTRREAT"
+		, 2:"CVTRRIQ"
+		, 3:"CVTRRIQ"
 		, 4:"HS"
 		, 6:hl7time
 		, 8:"ORU^R01"
@@ -3180,11 +3178,11 @@ makeORU(wqid) {
 		, 11:"2.5.1"})
 	
 	buildHL7("PID"
-		,{2:order.mrn
-		, 3:order.mrn "^^^^CHRMC"
-		, 5:parseName(order.name).last "^" parseName(order.name).first
-		, 7:parseDate(order.dob).YMD
-		, 8:substr(order.sex,1,1)
+		,{2:fldval["dem-MRN"]
+		, 3:fldval["dem-MRN"] "^^^^CHRMC"
+		, 5:fldval["dem-Name_L"] "^" fldval["dem-Name_F"]
+		, 7:parseDate(fldval["dem-DOB"]).YMD
+		, 8:substr(fldval["dem-Sex"],1,1)
 		, 18:order.accountnum})
 	
 	buildHL7("PV1"
@@ -3195,38 +3193,31 @@ makeORU(wqid) {
 		,{2:order.ordernum
 		, 3:order.accession
 		, 4:((isRemote) 
-			? "CVCAR602^Cardiac Device Check - Remote^IMGEAP" 
-			: "CVCAR601^Cardiac Device Check - In Clinic^IMGEAP")
+			? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP" 
+			: "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP" 
+			? ""
+			: "CVCAR102^HOLTER MONITOR - 14 DAY^IMGEAP")
 		, 7:order.date
 		, 16:order.prov "^^^^^^MSOW_ORG_ID"
 		, 25:"F"
-		, 32:docs[A_UserName]})
+		, 32:"###"})
+	;	Will need to substitute reading EP string "NPI^LAST^FIRST"
 	
 	buildHL7("OBX"
-		,{2:"TX"
-		, 3:"PACEMAKER^Pacemaker Check^^^^"
+		,{2:"FT"
+		, 3:"ED1^HOLTER/EVENT RECORDER REPORT"
+		, 5:"###"
 		, 11:"F"
 		, 14:hl7time})
-	
-	File := reportDir fileNam ".rtf"
-	FileGetSize, nBytes, %File%
-	FileRead, Bin, *c %File%
-	B64Data := Base64Enc( Bin, nBytes,,0)
-	buildHL7("OBX"
-		,{2:"ED"
-		, 3:"RTFReport^RTF Report^^^^"
-		, 4:"TESTER^" fileNam ".rtf"
-		, 5:B64Data
-		, 11:"F"
-		, 14:hl7time})
+	;	Will need to substitute RTF text stream 
 	
 	for key,val in dict																	; Loop through all values in Dict (from ini)
 	{
 		str:=StrSplit(val,"^")
 		buildHL7("OBX"																	; generate OBX for each value
 			,{2:"TX"
-			, 3:key "^" str[1] "^IMGLRR"
-			, 5:order[str[2]] 
+			, 3:key "^" str.1 "^IMGLRR"
+			, 5:fldval[str.2]
 			, 11:"F"
 			, 14:hl7time})
 	}
