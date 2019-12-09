@@ -3192,11 +3192,9 @@ makeORU(wqid) {
 	buildHL7("OBR"
 		,{2:order.ordernum
 		, 3:order.accession
-		, 4:((isRemote) 
-			? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP" 
-			: "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP" 
-			? ""
-			: "CVCAR102^HOLTER MONITOR - 14 DAY^IMGEAP")
+		, 4:strQ(montype~="i)PR|Hol","CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP")
+		.	strQ(montype~="i)BGH","CVCAR05^CARDIAC EVENT RECORDER^IMGEAP")
+		.	strQ(montype~="i)Mini|ZIO","CVCAR102^HOLTER MONITOR - 14 DAY^IMGEAP")
 		, 7:order.date
 		, 16:order.prov "^^^^^^MSOW_ORG_ID"
 		, 25:"F"
