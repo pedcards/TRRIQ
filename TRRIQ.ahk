@@ -3165,7 +3165,7 @@ return
 }
 
 makeORU(wqid) {
-	global xl, fldval, hl7out, docs, reportDir, filenam, isRemote
+	global xl, fldval, hl7out, docs, reportDir, filenam, isRemote, montype
 	dict:=readIni("EpicResult")
 	
 	hl7time := A_Now
@@ -3197,9 +3197,10 @@ makeORU(wqid) {
 	buildHL7("OBR"
 		,{2:order.ordernum
 		, 3:order.accession
-		, 4:strQ(montype~="i)PR|Hol","CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP")
-		.	strQ(montype~="i)BGH","CVCAR05^CARDIAC EVENT RECORDER^IMGEAP")
-		.	strQ(montype~="i)Mini|ZIO","CVCAR102^HOLTER MONITOR - 14 DAY^IMGEAP")
+		, 4:(montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP"
+			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP"
+			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR - 14 DAY^IMGEAP"
+			: ""
 		, 7:order.date
 		, 16:order.prov "^^^^^^MSOW_ORG_ID"
 		, 25:"F"
@@ -3208,11 +3209,15 @@ makeORU(wqid) {
 	
 	buildHL7("OBX"
 		,{2:"FT"
-		, 3:"ED1^HOLTER/EVENT RECORDER REPORT"
+		, 3:"&GDT^HOLTER/EVENT RECORDER REPORT"
 		, 5:"###"
 		, 11:"F"
 		, 14:hl7time})
 	;	Will need to substitute RTF text stream 
+	
+	if (montype~="BGH") {																; no DDE for CEM
+		return
+	}
 	
 	for key,val in dict																	; Loop through all values in Dict (from ini)
 	{
