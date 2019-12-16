@@ -2856,6 +2856,10 @@ outputfiles:
 	filenameOut := RegExReplace(filenameOut,"\^","'")										; convert [^] back to [']
 	tmpFlag := tmpDate.YMD . "020000"
 	
+	tmpFile := ".\tempfiles\ORU_" fldval["dem-Name_L"] "_" tmpDate.YMD "_z" fldval["wqid"] ".hl7"
+	FileDelete, % tmpFile
+	FileAppend, % hl7Out.msg, % tmpFile
+	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	
