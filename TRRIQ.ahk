@@ -218,7 +218,7 @@ PhaseGUI:
 	Gui, Tab, ORDERS
 	Gui, Add, Listview
 		, % "-Multi Grid BackgroundSilver ColorRed " lvDim " greadWQorder vWQlv_orders hwndHLV_orders"
-		, filename|Order Date|Name|MRN|Provider|Monitor
+		, filename|Order Date|Name|MRN|Ordering Provider|Monitor
 	Gui, ListView, WQlv_orders
 	LV_ModifyCol(1,"0")																	; filename and path (hidden)
 	LV_ModifyCol(2,"80")																; date
@@ -650,6 +650,7 @@ WQlist() {
 		wq.addElement("dob",newID,e0.dob)
 		wq.addElement("mon",newID,e0.mon)
 		wq.addElement("prov",newID,e0.prov)
+		wq.addElement("provname",newID,e0.provname)
 		wq.addElement("site",newID,e0.loc)
 		wq.addElement("acct",newID,e0.acct)
 		wq.addElement("ind",newID,e0.ind)
@@ -685,7 +686,7 @@ WQlist() {
 			, e0.date																	; date
 			, e0.name																	; name
 			, e0.mrn																	; mrn
-			, e0.prov																	; prov
+			, e0.provname																; prov
 			, (e0.mon="HOL" ? "24-hr "													; monitor type
 				: e0.mon="BGH" ? "30-day "
 				: e0.mon~="BGM|ZIO" ? "14-day "
@@ -1248,6 +1249,7 @@ readWQorder() {
 	processhl7(fileIn)																	; read HL7 OBX into fldval
 	ptDem:=parseORM()																	; read fldval into ptDem
 	ptDem.filename := fileIn
+	ptDem.Provider := ptDem.provname
 	
 	if (ptDem.monitor~="i)HOL") {														; for Mortara Holter
 		mortaraUpload()
@@ -1288,6 +1290,12 @@ parseORM() {
 		default:
 			location := encType
 	}
+	prov := strQ(fldval.ORC_ProvCode
+			, fldval.ORC_ProvCode "^" fldval.ORC_ProvNameL "^" fldval.ORC_ProvNameF
+			, fldval.OBR_ProviderCode "^" fldval.OBR_ProviderNameL "^" fldval.OBR_ProviderNameF)
+	provname := strQ(fldval.ORC_ProvCode
+			, fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF, ", ###")
+			, fldval.OBR_ProviderNameL strQ(fldval.OBR_ProviderNameF, ", ###"))
 	;~ location := (encType="Outpatient") ? sitesLong[fldval.PV1_Location]
 		;~ : encType
 	
@@ -1301,12 +1309,9 @@ parseORM() {
 		, DOB:parseDate(fldval.PID_DOB).MDY
 		, monitor:monType
 		, mon:monType
-		, provider:strQ(fldval.ORC_ProvCode
-			, fldval.ORC_ProvCode "^" fldval.ORC_ProvNameL "^" fldval.ORC_ProvNameF
-			, fldval.OBR_ProviderCode "^" fldval.OBR_ProviderNameL "^" fldval.OBR_ProviderNameF)
-		, prov:strQ(fldval.ORC_ProvCode
-			, fldval.ORC_ProvCode "^" fldval.ORC_ProvNameL "^" fldval.ORC_ProvNameF
-			, fldval.OBR_ProviderCode "^" fldval.OBR_ProviderNameL "^" fldval.OBR_ProviderNameF)
+		, provider:prov
+		, prov:prov
+		, provname:provname
 		, type:encType
 		, loc:location
 		, Account:fldval.ORC_ReqNum
