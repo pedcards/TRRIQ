@@ -45,7 +45,7 @@ hl7line(seg) {
 	attempt to map each field to recognized structure for that field element
 */
 	global hl7, fldVal, hl7Dir, obxVal
-	multiSeg := "NK1|DG1"																; segments that may have multiple lines, e.g. NK1
+	multiSeg := "NK1|DG1|NTE"																; segments that may have multiple lines, e.g. NK1
 	res := Object()
 	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
 	segName := fld.1																	; first array element should be NAME
