@@ -1268,7 +1268,7 @@ parseORM() {
 /*	parse fldval values to values
 	including aliases for both WQlist and readWQorder
 */
-	global fldval, sitesLong
+	global fldval, sitesLong, indCodes
 	
 	monType:=(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
 		: tmp~="i)24 HOUR" ? "HOL"
@@ -1298,6 +1298,27 @@ parseORM() {
 			, fldval.OBR_ProviderNameL strQ(fldval.OBR_ProviderNameF, ", ###"))
 	;~ location := (encType="Outpatient") ? sitesLong[fldval.PV1_Location]
 		;~ : encType
+		
+	if !(indication:=strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")) {
+		for key, val in fldval
+		{
+			if (key="hl7") {
+				continue
+			}
+			if RegExMatch(val,"Reason for exam") {
+				indText:=RegExReplace(val,"Reason for exam->")
+				break
+			}
+		}
+		for key, val in indCodes
+		{
+			if RegExMatch(val,indText) {
+				indCode:=strX(val,"",1,0,":",1,1)
+				break
+			}
+		}
+		indication := strQ(indCode,"###") strQ(indText,"^###")
+	}
 	
 	return {date:parseDate(fldval.PV1_DateTime).YMD
 		, encDate:parseDate(fldval.PV1_DateTime).YMD
@@ -1321,9 +1342,9 @@ parseORM() {
 		, accession:fldval.ORC_FillerNum
 		, acct:location strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
 		, UID:tobase(fldval.ORC_ReqNum fldval.ORC_FillerNum,36)
-		, ind:strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")
-		, indication:strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")
-		, indicationCode:fldval.OBR_ReasonCode
+		, ind:indication
+		, indication:indication
+		, indicationCode:strQ(fldval.OBR_ReasonCode,"###") strQ(indCode,"###")
 		, orderCtrl:fldval.ORC_OrderCtrl
 		, ctrlID:fldval.MSH_CtrlID}
 }
