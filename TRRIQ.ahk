@@ -1300,23 +1300,12 @@ parseORM() {
 		;~ : encType
 		
 	if !(indication:=strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")) {
-		for key, val in fldval
-		{
-			if (key="hl7") {
-				continue
-			}
-			if RegExMatch(val,"Reason for exam") {
-				indText:=RegExReplace(val,"Reason for exam->")
-				break
-			}
-		}
-		for key, val in indCodes
-		{
-			if RegExMatch(val,indText) {
-				indCode:=strX(val,"",1,0,":",1,1)
-				break
-			}
-		}
+		indText := objhasvalue(fldval,"^Reason for exam","RX")
+		indText := RegExReplace(fldval[indText],"Reason for exam->")
+		
+		indCode := objhasvalue(indCodes,indText,"RX")
+		indCode := strX(indCodes[indCode],"",1,0,":",1,1)
+		
 		indication := strQ(indCode,"###") strQ(indText,"^###")
 	}
 	
