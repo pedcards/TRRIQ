@@ -3206,21 +3206,24 @@ makeORU(wqid) {
 		, 5:fldval["dem-Name_L"] "^" fldval["dem-Name_F"]
 		, 7:parseDate(fldval["dem-DOB"]).YMD
 		, 8:substr(fldval["dem-Sex"],1,1)
-		, 18:order.accountnum})
+		, 18:fldval.accountnum})
 	
 	buildHL7("PV1"
-		,{19:order.encnum
+		,{19:fldval.encnum
 		, 50:wqid})
 	
 	buildHL7("OBR"
-		,{2:order.ordernum
-		, 3:order.accession
+		,{2:fldval.order
+		, 3:fldval.accession
 		, 4:(montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP"
 			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP"
 			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR - 14 DAY^IMGEAP"
 			: ""
-		, 7:order.date
-		, 16:order.prov "^^^^^^MSOW_ORG_ID"
+		, 7:fldval.date
+		, 16:fldval.OBR_ProviderCode "^"
+			. fldval.OBR_ProviderNameL "^"
+			. fldval.OBR_ProviderNameF
+			. "^^^^^^MSOW_ORG_ID"
 		, 25:"F"
 		, 32:"###"})
 	;	Will need to substitute reading EP string "NPI^LAST^FIRST"
