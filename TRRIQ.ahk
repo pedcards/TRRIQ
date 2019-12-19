@@ -592,7 +592,7 @@ WQlist() {
 		}
 	}
 	
-	/*	Now scan Incoming ORDERS
+	/*	Scan Incoming ORDERS from EPIC
 	*/
 	Gui, ListView, WQlv_orders
 	LV_Delete()
@@ -707,7 +707,7 @@ WQlist() {
 	Gui, ListView, WQlv_in
 	LV_Delete()																			; clear the INBOX entries
 	
-/*	Process each .hl7 file
+/*	Process each incoming .hl7 RESULT from PREVENTICE
 */
 	loop, Files, % hl7Dir "*.hl7"
 	{
