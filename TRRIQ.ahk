@@ -2736,6 +2736,8 @@ bgWqSave(sernum) {
 	wq.addElement("acct",ptDem.newID,ptDem.acct)
 	wq.addElement("order",ptDem.newID,ptDem.order)
 	wq.addElement("accession",ptDem.newID,ptDem.accession)
+	wq.addElement("accountnum",ptDem.newID,ptDem.accountnum)
+	wq.addElement("encnum",ptDem.newID,ptDem.encnum)
 	wq.addElement("ind",ptDem.newID,ptDem.indication)
 	if (ptDem.fedex) {
 		wq.addElement("fedex",ptDem.newID,ptDem.fedex)
