@@ -773,7 +773,7 @@ WQlist() {
 	findfullPDF()																		; read Holter PDF dir into pdfList
 	for key,val in pdfList
 	{
-		RegExMatch(val,"O)_WQ(\d+)(\w)?\.pdf",fnID)										; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
+		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])\.pdf",fnID)								; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
 		id := fnID.1
 		ftype := (fnID.2="H") ? "HOL"													; type of file based on fnID label
 				: (fnID.2="Z") ? "ZIO"
@@ -3307,7 +3307,7 @@ findFullPdf(wqid:="") {
 		if FileExist(fnam "-short.pdf") 
 			continue
 		
-		RegExMatch(fname,"O)_WQ(\d+)(\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
+		RegExMatch(fname,"O)_WQ([A-Z0-9]+)(_\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
 		
 		if (readWQ(fnID.1).node = "done") {
 			eventlog("Leftover PDF: " fnam ", moved to archive.")
@@ -3379,7 +3379,7 @@ getPdfID(txt) {
 			res.dob := dobDt.YMD
 		res.mrn := trim(stregX(txt,"Secondary ID:?",1,1,"Age:?",1))
 		res.ser := trim(stregX(txt,"Recorder (No|Number):?",1,1,"\R",1))
-		res.wqid := strQ(findWQid(res.date,res.mrn,"Mortara H3+ - " res.ser).id,"###","00000") "H"
+		res.wqid := strQ(findWQid(res.date,res.mrn,"Mortara H3+ - " res.ser).id,"###","00000") "_H"
 	} else if instr(txt,"BodyGuardian Heart") {											; BG Heart
 		res.type := "E"
 		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1)," `t`r`n"))
@@ -3388,7 +3388,7 @@ getPdfID(txt) {
 		dt := parseDate(trim(stregX(txt,"Period \(.*?\R",1,1," - ",1)," `t`r`n"))
 			res.date := dt.YMD
 		res.mrn := trim(stregX(txt,"Patient ID",1,1,"Gender",1)," `t`r`n")
-		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###E","00000E")
+		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "_E"
 	} else if instr(txt,"Zio XT") {														; Zio
 		res.type := "Z"
 		name := parseName(res.name := trim(stregX(txt,"Final Report for\R",1,1,"\R",1)," `t`r`n"))
@@ -3398,7 +3398,7 @@ getPdfID(txt) {
 		dt := parseDate(stregX(enroll,"i)\R+.*?(hours|days).*?\R+",1,1,",",1))
 			res.date := dt.YMD
 		res.mrn := strQ(trim(stregX(txt,"Patient ID\R",1,1,"\R",1)," `t`r`n"),"###","Zio")
-		res.wqid := "00000Z"
+		res.wqid := "00000_Z"
 	} else if instr(txt,"Preventice Services, LLC") {									; BG Mini report
 		res.type := "M"
 		name := parseName(res.name := trim(stregX(txt,"Patient Name:",1,1,"\R",1)))
@@ -3411,7 +3411,7 @@ getPdfID(txt) {
 			res.dob := dobDt.YMD
 		res.mrn := trim(stregX(txt,"MRN:",1,1,"Date of Birth:",1)," `r`n")
 		res.ser := trim(stregX(txt,"Device Serial Number:",1,1,"\(Firmware",1))
-		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "M"
+		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "_M"
 	}
 	return res
 }
