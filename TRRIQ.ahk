@@ -3604,7 +3604,7 @@ CheckProc:
 			if (fldval.wqid) {
 				id := fldval.wqid
 			} else {
-				id := A_TickCount 															; create wqid record if it doesn't exist somehow
+				id := makeUID() 															; create wqid record if it doesn't exist somehow
 				wq.addElement("enroll","/root/pending",{id:id})
 				fldval.wqid := id
 			}
