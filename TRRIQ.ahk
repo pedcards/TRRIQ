@@ -1062,6 +1062,26 @@ parsePrevDev(txt) {
 	return
 }
 
+makeUID() {
+	global wq
+	
+	Loop
+	{
+		Random, num1, 10000, 99999
+		Random, num2, 10000, 99999
+		Random, num3, 10000, 99999
+		num := num1 . num2 . num3
+		id := toBase(num,36)
+		if IsObject(wq.selectSingleNode("//enroll[id='" id "']")) {
+			eventlog("UID " id " already in use.")
+			continue
+		} 
+		else {
+			break
+		}
+	}
+	return id
+}
 
 WQfindlost() {
 	global wq
