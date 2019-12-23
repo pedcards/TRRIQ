@@ -2959,7 +2959,7 @@ moveWQ(id) {
 		x.parentNode.removeChild(x)														; remove x
 		eventlog("wqid " id " (" mrn " from " date ") moved to DONE list.")
 	} else {																			; no record exists (enrollment never captured, or Zio)
-		id := A_TickCount																; create an id
+		id := makeUID()																	; create an id
 		wq.addElement("enroll","/root/done",{id:id})									; in </root/done>
 		newID := "/root/done/enroll[@id='" id "']"
 		wq.addElement("date",newID,parseDate(fldval["dem-Test_date"]).YMD)				; add these to the new done node
