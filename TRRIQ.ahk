@@ -1016,7 +1016,7 @@ parsePrevEnroll(txt) {
 	/*	No match (i.e. unique record)
 	 *	add new record to PENDING
 	 */
-		id := A_Now
+		id := makeUID()
 		newID := "/root/pending/enroll[@id='" id "']"
 		wq.addElement("enroll","/root/pending",{id:id})
 		wq.addElement("date",newID,res.date)
