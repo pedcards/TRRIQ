@@ -2605,7 +2605,7 @@ getPatInfo() {
 	
 ;	Now separate the "Family contact" members, grab relevant contact info from each parsed line
 	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
-	relStr := "Father|Dad|Mother|Mom|Grand|Aunt|Uncle|Foster|Parent|Sibling|Cousin|Relative|Step|Adult"
+	relStr := "FAT|MOT|FOS|GPR|AOU|STP|INS"
 	rel := Object()
 	
 	loop
