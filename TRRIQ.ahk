@@ -586,14 +586,14 @@ WQlist() {
 	wq.save("worklist.xml")
 	FileDelete, .lock
 	
-	checkHl7Orders()
+	checkHl7Orders()																	; check registrations that failed upload to Preventice
 	
 	if (wksloc="Main Campus") {
 		
 	Gui, ListView, WQlv_in
 	LV_Delete()																			; clear the INBOX entries
 	
-/*	Process each .hl7 file
+/*	Process each INCOMING .hl7 RESULT from PREVENTICE
 */
 	loop, Files, % hl7Dir "*.hl7"
 	{
