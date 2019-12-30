@@ -2523,6 +2523,12 @@ BGregister(type) {
 		
 	registerPreventice()
 	
+	/*	This is just for Epic orders testing
+	*/
+	makeTestORU()
+	/*
+	*/
+	
 	return
 }
 
@@ -3285,6 +3291,18 @@ makeORU(wqid) {
 			, 11:"F"
 			, 14:hl7time})
 	}
+	
+	return
+}
+
+makeTestORU() {
+/*	Generate a fake Preventice inbound ORU message based on the Preventice ORM registration data
+*/
+	global xl, fldval, hl7out, docs, reportDir, filenam, isRemote, montype
+	hl7time := A_Now
+	hl7out := Object()
+	
+	buildHL7("MSH")
 	
 	return
 }
