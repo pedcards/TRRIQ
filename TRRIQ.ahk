@@ -3298,11 +3298,81 @@ makeORU(wqid) {
 makeTestORU() {
 /*	Generate a fake Preventice inbound ORU message based on the Preventice ORM registration data
 */
-	global xl, fldval, hl7out, docs, reportDir, filenam, isRemote, montype
+	global ptDem, hl7out
 	hl7time := A_Now
 	hl7out := Object()
+	PVID := "2459720"
 	
-	buildHL7("MSH")
+	buildHL7("MSH"
+		,{1:"^~\&"
+		, 2:"ADEPTIA"
+		, 3:"ECARDIO"
+		, 5:"8382"
+		, 6:hl7time
+		, 8:"ORU^R01"
+		, 9:"S" A_TickCount
+		, 10:"P"
+		, 11:"2.5"})
+	
+	buildHL7("PID"
+		,{2:PVID
+		, 3:ptDem.MRN
+		, 5:ptDem.nameL "^" ptDem.nameF
+		, 7:parseDate(ptDem.dob).YMD
+		, 8:substr(ptDem.sex,1,1)
+		, 11:ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
+		, 13:ptDem.phone
+		, 18:PVID })
+	
+	tmpPrv := parseName(ptDem.provider)
+	buildHL7("PV1"
+		,{7:ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, 39:A_now })
+	
+	buildHL7("OBR"
+		,{2:ptDem.wqid
+		, 3:PVID
+		, 4:strQ(ptDem.model~="Mortara" ? 1 : "","Holter^Holter")
+			. strQ(ptDem.model~="Heart" ? 1 : "","CEM^CEM")
+			. strQ(ptDem.model~="Mini" ? 1 : "","Holter^Holter")
+		, 7:hl7time
+		, 16:ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, 20:"OnComplete"
+		, 22:A_now })
+	
+	buildHL7("OBX"
+		,{2:"TX"
+		, 3:"EOS^EOS"
+		, 11:"F"
+		, 14:A_now })
+	
+	FileRead, testTXT, .\state\test-ED.txt
+	buildHL7("OBX"
+		,{2:"ED"
+		, 3:"PDFReport1^PDF Report^^^^"
+		, 4:ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_now ".pdf"
+		, 5:testTXT
+		, 6:8
+		, 11:"F"
+		, 14:A_now })
+	
+	buildHL7("OBX",{2:"NM|Brady_AvgRate^Bradycardia average rate^Preventice^^^||51|bpm|||||" })
+	buildHL7("OBX",{2:"TX|Brady_LongestDur^Bradycardia longest duration^Preventice^^^||01:09:06|time|||||" })
+	buildHL7("OBX",{2:"DTM|Brady_LongestDur_Dt^Date and Time of longest Bradycardia episode^Preventice^^^||20191206012300|datetime|||||" })
+	buildHL7("OBX",{2:"TX|Brady_ShortestDur^Bradycardia shortest duration^Preventice^^^||00:00:06|time|||||" })
+	buildHL7("OBX",{2:"DTM|Brady_ShortestDur_Dt^Date and Time of shortest Bradycardia episode^Preventice^^^||20191115171500|datetime|||||" })
+	buildHL7("OBX",{2:"TX|Diagnosis^Diagnosis (Indication for Monitoring)^Preventice^^^||R00.2: Palpitations||||||" })
+	buildHL7("OBX",{2:"TX|Disconnect_Dur^Overall disconnect duration^Preventice^^^||3.18:26:04|time|||||" })
+	buildHL7("OBX",{2:"DTM|Enroll_End_Dt^Enrollment End Date^Preventice^^^||20191206000000|datetime|||||" })
+	buildHL7("OBX",{2:"DTM|Enroll_Start_Dt^Enrollment Start Date^Preventice^^^||20191107000000|datetime|||||" })
+	buildHL7("OBX",{2:"NM|HTRate_MaxRate^Maximum heart rate^Preventice^^^||162|bpm|||||" })
+	buildHL7("OBX",{2:"NM|HTRate_MeanRate^Mean heart rate^Preventice^^^||69|bpm|||||" })
+	buildHL7("OBX",{2:"NM|HTRate_MinRate^Minimum heart rate^Preventice^^^||38|bpm|||||" })
+	buildHL7("OBX",{2:"NM|Pause_Count^Pauses >= 3 seconds^Preventice^^^||0||||||" })
+	
+	FileAppend
+		, % hl7out.msg
+		, % ".\Preventice\" ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_now ".hl7"
 	
 	return
 }
