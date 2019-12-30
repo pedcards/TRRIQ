@@ -115,6 +115,8 @@ for key,val in indCodes
 	indOpts .= tmpStr "|"
 }
 
+monCodes := readIni("EpicMonitorType")
+
 initHL7()
 hl7DirMap := {}
 
