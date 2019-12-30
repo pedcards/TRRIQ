@@ -3310,7 +3310,7 @@ makeTestORU() {
 		, 5:"8382"
 		, 6:hl7time
 		, 8:"ORU^R01"
-		, 9:"S" A_TickCount
+		, 9:"EPIC" A_TickCount
 		, 10:"P"
 		, 11:"2.5"})
 	
