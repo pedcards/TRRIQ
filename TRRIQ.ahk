@@ -2061,6 +2061,12 @@ MortaraUpload(tabnum="")
 		muWqSave(SerNum)
 		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 		
+		/*	This is just for Epic orders testing
+		*/
+			makeTestORU()
+		/*
+		*/
+		
 		removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
 		writeOut("root","orders")
 		FileMove, % ptDem.filename, .\tempfiles, 1
