@@ -3232,6 +3232,7 @@ return
 makeORU(wqid) {
 	global xl, fldval, hl7out, docs, reportDir, filenam, isRemote, montype
 	dict:=readIni("EpicResult")
+	ep:=readIni("epRead")
 	
 	hl7time := A_Now
 	hl7out := Object()
@@ -3264,7 +3265,7 @@ makeORU(wqid) {
 		, 3:fldval.accession
 		, 4:(montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP"
 			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP"
-			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR - 14 DAY^IMGEAP"
+			: (montype~="i)Mini|ZIO") ? "CVCAR102^14 DAY HOLTER MONITOR^IMGEAP"
 			: ""
 		, 7:fldval.date
 		, 16:fldval.OBR_ProviderCode "^"
@@ -3272,13 +3273,16 @@ makeORU(wqid) {
 			. fldval.OBR_ProviderNameF
 			. "^^^^^^MSOW_ORG_ID"
 		, 25:"F"
-		, 32:"###"})
+		, 32:(fldval.MSH_ctrlID~="EPIC") ? ep[fldval["dem-reading"]] : "###" })
 	;	Will need to substitute reading EP string "NPI^LAST^FIRST"
 	
+	if (fldval.MSH_ctrlID~="EPIC") {
+		FileRead, rtf, .\state\test-RTF.txt
+	}
 	buildHL7("OBX"
 		,{2:"FT"
 		, 3:"&GDT^HOLTER/EVENT RECORDER REPORT"
-		, 5:"###"
+		, 5:(fldval.MSH_ctrlID~="EPIC") ? rtf : "###"
 		, 11:"F"
 		, 14:hl7time})
 	;	Will need to substitute RTF text stream 
