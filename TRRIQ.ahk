@@ -3666,10 +3666,10 @@ Holter_BGM:
 	
 	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
-	demog := columns(newtxt,"Patient\s+Information","Ventricular Tachycardia",,"Test Start")
-	fields[1] := ["Patient Name","Age","MRN","Date Of Birth","Gender","Site"
+	demog := columns(newtxt,"Patient\s+Information","Ventricular Tachycardia",1,"Test Start")
+	fields[1] := ["MRN","Patient Name","Age","Date Of Birth","Gender","Site"
 				, "Test Start","Test End","Test Duration","Analysis Duration"]
-	labels[1] := ["Name","null","MRN","DOB","Sex","null"
+	labels[1] := ["MRN","Name","null","DOB","Sex","null"
 				, "Test_date","Test_end","Recording_time","Analysis_time"]
 	scanParams(demog,1,"dem",1)
 	
