@@ -4662,7 +4662,7 @@ ObjHasValue(aObj, aValue, rx:="") {
 ; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
     for key, val in aObj
 		if (rx) {
-			if RegExMatch(val,aValue) {
+			if (val ~= aValue) {
 				return, key, Errorlevel := 0
 			}
 		} else {
