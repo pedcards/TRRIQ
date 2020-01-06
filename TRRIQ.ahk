@@ -3229,7 +3229,7 @@ return
 }
 
 makeORU(wqid) {
-	global xl, fldval, hl7out, docs, reportDir, filenam, isRemote, montype
+	global fldval, hl7out, montype
 	dict:=readIni("EpicResult")
 	ep:=readIni("epRead")
 	
