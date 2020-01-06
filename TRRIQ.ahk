@@ -59,15 +59,15 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 /*	Get valid WebUploadDir
 */
-webUploadDir := check_h3(webUploadRoot,webUploadStr) "\"												; Find the location of H3 data files
+webUploadDir := check_h3(webUploadRoot,webUploadStr) "\"								; Find the location of H3 data files
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
 progress,,,Scanning providers...
 Docs := Object()
 tmpChk := false
-if FileExist(chipDir "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
-	FileCopy, %chipDir%outdocs.csv, .\files\outdocs.csv, 1
+if FileExist(path.chip "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
+	FileCopy, % path.chip "outdocs.csv", .\files\outdocs.csv, 1
 }
 Loop, Read, .\files\outdocs.csv
 {
@@ -95,7 +95,7 @@ Loop, Read, .\files\outdocs.csv
 	Docs[tmpGrp ".npi",tmpIdx] := tmp.5
 }
 
-y := new XML(chipDir "currlist.xml")
+y := new XML(path.chip "currlist.xml")
 if fileexist("worklist.xml") {
 	wq := new XML("worklist.xml")
 } else {
@@ -3001,7 +3001,7 @@ outputfiles:
 			. """" monType """" ; ","														; Monitor type
 			. "`n"
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
-	FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
+	FileCopy, .\logs\fileWQ.csv, % path.chip "fileWQ-copy.csv", 1
 	
 	setwqupdate()
 	wq := new XML("worklist.xml")
