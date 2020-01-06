@@ -349,7 +349,7 @@ lateReport:
 			str .= e.site ",""" e.prov """," e.date ",""" e.name """," e.mrn "," e.dev "`n"
 		}
 	}
-	tmp := holterDir "late-" A_now ".csv"
+	tmp := path.holterPDF "late-" A_now ".csv"
 	FileAppend, %str%, %tmp%
 	MsgBox, 262208, Missing devices report, Report saved to:`n%tmp%
 	return
@@ -671,7 +671,7 @@ WQlist() {
 		res := readwq(id)																; get values for wqid if valid, else null
 		
 		LV_Add(""
-			, HolterDir val																; filename and path to HolterDir
+			, path.holterPDF val														; filename and path to HolterDir
 			, strQ(res.Name,"###",strX(val,"",1,0,"_",1))								; name from wqid or filename
 			, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))								; mrn
 			, strQ(res.dob,"###")														; dob
@@ -2980,12 +2980,12 @@ outputfiles:
 	FileCopy, % fileHIM, % OnbaseDir1 filenameOut ".pdf", 1									; Copy to OnbaseDir
 	FileCopy, % fileHIM, % OnbaseDir2 filenameOut ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
 	
-	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; Copy the original PDF to holterDir Archive
-	FileCopy, %fileIn%-sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; Copy the shortened PDF, if it exists
+	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
+	FileCopy, % fileIn "-sh.pdf", % path.holterPDF filenameOut "-short.pdf", 1				; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
-	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
-	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
+	FileSetTime, tmpFlag, % path.holterPDF "Archive\" filenameOut ".pdf", C					; set the time of PDF in holterDir to 020000 (processed)
+	FileSetTime, tmpFlag, % path.holterPDF filenameOut "-short.pdf", C
 	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
 	FileMove, % path.PrevHL7in fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
@@ -3304,9 +3304,9 @@ findFullPdf(wqid:="") {
 	pdfList := Object()																	; clear list to add to WQlist
 	pdfScanPages := 3
 	
-	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(holterDir).Files.Count
+	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(path.holterPDF).Files.Count
 	
-	Loop, files, %holterDir%*.pdf
+	Loop, files, % path.holterPDF "*.pdf"
 	{
 		fileIn := A_LoopFileFullPath													; full path and filename
 		fname := A_LoopFileName															; full filename
@@ -3325,7 +3325,7 @@ findFullPdf(wqid:="") {
 		
 		if (readWQ(fnID.1).node = "done") {
 			eventlog("Leftover PDF: " fnam ", moved to archive.")
-			FileMove, % fileIn, % holterDir "archive\" fname
+			FileMove, % fileIn, % path.holterPDF "archive\" fname
 			continue
 		}
 		
@@ -3339,7 +3339,7 @@ findFullPdf(wqid:="") {
 			
 			if (AllowSavedPDF!="true") && (flds.type = "E") {
 				MsgBox, 262160, File error
-					, % holterDir "`n" fName "`n"
+					, % path.holterPDF "`n" fName "`n"
 					. "saved from email.`n`n"
 					. "DO NOT SAVE FROM EMAIL!`n`n"
 					. "(delete the file to stop getting this message)"
@@ -3347,7 +3347,7 @@ findFullPdf(wqid:="") {
 			}
 			
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
-			FileMove, %fileIn%, % holterDir newFnam ".pdf", 1							; rename the unprocessed PDF
+			FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1						; rename the unprocessed PDF
 			eventlog("Holter PDF: " fName " renamed to " newFnam)
 			fName := newFnam ".pdf"
 		} 
@@ -3361,7 +3361,7 @@ findFullPdf(wqid:="") {
 		
 		if (fnID.1 == wqid) {															; filename WQID matches wqid arg
 			FileMove, % path.PrevHL7in fldval.Filename, % path.PrevHL7in fldval.Filename "-sh.pdf"		; rename the pdf in hl7dir to -short.pdf
-			FileMove, % holterDir fName , % path.PrevHL7in fldval.filename 				; move this full disclosure PDF into hl7dir
+			FileMove, % path.holterPDF fName , % path.PrevHL7in fldval.filename 		; move this full disclosure PDF into hl7dir
 			progress, off
 			eventlog(fName " moved to path.PrevHL7in.")
 			return true																	; stop search and return
