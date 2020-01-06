@@ -603,7 +603,7 @@ WQlist() {
 		wq.addElement("orders","/root")
 	}
 	
-	Loop, files, % hl7InDir "*"															; First pass: process new files
+	Loop, files, % path.EpicHL7in "*"													; First pass: process new files
 	{
 		e0 := {}
 		fileIn := A_LoopFileName
@@ -616,18 +616,18 @@ WQlist() {
 		if IsObject(k:=wq.selectSingleNode(e0.orderNode)) {								; ordernum node exists
 			e0.nodeCtrlID := k.selectSingleNode("ctrlID").text
 			if (e0.CtrlID < e0.nodeCtrlID) {											; order CtrlID is older than existing, somehow
-				FileDelete, % hl7InDir fileIn
+				FileDelete, % path.EpicHL7in fileIn
 				eventlog("Order msg " fileIn " is outdated.")
 				continue
 			}
 			if (e0.orderCtrl="CA") {													; CAncel an order
-				FileDelete, % hl7InDir fileIn											; delete this order message
-				FileDelete, % hl7InDir "*_" e0.UID "Z.hl7"								; and the previously processed hl7 file
+				FileDelete, % path.EpicHL7in fileIn										; delete this order message
+				FileDelete, % path.EpicHL7in "*_" e0.UID "Z.hl7"						; and the previously processed hl7 file
 				removeNode(e0.orderNode)												; and the accompanying node
 				eventlog("Cancelled order " e0.order ".")
 				continue
 			}
-			FileDelete, % hl7InDir "*_" e0.UID "Z.hl7"									; delete previously processed hl7 file
+			FileDelete, % path.EpicHL7in "*_" e0.UID "Z.hl7"							; delete previously processed hl7 file
 			removeNode(e0.orderNode)													; and the accompanying node
 			eventlog("Cleared order " e0.order " node.")
 		}
@@ -635,7 +635,7 @@ WQlist() {
 			e0.orderNode := "/root/orders/enroll[accession='" e0.accession "']"
 			k := wq.selectSingleNode(e0.orderNode)
 			e0.nodeUID := k.getAttribute("id")
-			FileDelete, % hl7InDir "*_" e0.nodeUID "Z.hl7"
+			FileDelete, % path.EpicHL7in "*_" e0.nodeUID "Z.hl7"
 			removeNode(e0.orderNode)
 			eventlog("Removed node id " e0.nodeUID " for replacement.")
 		}
@@ -666,11 +666,11 @@ WQlist() {
 			. e0.uid "Z.hl7"
 			
 		FileMove, %A_LoopFileFullPath%													; and rename ORM file
-			, % hl7InDir . fileOut
+			, % path.EpicHL7in . fileOut
 		
 	}
 	
-	loop, Files, % hl7InDir "*Z.hl7"													; Second pass: scan *Z.hl7 files
+	loop, Files, % path.EpicHL7in "*Z.hl7"												; Second pass: scan *Z.hl7 files
 	{
 		e0 := {}
 		fileIn := A_LoopFileName
@@ -686,7 +686,7 @@ WQlist() {
 		}
 		
 		LV_Add(""
-			, hl7InDir . fileIn															; filename and path to HolterDir
+			, path.EpicHL7in . fileIn													; filename and path to HolterDir
 			, e0.date																	; date
 			, e0.name																	; name
 			, e0.mrn																	; mrn
@@ -775,7 +775,7 @@ WQlist() {
 	findfullPDF()																		; read Holter PDF dir into pdfList
 	for key,val in pdfList
 	{
-		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])\.pdf",fnID)								; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
+		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])\.pdf",fnID)							; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
 		id := fnID.1
 		ftype := (fnID.2="H") ? "HOL"													; type of file based on fnID label
 				: (fnID.2="Z") ? "ZIO"
