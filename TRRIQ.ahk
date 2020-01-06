@@ -4857,28 +4857,28 @@ ThousandsSep(x, s=",") {
 	return RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
 }
 
-WriteOut(path,node) {
+WriteOut(parentpath,node) {
 	global wq
 	
 	filecheck()
-	FileOpen(".lock", "W")															; Create lock file.
-	locPath := wq.selectSingleNode(path)
+	FileOpen(".lock", "W")																; Create lock file.
+	locPath := wq.selectSingleNode(parentpath)
 	locNode := locPath.selectSingleNode(node)
 	clone := locNode.cloneNode(true)													; make copy of wq.node
 	
 	if !IsObject(locNode) {
-		eventlog("No such node <" path "/" node "> for WriteOut.")
-		FileDelete, .lock															; release lock file.
+		eventlog("No such node <" parentpath "/" node "> for WriteOut.")
+		FileDelete, .lock																; release lock file.
 		return error
 	}
 	
 	z := new XML("worklist.xml")														; load a copy into z
 	
-	if !IsObject(z.selectSingleNode(path "/" node)) {									; no such node in z
-		z.addElement("newnode",path)													; create a blank node
+	if !IsObject(z.selectSingleNode(parentpath "/" node)) {								; no such node in z
+		z.addElement("newnode",parentpath)												; create a blank node
 		node := "newnode"
 	}
-	zPath := z.selectSingleNode(path)													; find same "node" in z
+	zPath := z.selectSingleNode(parentpath)												; find same "node" in z
 	zNode := zPath.selectSingleNode(node)
 	zPath.replaceChild(clone,zNode)														; replace existing zNode with node clone
 	
