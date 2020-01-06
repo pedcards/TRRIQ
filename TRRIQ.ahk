@@ -27,13 +27,13 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	;~ chip := httpComm("","full")
 	;~ FileDelete, .\Chipotle\currlist.xml
 	;~ FileAppend, % chip, .\Chipotle\currlist.xml
-	isAdmin := true
-	readIni("adminpaths")
+	isDevt := true
+	path:=readIni("devtpaths")
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
 	FileGetTime, tmp, % A_ScriptName
-	isAdmin := false
-	readIni("paths")
+	isDevt := false
+	path:=readIni("paths")
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
 	checkcitrix()
 }
@@ -59,15 +59,15 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 /*	Get valid WebUploadDir
 */
-webUploadDir := check_h3(webUploadRoot,webUploadStr) "\"												; Find the location of H3 data files
+webUploadDir := check_h3(path.webupload,webUploadStr) "\"								; Find the location of H3 data files
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
 progress,,,Scanning providers...
 Docs := Object()
 tmpChk := false
-if FileExist(chipDir "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
-	FileCopy, %chipDir%outdocs.csv, .\files\outdocs.csv, 1
+if FileExist(path.chip "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
+	FileCopy, % path.chip "outdocs.csv", .\files\outdocs.csv, 1
 }
 Loop, Read, .\files\outdocs.csv
 {
@@ -95,7 +95,7 @@ Loop, Read, .\files\outdocs.csv
 	Docs[tmpGrp ".npi",tmpIdx] := tmp.5
 }
 
-y := new XML(chipDir "currlist.xml")
+y := new XML(path.chip "currlist.xml")
 if fileexist("worklist.xml") {
 	wq := new XML("worklist.xml")
 } else {
@@ -349,7 +349,7 @@ lateReport:
 			str .= e.site ",""" e.prov """," e.date ",""" e.name """," e.mrn "," e.dev "`n"
 		}
 	}
-	tmp := holterDir "late-" A_now ".csv"
+	tmp := path.holterPDF "late-" A_now ".csv"
 	FileAppend, %str%, %tmp%
 	MsgBox, 262208, Missing devices report, Report saved to:`n%tmp%
 	return
@@ -595,12 +595,12 @@ WQlist() {
 	
 /*	Process each INCOMING .hl7 RESULT from PREVENTICE
 */
-	loop, Files, % hl7Dir "*.hl7"
+	loop, Files, % path.PrevHL7in "*.hl7"
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
-			fileread, tmptxt, % hl7Dir fileIn
+			fileread, tmptxt, % path.PrevHL7in fileIn
 			obr:= strsplit(stregX(tmptxt,"\R+OBR",1,0,"\R+",0),"|")						; get OBR segment
 			obr_req := trim(obr.3," ^")													; requision num from registration PV1.21
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
@@ -620,10 +620,10 @@ WQlist() {
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
 		if (res.node="done") {															; skip if DONE, might be currently in process 
 			eventlog("Report already done. WQlist removing " fileIn)
-			FileMove, % hl7Dir "\" fileIn, .\tempfiles\%fileIn%, 1
+			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			continue
 		}
-		FileGetSize,full,% hl7Dir fileIn,M
+		FileGetSize,full,% path.PrevHL7in fileIn,M
 		
 		/*	disable showing mystery files and BGH files
 		;*/																				; comment this line to show regardless
@@ -637,7 +637,7 @@ WQlist() {
 		*/
 		
 		LV_Add(""
-			, hl7Dir fileIn																; path and filename
+			, path.PrevHL7in fileIn														; path and filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
 			, strQ(res.mrn,"###",x.3)													; mrn
 			, strQ(niceDate(res.dob),"###",niceDate(x.4))								; dob
@@ -671,7 +671,7 @@ WQlist() {
 		res := readwq(id)																; get values for wqid if valid, else null
 		
 		LV_Add(""
-			, HolterDir val																; filename and path to HolterDir
+			, path.holterPDF val														; filename and path to HolterDir
 			, strQ(res.Name,"###",strX(val,"",1,0,"_",1))								; name from wqid or filename
 			, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))								; mrn
 			, strQ(res.dob,"###")														; dob
@@ -764,14 +764,14 @@ WQlist() {
 }
 
 CheckHl7Orders() {
-	global hl7OutDir
+	global path
 	
-	loop, files, % hl7OutDir "Failed\*.txt"
+	loop, files, % path.PrevHL7out "Failed\*.txt"
 	{
 		filenm := A_LoopFileName
 		filenmfull := A_LoopFileFullPath
 		eventlog("Resending failed registration: " filenm)
-		FileMove, % filenmfull, % hl7OutDir filenm
+		FileMove, % filenmfull, % path.PrevHL7out filenm
 	}
 	
 	return
@@ -1079,7 +1079,7 @@ readWQlv:
 		Gui, phase:Hide
 		
 		progress, 25 , % fnam, Extracting data
-		processHL7(hl7Dir . fnam)														; extract DDE to fldVal, and PDF into hl7Dir
+		processHL7(path.PrevHL7in . fnam)												; extract DDE to fldVal, and PDF into hl7Dir
 		moveHL7dem()																	; prepopulate the fldval["dem-"] values
 		
 		progress, 50 , % fnam, Processing PDF
@@ -2275,7 +2275,7 @@ UiFieldFill(fld,val,win) {
 }
 
 registerPreventice() {
-	global wq, ptDem, fetchQuit, hl7out, hl7OutDir, indCodes, sitesCode, sitesFacility
+	global wq, ptDem, fetchQuit, hl7out, path, indCodes, sitesCode, sitesFacility
 	
 	hl7time := A_Now
 	hl7out := Object()
@@ -2449,7 +2449,7 @@ registerPreventice() {
 	
 	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
-	FileCopy, % ".\tempfiles\" fileNm , % hl7OutDir . fileNm
+	FileCopy, % ".\tempfiles\" fileNm , % path.PrevHL7out . fileNm
 	eventlog("Preventice registration completed: " fileNm)
 	MsgBox, 262208, Preventice registration, Successful device registration!
 	return
@@ -2883,7 +2883,7 @@ ProcessHl7PDF:
 /*	Associate fldVal data with extra metadata from extracted PDF, complete final CSV report, handle files
 */
 	fileNam := RegExReplace(fldVal.Filename,"i)\.pdf")									; fileNam is name only without extension, no path
-	fileIn := hl7Dir fldVal.Filename													; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
+	fileIn := path.PrevHL7in fldVal.Filename											; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 	
 	if (fileNam="") {																	; No PDF extracted
 		eventlog("No PDF extracted.")
@@ -2970,24 +2970,23 @@ outputfiles:
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	
 	impSub := (monType~="BGH") ? "Event\" : "Holter\"										; Import subfolder Event or Holter
-	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%%impSub%*.*, 1						; copy CSV from tempfiles to importFld\impSub
+	FileCopy, .\tempfiles\%fileNameOut%.csv, % path.import impSub "*.*", 1					; copy CSV from tempfiles to importFld\impSub
 	
 	if (FileExist(fileIn "-sh.pdf")) {														; filename for OnbaseDir
 		fileHIM := fileIn "-sh.pdf"															; prefer shortened if it exists
 	} else {
 		fileHIM := fileIn
 	}
-	FileCopy, % fileHIM, % OnbaseDir1 filenameOut ".pdf", 1									; Copy to OnbaseDir
-	FileCopy, % fileHIM, % OnbaseDir2 filenameOut ".pdf", 1									; Copy to HCClinic folder *** DO WE NEED THIS? ***
+	FileCopy, % fileHIM, % path.3Mout filenameOut ".pdf", 1									; Copy to OnbaseDir
 	
-	FileCopy, %fileIn%, %holterDir%Archive\%filenameOut%.pdf, 1								; Copy the original PDF to holterDir Archive
-	FileCopy, %fileIn%-sh.pdf, %holterDir%%filenameOut%-short.pdf, 1							; Copy the shortened PDF, if it exists
+	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
+	FileCopy, % fileIn "-sh.pdf", % path.holterPDF filenameOut "-short.pdf", 1				; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
-	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
-	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
-	;~ FileDelete, % hl7dir fileNam ".hl7"														; We can delete the original HL7, if exists
-	FileMove, % hl7dir fileNam ".hl7", .\tempfiles\%fileNam%.hl7
+	FileSetTime, tmpFlag, % path.holterPDF "Archive\" filenameOut ".pdf", C					; set the time of PDF in holterDir to 020000 (processed)
+	FileSetTime, tmpFlag, % path.holterPDF filenameOut "-short.pdf", C
+	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
+	FileMove, % path.PrevHL7in fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
 	fileWQ := ma_date "," user "," 															; date processed and MA user
@@ -3001,7 +3000,7 @@ outputfiles:
 			. """" monType """" ; ","														; Monitor type
 			. "`n"
 	FileAppend, %fileWQ%, .\logs\fileWQ.csv													; Add to logs\fileWQ list
-	FileCopy, .\logs\fileWQ.csv, %chipDir%fileWQ-copy.csv, 1
+	FileCopy, .\logs\fileWQ.csv, % path.chip "fileWQ-copy.csv", 1
 	
 	setwqupdate()
 	wq := new XML("worklist.xml")
@@ -3172,7 +3171,7 @@ Holter_Pr_Hl7:
 	
 	fieldsToCSV()
 	
-	FileGetSize, fileInSize, % hl7dir fldval.Filename
+	FileGetSize, fileInSize, % path.PrevHL7in fldval.Filename
 	if (fileInSize > 2000000) {															; probably a full disclosure PDF
 		shortenPDF(fullDisc)															; generates .pdf and sh.pdf versions
 	} 
@@ -3299,14 +3298,14 @@ findFullPdf(wqid:="") {
 /*	Scans HolterDir for potential full disclosure PDFs
 	maybe rename if appropriate
 */
-	global holterDir, hl7dir, fldval, pdfList, AllowSavedPDF
+	global path, fldval, pdfList, AllowSavedPDF
 	
 	pdfList := Object()																	; clear list to add to WQlist
 	pdfScanPages := 3
 	
-	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(holterDir).Files.Count
+	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(path.holterPDF).Files.Count
 	
-	Loop, files, %holterDir%*.pdf
+	Loop, files, % path.holterPDF "*.pdf"
 	{
 		fileIn := A_LoopFileFullPath													; full path and filename
 		fname := A_LoopFileName															; full filename
@@ -3325,7 +3324,7 @@ findFullPdf(wqid:="") {
 		
 		if (readWQ(fnID.1).node = "done") {
 			eventlog("Leftover PDF: " fnam ", moved to archive.")
-			FileMove, % fileIn, % holterDir "archive\" fname
+			FileMove, % fileIn, % path.holterPDF "archive\" fname
 			continue
 		}
 		
@@ -3339,7 +3338,7 @@ findFullPdf(wqid:="") {
 			
 			if (AllowSavedPDF!="true") && (flds.type = "E") {
 				MsgBox, 262160, File error
-					, % holterDir "`n" fName "`n"
+					, % path.holterPDF "`n" fName "`n"
 					. "saved from email.`n`n"
 					. "DO NOT SAVE FROM EMAIL!`n`n"
 					. "(delete the file to stop getting this message)"
@@ -3347,7 +3346,7 @@ findFullPdf(wqid:="") {
 			}
 			
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
-			FileMove, %fileIn%, % holterDir newFnam ".pdf", 1							; rename the unprocessed PDF
+			FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1						; rename the unprocessed PDF
 			eventlog("Holter PDF: " fName " renamed to " newFnam)
 			fName := newFnam ".pdf"
 		} 
@@ -3360,10 +3359,10 @@ findFullPdf(wqid:="") {
 		}
 		
 		if (fnID.1 == wqid) {															; filename WQID matches wqid arg
-			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "-sh.pdf"		; rename the pdf in hl7dir to -short.pdf
-			FileMove, % holterDir fName , % hl7dir fldval.filename 						; move this full disclosure PDF into hl7dir
+			FileMove, % path.PrevHL7in fldval.Filename, % path.PrevHL7in fldval.Filename "-sh.pdf"		; rename the pdf in hl7dir to -short.pdf
+			FileMove, % path.holterPDF fName , % path.PrevHL7in fldval.filename 		; move this full disclosure PDF into hl7dir
 			progress, off
-			eventlog(fName " moved to hl7dir.")
+			eventlog(fName " moved to path.PrevHL7in.")
 			return true																	; stop search and return
 		} else {
 			continue
@@ -4857,28 +4856,28 @@ ThousandsSep(x, s=",") {
 	return RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
 }
 
-WriteOut(path,node) {
+WriteOut(parentpath,node) {
 	global wq
 	
 	filecheck()
-	FileOpen(".lock", "W")															; Create lock file.
-	locPath := wq.selectSingleNode(path)
+	FileOpen(".lock", "W")																; Create lock file.
+	locPath := wq.selectSingleNode(parentpath)
 	locNode := locPath.selectSingleNode(node)
 	clone := locNode.cloneNode(true)													; make copy of wq.node
 	
 	if !IsObject(locNode) {
-		eventlog("No such node <" path "/" node "> for WriteOut.")
-		FileDelete, .lock															; release lock file.
+		eventlog("No such node <" parentpath "/" node "> for WriteOut.")
+		FileDelete, .lock																; release lock file.
 		return error
 	}
 	
 	z := new XML("worklist.xml")														; load a copy into z
 	
-	if !IsObject(z.selectSingleNode(path "/" node)) {									; no such node in z
-		z.addElement("newnode",path)													; create a blank node
+	if !IsObject(z.selectSingleNode(parentpath "/" node)) {								; no such node in z
+		z.addElement("newnode",parentpath)												; create a blank node
 		node := "newnode"
 	}
-	zPath := z.selectSingleNode(path)													; find same "node" in z
+	zPath := z.selectSingleNode(parentpath)												; find same "node" in z
 	zNode := zPath.selectSingleNode(node)
 	zPath.replaceChild(clone,zNode)														; replace existing zNode with node clone
 	
