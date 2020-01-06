@@ -59,7 +59,7 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 /*	Get valid WebUploadDir
 */
-webUploadDir := check_h3(webUploadRoot,webUploadStr) "\"								; Find the location of H3 data files
+webUploadDir := check_h3(path.webupload,webUploadStr) "\"								; Find the location of H3 data files
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
