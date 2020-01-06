@@ -595,12 +595,12 @@ WQlist() {
 	
 /*	Process each INCOMING .hl7 RESULT from PREVENTICE
 */
-	loop, Files, % hl7Dir "*.hl7"
+	loop, Files, % path.PrevHL7in "*.hl7"
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
-			fileread, tmptxt, % hl7Dir fileIn
+			fileread, tmptxt, % path.PrevHL7in fileIn
 			obr:= strsplit(stregX(tmptxt,"\R+OBR",1,0,"\R+",0),"|")						; get OBR segment
 			obr_req := trim(obr.3," ^")													; requision num from registration PV1.21
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
@@ -620,10 +620,10 @@ WQlist() {
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
 		if (res.node="done") {															; skip if DONE, might be currently in process 
 			eventlog("Report already done. WQlist removing " fileIn)
-			FileMove, % hl7Dir "\" fileIn, .\tempfiles\%fileIn%, 1
+			FileMove, % path.PrevHL7in "\" fileIn, .\tempfiles\%fileIn%, 1
 			continue
 		}
-		FileGetSize,full,% hl7Dir fileIn,M
+		FileGetSize,full,% path.PrevHL7in fileIn,M
 		
 		/*	disable showing mystery files and BGH files
 		;*/																				; comment this line to show regardless
@@ -637,7 +637,7 @@ WQlist() {
 		*/
 		
 		LV_Add(""
-			, hl7Dir fileIn																; path and filename
+			, path.PrevHL7in fileIn														; path and filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
 			, strQ(res.mrn,"###",x.3)													; mrn
 			, strQ(niceDate(res.dob),"###",niceDate(x.4))								; dob
@@ -1079,7 +1079,7 @@ readWQlv:
 		Gui, phase:Hide
 		
 		progress, 25 , % fnam, Extracting data
-		processHL7(hl7Dir . fnam)														; extract DDE to fldVal, and PDF into hl7Dir
+		processHL7(path.PrevHL7in . fnam)												; extract DDE to fldVal, and PDF into hl7Dir
 		moveHL7dem()																	; prepopulate the fldval["dem-"] values
 		
 		progress, 50 , % fnam, Processing PDF
@@ -2883,7 +2883,7 @@ ProcessHl7PDF:
 /*	Associate fldVal data with extra metadata from extracted PDF, complete final CSV report, handle files
 */
 	fileNam := RegExReplace(fldVal.Filename,"i)\.pdf")									; fileNam is name only without extension, no path
-	fileIn := hl7Dir fldVal.Filename													; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
+	fileIn := path.PrevHL7in fldVal.Filename											; fileIn has complete path \\childrens\files\HCCardiologyFiles\EP\HoltER Database\Holter PDFs\steve.pdf
 	
 	if (fileNam="") {																	; No PDF extracted
 		eventlog("No PDF extracted.")
@@ -2986,8 +2986,8 @@ outputfiles:
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
 	FileSetTime, tmpFlag, %holterDir%Archive\%filenameOut%.pdf, C							; set the time of PDF in holterDir to 020000 (processed)
 	FileSetTime, tmpFlag, %holterDir%%filenameOut%-short.pdf, C
-	;~ FileDelete, % hl7dir fileNam ".hl7"														; We can delete the original HL7, if exists
-	FileMove, % hl7dir fileNam ".hl7", .\tempfiles\%fileNam%.hl7
+	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
+	FileMove, % path.PrevHL7in fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
 	fileWQ := ma_date "," user "," 															; date processed and MA user
@@ -3172,7 +3172,7 @@ Holter_Pr_Hl7:
 	
 	fieldsToCSV()
 	
-	FileGetSize, fileInSize, % hl7dir fldval.Filename
+	FileGetSize, fileInSize, % path.PrevHL7in fldval.Filename
 	if (fileInSize > 2000000) {															; probably a full disclosure PDF
 		shortenPDF(fullDisc)															; generates .pdf and sh.pdf versions
 	} 
@@ -3299,7 +3299,7 @@ findFullPdf(wqid:="") {
 /*	Scans HolterDir for potential full disclosure PDFs
 	maybe rename if appropriate
 */
-	global holterDir, hl7dir, fldval, pdfList, AllowSavedPDF
+	global path, fldval, pdfList, AllowSavedPDF
 	
 	pdfList := Object()																	; clear list to add to WQlist
 	pdfScanPages := 3
@@ -3360,10 +3360,10 @@ findFullPdf(wqid:="") {
 		}
 		
 		if (fnID.1 == wqid) {															; filename WQID matches wqid arg
-			FileMove, % hl7dir fldval.Filename, % hl7dir fldval.Filename "-sh.pdf"		; rename the pdf in hl7dir to -short.pdf
-			FileMove, % holterDir fName , % hl7dir fldval.filename 						; move this full disclosure PDF into hl7dir
+			FileMove, % path.PrevHL7in fldval.Filename, % path.PrevHL7in fldval.Filename "-sh.pdf"		; rename the pdf in hl7dir to -short.pdf
+			FileMove, % holterDir fName , % path.PrevHL7in fldval.filename 				; move this full disclosure PDF into hl7dir
 			progress, off
-			eventlog(fName " moved to hl7dir.")
+			eventlog(fName " moved to path.PrevHL7in.")
 			return true																	; stop search and return
 		} else {
 			continue
