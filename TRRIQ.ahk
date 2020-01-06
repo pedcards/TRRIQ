@@ -27,13 +27,13 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	;~ chip := httpComm("","full")
 	;~ FileDelete, .\Chipotle\currlist.xml
 	;~ FileAppend, % chip, .\Chipotle\currlist.xml
-	isAdmin := true
-	readIni("adminpaths")
+	isDevt := true
+	path:=readIni("devtpaths")
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
 	FileGetTime, tmp, % A_ScriptName
-	isAdmin := false
-	readIni("paths")
+	isDevt := false
+	path:=readIni("paths")
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
 	checkcitrix()
 }
