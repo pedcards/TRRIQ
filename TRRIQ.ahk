@@ -2970,7 +2970,7 @@ outputfiles:
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	
 	impSub := (monType~="BGH") ? "Event\" : "Holter\"										; Import subfolder Event or Holter
-	FileCopy, .\tempfiles\%fileNameOut%.csv, %importFld%%impSub%*.*, 1						; copy CSV from tempfiles to importFld\impSub
+	FileCopy, .\tempfiles\%fileNameOut%.csv, % path.import impSub "*.*", 1					; copy CSV from tempfiles to importFld\impSub
 	
 	if (FileExist(fileIn "-sh.pdf")) {														; filename for OnbaseDir
 		fileHIM := fileIn "-sh.pdf"															; prefer shortened if it exists
