@@ -764,14 +764,14 @@ WQlist() {
 }
 
 CheckHl7Orders() {
-	global hl7OutDir
+	global path
 	
-	loop, files, % hl7OutDir "Failed\*.txt"
+	loop, files, % path.PrevHL7out "Failed\*.txt"
 	{
 		filenm := A_LoopFileName
 		filenmfull := A_LoopFileFullPath
 		eventlog("Resending failed registration: " filenm)
-		FileMove, % filenmfull, % hl7OutDir filenm
+		FileMove, % filenmfull, % path.PrevHL7out filenm
 	}
 	
 	return
@@ -2275,7 +2275,7 @@ UiFieldFill(fld,val,win) {
 }
 
 registerPreventice() {
-	global wq, ptDem, fetchQuit, hl7out, hl7OutDir, indCodes, sitesCode, sitesFacility
+	global wq, ptDem, fetchQuit, hl7out, path, indCodes, sitesCode, sitesFacility
 	
 	hl7time := A_Now
 	hl7out := Object()
@@ -2449,7 +2449,7 @@ registerPreventice() {
 	
 	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
-	FileCopy, % ".\tempfiles\" fileNm , % hl7OutDir . fileNm
+	FileCopy, % ".\tempfiles\" fileNm , % path.PrevHL7out . fileNm
 	eventlog("Preventice registration completed: " fileNm)
 	MsgBox, 262208, Preventice registration, Successful device registration!
 	return
