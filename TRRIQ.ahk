@@ -1339,7 +1339,7 @@ parseORM() {
 		, nameF:fldval.PID_NameF
 		, name:fldval.PID_NameL strQ(fldval.PID_NameF,", ###")
 		, mrn:fldval.PID_PatMRN
-		, sex:(fldval_.PID_sex~="F") ? "Female" : "Male"
+		, sex:(fldval.PID_sex~="F") ? "Female" : "Male"
 		, DOB:parseDate(fldval.PID_DOB).MDY
 		, monitor:monType
 		, mon:monType
