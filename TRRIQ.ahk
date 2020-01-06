@@ -4783,9 +4783,9 @@ ObjHasValue(aObj, aValue, rx:="") {
 			if (val ~= aValue) {
 				return, key, Errorlevel := 0
 			}
-			if (aValue ~= val) {
-				return, key, Errorlevel := 0
-			}
+			;~ if (aValue ~= val) {
+				;~ return, key, Errorlevel := 0
+			;~ }
 		} else {
 			if (val = aValue) {
 				return, key, ErrorLevel := 0
