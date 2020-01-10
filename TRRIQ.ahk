@@ -3229,6 +3229,10 @@ return
 }
 
 makeORU(wqid) {
+/*	Generate a outbound ORU message for Epic
+	Real world incoming Preventice ORU MSH.8 is a Preventice number.
+	If MSH.8 contains "EPIC", was generated from MakeTestORU(),	so test ORU will set to OBR.32 and OBX.5 as "###" for filling in by Access DB
+*/
 	global fldval, hl7out, montype
 	dict:=readIni("EpicResult")
 	ep:=readIni("epRead")
@@ -3282,7 +3286,7 @@ makeORU(wqid) {
 		,{2:"FT"
 		, 3:"&GDT^HOLTER/EVENT RECORDER REPORT"
 		, 5:(fldval.MSH_ctrlID~="EPIC") ? rtf : "###"
-		, 11:"F"
+		, 11:"P"
 		, 14:hl7time})
 	;	Will need to substitute RTF text stream 
 	
