@@ -22,6 +22,7 @@ FileGetTime, wqfileDT, wqupdate
 
 SplitPath, A_ScriptDir,,fileDir
 user := A_UserName
+userinstance := substr(tobase(A_TickCount,36),-3)
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
 	;~ chip := httpComm("","full")
@@ -4817,12 +4818,12 @@ countlines(hay,n) {
 }
 
 eventlog(event) {
-	global user
+	global user, userinstance
 	comp := A_ComputerName
 	FormatTime, sessdate, A_Now, yyyy.MM
 	FormatTime, now, A_Now, yyyy.MM.dd||HH:mm:ss
 	name := "logs/" . sessdate . ".log"
-	txt := now " [" user "/" comp "] " event "`n"
+	txt := now " [" user "/" comp "/" userinstance "] " event "`n"
 	filePrepend(txt,name)
 ;	FileAppend, % timenow " ["  user "/" comp "] " event "`n", % "logs/" . sessdate . ".log"
 }
