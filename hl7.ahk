@@ -44,7 +44,7 @@ hl7line(seg) {
 	field elements stored in res[i] object
 	attempt to map each field to recognized structure for that field element
 */
-	global hl7, fldVal, hl7Dir, obxVal
+	global hl7, fldVal, path, obxVal
 	res := Object()
 	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
 	segName := fld.1																	; first array element should be NAME
@@ -94,7 +94,7 @@ hl7line(seg) {
 		if (res.ObsType == "ED") {
 			fldVal.Filename := res.Filename											; file follows
 			nBytes := Base64Dec( res.resValue, Bin )
-			File := FileOpen( hl7Dir . res.Filename, "w")
+			File := FileOpen( path.PrevHL7in . res.Filename, "w")
 			File.RawWrite(Bin, nBytes)
 			File.Close()
 			;~ seg := "OBX|" fld.2 "|ED|PDFReport"
