@@ -3141,7 +3141,12 @@ Holter_Pr_Hl7:
 		if (findFullPDF(fldval.wqid)) {
 			eventlog("Full disclosure PDF found.")
 			break																		; found matching full disclosure, exit loop
-		} else {
+		}
+		else if (fldval.MSH_CtrlID~="EPIC") {
+			eventlog("Epic test patient. No full disclosure PDF.")
+			break
+		}
+		else {
 			eventlog("Full disclosure PDF not found.")
 			
 			msg := cmsgbox("Missing full disclosure PDF"
