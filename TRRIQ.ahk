@@ -3365,7 +3365,11 @@ makeTestORU() {
 		, 11:"F"
 		, 14:A_now })
 	
-	FileRead, testTXT, .\state\test-ED.txt
+	FileRead, testTXT, % ".\state\test-ED_"
+		. strQ(ptDem.model~="Mortara" ? 1 : "","HOL")
+		. strQ(ptDem.model~="Heart" ? 1 : "","CEM")
+		. strQ(ptDem.model~="Mini" ? 1 : "","MCT")
+		. ".txt"
 	buildHL7("OBX"
 		,{2:"ED"
 		, 3:"PDFReport1^PDF Report^^^^"
