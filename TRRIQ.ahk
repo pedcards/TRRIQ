@@ -2921,6 +2921,7 @@ outputfiles:
 	tmpFile := ".\tempfiles\ORU_" fldval["dem-Name_L"] "_" tmpDate.YMD "_z" fldval["wqid"] ".hl7"
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile
+	FileCopy, % tmpFile, % path.EpicHL7out
 	
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
