@@ -3282,7 +3282,7 @@ makeORU(wqid) {
 			. fldval.OBR_ProviderNameL "^"
 			. fldval.OBR_ProviderNameF
 			. "^^^^^^MSOW_ORG_ID"
-		, 25:"F"
+		, 25:"P"
 		, 32:(fldval.MSH_ctrlID~="EPIC") ? ep[fldval["dem-reading"]] : "###" })
 	;	Will need to substitute reading EP string "NPI^LAST^FIRST"
 	
