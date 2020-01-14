@@ -2918,7 +2918,11 @@ outputfiles:
 	filenameOut := RegExReplace(filenameOut,"\^","'")										; convert [^] back to [']
 	tmpFlag := tmpDate.YMD . "020000"
 	
-	tmpFile := ".\tempfiles\ORU_" fldval["dem-Name_L"] "_" tmpDate.YMD "_z" fldval["wqid"] ".hl7"
+	tmpFile := ".\tempfiles\"
+		. "TRRIQ_ORU_" 
+		. fldval["dem-Name_L"] "_" 
+		. tmpDate.YMD "_"
+		. "z" fldval["wqid"] ".hl7"
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile
 	FileCopy, % tmpFile, % path.EpicHL7out
