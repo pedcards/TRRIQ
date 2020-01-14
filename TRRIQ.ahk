@@ -2907,7 +2907,7 @@ ProcessHl7PDF:
 	if (type~="CEM|EOS") {
 		gosub Event_BGH_Hl7
 	} else if (ftype="MINI") {
-		gosub processPDF
+		gosub Holter_BGM_HL7
 	} else if (type="Holter") {
 		gosub Holter_Pr_Hl7
 	} else {
@@ -3645,17 +3645,60 @@ Holter_BGM_HL7:
 */
 	eventlog("Holter_BGMini_HL7")
 	monType := "Mini"
-	fullDisc := "i)60\s+s(ec)?/line"
 	
-	demog := stregX(newtxt,"Subject Data",1,0,"Summary",1)
-	fields[1] := ["Patient Name","MRN","Date Of Birth","Gender"
-				, "Test Start","Test End","Test Duration","Analysis Duration","Practice:"]
-	labels[1] := ["Name","MRN","DOB","Sex"
-				, "Test_date","Test_end","Recording_time","Analysis_time","Site"]
+	demog := columns(newtxt,"Patient\s+Information","Ventricular Tachycardia",1,"Test Start")
+	fields[1] := ["MRN","Patient Name","Age","Date Of Birth","Gender","Site"
+				, "Test Start","Test End","Test Duration","Analysis Duration"]
+	labels[1] := ["MRN","Name","null","DOB","Sex","null"
+				, "Test_date","Test_end","Recording_time","Analysis_time"]
 	scanParams(demog,1,"dem",1)
 	
+	t0 := parseDate(fldval["dem-Test_date"]).ymd
+	;~ t1 := t0.YMD t0.hr t0.min t0.sec
 	
+	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS") "<<<end"
+	daycount(summary,t0)
 	
+	sumEvent := stregX(summary,"",1,0,"\s+Summary\R",1) "<<<end"
+	summary := stregX(summary,"\s+Summary\R",1,1,"<<<end",0)
+	
+	sumTot := stregX(summary,"\s+Totals\R",1,1,"\s+Heart Rate\R",1)
+	
+	sumRate := sumTot "`n" stregX(summary,"\s+Heart Rate\R",1,1,"\s+Ventricular Event Information\R",1)
+	fields[1] := ["Total QRS","Minimum","Maximum","Average","Tachycardia","Bradycardia"]
+	labels[1] := ["Total_beats","Min","Max","Avg","Longest_tachy","Longest_brady"]
+	scanParams(sumRate,1,"hrd",1)
+	
+	sumVE := sumTot "`n" stregX(summary,"\s+Ventricular Event Information\R",1,1,"\s+Supraventricular Event Information\R",1)
+	fields[2] := ["Ventricular","Isolated","Bigeminy","Couplets","Total Runs","Longest","Fastest"]
+	labels[2] := ["Total","SingleVE","Bigeminy","Couplets","Runs","Longest","Fastest"]
+	scanParams(sumVE,2,"ve",1)
+	
+	sumSVE := sumTot "`n" stregX(summary,"\s+Supraventricular Event Information\R",1,1,"\s+RR.Pause\R",1)
+	fields[3] := ["Supraventricular","Isolated","Couplets","Total Runs","Longest","Fastest"]
+	labels[3] := ["Total","Single","Pairs","Runs","Longest","Fastest"]
+	scanParams(sumSVE,3,"sve",1)
+	
+	sumPause := stregX(summary,"\s+RR.Pause\R",1,1,"\s+AFib.AFlutter\R",1)
+	fields[4] := ["Maximum","Total Pauses"]
+	labels[4] := ["LongRR","Pauses"]
+	scanParams(sumPause,4,"sve",1)
+	
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	fieldsToCSV()
+	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
+	StringReplace, tmpstr, tmpstr, `r, `n, ALL
+	fieldcoladd("","INTERP",trim(cleanspace(tempstr)," `n"))
+	fieldcoladd("","Mon_type","Holter")
+	
+	ShortenPDF(fullDisc)
+	
+	fldval.done := true
+
 return
 }
 
