@@ -3659,25 +3659,16 @@ Holter_BGM_HL7:
 	
 	sumTot := stregX(summary,"\s+Totals\R",1,1,"\s+Heart Rate\R",1)
 	
+	
+	;~ sumRate := sumTot "`n" stregX(summary,"\s+Heart Rate\R",1,1,"\s+Ventricular Event Information\R",1)
+	;~ fields[1] := ["Tachycardia","Bradycardia"]
+	;~ labels[1] := ["Longest_tachy","Longest_brady"]
+	;~ scanParams(sumRate,1,"hrd",1)
 	sumRate := sumTot "`n" stregX(summary,"\s+Heart Rate\R",1,1,"\s+Ventricular Event Information\R",1)
 	fields[1] := ["Total QRS","Minimum","Maximum","Average","Tachycardia","Bradycardia"]
 	labels[1] := ["Total_beats","Min","Max","Avg","Longest_tachy","Longest_brady"]
 	scanParams(sumRate,1,"hrd",1)
 	
-	sumVE := sumTot "`n" stregX(summary,"\s+Ventricular Event Information\R",1,1,"\s+Supraventricular Event Information\R",1)
-	fields[2] := ["Ventricular","Isolated","Bigeminy","Couplets","Total Runs","Longest","Fastest"]
-	labels[2] := ["Total","SingleVE","Bigeminy","Couplets","Runs","Longest","Fastest"]
-	scanParams(sumVE,2,"ve",1)
-	
-	sumSVE := sumTot "`n" stregX(summary,"\s+Supraventricular Event Information\R",1,1,"\s+RR.Pause\R",1)
-	fields[3] := ["Supraventricular","Isolated","Couplets","Total Runs","Longest","Fastest"]
-	labels[3] := ["Total","Single","Pairs","Runs","Longest","Fastest"]
-	scanParams(sumSVE,3,"sve",1)
-	
-	sumPause := stregX(summary,"\s+RR.Pause\R",1,1,"\s+AFib.AFlutter\R",1)
-	fields[4] := ["Maximum","Total Pauses"]
-	labels[4] := ["LongRR","Pauses"]
-	scanParams(sumPause,4,"sve",1)
 	
 	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
