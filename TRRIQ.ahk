@@ -3646,15 +3646,10 @@ Holter_BGM_HL7:
 	eventlog("Holter_BGMini_HL7")
 	monType := "Mini"
 	
-	demog := columns(newtxt,"Patient\s+Information","Ventricular Tachycardia",1,"Test Start")
-	fields[1] := ["MRN","Patient Name","Age","Date Of Birth","Gender","Site"
-				, "Test Start","Test End","Test Duration","Analysis Duration"]
-	labels[1] := ["MRN","Name","null","DOB","Sex","null"
-				, "Test_date","Test_end","Recording_time","Analysis_time"]
-	scanParams(demog,1,"dem",1)
-	
-	t0 := parseDate(fldval["dem-Test_date"]).ymd
-	;~ t1 := t0.YMD t0.hr t0.min t0.sec
+	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
+	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
+	fldval["dem-Recording_time"] := parsedate(fldval["Monitoring_Period"]).DHM
+	fldval["dem-Analysis_time"] := parsedate(fldval["Analyzed_Data"]).DHM
 	
 	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS") "<<<end"
 	daycount(summary,t0)
