@@ -4843,10 +4843,15 @@ ParseDate(x) {
 		time.time := d5 ":" d6 . strQ(d7,":###")
 	}
 	
-	if RegExMatch(x,"iO)(\d{1,2}):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {				; 17:42 PM
+	if RegExMatch(x,"iO)(\d+):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {			; 17:42 PM
 		hasDays := (t.value[4]) ? true : false 												; 4 nums has days
 		time.days := (hasDays) ? t.value[1] : ""
-		time.hr := zdigit(t.value[1+hasDays])
+		time.hr := trim(t.value[1+hasDays])
+		if (time.hr>23) {
+			time.days := floor(time.hr/24)
+			time.hr := mod(time.hr,24)
+			DHM:=true
+		}
 		time.min := trim(t.value[2+hasDays]," :")
 		time.sec := trim(t.value[3+hasDays]," :")
 		time.ampm := trim(t.value[5])
@@ -4856,7 +4861,8 @@ ParseDate(x) {
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
 			, YMD:date.yyyy date.mm date.dd
 			, MDY:date.mm "/" date.dd "/" date.yyyy
-			, days:time.days, hr:time.hr, min:time.min, sec:time.sec, ampm:time.ampm, time:time.time}
+			, days:zdigit(time.days), hr:zdigit(time.hr), min:zdigit(time.min), sec:zdigit(time.sec), ampm:time.ampm, time:time.time
+			, DHM:zdigit(time.days) ":" zdigit(time.hr) ":" zdigit(time.min) " (DD:HH:MM)" }
 }
 
 niceDate(x) {
