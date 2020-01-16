@@ -2893,14 +2893,15 @@ ProcessHl7PDF:
 		return
 	}
 	
-	runwait, pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min							; convert PDF pages 1-2 with no tabular structure
+	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
+	;~ runwait, pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min							; convert PDF pages 1-2 with no tabular structure
 	FileRead, newtxt, %filenam%.txt														; load into newtxt
 	FileDelete, %filenam%.txt
 	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
 	FileAppend % newtxt, %filenam%.txt													; create new tempfile with result, minus PDF
 	FileMove %filenam%.txt, .\tempfiles\*, 1											; move a copy into tempfiles for troubleshooting
-	FileAppend % fldval.hl7, %filenam%_hl7.txt											; create new tempfile with result, minus PDF
-	FileMove %filenam%_hl7.txt, .\tempfiles\*, 1										; move a copy into tempfiles for troubleshooting
+	FileAppend % fldval.hl7, %filenam%_hl7.txt											; create a copy of hl7 file
+	FileMove %filenam%_hl7.txt, .\tempfiles\*, 1										; move into tempfiles for troubleshooting
 	
 	progress, off
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
@@ -3650,9 +3651,11 @@ Holter_BGM_HL7:
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
 	fldval["dem-Recording_time"] := parsedate(fldval["Monitoring_Period"]).DHM
 	fldval["dem-Analysis_time"] := parsedate(fldval["Analyzed_Data"]).DHM
+	tmp := parsedate(fldval["hrd-Min_time"]), fldval["hrd-Min_time"] := tmp.MDY " at " tmp.time
+	tmp := parsedate(fldval["hrd-Max_time"]), fldval["hrd-Max_time"] := tmp.MDY " at " tmp.time
 	
 	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS") "<<<end"
-	daycount(summary,t0)
+	;~ daycount(summary,t0)
 	
 	sumEvent := stregX(summary,"",1,0,"\s+Summary\R",1) "<<<end"
 	summary := stregX(summary,"\s+Summary\R",1,1,"<<<end",0)
