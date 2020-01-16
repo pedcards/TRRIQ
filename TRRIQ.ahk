@@ -3274,6 +3274,13 @@ makeORU(wqid) {
 		,{19:fldval.encnum
 		, 50:wqid})
 	
+	if (fldval.MSH_ctrlID~="EPIC") {
+		FileRead, rtf, .\state\test-RTF.txt
+		EPdoc := ep[fldval["dem-reading"]]
+	} else {
+		rtf := "###"
+		EPdoc := "###"
+	}
 	buildHL7("OBR"
 		,{2:fldval.order
 		, 3:fldval.accession
@@ -3287,16 +3294,12 @@ makeORU(wqid) {
 			. fldval.OBR_ProviderNameF
 			. "^^^^^^MSOW_ORG_ID"
 		, 25:"P"
-		, 32:(fldval.MSH_ctrlID~="EPIC") ? ep[fldval["dem-reading"]] : "###" })
-	;	Will need to substitute reading EP string "NPI^LAST^FIRST"
+		, 32:EPdoc })																	; Epic test: Substitute reading EP string "NPI^LAST^FIRST"
 	
-	if (fldval.MSH_ctrlID~="EPIC") {
-		FileRead, rtf, .\state\test-RTF.txt
-	}
 	buildHL7("OBX"
 		,{2:"FT"
 		, 3:"&GDT^HOLTER/EVENT RECORDER REPORT"
-		, 5:(fldval.MSH_ctrlID~="EPIC") ? rtf : "###"
+		, 5:rtf																			; Epic test: Substitute test rtf
 		, 11:"P"
 		, 14:hl7time})
 	;	Will need to substitute RTF text stream 
