@@ -4843,7 +4843,8 @@ ParseDate(x) {
 			, YMD:date.yyyy date.mm date.dd
 			, MDY:date.mm "/" date.dd "/" date.yyyy
 			, days:zdigit(time.days), hr:zdigit(time.hr), min:zdigit(time.min), sec:zdigit(time.sec), ampm:time.ampm, time:time.time
-			, DHM:zdigit(time.days) ":" zdigit(time.hr) ":" zdigit(time.min) " (DD:HH:MM)" }
+			, DHM:zdigit(time.days) ":" zdigit(time.hr) ":" zdigit(time.min) " (DD:HH:MM)" 
+ 			, DT:date.mm "/" date.dd "/" date.yyyy " at " zdigit(time.hr) ":" zdigit(time.min) ":" zdigit(time.sec) }
 }
 
 niceDate(x) {
