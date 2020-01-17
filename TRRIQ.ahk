@@ -2893,8 +2893,7 @@ ProcessHl7PDF:
 		return
 	}
 	
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
-	;~ runwait, pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min							; convert PDF pages 1-2 with no tabular structure
+	runwait, pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min							; convert PDF pages 1-2 with no tabular structure
 	FileRead, newtxt, %filenam%.txt														; load into newtxt
 	FileDelete, %filenam%.txt
 	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
