@@ -3663,7 +3663,7 @@ Holter_BGM_HL7:
 	fieldcoladd("","INTERP","")									; fldval["Narrative"]
 	fieldcoladd("","Mon_type","Holter")
 	
-	ShortenPDF(fullDisc)
+	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
 	fldval.done := true
 
