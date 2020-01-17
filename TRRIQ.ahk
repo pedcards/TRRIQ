@@ -3653,26 +3653,7 @@ Holter_BGM_HL7:
 	fldval["dem-Analysis_time"] := parsedate(fldval["Analyzed_Data"]).DHM
 	tmp := parsedate(fldval["hrd-Min_time"]), fldval["hrd-Min_time"] := tmp.MDY " at " tmp.time
 	tmp := parsedate(fldval["hrd-Max_time"]), fldval["hrd-Max_time"] := tmp.MDY " at " tmp.time
-	
-	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS") "<<<end"
-	;~ daycount(summary,t0)
-	
-	sumEvent := stregX(summary,"",1,0,"\s+Summary\R",1) "<<<end"
-	summary := stregX(summary,"\s+Summary\R",1,1,"<<<end",0)
-	
-	sumTot := stregX(summary,"\s+Totals\R",1,1,"\s+Heart Rate\R",1)
-	
-	
-	;~ sumRate := sumTot "`n" stregX(summary,"\s+Heart Rate\R",1,1,"\s+Ventricular Event Information\R",1)
-	;~ fields[1] := ["Tachycardia","Bradycardia"]
-	;~ labels[1] := ["Longest_tachy","Longest_brady"]
-	;~ scanParams(sumRate,1,"hrd",1)
-	sumRate := sumTot "`n" stregX(summary,"\s+Heart Rate\R",1,1,"\s+Ventricular Event Information\R",1)
-	fields[1] := ["Total QRS","Minimum","Maximum","Average","Tachycardia","Bradycardia"]
-	labels[1] := ["Total_beats","Min","Max","Avg","Longest_tachy","Longest_brady"]
-	scanParams(sumRate,1,"hrd",1)
-	
-	
+		
 	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
