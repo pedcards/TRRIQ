@@ -3650,8 +3650,8 @@ Holter_BGM_HL7:
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
 	fldval["dem-Recording_time"] := parsedate(fldval["Monitoring_Period"]).DHM
 	fldval["dem-Analysis_time"] := parsedate(fldval["Analyzed_Data"]).DHM
-	tmp := parsedate(fldval["hrd-Min_time"]), fldval["hrd-Min_time"] := tmp.MDY " at " tmp.time
-	tmp := parsedate(fldval["hrd-Max_time"]), fldval["hrd-Max_time"] := tmp.MDY " at " tmp.time
+	fldval["hrd-Min_time"] := parsedate(fldval["hrd-Min_time"]).DT
+	fldval["hrd-Max_time"] := parsedate(fldval["hrd-Max_time"]).DT
 		
 	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
