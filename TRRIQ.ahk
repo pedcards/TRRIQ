@@ -3660,9 +3660,7 @@ Holter_BGM_HL7:
 	}
 	
 	fieldsToCSV()
-	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
-	StringReplace, tmpstr, tmpstr, `r, `n, ALL
-	fieldcoladd("","INTERP",trim(cleanspace(tempstr)," `n"))
+	fieldcoladd("","INTERP","")									; fldval["Narrative"]
 	fieldcoladd("","Mon_type","Holter")
 	
 	ShortenPDF(fullDisc)
