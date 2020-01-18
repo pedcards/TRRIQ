@@ -4413,8 +4413,13 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_per",res2)
 			return
 		}
-		if (lab~="_time" && RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res)) {		; convert DD:HH:MM:SS into Days & Hrs
-			txt := res1 " days, " res2 " hours"
+		if (lab~="_time") {
+			if RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res) {					; convert DD:HH:MM:SS into Days & Hrs
+				txt := res1 " days, " res2 " hours"
+			}
+			if (txt~="^\d{14}$") {														; yyyymmddhhmmss
+				txt := parseDate(txt).DT												; = mm/dd/yyyy at hh:mm:ss
+			}
 		}
 	}
 	
