@@ -3640,9 +3640,6 @@ return
 
 Holter_BGM_HL7:
 {
-/*	Process newtxt from pdftotxt from HL7 extract
-	NOTE: this is just a placeholder. No DDE for Mini yet, but hopefully by Q3 2019!
-*/
 	eventlog("Holter_BGMini_HL7")
 	monType := "Mini"
 	
