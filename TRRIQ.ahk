@@ -2850,15 +2850,15 @@ ProcessHl7PDF:
 	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
 	FileAppend % newtxt, %filenam%.txt													; create new tempfile with result, minus PDF
 	FileMove %filenam%.txt, .\tempfiles\*, 1											; move a copy into tempfiles for troubleshooting
-	FileAppend % fldval.hl7, %filenam%_hl7.txt											; create new tempfile with result, minus PDF
-	FileMove %filenam%_hl7.txt, .\tempfiles\*, 1										; move a copy into tempfiles for troubleshooting
+	FileAppend % fldval.hl7, %filenam%_hl7.txt											; create a copy of hl7 file
+	FileMove %filenam%_hl7.txt, .\tempfiles\*, 1										; move into tempfiles for troubleshooting
 	
 	progress, off
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (type~="CEM|EOS") {
 		gosub Event_BGH_Hl7
 	} else if (ftype="MINI") {
-		gosub processPDF
+		gosub Holter_BGM_HL7
 	} else if (type="Holter") {
 		gosub Holter_Pr_Hl7
 	} else {
@@ -3782,22 +3782,27 @@ return
 
 Holter_BGM_HL7:
 {
-/*	Process newtxt from pdftotxt from HL7 extract
-	NOTE: this is just a placeholder. No DDE for Mini yet, but hopefully by Q3 2019!
-*/
 	eventlog("Holter_BGMini_HL7")
 	monType := "Mini"
-	fullDisc := "i)60\s+s(ec)?/line"
 	
-	demog := stregX(newtxt,"Subject Data",1,0,"Summary",1)
-	fields[1] := ["Patient Name","MRN","Date Of Birth","Gender"
-				, "Test Start","Test End","Test Duration","Analysis Duration","Practice:"]
-	labels[1] := ["Name","MRN","DOB","Sex"
-				, "Test_date","Test_end","Recording_time","Analysis_time","Site"]
-	scanParams(demog,1,"dem",1)
+	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
+	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
+	fldval["dem-Recording_time"] := parsedate(fldval["Monitoring_Period"]).DHM
+	fldval["dem-Analysis_time"] := parsedate(fldval["Analyzed_Data"]).DHM
 	
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
 	
+	fieldsToCSV()
+	fieldcoladd("","INTERP","")									; fldval["Narrative"]
+	fieldcoladd("","Mon_type","Holter")
 	
+	FileCopy, %fileIn%, %fileIn%-sh.pdf
+	
+	fldval.done := true
+
 return
 }
 
@@ -4547,8 +4552,13 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_per",res2)
 			return
 		}
-		if (lab~="_time" && RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res)) {		; convert DD:HH:MM:SS into Days & Hrs
-			txt := res1 " days, " res2 " hours"
+		if (lab~="_time") {
+			if RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res) {					; convert DD:HH:MM:SS into Days & Hrs
+				txt := res1 " days, " res2 " hours"
+			}
+			if (txt~="^\d{14}$") {														; yyyymmddhhmmss
+				txt := parseDate(txt).DT												; = mm/dd/yyyy at hh:mm:ss
+			}
 		}
 	}
 	
@@ -4958,10 +4968,15 @@ ParseDate(x) {
 		time.time := d5 ":" d6 . strQ(d7,":###")
 	}
 	
-	if RegExMatch(x,"iO)(\d{1,2}):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {				; 17:42 PM
+	if RegExMatch(x,"iO)(\d+):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {			; 17:42 PM
 		hasDays := (t.value[4]) ? true : false 												; 4 nums has days
 		time.days := (hasDays) ? t.value[1] : ""
-		time.hr := zdigit(t.value[1+hasDays])
+		time.hr := trim(t.value[1+hasDays])
+		if (time.hr>23) {
+			time.days := floor(time.hr/24)
+			time.hr := mod(time.hr,24)
+			DHM:=true
+		}
 		time.min := trim(t.value[2+hasDays]," :")
 		time.sec := trim(t.value[3+hasDays]," :")
 		time.ampm := trim(t.value[5])
@@ -4971,7 +4986,9 @@ ParseDate(x) {
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
 			, YMD:date.yyyy date.mm date.dd
 			, MDY:date.mm "/" date.dd "/" date.yyyy
-			, days:time.days, hr:time.hr, min:time.min, sec:time.sec, ampm:time.ampm, time:time.time}
+			, days:zdigit(time.days), hr:zdigit(time.hr), min:zdigit(time.min), sec:zdigit(time.sec), ampm:time.ampm, time:time.time
+			, DHM:zdigit(time.days) ":" zdigit(time.hr) ":" zdigit(time.min) " (DD:HH:MM)" 
+ 			, DT:date.mm "/" date.dd "/" date.yyyy " at " zdigit(time.hr) ":" zdigit(time.min) ":" zdigit(time.sec) }
 }
 
 niceDate(x) {
