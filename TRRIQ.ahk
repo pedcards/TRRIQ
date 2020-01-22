@@ -2938,7 +2938,7 @@ outputfiles:
 	} else {
 		fileHIM := fileIn
 	}
-	FileCopy, % fileHIM, % path.3Mout filenameOut ".pdf", 1									; Copy to OnbaseDir
+	FileCopy, % fileHIM, % path.Onbase filenameOut ".pdf", 1									; Copy to OnbaseDir
 	
 	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
 	FileCopy, % fileIn "-sh.pdf", % path.holterPDF filenameOut "-short.pdf", 1				; Copy the shortened PDF, if it exists
