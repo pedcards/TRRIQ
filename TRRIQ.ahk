@@ -3363,7 +3363,7 @@ findFullPdf(wqid:="") {
 			FileMove, % path.PrevHL7in fldval.Filename, % path.PrevHL7in fldval.Filename "-sh.pdf"		; rename the pdf in hl7dir to -short.pdf
 			FileMove, % path.holterPDF fName , % path.PrevHL7in fldval.filename 		; move this full disclosure PDF into hl7dir
 			progress, off
-			eventlog(fName " moved to path.PrevHL7in.")
+			eventlog(fName " moved to " path.PrevHL7in)
 			return true																	; stop search and return
 		} else {
 			continue
