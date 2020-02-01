@@ -3050,6 +3050,9 @@ wqSetVal(id,node,val) {
 	
 	newID := "/root/pending/enroll[@id='" id "']"
 	k := wq.selectSingleNode(newID "/" node)
+	if (k.text) and (val="") {															; don't overwrite an existing value with null
+		return
+	}
 	val := RegExReplace(val,"\'","^")													; make sure no val ever contains [']
 	
 	if IsObject(k) {
