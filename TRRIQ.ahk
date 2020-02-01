@@ -276,7 +276,6 @@ PhaseGUI:
 	WQlist()
 	
 	Menu, menuSys, Add, Clean tempfiles, CleanTempFiles
-	;~ Menu, menuSys, Add, Find returned devices, WQfindlost
 	Menu, menuSys, Add, Change clinic location, changeLoc
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
@@ -946,72 +945,6 @@ parsePrevDev(txt) {
 	
 	return
 }
-
-
-WQfindlost() {
-	global wq
-	MsgBox, 4132, Find devices, Scan database for duplicate devices?`n`n(this can take a while)
-	IfMsgBox, Yes
-	{
-		wq := new XML("worklist.xml")
-		progress,,, Scanning lost devices
-		loop
-		{
-			res := WQfindreturned()
-			if (res="clean") {
-				eventlog("Device logs clean.")
-				break
-			}
-			moveWQ(res)
-		}
-	} 
-	reload
-}
-
-WQfindreturned() {
-	global wq
-	
-	loop, % (ens:=wq.selectNodes("/root/pending/enroll")).length
-	{
-		e0 := []
-		k := ens.item(A_Index-1)
-		e0.id := k.getAttribute("id")
-		e0.date := k.selectSingleNode("date").text
-		enlist .= e0.date "," e0.id "`n"
-	}
-	sort, enlist
-	loop, parse, enlist, `n,`r
-	{
-		StringSplit, en, A_LoopField, `,
-		k := wq.selectSingleNode("/root/pending/enroll[@id='" en2 "']")
-		dev := k.selectSingleNode("dev").text
-		find := trim(stregX(dev," -",1,1,"$",0))
-		findID := en2
-		if (find="") {
-			continue
-		}
-		progress,% A_index,, Scanning for reused devices
-		loop, parse, enlist, `n,`r
-		{
-			StringSplit, idk, A_LoopField, `,
-			if (idk2=en2) {
-				continue
-			}
-			k2 := wq.selectSingleNode("/root/pending/enroll[@id='" idk2 "']")
-			dev2 := k2.selectSingleNode("dev").text
-			if instr(dev2,find) {
-				found := true
-				break
-			}
-		}
-		if (found) {
-			return findID
-		} 
-	}
-	return "clean"
-}
-
-
 
 readWQ(idx) {
 	global wq
