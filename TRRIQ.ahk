@@ -278,6 +278,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Clean tempfiles, CleanTempFiles
 	Menu, menuSys, Add, Change clinic location, changeLoc
 	Menu, menuSys, Add, Generate late returns report, lateReport
+	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -338,8 +339,11 @@ changeLoc:
 lateReport:
 {
 	str := ""
-	Loop, % (ens:=wq.selectNodes("/root/pending/enroll")).length
+	ens:=wq.selectNodes("/root/pending/enroll")
+	num := ens.length
+	Loop, % num
 	{
+		Progress,,,% A_index "/" num 
 		k := ens.item(A_Index-1)
 		id	:= k.getAttribute("id")
 		e := readWQ(id)
@@ -349,9 +353,32 @@ lateReport:
 			str .= e.site ",""" e.prov """," e.date ",""" e.name """," e.mrn "," e.dev "`n"
 		}
 	}
+	progress, off
 	tmp := path.holterPDF "late-" A_now ".csv"
 	FileAppend, %str%, %tmp%
+	eventlog("Generated missing devices report.")
 	MsgBox, 262208, Missing devices report, Report saved to:`n%tmp%
+	return
+}
+
+regReport:
+{
+	str := ""
+	ens:=wq.selectNodes("//enroll")
+	num := ens.length
+	loop, % num
+	{
+		Progress,,,% A_index "/" num 
+		k := ens.item(A_Index-1)
+		id	:= k.getAttribute("id")
+		e := readWQ(id)
+		str .= e.site "," e.date "," "" e.prov "" "," e.dev "`n"
+	}
+	progress, off
+	tmp := path.holterPDF "reg-" A_Now ".csv"
+	FileAppend, %str%, %tmp%
+	eventlog("Generated registrations report.")
+	MsgBox, 262208, Registrations report, Report saved to:`n%tmp%
 	return
 }
 
