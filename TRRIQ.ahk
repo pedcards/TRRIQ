@@ -272,9 +272,9 @@ PhaseGUI:
 	WQlist()
 	
 	Menu, menuSys, Add, Clean tempfiles, CleanTempFiles
-	;~ Menu, menuSys, Add, Find returned devices, WQfindlost
 	Menu, menuSys, Add, Change clinic location, changeLoc
 	Menu, menuSys, Add, Generate late returns report, lateReport
+	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -335,8 +335,11 @@ changeLoc:
 lateReport:
 {
 	str := ""
-	Loop, % (ens:=wq.selectNodes("/root/pending/enroll")).length
+	ens:=wq.selectNodes("/root/pending/enroll")
+	num := ens.length
+	Loop, % num
 	{
+		Progress,,,% A_index "/" num 
 		k := ens.item(A_Index-1)
 		id	:= k.getAttribute("id")
 		e := readWQ(id)
@@ -346,9 +349,32 @@ lateReport:
 			str .= e.site ",""" e.prov """," e.date ",""" e.name """," e.mrn "," e.dev "`n"
 		}
 	}
+	progress, off
 	tmp := path.holterPDF "late-" A_now ".csv"
 	FileAppend, %str%, %tmp%
+	eventlog("Generated missing devices report.")
 	MsgBox, 262208, Missing devices report, Report saved to:`n%tmp%
+	return
+}
+
+regReport:
+{
+	str := ""
+	ens:=wq.selectNodes("//enroll")
+	num := ens.length
+	loop, % num
+	{
+		Progress,,,% A_index "/" num 
+		k := ens.item(A_Index-1)
+		id	:= k.getAttribute("id")
+		e := readWQ(id)
+		str .= e.site "," e.date "," "" e.prov "" "," e.dev "`n"
+	}
+	progress, off
+	tmp := path.holterPDF "reg-" A_Now ".csv"
+	FileAppend, %str%, %tmp%
+	eventlog("Generated registrations report.")
+	MsgBox, 262208, Registrations report, Report saved to:`n%tmp%
 	return
 }
 
@@ -1085,71 +1111,6 @@ makeUID() {
 	}
 	return id
 }
-
-WQfindlost() {
-	global wq
-	MsgBox, 4132, Find devices, Scan database for duplicate devices?`n`n(this can take a while)
-	IfMsgBox, Yes
-	{
-		wq := new XML("worklist.xml")
-		progress,,, Scanning lost devices
-		loop
-		{
-			res := WQfindreturned()
-			if (res="clean") {
-				eventlog("Device logs clean.")
-				break
-			}
-			moveWQ(res)
-		}
-	} 
-	reload
-}
-
-WQfindreturned() {
-	global wq
-	
-	loop, % (ens:=wq.selectNodes("/root/pending/enroll")).length
-	{
-		e0 := []
-		k := ens.item(A_Index-1)
-		e0.id := k.getAttribute("id")
-		e0.date := k.selectSingleNode("date").text
-		enlist .= e0.date "," e0.id "`n"
-	}
-	sort, enlist
-	loop, parse, enlist, `n,`r
-	{
-		StringSplit, en, A_LoopField, `,
-		k := wq.selectSingleNode("/root/pending/enroll[@id='" en2 "']")
-		dev := k.selectSingleNode("dev").text
-		find := trim(stregX(dev," -",1,1,"$",0))
-		findID := en2
-		if (find="") {
-			continue
-		}
-		progress,% A_index,, Scanning for reused devices
-		loop, parse, enlist, `n,`r
-		{
-			StringSplit, idk, A_LoopField, `,
-			if (idk2=en2) {
-				continue
-			}
-			k2 := wq.selectSingleNode("/root/pending/enroll[@id='" idk2 "']")
-			dev2 := k2.selectSingleNode("dev").text
-			if instr(dev2,find) {
-				found := true
-				break
-			}
-		}
-		if (found) {
-			return findID
-		} 
-	}
-	return "clean"
-}
-
-
 
 readWQ(idx) {
 	global wq
@@ -3010,6 +2971,9 @@ wqSetVal(id,node,val) {
 	
 	newID := "/root/pending/enroll[@id='" id "']"
 	k := wq.selectSingleNode(newID "/" node)
+	if (k.text) and (val="") {															; don't overwrite an existing value with null
+		return
+	}
 	val := RegExReplace(val,"\'","^")													; make sure no val ever contains [']
 	
 	if IsObject(k) {
@@ -3505,7 +3469,7 @@ findFullPdf(wqid:="") {
 			FileMove, % path.PrevHL7in fldval.Filename, % path.PrevHL7in fldval.Filename "-sh.pdf"		; rename the pdf in hl7dir to -short.pdf
 			FileMove, % path.holterPDF fName , % path.PrevHL7in fldval.filename 		; move this full disclosure PDF into hl7dir
 			progress, off
-			eventlog(fName " moved to path.PrevHL7in.")
+			eventlog(fName " moved to " path.PrevHL7in)
 			return true																	; stop search and return
 		} else {
 			continue
