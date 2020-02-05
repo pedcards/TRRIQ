@@ -1830,6 +1830,7 @@ MortaraUpload(tabnum="")
 				wuDir.Date := loopDate
 				wuDir.Full := loopName
 			}
+			wuDir.fullDir := loopDate ", " loopname "`n"
 		}
 		if (wuDir.Full="") {															; no transfer files found
 			eventlog("No transfer files found.")
@@ -1856,6 +1857,8 @@ MortaraUpload(tabnum="")
 			eventlog("FILELIST:`n" wuDir.list)
 			eventlog("RECORD: '" wuRecord "'")
 			eventlog("DEVICE: '" wuDevice "'")
+			eventlog(wuDir.fullDir)
+			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			WinActivate, ahk_id %muWinID%
 			ControlGet, clkbut, HWND,, Back
