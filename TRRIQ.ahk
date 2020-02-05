@@ -1867,6 +1867,7 @@ MortaraUpload(tabnum="")
 				wuDir.Date := loopDate
 				wuDir.Full := loopName
 			}
+			wuDir.fullDir := loopDate ", " loopname "`n"
 		}
 		if (wuDir.Full="") {															; no transfer files found
 			eventlog("No transfer files found.")
@@ -1890,6 +1891,8 @@ MortaraUpload(tabnum="")
 			eventlog("FILELIST:`n" wuDir.list)
 			eventlog("RECORD: '" wuRecord "'")
 			eventlog("DEVICE: '" wuDevice "'")
+			eventlog(wuDir.fullDir)
+			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			muPushButton(muWinID,"Back")
 			return
@@ -1964,7 +1967,7 @@ MortaraUpload(tabnum="")
 		wq.setText(wqStr "/sent",substr(A_now,1,8))
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']")
-		eventlog(ptDem.MRN " " ptDem.Name " study " ptDem.Date " uploaded to Preventice.")
+		eventlog(ptDem.MRN " " ptDem.nameL " study " ptDem.Date " uploaded to Preventice.")
 		MsgBox, 262208, Transfer, Successful data upload to Preventice.
 	}
 	
