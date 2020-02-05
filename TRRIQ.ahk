@@ -1939,7 +1939,7 @@ MortaraUpload(tabnum="")
 		wq.setText(wqStr "/sent",substr(A_now,1,8))
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']")
-		eventlog(ptDem.MRN " " ptDem.Name " study " ptDem.Date " uploaded to Preventice.")
+		eventlog(ptDem.MRN " " ptDem.nameL " study " ptDem.Date " uploaded to Preventice.")
 		MsgBox, 262208, Transfer, Successful data upload to Preventice.
 	}
 	
