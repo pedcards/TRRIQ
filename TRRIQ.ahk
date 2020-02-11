@@ -3260,14 +3260,14 @@ makeORU(wqid) {
 			. fldval.OBR_ProviderNameL "^"
 			. fldval.OBR_ProviderNameF
 			. "^^^^^^MSOW_ORG_ID"
-		, 25:"P"
+		, 25:"F"
 		, 32:EPdoc })																	; Epic test: Substitute reading EP string "NPI^LAST^FIRST"
 	
 	buildHL7("OBX"
 		,{2:"FT"
 		, 3:"&GDT^HOLTER/EVENT RECORDER REPORT"
 		, 5:rtf																			; Epic test: Substitute test rtf
-		, 11:"P"
+		, 11:"F"
 		, 14:hl7time})
 	;	Will need to substitute RTF text stream 
 	
