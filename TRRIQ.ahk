@@ -3339,7 +3339,7 @@ makeTestORU() {
 		, 3:strQ(ptDem.model~="Mortara" ? 1 : "","Holter^Holter")
 			. strQ(ptDem.model~="Heart" ? 1 : "","CEM^CEM")
 			. strQ(ptDem.model~="Mini" ? 1 : "","Holter^Holter")
-		, 11:"P"
+		, 11:"F"
 		, 14:A_now })
 	
 	FileRead, testTXT, % ".\state\test-ED_"
@@ -3353,7 +3353,7 @@ makeTestORU() {
 		, 4:ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_now ".pdf"
 		, 5:testTXT
 		, 6:8
-		, 11:"P"
+		, 11:"F"
 		, 14:A_now })
 	
 	buildHL7("OBX",{2:"NM|Brady_AvgRate^Bradycardia average rate^Preventice^^^||51|bpm|||||" })
