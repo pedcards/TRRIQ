@@ -42,7 +42,18 @@ MainLoop:
 {
 	eventlog("PREVGRAB: Initializing.")
 	
-	wb := IEopen()																		; start/activate an IE instance
+	loop, 3
+	{
+		wb := IEopen()																	; start/activate an IE instance
+		eventlog("PREVGRAB: IEopen attempt " A_index)
+		if IsObject(wb) {
+			break
+		}
+	}
+	if !IsObject(wb) {
+		MsgBox, 262160, , Failed to open IE
+		ExitApp
+	}
 	wb.visible := gl.settings.isVisible
 	
 	PreventiceWebGrab("Enrollment")
