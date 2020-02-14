@@ -82,6 +82,9 @@ PreventiceWebGrab(phase) {
 		progress,,% " ",% phase
 	}
 	IEurl(web.url)																		; load URL, return DOM in wb
+	if (gl.IEfail) {
+		return
+	}
 	prvFunc := web.fx
 	
 	loop
@@ -287,6 +290,7 @@ IEurl(url) {
 */
 	global wb,gl
 	
+	gl.IEfail := false
 	loop, 3																				; Number of attempts to permit redirects
 	{
 		try 
@@ -323,6 +327,7 @@ IEurl(url) {
 			sleep 500
 		}
 	}
+	gl.IEfail := true
 	eventlog("PREVGRAB: Failed all attempts " url)
 	return
 }
