@@ -42,7 +42,18 @@ MainLoop:
 {
 	eventlog("PREVGRAB: Initializing.")
 	
-	wb := IEopen()																		; start/activate an IE instance
+	loop, 3
+	{
+		wb := IEopen()																	; start/activate an IE instance
+		eventlog("PREVGRAB: IEopen attempt " A_index)
+		if IsObject(wb) {
+			break
+		}
+	}
+	if !IsObject(wb) {
+		MsgBox, 262160, , Failed to open IE
+		ExitApp
+	}
 	wb.visible := gl.settings.isVisible
 	
 	PreventiceWebGrab("Enrollment")
@@ -71,6 +82,9 @@ PreventiceWebGrab(phase) {
 		progress,,% " ",% phase
 	}
 	IEurl(web.url)																		; load URL, return DOM in wb
+	if (gl.IEfail) {
+		return
+	}
 	prvFunc := web.fx
 	
 	loop
@@ -276,6 +290,7 @@ IEurl(url) {
 */
 	global wb,gl
 	
+	gl.IEfail := false
 	loop, 3																				; Number of attempts to permit redirects
 	{
 		try 
@@ -285,15 +300,18 @@ IEurl(url) {
 			if !(wb.LocationURL = url) {
 				eventlog("PREVGRAB: Redirected.",0)
 			}
-			if !(IEwaitBusy(gl.settings.webwait)) {													; msec before fails
+			if !(IEwaitBusy(gl.settings.webwait)) {										; msec before fails
 				eventlog("PREVGRAB: Failed to load.")
-				return
 			}
 		}
 		catch e
 		{
-			eventlog("PREVGRAB: IEurl failed with msg: " stregX(e.message,"^",1,0,"[\r\n]"))
-			return
+			eventlog("PREVGRAB: IEurl failed with msg: " stregX(e.message "`n","",1,0,"[\r\n]+",1))
+			if instr(e.message,"The RPC server is unavailable") {
+				eventlog("PREVGRAB: Reloading IE DOM...")
+				wb := IEopen()
+			}
+			continue
 		}
 		
 		if instr(wb.LocationURL,gl.login.string) {
@@ -309,6 +327,7 @@ IEurl(url) {
 			sleep 500
 		}
 	}
+	gl.IEfail := true
 	eventlog("PREVGRAB: Failed all attempts " url)
 	return
 }
