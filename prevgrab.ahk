@@ -302,8 +302,12 @@ IEurl(url) {
 		}
 		catch e
 		{
-			eventlog("PREVGRAB: IEurl failed with msg: " stregX(e.message,"^",1,0,"[\r\n]"))
-			return
+			eventlog("PREVGRAB: IEurl failed with msg: " stregX(e.message "`n","",1,0,"[\r\n]+",1))
+			if instr(e.message,"The RPC server is unavailable") {
+				eventlog("PREVGRAB: Reloading IE DOM...")
+				wb := IEopen()
+			}
+			continue
 		}
 		
 		if instr(wb.LocationURL,gl.login.string) {
