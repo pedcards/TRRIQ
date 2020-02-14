@@ -296,9 +296,8 @@ IEurl(url) {
 			if !(wb.LocationURL = url) {
 				eventlog("PREVGRAB: Redirected.",0)
 			}
-			if !(IEwaitBusy(gl.settings.webwait)) {													; msec before fails
+			if !(IEwaitBusy(gl.settings.webwait)) {										; msec before fails
 				eventlog("PREVGRAB: Failed to load.")
-				return
 			}
 		}
 		catch e
