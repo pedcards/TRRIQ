@@ -18,7 +18,7 @@ progress,,,TRRIQ intializing...
 ;~ FileInstall, libiconv2.dll, libiconv2.dll
 ;~ FileInstall, trriq.ini, trriq.ini
 ;~ FileInstall, hl7.ini, hl7.ini
-FileGetTime, wqfileDT, wqupdate
+FileGetTime, wqfileDT, .\files\wqupdate
 
 SplitPath, A_ScriptDir,,fileDir
 user := A_UserName
@@ -409,7 +409,7 @@ idleTimer() {
 
 checkWQfile() {
 	global wqfileDT
-	FileGetTime, tmpdt, wqupdate														; get mod dt for "wqupdate"
+	FileGetTime, tmpdt, .\files\wqupdate												; get mod dt for "wqupdate"
 	if (tmpdt > wqfileDT) {																; file is more recent than internal var
 		wqfileDT := tmpdt																; set var to this date
 		WQlist()																		; refresh list
@@ -419,8 +419,8 @@ checkWQfile() {
 
 setwqupdate() {
 	global wqfileDT
-	FileDelete, wqupdate
-	FileAppend,,wqupdate
+	FileDelete, .\files\wqupdate
+	FileAppend,,.\files\wqupdate
 	wqfileDT := A_now
 	return
 }
