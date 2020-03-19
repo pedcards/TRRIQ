@@ -1,12 +1,13 @@
 initHL7() {
 	global hl7, preventiceDDE
 	hl7 := Object()
-	IniRead, s0, hl7.ini																	; s0 = Section headers
+	inifile := ".\files\hl7.ini"
+	IniRead, s0, %inifile%																	; s0 = Section headers
 	loop, parse, s0, `n, `r																	; parse s0
 	{
 		i := A_LoopField
 		hl7[i] := []																		; create array for each header
-		IniRead, s1, hl7.ini, % i															; s1 = individual header
+		IniRead, s1, %inifile%, % i															; s1 = individual header
 		loop, parse, s1, `n, `r																; parse s1
 		{
 			j := A_LoopField
@@ -45,7 +46,7 @@ hl7line(seg) {
 	attempt to map each field to recognized structure for that field element
 */
 	global hl7, fldVal, path, obxVal
-	multiSeg := "NK1|DG1|NTE"																; segments that may have multiple lines, e.g. NK1
+	multiSeg := "NK1|DG1|NTE"															; segments that may have multiple lines, e.g. NK1
 	res := Object()
 	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
 	segName := fld.1																	; first array element should be NAME
