@@ -2882,28 +2882,42 @@ outputfiles:
 	filenameOut := RegExReplace(filenameOut,"\^","'")										; convert [^] back to [']
 	tmpFlag := tmpDate.YMD . "020000"
 	
-	tmpFile := ".\tempfiles\"
-		. "TRRIQ_ORU_" 
+	/*	Save hl7Out result
+	*/
+	tmpFile := ".\tempfiles\"																; HL7 for tempfiles,
+		. "TRRIQ_ORU_" 																		; to copy to RawHL7 (for Access use)
 		. fldval["dem-Name_L"] "_" 
 		. tmpDate.YMD "_"
 		. "z" fldval["wqid"] ".hl7"
 	FileDelete, % tmpFile
-	FileAppend, % hl7Out.msg, % tmpFile
-	FileCopy, % tmpFile, % path.EpicHL7out
+	FileAppend, % hl7Out.msg, % tmpFile														; copy ORU hl7 to tempfiles
+	FileCopy, % tmpFile, % path.EpicHL7out													; create copy in RawHL7
 	
+	/*	Save CSV in tempfiles, and copy to Import folder
+	*/
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	
 	impSub := (monType~="BGH") ? "Event\" : "Holter\"										; Import subfolder Event or Holter
 	FileCopy, .\tempfiles\%fileNameOut%.csv, % path.import impSub "*.*", 1					; copy CSV from tempfiles to importFld\impSub
 	
-	if (FileExist(fileIn "-sh.pdf")) {														; filename for OnbaseDir
-		fileHIM := fileIn "-sh.pdf"															; prefer shortened if it exists
-	} else {
-		fileHIM := fileIn
-	}
-	FileCopy, % fileHIM, % path.Onbase filenameOut ".pdf", 1									; Copy to OnbaseDir
+	/*	Copy PDF to OnBase
+	*/
+	onbaseFile := path.OnBase																; PDF for OnBase
+		. "TRRIQ_" 
+		. fldval["order"] "_" 
+		. tmpDate.YMD "_" 
+		. fldval["dem-Name_L"] "_" 
+		. fldval["dem-MRN"] ".pdf"
 	
+	fileHIM := FileExist(fileIn "-sh.pdf")													; filename for OnbaseDir
+			? fileIn "-sh.pdf"																; prefer shortened if it exists
+			: fileIn
+	
+	FileCopy, % fileHIM, % onbaseFile, 1													; Copy to OnbaseDir
+	
+	/*	Copy PDF to HolterPDF folder and archive
+	*/
 	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
 	FileCopy, % fileIn "-sh.pdf", % path.holterPDF filenameOut "-short.pdf", 1				; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
@@ -2914,6 +2928,8 @@ outputfiles:
 	FileMove, % path.PrevHL7in fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 	
+	/*	Append info to fileWQ (probably obsolete in Epic)
+	*/
 	fileWQ := ma_date "," user "," 															; date processed and MA user
 			. """" fldval["dem-Ordering"] """" ","											; extracted provider
 			. """" fldval["dem-Name_L"] ", " fldval["dem-Name_F"] """" ","					; CIS name
