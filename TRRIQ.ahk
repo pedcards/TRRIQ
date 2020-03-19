@@ -3358,7 +3358,7 @@ makeTestORU() {
 		, 11:"F"
 		, 14:A_now })
 	
-	FileRead, testTXT, % ".\state\test-ED_"
+	FileRead, testTXT, % ".\files\test-ED_"
 		. strQ(ptDem.model~="Mortara" ? 1 : "","HOL")
 		. strQ(ptDem.model~="Heart" ? 1 : "","CEM")
 		. strQ(ptDem.model~="Mini" ? 1 : "","MCT")
