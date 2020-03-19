@@ -3308,7 +3308,7 @@ makeORU(wqid) {
 makeTestORU() {
 /*	Generate a fake Preventice inbound ORU message based on the Preventice ORM registration data
 */
-	global ptDem, hl7out
+	global ptDem, hl7out, path
 	hl7time := A_Now
 	hl7out := Object()
 	PVID := "2459720"
@@ -3388,7 +3388,7 @@ makeTestORU() {
 	
 	FileAppend
 		, % hl7out.msg
-		, % ".\Preventice\" ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_now ".hl7"
+		, % path.PrevHL7in ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_now ".hl7"
 	
 	return
 }
