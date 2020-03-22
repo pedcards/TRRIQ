@@ -273,6 +273,8 @@ IEopen() {
 	global gl
 	
 	if !winExist("ahk_exe iexplore.exe") {
+		run iexplore.exe
+		sleep 2000
 		wb := ComObjCreate("InternetExplorer.application")
 		gl.IEnew := true
 		return wb
