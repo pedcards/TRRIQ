@@ -1843,10 +1843,10 @@ MortaraUpload(tabnum="")
 		}
 		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)									; transfer files found
 		eventlog("Found WebUploadDir " wuDir.Short )
-		loop, files, % wuDir.Full "\*", R
-		{
-			wuDir.list .= A_LoopFileFullPath "`n"
-		}
+		;~ loop, files, % wuDir.Full "\*", R
+		;~ {
+			;~ wuDir.list .= A_LoopFileFullPath "`n"
+		;~ }
 		FileReadLine, wuRecord, % wuDir.Full "\RECORD.LOG", 1
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
 		wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
@@ -1854,17 +1854,17 @@ MortaraUpload(tabnum="")
 		eventlog("Data files: wuDirSer " wuDir.Ser ", MRN " wuDir.MRN)
 		if !(serNum=wuDir.Ser) {
 			eventlog("Serial number mismatch.")
-			eventlog("FILELIST:`n" wuDir.list)
-			eventlog("RECORD: '" wuRecord "'")
-			eventlog("DEVICE: '" wuDevice "'")
+			;~ eventlog("FILELIST:`n" wuDir.list)
+			;~ eventlog("RECORD: '" wuRecord "'")
+			;~ eventlog("DEVICE: '" wuDevice "'")
 			eventlog(wuDir.fullDir)
 			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
-			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
-			WinActivate, ahk_id %muWinID%
-			ControlGet, clkbut, HWND,, Back
-			sleep 200
-			ControlClick,, ahk_id %clkbut%,,,,NA
-			return
+			;~ MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
+			;~ WinActivate, ahk_id %muWinID%
+			;~ ControlGet, clkbut, HWND,, Back
+			;~ sleep 200
+			;~ ControlClick,, ahk_id %clkbut%,,,,NA
+			;~ return
 		}
 		
 		wq := new XML("worklist.xml")													; refresh WQ
