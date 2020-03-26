@@ -862,6 +862,10 @@ parsePrevEnroll(txt) {
 			, prov:filterProv(el.6).name
 			, site:filterProv(el.6).site }
 	
+	if (res.dev~="-$") {																; e.g. "Body Guardian Mini -"
+		res.dev .= res.name																; append string so will not match in enrollcheck
+	}
+	
 	/*	Check whether any params match this device
 	*/
 		if enrollcheck("[name='" res.name "']"											; 6/6 perfect match
