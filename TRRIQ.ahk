@@ -2946,7 +2946,11 @@ outputfiles:
 	} else {
 		fileHIM := fileIn
 	}
-	FileCopy, % fileHIM, % path.3Mout filenameOut ".pdf", 1									; Copy to OnbaseDir
+	if FileExist(path.3Mout) {
+		FileCopy, % fileHIM, % path.3Mout filenameOut ".pdf", 1								; Copy to OnbaseDir
+	} else {
+		eventlog("Cannot find path " path.3Mout)
+	}
 	
 	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
 	FileCopy, % fileIn "-sh.pdf", % path.holterPDF filenameOut "-short.pdf", 1				; Copy the shortened PDF, if it exists
