@@ -1848,20 +1848,17 @@ MortaraUpload(tabnum="")
 		}
 		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)									; transfer files found
 		eventlog("Found WebUploadDir " wuDir.Short )
-		;~ loop, files, % wuDir.Full "\*", R
-		;~ {
-			;~ wuDir.list .= A_LoopFileFullPath "`n"
-		;~ }
 		FileReadLine, wuRecord, % wuDir.Full "\RECORD.LOG", 1
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
+		FileRead, wuConfig, % wuDir.Full "\CONFIG.SYS"
+		if (wuConfig!="") {
+			FileCopy, % wuDir.Full "\CONFIG.SYS", % ".\tempfiles\config-" serNum "-" A_Now
+		}
 		wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
 		wuDir.Ser := substr(wuDevice,-4)
 		eventlog("Data files: wuDirSer " wuDir.Ser ", MRN " wuDir.MRN)
 		if !(serNum=wuDir.Ser) {
 			eventlog("Serial number mismatch.")
-			;~ eventlog("FILELIST:`n" wuDir.list)
-			;~ eventlog("RECORD: '" wuRecord "'")
-			;~ eventlog("DEVICE: '" wuDevice "'")
 			eventlog(wuDir.fullDir)
 			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			;~ MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
