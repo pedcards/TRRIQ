@@ -2950,6 +2950,14 @@ outputfiles:
 	}
 	if FileExist(path.3Mout) {
 		FileCopy, % fileHIM, % path.3Mout filenameOut ".pdf", 1								; Copy to OnbaseDir
+		loop, 3
+		{
+			if FileExist(path.3Mout filenameOut ".pdf") {
+				break
+			}
+			eventlog("OnBase writeout failed copy " A_index)
+			sleep 1000
+		}
 	} else {
 		eventlog("Cannot find path " path.3Mout)
 	}
