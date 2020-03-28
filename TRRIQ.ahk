@@ -1855,7 +1855,12 @@ MortaraUpload(tabnum="")
 			FileCopy, % wuDir.Full "\CONFIG.SYS", % ".\tempfiles\config-" serNum "-" A_Now
 		}
 		wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
-		wuDir.Ser := substr(wuDevice,-4)
+		if (wuDevice) {																	; try to match SerNum from DEVICE.LOG first
+			wuDir.Ser := substr(wuDevice,-4)
+		} else {																		; otherwise get SerNum from CONFIG.SYS
+			RegExMatch(wuConfig,"\D(\d+)\D",t)
+			wuDir.Ser := substr(t1,1-strlen(sernum))
+		}
 		eventlog("Data files: wuDirSer " wuDir.Ser ", MRN " wuDir.MRN)
 		if !(serNum=wuDir.Ser) {
 			eventlog("Serial number mismatch.")
