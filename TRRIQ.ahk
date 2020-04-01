@@ -2955,10 +2955,11 @@ outputfiles:
 			if FileExist(path.3Mout filenameOut ".pdf") {
 				break
 			}
-			eventlog("OnBase writeout failed copy " A_index)
+			eventlog("OnBase writeout failed " A_index)
 			sleep 1000
 		}
 	} else {
+		FileCopy, % fileHIM, % ".\OnbaseSpool\" filenameOut ".pdf", 1						; Copy to Onbase spool dir (consider setting this at init)
 		eventlog("Cannot find path " path.3Mout)
 	}
 	
