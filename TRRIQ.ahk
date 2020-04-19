@@ -148,7 +148,7 @@ MainLoop: ; ===================== This is the main part ========================
 		}
 	}
 	
-	checkHl7Orders()
+	checkPreventiceOrdersOut()
 	
 	ExitApp
 }
@@ -168,7 +168,7 @@ PhaseGUI:
 		, Y+10 wp h40 gPhaseRefresh
 		, Refresh lists
 	Gui, Add, Button
-		, Y+10 wp h40 vEnrollment gPrevGrab Disabled
+		, Y+10 wp h40 gPrevGrab Disabled
 		, Grab Preventice enrollments
 	Gui, Add, Text, wp h40																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/activate a`nHOLTER or EVENT MONITOR
@@ -764,7 +764,8 @@ WQlist() {
 		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
 		if (res.node="done") {															; skip if DONE, might be currently in process 
-			eventlog("Report already done. WQlist removing " fileIn)
+			eventlog("Report already done (" id ": " res.name " - " res.mrn ", " res.date ")")
+			eventlog("WQlist removing " fileIn)
 			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			continue
 		}
@@ -909,7 +910,7 @@ WQlist() {
 	return
 }
 
-CheckHl7Orders() {
+checkPreventiceOrdersOut() {
 	global path
 	
 	loop, files, % path.PrevHL7out "Failed\*.txt"
@@ -980,6 +981,10 @@ parsePrevEnroll(txt) {
 			, dev:el.5
 			, prov:filterProv(el.6).name
 			, site:filterProv(el.6).site }
+	
+	if (res.dev~="-$") {																; e.g. "Body Guardian Mini -"
+		res.dev .= res.name																; append string so will not match in enrollcheck
+	}
 	
 	/*	Check whether any params match this device
 	*/
@@ -1877,20 +1882,31 @@ MortaraUpload(tabnum="")
 		}
 		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)									; transfer files found
 		eventlog("Found WebUploadDir " wuDir.Short )
-		loop, files, % wuDir.Full "\*", R
-		{
-			wuDir.list .= A_LoopFileFullPath "`n"
-		}
 		FileReadLine, wuRecord, % wuDir.Full "\RECORD.LOG", 1
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
-		wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
-		wuDir.Ser := substr(wuDevice,-4)
-		eventlog("Data files: wuDirSer " wuDir.Ser ", MRN " wuDir.MRN)
+		FileRead, wuConfig, % wuDir.Full "\CONFIG.SYS"
+			wuConfig := substr(wuConfig,1,512)
+			RegExMatch(wuConfig,"\D(\d{5,})\D+(\d{6,})?\D",t)
+		if (t1) {
+			wuDir.Ser := substr(t1,1-strlen(sernum))
+			eventlog("wuDirSer " wuDir.Ser " from CONFIG.SYS")
+		} else if (wuDevice) {
+			wuDir.Ser := substr(wuDevice,-4)
+			eventlog("wuDirSer " wuDir.Ser " from DEVICE.LOG")
+		} else {
+			eventlog("No S/N found.")
+		}
+		if (t2) {
+			wuDir.MRN := t2
+			eventlog("wuDirMRN " wuDir.MRN " from CONFIG.SYS")
+		} else if (wuRecord) {
+			wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
+			eventlog("wuDirMRN " wuDir.MRN " from RECORD.LOG")
+		} else {
+			eventlog("No MRN found.")
+		}
 		if !(serNum=wuDir.Ser) {
 			eventlog("Serial number mismatch.")
-			eventlog("FILELIST:`n" wuDir.list)
-			eventlog("RECORD: '" wuRecord "'")
-			eventlog("DEVICE: '" wuDevice "'")
 			eventlog(wuDir.fullDir)
 			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
@@ -4905,10 +4921,14 @@ ParseName(x) {
 ParseDate(x) {
 	mo := ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 	moStr := "Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec"
-	dSep := "[ \-_/]"
+	dSep := "[ \-\._/]"
 	date := []
 	time := []
 	x := RegExReplace(x,"[,\(\)]")
+	
+	if (x~="\d{4}.\d{2}.\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z") {
+		x := RegExReplace(x,"[TZ]","|")
+	}
 	if RegExMatch(x,"i)(\d{1,2})" dSep "(" moStr ")" dSep "(\d{4}|\d{2})",d) {			; 03-Jan-2015
 		date.dd := zdigit(d1)
 		date.mmm := d2
@@ -4931,14 +4951,21 @@ ParseDate(x) {
 				: "20" d3
 		date.date := trim(d)
 	}
-	else if RegExMatch(x,"\b(\d{4})-?(\d{2})-?(\d{2})\b",d) {								; 20150103 or 2015-01-03
+	else if RegExMatch(x,"i)(" moStr ")\s+(\d{1,2}),?\s+(\d{4})",d) {					; Dec 21, 2018
+		date.mmm := d1
+		date.mm := zdigit(objhasvalue(mo,d1))
+		date.dd := zdigit(d2)
+		date.yyyy := d3
+		date.date := trim(d)
+	}
+	else if RegExMatch(x,"\b(\d{4})[\-\.](\d{2})[\-\.](\d{2})\b",d) {					; 2015-01-03
 		date.yyyy := d1
 		date.mm := d2
 		date.mmm := mo[d2]
 		date.dd := d3
 		date.date := trim(d)
 	}
-	else if RegExMatch(x,"\b(\d{4})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {			; 20150103174307
+	else if RegExMatch(x,"\b(19|20\d{2})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {	; 20150103174307 or 20150103
 		date.yyyy := d1
 		date.mm := d2
 		date.mmm := mo[d2]
@@ -4951,8 +4978,8 @@ ParseDate(x) {
 		time.time := d5 ":" d6 . strQ(d7,":###")
 	}
 	
-	if RegExMatch(x,"iO)(\d+):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {			; 17:42 PM
-		hasDays := (t.value[4]) ? true : false 												; 4 nums has days
+	if RegExMatch(x,"iO)(\d+):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {				; 17:42 PM
+		hasDays := (t.value[4]) ? true : false 											; 4 nums has days
 		time.days := (hasDays) ? t.value[1] : ""
 		time.hr := trim(t.value[1+hasDays])
 		if (time.hr>23) {
@@ -4969,7 +4996,9 @@ ParseDate(x) {
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
 			, YMD:date.yyyy date.mm date.dd
 			, MDY:date.mm "/" date.dd "/" date.yyyy
-			, days:zdigit(time.days), hr:zdigit(time.hr), min:zdigit(time.min), sec:zdigit(time.sec), ampm:time.ampm, time:time.time
+			, days:zdigit(time.days)
+			, hr:zdigit(time.hr), min:zdigit(time.min), sec:zdigit(time.sec)
+			, ampm:time.ampm, time:time.time
 			, DHM:zdigit(time.days) ":" zdigit(time.hr) ":" zdigit(time.min) " (DD:HH:MM)" 
  			, DT:date.mm "/" date.dd "/" date.yyyy " at " zdigit(time.hr) ":" zdigit(time.min) ":" zdigit(time.sec) }
 }
