@@ -153,7 +153,7 @@ MainLoop: ; ===================== This is the main part ========================
 		}
 	}
 	
-	checkHl7Orders()
+	checkPreventiceOrdersOut()
 	
 	ExitApp
 }
@@ -791,7 +791,7 @@ WQlist() {
 	return
 }
 
-CheckHl7Orders() {
+checkPreventiceOrdersOut() {
 	global path
 	
 	loop, files, % path.PrevHL7out "Failed\*.txt"
