@@ -602,7 +602,7 @@ WQlist() {
 	wq.save("worklist.xml")
 	FileDelete, .lock
 	
-	checkHl7Orders()																	; check registrations that failed upload to Preventice
+	checkPreventiceOrdersOut()															; check registrations that failed upload to Preventice
 	
 	if (wksloc="Main Campus") {
 		
