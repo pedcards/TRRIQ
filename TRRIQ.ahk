@@ -1815,19 +1815,20 @@ cleanTempFiles() {
 	return
 }
 
-MortaraUpload(tabnum="")
+checkMWUapp()
 {
-	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
-	checkCitrix()
-	SetTimer, idleTimer, Off
+	global isDevt
 	
-/*	Comment out for debugging
-
+	if (isDevt=true) {																	; In DEVT environment, skip loading MWU
+		eventlog("isDevt=true, skip MWU load.")
+		return
+	}
+	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
 		wb := IEopen()
 		sleep 500
 		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
-		;~ ComObjConnect(wb)																; disconnect the webbrowser object
+		wb := {}																		; disconnect the webbrowser object
 		
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
@@ -1838,10 +1839,22 @@ MortaraUpload(tabnum="")
 			}
 			sleep 100
 		}
-		return
+		progress, off
 	}
 
 */
+	
+	return																	
+	
+}
+
+MortaraUpload(tabnum="")
+{
+	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt
+	checkCitrix()
+	SetTimer, idleTimer, Off
+	
+	checkMWUapp()
 	
 	muWinID := WinExist("Mortara Web Upload")
 
@@ -1852,11 +1865,16 @@ MortaraUpload(tabnum="")
 	
 	SerNum := substr(stregX(muWintxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-6)		; Get S/N on visible page
 	SerNum := SerNum ? trim(SerNum," `r`n") : ""
-;***
-	SerNum := "12345"
-	TabNum := "Prepare"
-;***
-	eventlog("Device S/N " sernum " attached.")
+	if (isDevt=true) {
+		SerNum := "12345"
+		Tabnum := cMsgBox("DEVT MortaraUpload","Which tab?","Prepare|Transfer","Q")
+	}
+	if (SerNum="") {
+		eventlog("No device attached, return to PhaseGUI.")
+		return
+	} else {
+		eventlog("Device S/N " sernum " attached.")
+	}
 	
 	if (Tabnum="Transfer") {															; TRANSFER RECORDING TAB
 		eventlog("Transfer recording selected.")
