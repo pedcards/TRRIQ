@@ -1573,7 +1573,7 @@ checkMWUapp()
 
 MortaraUpload(tabnum="")
 {
-	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user
+	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt
 	checkCitrix()
 	SetTimer, idleTimer, Off
 	
@@ -1589,7 +1589,10 @@ MortaraUpload(tabnum="")
 	
 	SerNum := substr(stregX(muWintxt,"Status.*?[\r\n]+",1,1,"Recorder S/N",1),-6)		; Get S/N on visible page
 	SerNum := SerNum ? trim(SerNum," `r`n") : ""
-	
+	if (isDevt=true) {
+		SerNum := "12345"
+		Tabnum := cMsgBox("DEVT MortaraUpload","Which tab?","Prepare|Transfer","Q")
+	}
 	if (SerNum="") {
 		eventlog("No device attached, return to PhaseGUI.")
 		return
