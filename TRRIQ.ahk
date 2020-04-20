@@ -1841,11 +1841,8 @@ checkMWUapp()
 		}
 		progress, off
 	}
-
-*/
 	
 	return																	
-	
 }
 
 MortaraUpload(tabnum="")
