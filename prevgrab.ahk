@@ -138,7 +138,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	}
 	
 	t0 := A_TickCount
-	loop, 300																			; wait each 100*0.05 = 5 sec
+	While (A_TickCount-t0 < gl.settings.webwait)
 	{
 		if (substr(A_index,0)="0") {
 			elipse .= "."
