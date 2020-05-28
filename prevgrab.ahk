@@ -60,15 +60,19 @@ MainLoop:
 	
 	PreventiceWebGrab("Inventory")
 	
-	if (gl.FAIL) {																		; Note when a table had failed to load
-		eventlog("PREVGRAB: Critical hit.")
-	}
 	filedelete, % gl.files_dir "\prev.txt"												; writeout each one regardless
 	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
 	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
 	if (gl.IEnew=true) {
 		IEclose()
+	}
+	
+	if (gl.FAIL) {																		; Note when a table had failed to load
+		MsgBox,262160,, Downloads failed.
+		eventlog("PREVGRAB: Critical hit.")
+	} else {
+		MsgBox,262160,, Successful Preventice update!
 	}
 	
 	ExitApp
