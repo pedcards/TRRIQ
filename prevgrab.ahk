@@ -44,13 +44,13 @@ MainLoop:
 	
 	loop, 3
 	{
-		wb := IEopen()																	; start/activate an IE instance
 		eventlog("PREVGRAB: IEopen attempt " A_index)
+		wb := IEopen()																	; start/activate an IE instance
 		if IsObject(wb) {
 			break
 		}
 	}
-	if !IsObject(wb) {
+	if !instr(wb.FullName,"iexplore.exe") {
 		MsgBox, 262160, , Failed to open IE
 		ExitApp
 	}
@@ -273,18 +273,19 @@ IEopen() {
 	global gl
 	
 	if !winExist("ahk_exe iexplore.exe") {
-		run iexplore.exe
-		sleep 2000
-		wb := ComObjCreate("InternetExplorer.application")
+		ComObjCreate("InternetExplorer.application")
 		gl.IEnew := true
-		return wb
+		sleep 2000
+		eventlog("PREVGRAB: Creating new IE instance.")
 	} 
 	for wb in ComObjCreate("Shell.Application").Windows() {
 		if InStr(wb.FullName, "iexplore.exe") {
-			gl.IEnew := false
+			eventlog("PREVGRAB: Found existing " wb.FullName " (HWND " format("{:#x}",wb.HWND) ")")
 			return wb
 		}
 	}
+	eventlog("PREVGRAB: Failed to open IE.")
+	return
 }
 
 IEurl(url) {
