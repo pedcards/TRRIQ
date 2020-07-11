@@ -3098,7 +3098,7 @@ findFullPdf(wqid:="") {
 		
 		if (readWQ(fnID.1).node = "done") {
 			eventlog("Leftover PDF: " fnam ", moved to archive.")
-			FileMove, % fileIn, % path.holterPDF "archive\" fname
+			FileMove, % fileIn, % path.holterPDF "archive\" fname, 1
 			continue
 		}
 		
