@@ -3689,24 +3689,34 @@ Event_BGH_Hl7:
 	fieldcoladd("dem","Test_date",niceDate(obxVal["Enroll_Start_Dt"]))
 	fieldcoladd("dem","Test_end",niceDate(obxVal["Enroll_End_Dt"]))
 	
-	count:=[]																			; create object for counts
-	count["Patient-Activated"]:=0														; zero the results instead of null
-	count["Auto-Detected"]:=0
-	count["Stable"]:=0
-	count["Serious"]:=0
-	count["Critical"]:=0
-	for key,val in obxVal																; recurse through obxVal results
+	count_block := stregX(newtxt,"Event Counts",1,1,"Summarized Findings",1)
+	count_block := RegExReplace(count_block,"(\d) ","$1`n")
+	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
+	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
+	fieldvals(count_block,3,"counts")
+	
+	if (fldval["counts-Auto"]="" && fldval["counts-Manual"]="")							; Event Counts block not parsed
 	{
-		if (key~="Event_Acuity|Event_Type") {											; count Critical/Serious/Stable and Auto/Manual events
-			count[val] ++																; more reliable than parsing PDF
+		count:=[]																		; create object for counts
+		count["Patient-Activated"]:=0													; zero the results instead of null
+		count["Auto-Detected"]:=0
+		count["Stable"]:=0
+		count["Serious"]:=0
+		count["Critical"]:=0
+		for key,val in obxVal															; recurse through obxVal results
+		{
+			if (key~="Event_Acuity|Event_Type") {										; count Critical/Serious/Stable and Auto/Manual events
+				count[val] ++															; more reliable than parsing PDF
+			}
 		}
+		fieldcoladd("counts","Critical",count["Critical"])
+		fieldcoladd("counts","Serious",count["Serious"])
+		fieldcoladd("counts","Stable",count["Stable"])
+		fieldcoladd("counts","Manual",count["Patient-Activated"])
+		fieldcoladd("counts","Auto",count["Auto-Detected"])
+		fieldcoladd("counts","Total",count["Auto-Detected"]+count["Patient-Activated"])
+		eventlog("Event Count block not parsed, counted from OBR.")
 	}
-	fieldcoladd("counts","Critical",count["Critical"])
-	fieldcoladd("counts","Serious",count["Serious"])
-	fieldcoladd("counts","Stable",count["Stable"])
-	fieldcoladd("counts","Manual",count["Patient-Activated"])
-	fieldcoladd("counts","Auto",count["Auto-Detected"])
-	fieldcoladd("counts","Total",count["Auto-Detected"]+count["Patient-Activated"])
 	
 	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
