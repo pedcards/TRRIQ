@@ -44,13 +44,13 @@ MainLoop:
 	
 	loop, 3
 	{
-		wb := IEopen()																	; start/activate an IE instance
 		eventlog("PREVGRAB: IEopen attempt " A_index)
+		wb := IEopen()																	; start/activate an IE instance
 		if IsObject(wb) {
 			break
 		}
 	}
-	if !IsObject(wb) {
+	if !instr(wb.FullName,"iexplore.exe") {
 		MsgBox, 262160, , Failed to open IE
 		ExitApp
 	}
@@ -60,15 +60,19 @@ MainLoop:
 	
 	PreventiceWebGrab("Inventory")
 	
-	if (gl.FAIL) {																		; Note when a table had failed to load
-		eventlog("PREVGRAB: Critical hit.")
-	}
 	filedelete, % gl.files_dir "\prev.txt"												; writeout each one regardless
 	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
 	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
 	if (gl.IEnew=true) {
 		IEclose()
+	}
+	
+	if (gl.FAIL) {																		; Note when a table had failed to load
+		MsgBox,262160,, Downloads failed.
+		eventlog("PREVGRAB: Critical hit.")
+	} else {
+		MsgBox,262160,, Successful Preventice update!
 	}
 	
 	ExitApp
@@ -138,7 +142,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	}
 	
 	t0 := A_TickCount
-	loop, 300																			; wait each 100*0.05 = 5 sec
+	While (A_TickCount-t0 < gl.settings.webwait)
 	{
 		if (substr(A_index,0)="0") {
 			elipse .= "."
@@ -273,18 +277,19 @@ IEopen() {
 	global gl
 	
 	if !winExist("ahk_exe iexplore.exe") {
-		run iexplore.exe
-		sleep 2000
-		wb := ComObjCreate("InternetExplorer.application")
+		ComObjCreate("InternetExplorer.application")
 		gl.IEnew := true
-		return wb
+		sleep 2000
+		eventlog("PREVGRAB: Creating new IE instance.")
 	} 
 	for wb in ComObjCreate("Shell.Application").Windows() {
 		if InStr(wb.FullName, "iexplore.exe") {
-			gl.IEnew := false
+			eventlog("PREVGRAB: Found existing " wb.FullName " (HWND " format("{:#x}",wb.HWND) ")")
 			return wb
 		}
 	}
+	eventlog("PREVGRAB: Failed to open IE.")
+	return
 }
 
 IEurl(url) {

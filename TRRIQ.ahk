@@ -522,7 +522,7 @@ WQtask() {
 		}
 		wq.setText(idstr "/sent",parseDate(inDT).YMD)
 		wq.setAtt(idstr "/sent",{user:user})
-		wq.save("worklist.xml")
+		writeout(idstr,"sent")
 		eventlog(pt.MRN " " pt.Name " study " pt.Date " uploaded to Preventice.")
 		MsgBox, 4160, Logged, % pt.Name "`nUpload date logged!"
 		setwqupdate()
@@ -728,7 +728,7 @@ WQlist() {
 		GuiControl, Text, Register, Go to ORDERS tab
 	}
 	
-	wq.save("worklist.xml")
+	WriteSave(wq)
 	FileDelete, .lock
 	
 	checkPreventiceOrdersOut()															; check registrations that failed upload to Preventice
@@ -2119,7 +2119,7 @@ muWqSave(sernum) {
 			wq.selectSingleNode("/root/done").appendChild(clone)						; copy x.clone to z.DONE
 			x.parentNode.removeChild(x)													; remove enStr node
 			
-			wq.save("worklist.xml")
+			WriteSave(wq)
 		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
 	}
 	
@@ -3009,7 +3009,7 @@ moveWQ(id) {
 		wq.addElement("done",newID,{user:A_UserName},A_Now)
 		eventlog("No wqid. Saved new DONE record " fldval["dem-MRN"] ".")
 	}
-	wq.save("worklist.xml")
+	writeSave(wq)
 	
 	FileDelete, .lock
 	
@@ -3481,7 +3481,7 @@ findFullPdf(wqid:="") {
 		
 		if (readWQ(fnID.1).node = "done") {
 			eventlog("Leftover PDF: " fnam ", moved to archive.")
-			FileMove, % fileIn, % path.holterPDF "archive\" fname
+			FileMove, % fileIn, % path.holterPDF "archive\" fname, 1
 			continue
 		}
 		
@@ -4074,24 +4074,34 @@ Event_BGH_Hl7:
 	fieldcoladd("dem","Test_date",niceDate(obxVal["Enroll_Start_Dt"]))
 	fieldcoladd("dem","Test_end",niceDate(obxVal["Enroll_End_Dt"]))
 	
-	count:=[]																			; create object for counts
-	count["Patient-Activated"]:=0														; zero the results instead of null
-	count["Auto-Detected"]:=0
-	count["Stable"]:=0
-	count["Serious"]:=0
-	count["Critical"]:=0
-	for key,val in obxVal																; recurse through obxVal results
+	count_block := stregX(newtxt,"Event Counts",1,1,"Summarized Findings",1)
+	count_block := RegExReplace(count_block,"(\d) ","$1`n")
+	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
+	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
+	fieldvals(count_block,3,"counts")
+	
+	if (fldval["counts-Auto"]="" && fldval["counts-Manual"]="")							; Event Counts block not parsed
 	{
-		if (key~="Event_Acuity|Event_Type") {											; count Critical/Serious/Stable and Auto/Manual events
-			count[val] ++																; more reliable than parsing PDF
+		count:=[]																		; create object for counts
+		count["Patient-Activated"]:=0													; zero the results instead of null
+		count["Auto-Detected"]:=0
+		count["Stable"]:=0
+		count["Serious"]:=0
+		count["Critical"]:=0
+		for key,val in obxVal															; recurse through obxVal results
+		{
+			if (key~="Event_Acuity|Event_Type") {										; count Critical/Serious/Stable and Auto/Manual events
+				count[val] ++															; more reliable than parsing PDF
+			}
 		}
+		fieldcoladd("counts","Critical",count["Critical"])
+		fieldcoladd("counts","Serious",count["Serious"])
+		fieldcoladd("counts","Stable",count["Stable"])
+		fieldcoladd("counts","Manual",count["Patient-Activated"])
+		fieldcoladd("counts","Auto",count["Auto-Detected"])
+		fieldcoladd("counts","Total",count["Auto-Detected"]+count["Patient-Activated"])
+		eventlog("Event Count block not parsed, counted from OBR.")
 	}
-	fieldcoladd("counts","Critical",count["Critical"])
-	fieldcoladd("counts","Serious",count["Serious"])
-	fieldcoladd("counts","Stable",count["Stable"])
-	fieldcoladd("counts","Manual",count["Patient-Activated"])
-	fieldcoladd("counts","Auto",count["Auto-Detected"])
-	fieldcoladd("counts","Total",count["Auto-Detected"]+count["Patient-Activated"])
 	
 	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -5082,10 +5092,37 @@ WriteOut(parentpath,node) {
 	zNode := zPath.selectSingleNode(node)
 	zPath.replaceChild(clone,zNode)														; replace existing zNode with node clone
 	
-	z.save("worklist.xml")
-	FileCopy, worklist.xml, bak\%A_now%.bak
-	wq := z
+	writeSave(z)
+	
 	FileDelete, .lock
+	
+	return
+}
+
+WriteSave(z) {
+/*	Saves worklist.xml with integrity check
+	presence of .lock does not matter
+*/
+	global wq
+	
+	loop, 3
+	{
+		z.save("worklist.xml")
+		FileRead,wltxt,worklist.xml
+		
+		if instr(substr(wltxt,-9),"</root>") {
+			valid:=true
+			break
+		}
+		
+		eventlog("WriteSave failed " A_index)
+		sleep 2000
+	}
+	
+	if (valid=true) {
+		FileCopy, worklist.xml, bak\%A_now%.bak
+		wq := z
+	}
 	
 	return
 }
