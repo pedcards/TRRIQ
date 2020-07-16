@@ -790,7 +790,7 @@ WQlist() {
 			, strQ(res.site,"###","???")												; site
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
-			, (res.dev~="BG|BodyGuardian Heart|IMD POST EVENT") ? "BGH"					; extracted
+			, (res.dev~="Heart|IMD POST EVENT") ? "BGH"									; extracted
 			: (res.dev~="Mortara") ? "HOL"
 			: (res.dev~="Mini") ? "MINI"
 			: "HL7"
