@@ -4074,13 +4074,16 @@ Event_BGH_Hl7:
 	fieldcoladd("dem","Test_date",niceDate(obxVal["Enroll_Start_Dt"]))
 	fieldcoladd("dem","Test_end",niceDate(obxVal["Enroll_End_Dt"]))
 	
-	count_block := stregX(newtxt,"Event Counts",1,1,"Summarized Findings",1)
+	count_block := stregX(newtxt,"Event Counts",1,1,"Summarized",1)
 	count_block := RegExReplace(count_block,"(\d) ","$1`n")
-	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger"]
-	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto"]
-	fieldvals(count_block,3,"counts")
+	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger","\R"]
+	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto","null"]
 	
-	if (fldval["counts-Auto"]="" && fldval["counts-Manual"]="")							; Event Counts block not parsed
+	if (fldval["counts-Auto"]!="" && fldval["counts-Manual"]!="")						; Event Counts valid
+	{
+		fieldvals(count_block,3,"counts")
+	} 
+	else																				; Event Counts block not parsed
 	{
 		count:=[]																		; create object for counts
 		count["Patient-Activated"]:=0													; zero the results instead of null
