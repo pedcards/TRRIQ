@@ -7,5 +7,5 @@
 	This description comment block is longer than the program itself
 */
 
-Run, \\childrens\files\HCTRREAT\PROD\TRREAT.exe
+Run, \\childrens\files\HCHolterDatabase\PROD\TRRIQ\TRRIQ.exe "launch"
 ExitApp
