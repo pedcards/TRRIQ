@@ -1265,7 +1265,7 @@ checkEpicOrder() {
 	Epic order number necessary to move forward with resulting
 	If needed, MA will place order and check-in study to create ORM
 */
-	global fldval
+	global fldval, wq
 	
 	if (fldval.accession) {																; Accession number exists, return to processing
 		return
@@ -1280,6 +1280,10 @@ checkEpicOrder() {
 		. "4) Sign order on behafl of provider`n"
 		. "5) Now check-in study you just created from the Epic Holter work list`n"
 		. "6) Click OK when you have done this"
+	
+	wqid := fldval.wqid
+	wqsetval(wqid,"oldUID",wqid)
+	writeOut("/root/pending","enroll[@id='" wqid "']")
 	
 	gosub MainLoop
 	return
