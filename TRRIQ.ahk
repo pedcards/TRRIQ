@@ -1190,6 +1190,8 @@ readWQlv:
 		processHL7(path.PrevHL7in . fnam)												; extract DDE to fldVal, and PDF into hl7Dir
 		moveHL7dem()																	; prepopulate the fldval["dem-"] values
 		
+		checkEpicOrder()																; check for presence of valid Epic order
+		
 		progress, 50 , % fnam, Processing PDF
 		gosub processHl7PDF																; process resulting PDF file
 	}
@@ -1255,6 +1257,31 @@ readWQorder() {
 		BGregister("BGH")
 	}
 	
+	return
+}
+
+checkEpicOrder() {
+/*	"In-flight" legacy results will not have existing Epic orders
+	Epic order number necessary to move forward with resulting
+	If needed, MA will place order and check-in study to create ORM
+*/
+	global fldval
+	
+	if (fldval.accession) {																; Accession number exists, return to processing
+		return
+	}
+	
+	MsgBox, 262192
+		, Needs Epic Order
+		, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
+		. "1) Find patient """ fldval["dem-name"] """ in Epic.`n"
+		. "2) Place order ""Holter Event Cutover"" in Epic`n"
+		. "3) Make sure requesting provider """ fldval["dem-ordering"] """ is filled in`n"
+		. "4) Sign order on behafl of provider`n"
+		. "5) Now check-in study you just created from the Epic Holter work list`n"
+		. "6) Click OK when you have done this"
+	
+	gosub MainLoop
 	return
 }
 
