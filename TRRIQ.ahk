@@ -50,6 +50,9 @@ if !(wksLoc := GetLocation()) {
 	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
 	ExitApp
 }
+if (%1%="launch") {
+	eventlog("***** launched from legacy shortcut.")
+}
 
 site := getSites(wksLoc)
 sites := site.tracked																	; sites we are tracking
