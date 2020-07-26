@@ -3291,10 +3291,17 @@ makeORU(wqid) {
 		,{19:fldval.encnum
 		, 50:wqid})
 	
-	if (fldval.MSH_ctrlID~="EPIC") {
+/*	Insert fake RTF and reading EP
+*/
+	MsgBox, 36, Testing, Create ORU with fake RTF and reading EP?
+	IfMsgBox, Yes
+	{
+	;~ if (fldval.MSH_ctrlID~="EPIC") {
 		FileRead, rtf, .\state\test-RTF.txt
 		EPdoc := ep[fldval["dem-reading"]]
-	} else {
+	} 
+	else
+	{
 		rtf := "###"
 		EPdoc := "###"
 	}
@@ -3319,7 +3326,6 @@ makeORU(wqid) {
 		, 5:rtf																			; Epic test: Substitute test rtf
 		, 11:"F"
 		, 14:hl7time})
-	;	Will need to substitute RTF text stream 
 	
 	if (montype~="BGH") {																; no DDE for CEM
 		return
