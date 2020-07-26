@@ -1324,7 +1324,7 @@ parseORM() {
 		, order:fldval.ORC_ReqNum
 		, accession:fldval.ORC_FillerNum
 		, acct:location strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
-		, UID:tobase(fldval.ORC_ReqNum fldval.ORC_FillerNum,36)
+		, UID:tobase(fldval.ORC_ReqNum RegExReplace(fldval.ORC_FillerNum,"[a-zA-Z]"),36)
 		, ind:indication
 		, indication:indication
 		, indicationCode:strQ(fldval.OBR_ReasonCode,"###") strQ(indCode,"###")
