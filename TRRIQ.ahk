@@ -2991,7 +2991,7 @@ outputfiles:
 	*/
 	onbaseFile := path.OnBase																; PDF for OnBase
 		. "TRRIQ_" 
-		. fldval["order"] "_" 
+		. fldval["ordernum"] "_" 
 		. tmpDate.YMD "_" 
 		. fldval["dem-Name_L"] "_" 
 		. fldval["dem-MRN"] ".pdf"
@@ -3168,7 +3168,7 @@ epRead() {
 	fieldcoladd("","MA",user)
 	fieldcoladd("","MA_date",ma_date)
 	fieldcoladd("TRRIQ","UID",fldval.wqid)
-	fieldcoladd("TRRIQ","order",fldval.order)
+	fieldcoladd("TRRIQ","order",fldval.ordernum)
 	fieldcoladd("TRRIQ","accession",fldval.accession)
 return
 }
@@ -3358,7 +3358,7 @@ makeORU(wqid) {
 		EPdoc := "###"
 	}
 	buildHL7("OBR"
-		,{2:fldval.order
+		,{2:fldval.ordernum
 		, 3:fldval.accession
 		, 4:(montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP"
 			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP"
