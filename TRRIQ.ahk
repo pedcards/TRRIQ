@@ -642,6 +642,27 @@ WQlist() {
 		}
 		processhl7(A_LoopFileFullPath)
 		e0:=parseORM()
+		
+		loop, % (ens:=wq.selectNodes("/root/pending/enroll[oldUID]")).Length			; find enroll nodes with result but no order
+		{
+			k := ens.item(A_Index-1)
+			e0.match_NM := fuzzysearch(e0.name,format("{:U}",k.selectSingleNode("name").text))
+			e0.match_MRN := fuzzysearch(e0.mrn,k.selectSingleNode("mrn").text)
+			if (e0.match_NM > 0.15) && (e0.match_MRN > 0.15) {							; Name and MRN each vary by more than 15%
+				continue
+			} else {
+				id := k.getAttribute("id")
+				e0.match_UID := true
+				
+				wqSetVal(id,"ordernum",e0.order)
+				wqSetVal(id,"accession",e0.accession)
+				eventlog("Found pending/enroll/oldUID=" id " that matches new Epic order " e0.order)
+			}
+		}
+		if (e0.match_UID) {
+			continue
+		}
+		
 		e0.orderNode := "/root/orders/enroll[ordernum='" e0.order "']"
 		if IsObject(k:=wq.selectSingleNode(e0.orderNode)) {								; ordernum node exists
 			e0.nodeCtrlID := k.selectSingleNode("ctrlID").text
