@@ -18,12 +18,11 @@ Config:
 	
 	IfInString, A_ScriptDir, AhkProjects 
 	{
-		gl.isAdmin := true
-		gl.TRRIQ_path := A_ScriptDir
+		gl.isDevt := true
 	} else {
-		gl.isAdmin := false
-		gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\HoltER Database\TRRIQ"
+		gl.isDevt := false
 	}
+	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
 	wq := new XML(gl.TRRIQ_path "\worklist.xml")
 	
