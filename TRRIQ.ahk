@@ -192,7 +192,7 @@ PhaseGUI:
 		, % "Y" btn2Y+36 " X" btn2X+60 
 		. " w" btnW " h" btnH " "
 		. " +0x1000 vUpload gPhaseTask"
-		, .\H3.png
+		, .\files\H3.png
 	
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
@@ -2493,7 +2493,8 @@ BGregister(type) {
 			. (type="BGM" ? "`n14-day Holter" : "")
 		, "Yes|No"
 		, "Q", "V", 
-		, (type="BGH" ? "BGHeart.png" : "") . (type="BGM" ? "BGMini.png" : "") )
+		, (type="BGH" ? ".\files\BGHeart.png" : "") 
+		. (type="BGM" ? ".\files\BGMini.png" : "") )
 	if (tmp!="Yes") {
 		return
 	}
