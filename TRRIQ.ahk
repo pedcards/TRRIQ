@@ -2895,7 +2895,7 @@ ProcessHl7PDF:
 		return
 	}
 	
-	runwait, pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min							; convert PDF pages 1-2 with no tabular structure
+	RunWait, .\files\pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min					; convert PDF pages 1-2 with no tabular structure
 	FileRead, newtxt, %filenam%.txt														; load into newtxt
 	FileDelete, %filenam%.txt
 	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
@@ -2928,7 +2928,7 @@ ProcessPDF:
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
  */
-	RunWait, pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min				; convert PDF pages 1-2 to txt file
+	RunWait, .\files\pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
 	newTxt:=""																			; clear the full txt variable
 	FileRead, maintxt, %filenam%.txt													; load into maintxt
 	FileDelete, %filenam%.txt
@@ -3350,7 +3350,7 @@ makeORU(wqid) {
 	IfMsgBox, Yes
 	{
 	;~ if (fldval.MSH_ctrlID~="EPIC") {
-		FileRead, rtf, .\state\test-RTF.txt
+		FileRead, rtf, .\files\test-RTF.txt
 		EPdoc := ep[fldval["dem-reading"]]
 	} 
 	else
@@ -3493,7 +3493,7 @@ shortenPDF(find) {
 	fullNam := filenam "full.txt"
 
 	Progress,,,Scanning full size PDF...
-	Runwait, pdftotext.exe "%fileIn%" "%fullnam%",,min,wincons								; convert PDF all pages to txt file
+	RunWait, .\files\pdftotext.exe "%fileIn%" "%fullnam%",,min,wincons					; convert PDF all pages to txt file
 	eventlog("Extracting full text.")
 	progress,100,, Shrinking PDF...
 	FileRead, fulltxt, %fullnam%
@@ -3501,7 +3501,7 @@ shortenPDF(find) {
 	pgpos := instr(fulltxt,"Page ",,findpos-strlen(fulltxt))
 	RegExMatch(fulltxt,"Oi)Page\s+(\d+)\s",pgs,pgpos)
 	pgpos := pgs.value(1)
-	RunWait, pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%-sh.pdf",,min
+	RunWait, .\files\pdftk.exe "%fileIn%" cat 1-%pgpos% output "%fileIn%-sh.pdf",,min
 	if !FileExist(fileIn "-sh.pdf") {
 		FileCopy, %fileIn%, %fileIn%-sh.pdf
 	}
@@ -3548,7 +3548,7 @@ findFullPdf(wqid:="") {
 		}
 		
 		if (fnID.0 = "") {																; Unprocessed full disclosure PDF
-			runwait, pdftotext.exe -l %pdfScanPages% "%fileIn%" "%fnam%.txt",,min		; convert PDF pages with no tabular structure
+			RunWait, .\files\pdftotext.exe -l %pdfScanPages% "%fileIn%" "%fnam%.txt",,min		; convert PDF pages with no tabular structure
 			FileRead, newtxt, %fnam%.txt												; load into newtxt
 			FileDelete, %fnam%.txt
 			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
@@ -3965,7 +3965,7 @@ Zio:
 	eventlog("Holter_Zio")
 	monType := "Zio"
 	
-	RunWait, pdftotext.exe -table -fixed 3 "%fileIn%" "%filenam%.txt", , hide			; reconvert entire Zio PDF 
+	RunWait, .\files\pdftotext.exe -table -fixed 3 "%fileIn%" "%filenam%.txt", , hide			; reconvert entire Zio PDF 
 	newTxt:=""																		; clear the full txt variable
 	FileRead, maintxt, %filenam%.txt												; load into maintxt
 	StringReplace, newtxt, maintxt, `r`n`r`n, `r`n, All

@@ -18,7 +18,7 @@ global SelectedLocation := ""
 global SelectConfirm := ""
 
 ; **** Globals used as constants (do not change these variables in the code)
-global m_strXmlFilename := "wkslocation.xml"                                 ; path to xml data file that contains workstation information
+global m_strXmlFilename := ".\files\wkslocation.xml"                         ; path to xml data file that contains workstation information
 global m_strXmlLocationsPath := "/root/locations"                            ; xml path to locations node (location names)
 global m_strXmlWorkstationsPath := "/root/workstations"                      ; xml path to workstations node (contains all infomation for workstations)
 global m_strXmlWksNodeName := "workstation"                                  ; name of "workstation" node in the xml data file
