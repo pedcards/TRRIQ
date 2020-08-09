@@ -2966,7 +2966,6 @@ outputfiles:
 	tmpDate := parseDate(fldval["dem-Test_Date"])											; get the study date from PDF result
 	filenameOut := fldval["dem-MRN"] " " fldval["dem-Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
 	filenameOut := RegExReplace(filenameOut,"\^","'")										; convert [^] back to [']
-	tmpFlag := tmpDate.YMD . "020000"
 	
 	/*	Save hl7Out result
 	*/
@@ -3008,8 +3007,6 @@ outputfiles:
 	FileCopy, % fileIn "-sh.pdf", % path.holterPDF filenameOut "-short.pdf", 1				; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
-	FileSetTime, tmpFlag, % path.holterPDF "Archive\" filenameOut ".pdf", C					; set the time of PDF in holterDir to 020000 (processed)
-	FileSetTime, tmpFlag, % path.holterPDF filenameOut "-short.pdf", C
 	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
 	FileMove, % path.PrevHL7in fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
