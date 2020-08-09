@@ -2098,9 +2098,8 @@ MortaraUpload(tabnum="")
 */
 		
 		InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
-		if (RegExMatch(note,"((\d\s*){12})",fedex)) {
-			fedex := RegExReplace(fedex1," ")
-			ptDem["fedex"] := fedex
+		if (note) {
+			ptDem["fedex"] := note
 			eventlog("Fedex number entered.")
 		} else {
 			eventlog("Fedex ignored.")
