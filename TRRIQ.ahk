@@ -654,7 +654,7 @@ WQlist() {
 				id := k.getAttribute("id")
 				e0.match_UID := true
 				
-				wqSetVal(id,"ordernum",e0.order)
+				wqSetVal(id,"order",e0.order)
 				wqSetVal(id,"accession",e0.accession)
 				eventlog("Found pending/enroll/oldUID=" id " that matches new Epic order " e0.order)
 			}
@@ -663,7 +663,7 @@ WQlist() {
 			continue
 		}
 		
-		e0.orderNode := "/root/orders/enroll[ordernum='" e0.order "']"
+		e0.orderNode := "/root/orders/enroll[order='" e0.order "']"
 		if IsObject(k:=wq.selectSingleNode(e0.orderNode)) {								; ordernum node exists
 			e0.nodeCtrlID := k.selectSingleNode("ctrlID").text
 			if (e0.CtrlID < e0.nodeCtrlID) {											; order CtrlID is older than existing, somehow
@@ -693,7 +693,7 @@ WQlist() {
 		
 		newID := "/root/orders/enroll[@id='" e0.UID "']"								; otherwise create a new node
 			wq.addElement("enroll","/root/orders",{id:e0.UID})
-			wq.addElement("ordernum",newID,e0.order)
+			wq.addElement("order",newID,e0.order)
 			wq.addElement("accession",newID,e0.accession)
 			wq.addElement("ctrlID",newID,e0.CtrlID)
 			wq.addElement("date",newID,e0.date)
@@ -2992,7 +2992,7 @@ outputfiles:
 	*/
 	onbaseFile := path.OnBase																; PDF for OnBase
 		. "TRRIQ_" 
-		. fldval["ordernum"] "_" 
+		. fldval["order"] "_" 
 		. tmpDate.YMD "_" 
 		. fldval["dem-Name_L"] "_" 
 		. fldval["dem-MRN"] ".pdf"
@@ -3169,7 +3169,7 @@ epRead() {
 	fieldcoladd("","MA",user)
 	fieldcoladd("","MA_date",ma_date)
 	fieldcoladd("TRRIQ","UID",fldval.wqid)
-	fieldcoladd("TRRIQ","order",fldval.ordernum)
+	fieldcoladd("TRRIQ","order",fldval.order)
 	fieldcoladd("TRRIQ","accession",fldval.accession)
 return
 }
@@ -3359,7 +3359,7 @@ makeORU(wqid) {
 		EPdoc := "###"
 	}
 	buildHL7("OBR"
-		,{2:fldval.ordernum
+		,{2:fldval.order
 		, 3:fldval.accession
 		, 4:(montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP"
 			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP"
