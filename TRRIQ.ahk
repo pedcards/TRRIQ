@@ -1298,7 +1298,7 @@ checkEpicOrder() {
 		. "1) Find patient """ fldval["dem-name"] """ in Epic.`n"
 		. "2) Place order ""Holter Event Cutover"" in Epic`n"
 		. "3) Make sure requesting provider """ fldval["dem-ordering"] """ is filled in`n"
-		. "4) Sign order on behafl of provider`n"
+		. "4) Sign order on behalf of provider`n"
 		. "5) Now check-in study you just created from the Epic Holter work list`n"
 		. "6) Click OK when you have done this"
 	
