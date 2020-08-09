@@ -3004,7 +3004,7 @@ outputfiles:
 	/*	Copy PDF to HolterPDF folder and archive
 	*/
 	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
-	FileCopy, % fileIn "-sh.pdf", % path.holterPDF filenameOut "-short.pdf", 1				; Copy the shortened PDF, if it exists
+	FileCopy, % fileHIM, % path.holterPDF filenameOut "-short.pdf", 1						; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
 	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
