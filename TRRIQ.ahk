@@ -2121,7 +2121,7 @@ MortaraUpload(tabnum="")
 		writeOut("root","orders")
 		FileMove, % ptDem.filename, .\tempfiles, 1
 		
-		registerPreventice()
+		makePreventiceORM()
 	}
 	
 	return
@@ -2367,7 +2367,7 @@ UiFieldFill(fld,val,win) {
 	return
 }
 
-registerPreventice() {
+makePreventiceORM() {
 	global wq, ptDem, fetchQuit, hl7out, path, indCodes, sitesCode, sitesFacility
 	
 	hl7time := A_Now
@@ -2578,7 +2578,7 @@ BGregister(type) {
 	writeOut("root","orders")
 	FileMove, % ptDem.filename, .\tempfiles, 1
 		
-	registerPreventice()
+	makePreventiceORM()
 	
 	/*	This is just for Epic orders testing
 	*/
