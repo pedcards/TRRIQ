@@ -2077,25 +2077,24 @@ MortaraUpload(tabnum="")
 		
 		MorUIfill(mu_UI.PRct,muWinID)													; Fill UI fields from ptDem
 		
-/*	Comment out for debugging
-
-		muPushButton(muWinID,"Set Clock...")											; Make sure clock button is set
-		WinWaitClose, Set Recorder Time
-		
-		loop											
-		{
-			winget, x, ProcessName, A													; Dialog has no title
-			if !instr(x,"WebUpload") {													; so find the WebUpload
-				continue
+		if (isDevt=false) {
+			muPushButton(muWinID,"Set Clock...")										; Make sure clock button is set
+			WinWaitClose, Set Recorder Time
+			
+			loop											
+			{
+				winget, x, ProcessName, A												; Dialog has no title
+				if !instr(x,"WebUpload") {												; so find the WebUpload
+					continue
+				}
+				WinGetText, x, A
+				if (x="OK`r`n") {														; dialog that has only "OK`r`n" as the text
+					WinGet, finOK, ID, A
+					break
+				}
 			}
-			WinGetText, x, A
-			if (x="OK`r`n") {															; dialog that has only "OK`r`n" as the text
-				WinGet, finOK, ID, A
-				break
-			}
+			Winwaitclose, ahk_id %finOK%												; Now we can wait until it is closed
 		}
-		Winwaitclose, ahk_id %finOK%													; Now we can wait until it is closed
-*/
 		
 		InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
 		if (note) {
@@ -2113,7 +2112,9 @@ MortaraUpload(tabnum="")
 		
 		/*	This is just for Epic orders testing
 		*/
+		if (isDevt=true) {
 			makeTestORU()
+		}
 		/*
 		*/
 		
@@ -2582,7 +2583,9 @@ BGregister(type) {
 	
 	/*	This is just for Epic orders testing
 	*/
-	makeTestORU()
+	if (isDevt=true) {
+		makeTestORU()
+	}
 	/*
 	*/
 	
@@ -2941,8 +2944,6 @@ ProcessPDF:
 		gosub Holter_Pr2
 	} else if (instr(newtxt,"Preventice") && instr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
 		gosub Event_BGH
-	;~ } else if (instr(newtxt,"Preventice") && instr(newtxt,"H3Plus")) {				; Original Preventice Holter
-		;~ gosub Holter_Pr
 	} else if (instr(newtxt,"Global Instrumentation LLC")) {							; BG Mini extended Holter
 		gosub Holter_BGM
 	} else {
@@ -3342,7 +3343,9 @@ makeORU(wqid) {
 	
 /*	Insert fake RTF and reading EP
 */
-	MsgBox, 36, Testing, Create ORU with fake RTF and reading EP?
+	if (isDevt=true) {
+		MsgBox, 36, Testing, Create ORU with fake RTF and reading EP?
+	}
 	IfMsgBox, Yes
 	{
 	;~ if (fldval.MSH_ctrlID~="EPIC") {
