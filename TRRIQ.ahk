@@ -2984,7 +2984,7 @@ outputfiles:
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	
-	impSub := (monType~="BGH") ? "Event\" : "Holter\"										; Import subfolder Event or Holter
+	impSub := (monType~="BGH") ? "EventCSV\" : "HolterCSV\"										; Import subfolder Event or Holter
 	FileCopy, .\tempfiles\%fileNameOut%.csv, % path.import impSub "*.*", 1					; copy CSV from tempfiles to importFld\impSub
 	
 	/*	Copy PDF to OnBase
