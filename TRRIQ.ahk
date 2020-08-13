@@ -38,6 +38,9 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
 	checkcitrix()
 }
+if (%1%="launch") {
+	eventlog("***** launched from legacy shortcut.")
+}
 
 readini("setup")
 
@@ -49,9 +52,6 @@ if !(wksLoc := GetLocation()) {
 	progress, off
 	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
 	ExitApp
-}
-if (%1%="launch") {
-	eventlog("***** launched from legacy shortcut.")
 }
 
 site := getSites(wksLoc)
