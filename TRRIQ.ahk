@@ -655,6 +655,7 @@ WQlist() {
 			}
 		}
 		if (e0.match_UID) {
+			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
 			continue
 		}
 		
