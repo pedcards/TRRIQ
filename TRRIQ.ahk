@@ -1687,39 +1687,6 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	ptDem["Account"] := EncNum															; make sure array has submitted EncNum value
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy												; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
-	ptDemChk := (ptDem["nameF"]~="i)[A-Z\-]+") && (ptDem["nameL"]~="i)[A-Z\-]+") 		; valid names
-			;~ && (ptDem["mrn"]~="\d{6,7}") && (ptDem["Account"]~="\d{8,}") 				; valid MRN and Acct numbers
-			&& (ptDem["DOB"]~="[0-9]{1,2}/[0-9]{1,2}/[1-2][0-9]{3}") && (ptDem["Sex"]~="^[MF]") 		; valid DOB and Sex
-			&& (ptDem["Loc"]) && (ptDem["Type"])										; Loc and type is not null
-			&& (ptDem["Provider"]~="i)[a-z]+") && (ptDem["EncDate"])					; prov any string, encDate not null
-	if !(ptDemChk) {																	; all data elements must be present, otherwise retry
-		eventlog("Data incomplete."
-			. ((ptDem["nameF"]) ? "" : " nameF")
-			. ((ptDem["nameL"]) ? "" : " nameL")
-			. ((ptDem["mrn"]) ? "" : " MRN")
-			. ((ptDem["Account"]) ? "" : " EncNum")
-			. ((ptDem["DOB"]) ? "" : " DOB")
-			. ((ptDem["Sex"]) ? "" : " Sex")
-			. ((ptDem["Loc"]) ? "" : " Loc")
-			. ((ptDem["Type"]) ? "" : " Type")
-			. ((ptDem["EncDate"]) ? "" : " EncDate")
-			. ((ptDem["Provider"]) ? "" : " Provider")
-			. ".")
-		MsgBox,, % "Data incomplete. Try again", % ""
-			. "First name " ptDem["nameF"] "`n"
-			. "Last name " ptDem["nameL"] "`n"
-			. "MRN " ptDem["mrn"] "`n"
-			. "Account number " ptDem["Account"] "`n"
-			. "DOB " ptDem["DOB"] "`n"
-			. "Sex " ptDem["Sex"] "`n"
-			. "Location " ptDem["Loc"] "`n"
-			. "Visit type " ptDem["Type"] "`n"
-			. "Date Holter placed " ptDem["EncDate"] "`n"
-			. "Provider " ptDem["Provider"] "`n"
-			. "`nREQUIRED!"
-		gosub fetchGUI
-		return
-	}
 	getDem := false																; done getting demographics
 	Loop
 	{
