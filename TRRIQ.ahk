@@ -2837,8 +2837,8 @@ moveHL7dem() {
 		fldVal["dem-DOB"] := niceDate(obxVal["PID_DOB"])
 		fldVal["dem-Sex"] := (obxVal["PID_Sex"]~="F") ? "Female" : "Male"
 		fldVal["dem-Indication"] := obxVal.Diagnosis
-		;~ fldVal["dem-Site"] := fldVal.site
-		;~ fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
+		fldVal["dem-Site"] := fldVal.site
+		fldVal["dem-Billing"] := RegExReplace(fldVal.Accession,"[[:alpha:]]")
 		fldVal["dem-Ordering"] := filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name
 		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
 	}
