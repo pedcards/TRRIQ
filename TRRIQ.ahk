@@ -189,6 +189,10 @@ PhaseGUI:
 		. " +0x1000 vUpload gPhaseTask"
 		, .\files\H3.png
 	
+	GuiControl 
+	, % (wksloc="Main Campus" ? "Enable" : "Disable")  
+	, Grab Preventice enrollments 
+	
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
 	Gui, Add, Tab3																		; add Tab bar with tracked sites
