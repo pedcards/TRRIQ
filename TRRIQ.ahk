@@ -2448,7 +2448,7 @@ makePreventiceORM() {
 }
 
 BGregister(type) {
-	global wq, ptDem, fetchQuit
+	global wq, ptDem, fetchQuit, isDevt
 	SetTimer, idleTimer, Off
 	checkCitrix()
 	
@@ -3278,7 +3278,7 @@ makeORU(wqid) {
 	Real world incoming Preventice ORU MSH.8 is a Preventice number.
 	If MSH.8 contains "EPIC", was generated from MakeTestORU(),	so test ORU will set to OBR.32 and OBX.5 as "###" for filling in by Access DB
 */
-	global fldval, hl7out, montype
+	global fldval, hl7out, montype, isDevt
 	dict:=readIni("EpicResult")
 	ep:=readIni("epRead")
 	
