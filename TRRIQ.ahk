@@ -1322,7 +1322,7 @@ parseORM() {
 		: ""
 	encType:=(tmp:=fldval.PV1_PtClass)="O" ? "Outpatient" 
 		: tmp="I" ? "Inpatient"
-		: "Other"
+		: "Outpatient"
 	switch encType
 	{
 		case "Outpatient":
