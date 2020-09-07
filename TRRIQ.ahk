@@ -1293,6 +1293,7 @@ checkEpicOrder() {
 		return
 	}
 	
+	progress, hide
 	MsgBox, 262192
 		, Needs Epic Order
 		, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
@@ -1315,6 +1316,7 @@ checkEpicOrder() {
 	wqid := fldval.wqid
 	wqsetval(wqid,"oldUID",wqid)
 	writeOut("/root/pending","enroll[@id='" wqid "']")
+	progress, show
 	
 	gosub MainLoop
 	return
