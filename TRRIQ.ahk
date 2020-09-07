@@ -1295,12 +1295,21 @@ checkEpicOrder() {
 	MsgBox, 262192
 		, Needs Epic Order
 		, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
-		. "1) Find patient """ fldval["dem-name"] """ in Epic.`n"
-		. "2) Place order ""Holter Event Cutover"" in Epic`n"
-		. "3) Make sure requesting provider """ fldval["dem-ordering"] """ is filled in`n"
-		. "4) Sign order on behalf of provider`n"
-		. "5) Now check-in study you just created from the Epic Holter work list`n"
-		. "6) Click OK when you have done this"
+		. "1) Open ""Anc Orders"" from Epic top toolbar.`n"
+		. "2) Search for """ fldval["dem-name"] """.`n`n"
+		. "3) Click the ""New Order"" button and fill out:`n"
+		. "   - Referring Prov: """ fldval["dem-ordering"] """`n"
+		. "   - Department: ordering clinic`n"
+		. "   - Procedure: Cutover Holter/Event Monitor`n"
+		. "   - Diagnosis: patient's primary diagnosis`n"
+		. "   - Reason for exam: choose the indication`n"
+		. "   - click ""Accept""`n`n"
+		. "4) Fill in """ fldval["dem-ordering"] """ as the Authorizing Provider.`n"
+		. "5) Click the ""Add-on"" button to move to the Technician Work List.`n`n"
+		. "6) You may need to complete the ""Check-in"" for the patient.`n`n"
+		. "7) Select the patient on the Technician Work List, and ""End Exam"".`n"
+		. "8) Select the type of monitor. Click ""Mark as ended"" button.`n`n"
+		. "9) Click [OK] here when you have done this."
 	
 	wqid := fldval.wqid
 	wqsetval(wqid,"oldUID",wqid)
