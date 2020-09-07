@@ -3319,7 +3319,9 @@ makeORU(wqid) {
 		,{19:fldval.encnum
 		, 50:wqid})
 	
+
 /*	Insert fake RTF and reading EP
+	and monType in OBR_4 in cutover condition
 */
 	if (isDevt=true) {
 		MsgBox, 36, Testing, Create ORU with fake RTF and reading EP?
@@ -3335,13 +3337,18 @@ makeORU(wqid) {
 		rtf := "###"
 		EPdoc := "###"
 	}
-	buildHL7("OBR"
-		,{2:fldval.order
-		, 3:fldval.accession
-		, 4:(montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP"
+	obr4 := (montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP"
 			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP"
 			: (montype~="i)Mini|ZIO") ? "CVCAR102^14 DAY HOLTER MONITOR^IMGEAP"
 			: ""
+	if (fldval.oldUID) {
+		obr4 := RegExReplace(obr4,"^(.*?)\^","CVCAR104^")
+		obr4 := RegExReplace(obr4,"\^IMGEAP$"," (cutover)^IMGEAP")
+	}
+	buildHL7("OBR"
+		,{2:fldval.order
+		, 3:fldval.accession
+		, 4:obr4
 		, 7:fldval.date
 		, 16:fldval.OBR_ProviderCode "^"
 			. fldval.OBR_ProviderNameL "^"
