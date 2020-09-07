@@ -711,11 +711,12 @@ WQlist() {
 			wq.addElement("ind",newID,e0.ind)
 		eventlog("Added order ID " e0.UID ".")
 		
-		fileOut := e0.MRN "_" 
+		fileOut := (e0.mon="CUTOVER" ? "done\" : "")
+			. e0.MRN "_" 
 			. fldval["PID_nameL"] "^" fldval["PID_nameF"] "_"
 			. e0.date "_"
 			. e0.uid "Z.hl7"
-			
+		
 		FileMove, %A_LoopFileFullPath%													; and rename ORM file
 			, % path.EpicHL7in . fileOut
 		
