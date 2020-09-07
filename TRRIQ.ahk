@@ -1328,6 +1328,7 @@ parseORM() {
 	monType:=(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
 		: tmp~="i)24 HOUR" ? "HOL"
 		: tmp~="i)RECORDER" ? "BGH"
+		: tmp~="i)CUTOVER" ? "CUTOVER"
 		: ""
 	encType:=(tmp:=fldval.PV1_PtClass)="O" ? "Outpatient" 
 		: tmp="I" ? "Inpatient"
