@@ -2954,7 +2954,7 @@ outputfiles:
 		. "TRRIQ_ORU_" 																		; to copy to RawHL7 (for Access use)
 		. fldval["dem-Name_L"] "_" 
 		. tmpDate.YMD "_"
-		. "z" fldval["wqid"] ".hl7"
+		. "@" fldval["wqid"] ".hl7"
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile														; copy ORU hl7 to tempfiles
 	FileCopy, % tmpFile, % path.EpicHL7out													; create copy in RawHL7
