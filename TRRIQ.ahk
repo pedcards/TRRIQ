@@ -1238,7 +1238,7 @@ readWQlv:
 readWQorder() {
 /*	Retrieve info from WQlist line
 */
-	global wq, fldval, ptDem, sitesLong
+	global wq, fldval, ptDem, sitesLong, mwuPhase
 	ptDem := {}
 	pt := {}
 	
@@ -1880,7 +1880,7 @@ checkMWUapp()
 
 MortaraUpload(tabnum="")
 {
-	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt
+	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt, mwuPhase
 	checkCitrix()
 	SetTimer, idleTimer, Off
 	
@@ -1897,7 +1897,7 @@ MortaraUpload(tabnum="")
 	SerNum := SerNum ? trim(SerNum," `r`n") : ""
 	if (isDevt=true) {
 		SerNum := "12345"
-		Tabnum := cMsgBox("DEVT MortaraUpload","Which tab?","Prepare|Transfer","Q")
+		;~ Tabnum := cMsgBox("DEVT MortaraUpload","Which tab?","Prepare|Transfer","Q")
 	}
 	if (SerNum="") {
 		eventlog("No device attached, return to PhaseGUI.")
@@ -1908,7 +1908,13 @@ MortaraUpload(tabnum="")
 	
 	if (Tabnum="Transfer") {															; TRANSFER RECORDING TAB
 		eventlog("Transfer recording selected.")
-		sleep 1000
+		
+		if (mwuPhase != Tabnum) {
+			MsgBox, 262160, Mortara app selection, Switch the Mortara app tab to`n"Prepare Recorder Media".`n`nClick "OK" to continue
+			SetTimer, idleTimer, 500
+			return
+		}
+		
 		ptDem := Object()
 		
 		wuDir := {}
@@ -2032,11 +2038,18 @@ MortaraUpload(tabnum="")
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']")
 		eventlog(ptDem.MRN " " ptDem.nameL " study " ptDem.Date " uploaded to Preventice.")
+		mwuPhase := ""
 		MsgBox, 262208, Transfer, Successful data upload to Preventice.
 	}
 	
 	if (Tabnum="Prepare") {																; PREPARE MEDIA TAB
 		eventlog("Prepare media selected.")
+		
+		if (mwuPhase != Tabnum) {
+			MsgBox, 262160, Mortara app selection, Switch the Mortara app tab to`n"Prepare Recorder Media".`n`nClick "OK" to continue
+			SetTimer, idleTimer, 500
+			return
+		}
 		
 		gosub getDem
 		if (fetchQuit=true) {
@@ -2101,6 +2114,7 @@ MortaraUpload(tabnum="")
 		FileMove, % ptDem.filename, .\tempfiles, 1
 		
 		makePreventiceORM()
+		mwuPhase := ""
 	}
 	
 	return
