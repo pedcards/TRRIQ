@@ -169,7 +169,7 @@ PhaseGUI:
 		, Y+10 wp h40 gPrevGrab Disabled
 		, Grab Preventice enrollments
 	Gui, Add, Text, wp h40																; space between top buttons and lower buttons
-	Gui, Add, Text, Y+10 wp h24 Center, Register/activate a`nHOLTER or EVENT MONITOR
+	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
 		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
 		, No active orders
@@ -2196,13 +2196,16 @@ muWqSave(sernum) {
 }
 
 MorUIgrab() {
+	local visTxt, WinText, Wintab
+		, mx, my, mw, mh
+	
 	id := WinExist("Mortara Web Upload")
 	DetectHiddenText, off
 	WinGetText, visTxt, ahk_id %id%											; Should only check visible window
 	DetectHiddenText, on
 	q := Object()
 	WinGet, WinText, ControlList, ahk_id %id%
-	ControlGet , Tabnum, Tab,
+	ControlGet , Wintab, Tab,
 		, WindowsForms10.SysTabControl32.app.0.33c0d9d1
 		, ahk_id %id%
 
@@ -2223,7 +2226,7 @@ MorUIgrab() {
 		el := {x:mx,y:my,w:mw,h:mh,str:str,val:val}
 		q[A_index] := el
 	}
-	q.tab := Tabnum
+	q.tab := Wintab
 	q.vis := vistxt
 	q.txt := WinText
 	q.TRct := TRct
