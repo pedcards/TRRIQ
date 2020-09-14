@@ -136,13 +136,9 @@ MainLoop: ; ===================== This is the main part ========================
 		WinWaitClose, TRRIQ Dashboard
 		
 		if (phase="Upload") {
-			MsgBox, 262177, Verify, % "Ready to upload a MORTARA HOLTER to Preventice?`n`n"
-				. "Be sure to select the ""TRANSFER"" activity`nin the Mortara Web Upload window."
-			IfMsgBox, OK
-			{
-				eventlog("Start Mortara upload.")
-				MortaraUpload()
-			}
+			eventlog("Start Mortara upload.")
+			mwuPhase := "Transfer"
+			MortaraUpload(mwuPhase)
 		}
 	}
 	
@@ -1270,7 +1266,9 @@ readWQorder() {
 	ptDem.Provider := ptDem.provname
 	
 	if (ptDem.monitor~="i)HOL") {														; for Mortara Holter
-		mortaraUpload()
+		eventlog("Start Mortara prepare.")
+		mwuPhase := "Prepare"
+		mortaraUpload(mwuPhase)
 	} 
 	else if (ptDem.monitor~="i)BGM") {													; for BG Mini (and maybe Zio)
 		BGregister("BGM")
