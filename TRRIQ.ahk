@@ -1308,9 +1308,7 @@ checkEpicOrder() {
 		. "4) Fill in """ fldval["dem-ordering"] """ as the Authorizing Provider.`n"
 		. "5) Click the ""Add-on"" button to move to the Technician Work List.`n`n"
 		. "6) You may need to complete the ""Check-in"" for the patient.`n`n"
-		. "7) Select the patient on the Technician Work List, and ""End Exam"".`n"
-		. "8) Select the type of monitor. Click ""Mark as ended"" button.`n`n"
-		. "9) Click [OK] here when you have done this."
+		. "7) Click [OK] here when you have done this."
 	
 	wqid := fldval.wqid
 	wqsetval(wqid,"oldUID",wqid)
