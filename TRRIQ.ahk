@@ -711,7 +711,8 @@ WQlist() {
 			. e0.MRN "_" 
 			. fldval["PID_nameL"] "^" fldval["PID_nameF"] "_"
 			. e0.date "_"
-			. e0.uid "Z.hl7"
+			. e0.uid 																	; new ORM filename ends with _[UID]Z.hl7
+			. "Z.hl7"
 		
 		FileMove, %A_LoopFileFullPath%													; and rename ORM file
 			, % path.EpicHL7in . fileOut
