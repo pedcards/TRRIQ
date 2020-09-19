@@ -1234,6 +1234,15 @@ readWQlv:
 		epRead()																		; find out which EP is reading today
 		makeORU(wqid)
 		gosub outputfiles																; generate and save output CSV, rename and move PDFs
+		
+		if (fldval.oldUID) {
+			MsgBox, 262192
+				, Cutover study
+				, % "Successfully processed Epic cutover report.`n`n"
+				. "1) Return to Epic Tech Work List.`n"
+				. "2) End Study for """ fldval["dem-name"] """.`n`n"
+				. "3) Complete tech biller for """ strX(fldval.obr4,"^",1,1,"^",1,1) "`n"
+		}
 	}
 	
 	return
