@@ -641,6 +641,9 @@ WQlist() {
 		loop, % (ens:=wq.selectNodes("/root/pending/enroll[oldUID]")).Length			; find enroll nodes with result but no order
 		{
 			k := ens.item(A_Index-1)
+			if IsObject(k.selectSingleNode("accession")) {								; skip nodes that already have accession
+				continue
+			}
 			e0.match_NM := fuzzysearch(e0.name,format("{:U}",k.selectSingleNode("name").text))
 			e0.match_MRN := fuzzysearch(e0.mrn,k.selectSingleNode("mrn").text)
 			if (e0.match_NM > 0.15) && (e0.match_MRN > 0.15) {							; Name and MRN each vary by more than 15%
