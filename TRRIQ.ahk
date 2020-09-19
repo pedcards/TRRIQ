@@ -3364,10 +3364,11 @@ makeORU(wqid) {
 		obr4 := RegExReplace(obr4,"^(.*?)\^","CVCAR104^")
 		obr4 := RegExReplace(obr4,"\^IMGEAP$"," (cutover)^IMGEAP")
 	}
+	fldval.obr4 := obr4
 	buildHL7("OBR"
 		,{2:fldval.order
 		, 3:fldval.accession
-		, 4:obr4
+		, 4:fldval.obr4
 		, 7:fldval.date
 		, 16:fldval.OBR_ProviderCode "^"
 			. fldval.OBR_ProviderNameL "^"
