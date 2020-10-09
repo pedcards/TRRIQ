@@ -1,12 +1,13 @@
 initHL7() {
 	global hl7, preventiceDDE
 	hl7 := Object()
-	IniRead, s0, hl7.ini																	; s0 = Section headers
+	inifile := ".\files\hl7.ini"
+	IniRead, s0, %inifile%																	; s0 = Section headers
 	loop, parse, s0, `n, `r																	; parse s0
 	{
 		i := A_LoopField
 		hl7[i] := []																		; create array for each header
-		IniRead, s1, hl7.ini, % i															; s1 = individual header
+		IniRead, s1, %inifile%, % i															; s1 = individual header
 		loop, parse, s1, `n, `r																; parse s1
 		{
 			j := A_LoopField
@@ -45,9 +46,11 @@ hl7line(seg) {
 	attempt to map each field to recognized structure for that field element
 */
 	global hl7, fldVal, path, obxVal
+	multiSeg := "NK1|DG1|NTE"															; segments that may have multiple lines, e.g. NK1
 	res := Object()
 	fld := StrSplit(seg,"|")															; split on `|` field separator into fld array
 	segName := fld.1																	; first array element should be NAME
+	segNum := fld.2
 	if !IsObject(hl7[segName]) {														; no matching hl7 map?
 		MsgBox,,% A_Index, % seg "-" segName "`nBAD SEGMENT NAME"
 		return error																	; fail if segment name not allowed
@@ -55,37 +58,43 @@ hl7line(seg) {
 	
 	isOBX := (segName == "OBX")
 	segMap := hl7[segName]
-	segPre := (isOBX) ? "" : segName "_"
+	segPre := (isOBX) ? "" 
+		: segName "_" . (instr(multiSeg,segName) ? segNum "_" : "")
 	
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
 		i := A_Index
-		if (i<=2) {																		; skip first 2 elements in OBX|2|TX
+		if (i<=1) {																		; skip first 2 elements in OBX|2|TX
 			continue
 		}
 		str := fld[i]																	; each segment field
-		strMap := segMap[i-1]															; get hl7 substring that maps to this 
-		val := StrSplit(str,"^")														; array of subelements
+		val := StrSplit(str,"^")													; array of subelements
 		
+		strMap := segMap[i-1]															; get hl7 substring that maps to this 
 		if (strMap=="") {																; no mapped fields
 			loop, % val.length()														; create strMap "^^^" based on subelements in val
 			{
 				strMap .= "z" i "_" A_Index "^"
 			}
 		}
+		
 		map := StrSplit(strMap,"^")														; array of substring map
 		loop, % map.length()
 		{
 			j := A_Index
-			if (map[j]=="") {															; skip if map value is null
+			if (map[j]=="") {														; skip if map value is null
 				continue
 			}
-			x := segPre . map[j]														; res.pre_map
+			x := segPre	
+				. map[j]															; res.pre_map
 			
-			res[x] := val[j]															; add each mapped result as subelement, res.mapped_name
+			if (map.length()=1) {													; for seg with only 1 map, ensure val is at least popuated with str
+				val[j] := str
+			}
+			res[x] := val[j]														; add each mapped result as subelement, res.mapped_name
 			
-			if !(isOBX)  {																; non-OBX results
-				fldVal[x] := val[j]														; populate all fldVal.mapped_name
+			if !(isOBX)  {															; non-OBX results
+				fldVal[x] := val[j]													; populate all fldVal.mapped_name
 				obxVal[x] := val[j]
 			}
 		}
@@ -112,6 +121,31 @@ hl7line(seg) {
 	return res
 }
 
+segField(fld,lbl="") {
+	res := new XML("<root/>")
+	split := StrSplit(fld,"~")
+	loop, % split.length()
+	{
+		i := A_index
+		res.addElement("idx","root",{num:i})
+		id := "/root/idx[@num='" i "']"
+		subfld := StrSplit(split[i],"^")
+		sublbl := StrSplit(lbl,"^")
+		loop, % subfld.length()
+		{
+			j := A_Index
+			k := sublbl[j]
+			if (k="") {
+				res.addElement("node",id,{num:j},subfld[j])
+			} 
+			else {
+				res.addElement(k,id,subfld[j])
+			}
+		}
+	}
+	return res
+}
+
 Base64Dec( ByRef B64, ByRef Bin ) {  ; By SKAN / 18-Aug-2017
 ; from https://autohotkey.com/boards/viewtopic.php?t=35964
 Local Rqd := 0, BLen := StrLen(B64)                 ; CRYPT_STRING_BASE64 := 0x1
@@ -123,24 +157,41 @@ Local Rqd := 0, BLen := StrLen(B64)                 ; CRYPT_STRING_BASE64 := 0x1
 Return Rqd
 }
 
-buildHL7(seg,params*) {
+Base64Enc( ByRef Bin, nBytes, LineLength := 64, LeadingSpaces := 0 ) { ; By SKAN / 18-Aug-2017
+Local Rqd := 0, B64, B := "", N := 0 - LineLength + 1  ; CRYPT_STRING_BASE64 := 0x1
+  DllCall( "Crypt32.dll\CryptBinaryToString", "Ptr",&Bin ,"UInt",nBytes, "UInt",0x1, "Ptr",0,   "UIntP",Rqd )
+  VarSetCapacity( B64, Rqd * ( A_Isunicode ? 2 : 1 ), 0 )
+  DllCall( "Crypt32.dll\CryptBinaryToString", "Ptr",&Bin, "UInt",nBytes, "UInt",0x1, "Str",B64, "UIntP",Rqd )
+  If ( LineLength = 64 and ! LeadingSpaces )
+    Return B64
+  B64 := StrReplace( B64, "`r`n" )        
+  Loop % Ceil( StrLen(B64) / LineLength )
+    B .= Format("{1:" LeadingSpaces "s}","" ) . SubStr( B64, N += LineLength, LineLength ) . "`n" 
+Return RTrim( B,"`n" )    
+}
+
+buildHL7(seg,params) {
 /*	creates hl7out.msg = "seg|idx|param1|param2|param3|param4|..."
 	keeps seg counts in hl7out[seg] = idx
+	params is a sparse object with {2:"TX", 3:str1, 5:value, 11:"F", 14:A_now}
 */
 	global hl7out
 	
 	txt := seg
 	
-	if (seg!="MSH") {
-		seqnum := hl7out[seg]															; get last sequence number for this segment
-		seqnum ++
-		hl7out[seg] := seqnum
-		txt .= "|" seqnum
-	}
-	
-	for index,param in params															; append params
+	Loop, % params.MaxIndex()
 	{
+		param := params[A_index]
+		
+		if (seg!="MSH")&&(A_index=1) {
+			seqnum := hl7out[seg]														; get last sequence number for this segment
+			seqnum ++
+			hl7out[seg] := seqnum
+			param := seqnum
+		}
+		
 		txt .= "|" param
+		
 	}
 	
 	hl7out.msg .= txt "`n"																; append result to hl7out.msg

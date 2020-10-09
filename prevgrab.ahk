@@ -18,12 +18,11 @@ Config:
 	
 	IfInString, A_ScriptDir, AhkProjects 
 	{
-		gl.isAdmin := true
-		gl.TRRIQ_path := A_ScriptDir
+		gl.isDevt := true
 	} else {
-		gl.isAdmin := false
-		gl.TRRIQ_path := "\\childrens\files\HCCardiologyFiles\EP\HoltER Database\TRRIQ"
+		gl.isDevt := false
 	}
+	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
 	wq := new XML(gl.TRRIQ_path "\worklist.xml")
 	
@@ -42,22 +41,37 @@ MainLoop:
 {
 	eventlog("PREVGRAB: Initializing.")
 	
-	wb := IEopen()																		; start/activate an IE instance
+	loop, 3
+	{
+		eventlog("PREVGRAB: IEopen attempt " A_index)
+		wb := IEopen()																	; start/activate an IE instance
+		if IsObject(wb) {
+			break
+		}
+	}
+	if !instr(wb.FullName,"iexplore.exe") {
+		MsgBox, 262160, , Failed to open IE
+		ExitApp
+	}
 	wb.visible := gl.settings.isVisible
 	
 	PreventiceWebGrab("Enrollment")
 	
 	PreventiceWebGrab("Inventory")
 	
-	if (gl.FAIL) {																		; Note when a table had failed to load
-		eventlog("PREVGRAB: Critical hit.")
-	}
 	filedelete, % gl.files_dir "\prev.txt"												; writeout each one regardless
 	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
 	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
 	if (gl.IEnew=true) {
 		IEclose()
+	}
+	
+	if (gl.FAIL) {																		; Note when a table had failed to load
+		MsgBox,262160,, Downloads failed.
+		eventlog("PREVGRAB: Critical hit.")
+	} else {
+		MsgBox,262160,, Successful Preventice update!
 	}
 	
 	ExitApp
@@ -71,6 +85,9 @@ PreventiceWebGrab(phase) {
 		progress,,% " ",% phase
 	}
 	IEurl(web.url)																		; load URL, return DOM in wb
+	if (gl.IEfail) {
+		return
+	}
 	prvFunc := web.fx
 	
 	loop
@@ -124,7 +141,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	}
 	
 	t0 := A_TickCount
-	loop, 300																			; wait each 100*0.05 = 5 sec
+	While (A_TickCount-t0 < gl.settings.webwait)
 	{
 		if (substr(A_index,0)="0") {
 			elipse .= "."
@@ -259,16 +276,19 @@ IEopen() {
 	global gl
 	
 	if !winExist("ahk_exe iexplore.exe") {
-		wb := ComObjCreate("InternetExplorer.application")
+		ComObjCreate("InternetExplorer.application")
 		gl.IEnew := true
-		return wb
+		sleep 2000
+		eventlog("PREVGRAB: Creating new IE instance.")
 	} 
 	for wb in ComObjCreate("Shell.Application").Windows() {
 		if InStr(wb.FullName, "iexplore.exe") {
-			gl.IEnew := false
+			eventlog("PREVGRAB: Found existing " wb.FullName " (HWND " format("{:#x}",wb.HWND) ")")
 			return wb
 		}
 	}
+	eventlog("PREVGRAB: Failed to open IE.")
+	return
 }
 
 IEurl(url) {
@@ -276,6 +296,7 @@ IEurl(url) {
 */
 	global wb,gl
 	
+	gl.IEfail := false
 	loop, 3																				; Number of attempts to permit redirects
 	{
 		try 
@@ -285,15 +306,18 @@ IEurl(url) {
 			if !(wb.LocationURL = url) {
 				eventlog("PREVGRAB: Redirected.",0)
 			}
-			if !(IEwaitBusy(gl.settings.webwait)) {													; msec before fails
+			if !(IEwaitBusy(gl.settings.webwait)) {										; msec before fails
 				eventlog("PREVGRAB: Failed to load.")
-				return
 			}
 		}
 		catch e
 		{
-			eventlog("PREVGRAB: IEurl failed with msg: " stregX(e.message,"^",1,0,"[\r\n]"))
-			return
+			eventlog("PREVGRAB: IEurl failed with msg: " stregX(e.message "`n","",1,0,"[\r\n]+",1))
+			if instr(e.message,"The RPC server is unavailable") {
+				eventlog("PREVGRAB: Reloading IE DOM...")
+				wb := IEopen()
+			}
+			continue
 		}
 		
 		if instr(wb.LocationURL,gl.login.string) {
@@ -309,6 +333,7 @@ IEurl(url) {
 			sleep 500
 		}
 	}
+	gl.IEfail := true
 	eventlog("PREVGRAB: Failed all attempts " url)
 	return
 }
