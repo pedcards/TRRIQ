@@ -1982,43 +1982,58 @@ MortaraUpload(tabnum="")
 		wq := new XML("worklist.xml")													; refresh WQ
 		wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" wuDir.MRN "']"
 		wqTR:=wq.selectSingleNode(wqStr)
-		if IsObject(wqTR.selectSingleNode("acct")) {									; S/N exists, and valid
-			pt := readwq(wqTR.getAttribute("id"))
-			ptDem["mrn"] := pt.mrn														; fill ptDem[] with values
-			ptDem["loc"] := pt.site
-			ptDem["date"] := pt.date
-			ptDem["Account"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
-			ptDem["nameL"] := parseName(pt.name).last
-			ptDem["nameF"] := parseName(pt.name).first
-			ptDem["Sex"] := pt.sex
-			ptDem["dob"] := pt.dob
-			ptDem["Provider"] := pt.prov
-			ptDem["Indication"] := pt.ind
-			ptDem["loc"] := z1
-			ptDem["wqid"] := wqTR.getAttribute("id")
+		
+		pt := readwq(wqTR.getAttribute("id"))
+		ptDem["mrn"] := pt.mrn															; fill ptDem[] with values
+		ptDem["loc"] := pt.site
+		ptDem["date"] := pt.date
+		ptDem["Account"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
+		ptDem["nameL"] := parseName(pt.name).last
+		ptDem["nameF"] := parseName(pt.name).first
+		ptDem["Sex"] := pt.sex
+		ptDem["dob"] := pt.dob
+		ptDem["Provider"] := pt.prov
+		ptDem["Indication"] := pt.ind
+		ptDem["loc"] := z1
+		ptDem["wqid"] := wqTR.getAttribute("id")
+		
+		if IsObject(wqTR.selectSingleNode("acct")) {									; node exists, and valid
 			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
 			MsgBox, 262193
 				, Match!
-				, % "Found valid registration for:`n" pt.name "`n" pt.mrn "`n" pt.date
+				, % "Found valid registration for:`n   " pt.name "`n   " pt.mrn "`n   " pt.date "`n`nContinue?"
 			IfMsgBox, Cancel
 			{
 				eventlog("Cancelled GUI.")
 				muPushButton(muWinID,"Back")
 				return
 			}
-		} else {																		; no valid S/N exists
-			gosub getDem																; fill ptDem[] with values
-			if (fetchQuit=true) {
-				fetchQuit:=false
-				eventlog("Cancelled getDem.")
+		} 
+		else if (wqTR.getAttribute("id")) {												; node exists, but not validated
+			eventlog("Found unvalidated registration for " pt.name " " pt.mrn " " pt.date)
+			MsgBox, 262193
+				, Match?
+				, % "Found unvalidated registration for:`n   " pt.name "`n   " pt.mrn "`n   " parseDate(pt.date).mdy "`n`nContinue?"
+			IfMsgBox, Cancel
+			{
+				eventlog("Cancelled GUI.")
 				muPushButton(muWinID,"Back")
 				return
 			}
-			ptDem["muphase"] := "upload"
-			muWqSave(SerNum)
-			eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
-			wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']"
 		}
+		else {																			; no matching node found
+			eventlog("No registration found for " pt.name " " pt.mrn " " pt.date)
+			MsgBox, 262193
+				, No match
+				, % "No registration found for:`n   " pt.name "`n   " pt.mrn "`n   " pt.date "`n`nContinue?"
+			IfMsgBox, Cancel
+			{
+				eventlog("Cancelled GUI.")
+				muPushButton(muWinID,"Back")
+				return
+			}
+		}
+			
 		MorUIfill(mu_UI.TRct,muWinID)
 		
 		Gui, muTm:Add, Progress, w150 h6 -smooth hwndMtCt 0x8
