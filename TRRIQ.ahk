@@ -2749,14 +2749,15 @@ getPatInfo() {
 	}
 	
 ;	Generate parent name menu for cmsgbox selection
+	if (rel.MaxIndex() > 1) {
 	loop, % rel.MaxIndex()
 	{
 		nm .= A_index ") " rel[A_index].name "|"
 	}
-	if (rel.MaxIndex() > 1) {
 		eventlog("Multiple potential parent matches (" rel.MaxIndex() ").")
 		q := cmsgbox("Parent","Who is the guarantor?",trim(nm,"|"))
 		if (q="xClose") {
+			eventlog("Quit registration at parent selection.")
 			fetchQuit:=true
 			return
 		}
@@ -2764,6 +2765,7 @@ getPatInfo() {
 	} else {
 		choice := 1
 	}
+	eventlog("Parent selection " choice ": " rel[choice].Name "|" rel[choice].livesaddr)
 	
 	ptDem.parent := rel[choice].Name
 	ptDem.parentL := parseName(ptDem.parent).last
