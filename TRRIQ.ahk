@@ -2750,10 +2750,10 @@ getPatInfo() {
 	
 ;	Generate parent name menu for cmsgbox selection
 	if (rel.MaxIndex() > 1) {
-	loop, % rel.MaxIndex()
-	{
-		nm .= A_index ") " rel[A_index].name "|"
-	}
+		loop, % rel.MaxIndex()
+		{
+			nm .= A_index ") " rel[A_index].name "|"
+		}
 		eventlog("Multiple potential parent matches (" rel.MaxIndex() ").")
 		q := cmsgbox("Parent","Who is the guarantor?",trim(nm,"|"))
 		if (q="xClose") {
@@ -2797,12 +2797,23 @@ getPatInfo() {
 			ptDem[addr] := trim(i)
 		}
 	}
+	if (ptDem.addr1="") {
+		InputBox(addr1, "Registration requires street address","`n`nEnter valid street address","")
+		InputBox(addr2, "Registration requires street address","`n`nEnter city", ptDem.city)
+		if (addr1) {
+			ptDem.addr1 := addr1
+			eventlog("Entered street address.")
+		} else {
+			fetchQuit := true
+			return
+		}
+	}
 	if (ptDem.addr1~="i)^P[\. ]+?O[\. ]+?Box") {
 		InputBox(addr1, "Cannot use P.O. Box","`n`nEnter valid street address","")
 		InputBox(addr2, "Cannot use P.O. Box","`n`nEnter city", ptDem.city)
 		if (addr1) {
 			ptDem.addr1 := addr1
-			eventlog("Replaced PO box with valid address.")
+			eventlog("Replaced PO box with street address.")
 		} else {
 			fetchQuit := true
 			return
