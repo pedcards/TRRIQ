@@ -731,6 +731,13 @@ WQlist() {
 		} else {
 			continue
 		}
+		
+		if instr(sites0,e0.site) {														; sites0 location
+			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
+			removeNode("/root/orders/enroll[@id='" i1 "']")
+			eventlog("Non-tracked order " fileIn " moved to tempfiles.")
+			continue
+		}
 		if (e0.node != "orders") {														; remnant orders file
 			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
 			eventlog("Leftover HL7 file " fileIn " moved to tempfiles.")
