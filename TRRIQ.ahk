@@ -796,17 +796,6 @@ WQlist() {
 		}
 		FileGetSize,full,% path.PrevHL7in fileIn,M
 		
-		/*	disable showing mystery files and BGH files
-		;*/																				; comment this line to show regardless
-			if !(res.dev) {
-				continue
-			}
-			if (res.dev~="BG") {
-				continue
-			}
-		/*
-		*/
-		
 		LV_Add(""
 			, path.PrevHL7in fileIn														; path and filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
