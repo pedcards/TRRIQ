@@ -5210,6 +5210,7 @@ WriteSave(z) {
 	
 	loop, 3
 	{
+		z.transformXML()
 		z.save("worklist.xml")
 		FileRead,wltxt,worklist.xml
 		
