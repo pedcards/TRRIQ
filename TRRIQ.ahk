@@ -1248,6 +1248,7 @@ readWQorder() {
 /*	Retrieve info from WQlist line
 */
 	global wq, fldval, ptDem, sitesLong, mwuPhase
+	fldval := {}
 	ptDem := {}
 	pt := {}
 	
