@@ -5092,7 +5092,7 @@ ParseDate(x) {
 		date.dd := d3
 		date.date := trim(d)
 	}
-	else if RegExMatch(x,"\b(19|20\d{2})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {	; 20150103174307 or 20150103
+	else if RegExMatch(x,"\b(19\d{2}|20\d{2})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {	; 20150103174307 or 20150103
 		date.yyyy := d1
 		date.mm := d2
 		date.mmm := mo[d2]
