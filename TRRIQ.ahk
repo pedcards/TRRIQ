@@ -1266,6 +1266,7 @@ readWQorder() {
 	}
 	LV_GetText(fileIn,x,1)																; selection filename
 	SplitPath,fileIn,fnam,,fExt,fileNam
+	eventlog("Clicked order " fileIn)
 	
 	Gui, phase:Destroy
 	
