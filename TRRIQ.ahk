@@ -1288,6 +1288,7 @@ readWQorder() {
 		BGregister("BGH")
 	}
 	
+	wqlist()
 	return
 }
 
