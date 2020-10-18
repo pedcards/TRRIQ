@@ -1117,18 +1117,25 @@ parsePrevEnroll(txt) {
 	 *	add new record to PENDING
 	 */
 		id := makeUID()
-		newID := "/root/pending/enroll[@id='" id "']"
-		wq.addElement("enroll","/root/pending",{id:id})
-		wq.addElement("date",newID,res.date)
-		wq.addElement("name",newID,res.name)
-		wq.addElement("mrn",newID,res.mrn)
-		wq.addElement("dev",newID,res.dev)
-		wq.addElement("prov",newID,res.prov)
-		wq.addElement("site",newID,res.site)
-		wq.addElement("webgrab",newID,A_now)
-		
-		eventlog("Found new web registration " res.mrn " " res.name " " res.date ".")
+		addPrevEnroll(id,res)
 	
+	return
+}
+
+addPrevEnroll(id,res) {
+	global wq
+	
+	newID := "/root/pending/enroll[@id='" id "']"
+	wq.addElement("enroll","/root/pending",{id:id})
+	wq.addElement("date",newID,res.date)
+	wq.addElement("name",newID,res.name)
+	wq.addElement("mrn",newID,res.mrn)
+	wq.addElement("dev",newID,res.dev)
+	wq.addElement("prov",newID,res.prov)
+	wq.addElement("site",newID,res.site)
+	wq.addElement("webgrab",newID,A_now)
+	
+	eventlog("Found new web registration " res.mrn " " res.name " " res.date ".")
 	return
 }
 
