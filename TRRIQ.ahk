@@ -1091,6 +1091,14 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			if (en.node="orders") {														; falls through if not in <pending> or <done>
+				addPrevEnroll(id,res)													; create a <pending> record
+				wqSetVal(id,"acct",en.acct)
+				wqSetVal(id,"order",en.order)
+				wqSetVal(id,"accession",en.accession)
+				wqSetVal(id,"accountnum",en.acctnum)
+				wqSetVal(id,"encnum",en.encnum)
+			}
 			parsePrevElement(id,en,res,"dev")
 			return
 		}
