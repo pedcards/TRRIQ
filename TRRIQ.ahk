@@ -143,6 +143,7 @@ MainLoop: ; ===================== This is the main part ========================
 	}
 	
 	checkPreventiceOrdersOut()
+	cleanDone()
 	
 	ExitApp
 }
@@ -291,6 +292,8 @@ PhaseGUIclose:
 	MsgBox, 262161, Exit, Really quit TRRIQ?
 	IfMsgBox, OK
 	{
+		checkPreventiceOrdersOut()
+		cleanDone()
 		eventlog("<<<<< Session end.")
 		ExitApp
 	}
