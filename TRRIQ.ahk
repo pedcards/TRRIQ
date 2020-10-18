@@ -1920,7 +1920,7 @@ MortaraUpload(tabnum="")
 		eventlog("Transfer recording selected.")
 		
 		if (mwuPhase != Tabnum) {
-			MsgBox, 262160, Mortara app selection, Switch the Mortara app tab to`n"Prepare Recorder Media".`n`nClick "OK" to continue
+			MsgBox, 262160, Mortara app selection, Switch the Mortara app tab to`n"Transfer Recording".`n`nClick "OK" to continue
 			SetTimer, idleTimer, 500
 			return
 		}
@@ -2703,7 +2703,6 @@ getPatInfo() {
 	ptDem.phone := formatPhone(fldval.PID_phone)														; get phone num from PID
 	
 ;	Now separate the "Family contact" members, grab relevant contact info from each parsed line
-	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
 	relStr := "FAT|MOT|FOS|GPR|AOU|STP|INS"
 	rel := Object()
 	
