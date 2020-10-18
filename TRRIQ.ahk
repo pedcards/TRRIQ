@@ -945,6 +945,44 @@ checkPreventiceOrdersOut() {
 	return
 }
 
+cleanDone() {
+	global wq
+	
+	if fileexist("archive.xml") {
+		arc := new XML("archive.xml")
+	} else {
+		arc := new XML("<root/>")
+		arc.addElement("done","/root")
+		arc.save("archive.xml")
+	}
+	
+	ens := wq.selectNodes("/root/done/enroll")
+	t := ens.length
+	progress,,,Cleaning old records
+	loop, % t
+	{
+		progress, % (A_Index/t)*100
+		en := ens.item(A_Index-1)
+		dt := en.selectSingleNode("date").text
+		name := en.selectSingleNode("name").text
+		dtDiff := A_now
+		dtDiff -= dt, Days
+		if (dtDiff<180) {																; skip dates less than 180 days
+			continue
+		}
+		clone := en.cloneNode(true)
+		arc.selectSingleNode("/root/done").appendChild(clone)
+		en.parentNode.removeChild(en)
+	}
+	
+	arc.save("archive.xml")
+	writeSave(wq)
+	
+	
+	return
+}
+
+
 readPrevTxt() {
 	global wq
 	
