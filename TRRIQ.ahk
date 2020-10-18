@@ -951,6 +951,9 @@ checkPreventiceOrdersOut() {
 cleanDone() {
 	global wq
 	
+	fileCheck()
+	FileOpen(".lock", "W")																; Create lock file.
+	
 	if fileexist("archive.xml") {
 		arc := new XML("archive.xml")
 	} else {
@@ -980,6 +983,7 @@ cleanDone() {
 	
 	arc.save("archive.xml")
 	writeSave(wq)
+	FileDelete, .lock
 	
 	
 	return
