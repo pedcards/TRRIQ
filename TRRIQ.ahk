@@ -2076,6 +2076,17 @@ MortaraUpload(tabnum="")
 			return
 		}
 		
+		if (ptDem.filename="") {
+			MsgBox, 262160, Mortara app selection, Please reselect order from ORDERS tab.
+			SetTimer, idleTimer, 500
+			return
+		}
+		filein := ptDem.filename														; refresh ptDem and fldval from ORM
+		processhl7(fileIn)																; because WQlist wipes out fldval
+		ptDem:=parseORM()
+		ptDem.filename := fileIn
+		ptDem.Provider := ptDem.provname
+		
 		gosub getDem
 		if (fetchQuit=true) {
 			fetchQuit:=false
