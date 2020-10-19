@@ -1354,7 +1354,11 @@ readWQorder() {
 }
 
 checkEpicOrder() {
-/*	"In-flight" legacy results will not have existing Epic orders
+/*	Check for presence of valid <pending> node (has accession number)
+	
+	Check for <orders> node that matches the parsed ORU
+	
+	"In-flight" legacy results will not have existing Epic orders
 	Epic order number necessary to move forward with resulting
 	If needed, MA will place order and check-in study to create ORM
 */
@@ -1362,6 +1366,32 @@ checkEpicOrder() {
 	
 	if (fldval.accession) {																; Accession number exists, return to processing
 		return
+	}
+	
+	loop, % (ens := wq.selectNodes("/root/orders/enroll")).Length
+	{
+		en := ens.item(A_Index-1)
+		en_id := en.getAttribute("id")
+		en_name := en.selectSingleNode("name").text
+		en_date := en.selectSingleNode("date").text
+		en_mrn := en.selectSingleNode("mrn").text
+		en_mon := en.selectSingleNode("mon").text										; en_mon=order HOL|BGM|BGH 
+		fld_mon := (en_mon~="HOL|BGM") ? "Holter"										; fld_mon => Holter|CEM
+				:  (en_mon~="BGH") ? "CEM"  											; fldval.OBR_TestCode=Holter|CEM
+				: ""
+		
+		if (en_name = fldval["dem-name"]) && (fld_mon = fldval.OBR_TestCode) {
+			MsgBox, 262196, 
+			, % "No exact order, but found this:`n"
+			.   "   " en_name "`n"
+			.   "   " parseDate(en_date).MDY "`n"
+			.   "   " en_mon "`n`n"
+			. "Use this order?"
+			IfMsgBox, Yes
+			{
+				
+			}
+		}
 	}
 	
 	progress, hide
