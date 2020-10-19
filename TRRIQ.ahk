@@ -1098,6 +1098,8 @@ parsePrevEnroll(txt) {
 				wqSetVal(id,"accession",en.accession)
 				wqSetVal(id,"accountnum",en.acctnum)
 				wqSetVal(id,"encnum",en.encnum)
+				removeNode("/root/orders/enroll[@id='" id "']")
+				eventlog("Moved Order ID " id " for " en.name " to Pending.")
 			}
 			parsePrevElement(id,en,res,"dev")
 			return
