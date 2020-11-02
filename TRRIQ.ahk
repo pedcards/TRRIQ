@@ -640,6 +640,7 @@ WQlist() {
 		}
 		processhl7(A_LoopFileFullPath)
 		e0:=parseORM()
+		eventlog("New order " fileIn ". " e0.name " " e0.mrn )
 		
 		loop, % (ens:=wq.selectNodes("/root/pending/enroll[oldUID]")).Length			; find enroll nodes with result but no order
 		{
