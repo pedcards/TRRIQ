@@ -1380,7 +1380,9 @@ checkEpicOrder() {
 				:  (en_mon~="BGH") ? "CEM"  											; fldval.OBR_TestCode=Holter|CEM
 				: ""
 		
-		if (en_name = fldval["dem-name"]) && (fld_mon = fldval.OBR_TestCode) {
+		if (en_name = fldval["dem-name"]) {
+			eventlog("Found order for " en_name " (" en_id ").")
+			progress, hide
 			MsgBox, 262196, 
 			, % "No exact order, but found this:`n"
 			.   "   " en_name "`n"
@@ -1389,8 +1391,13 @@ checkEpicOrder() {
 			. "Use this order?"
 			IfMsgBox, Yes
 			{
-				
+				fldval.order := en.selectSingleNode("order").text
+				fldval.accession := en.selectSingleNode("accession").text
+				fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
+				eventlog("Used order.")
+				return
 			}
+			progress, show
 		}
 	}
 	
