@@ -658,11 +658,13 @@ WQlist() {
 				
 				wqSetVal(id,"order",e0.order)
 				wqSetVal(id,"accession",e0.accession)
-				eventlog("Found pending/enroll/oldUID=" id " that matches new Epic order " e0.order)
+				eventlog("Found pending/enroll/oldUID=" id " that matches new Epic order " e0.order ". " e0.match_NM)
+				break
 			}
 		}
 		if (e0.match_UID) {
-			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
+			FileMove, %A_LoopFileFullPath%, .\tempfiles\*, 1
+			eventlog("Moved: " A_LoopFileFullPath)
 			continue
 		}
 		
