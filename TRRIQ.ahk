@@ -673,19 +673,19 @@ WQlist() {
 			e0.nodeCtrlID := k.selectSingleNode("ctrlID").text
 			if (e0.CtrlID < e0.nodeCtrlID) {											; order CtrlID is older than existing, somehow
 				FileDelete, % path.EpicHL7in fileIn
-				eventlog("Order msg " fileIn " is outdated.")
+				eventlog("Order msg " fileIn " is outdated. " e0.name)
 				continue
 			}
 			if (e0.orderCtrl="CA") {													; CAncel an order
 				FileDelete, % path.EpicHL7in fileIn										; delete this order message
 				FileDelete, % path.EpicHL7in "*_" e0.UID "Z.hl7"						; and the previously processed hl7 file
 				removeNode(e0.orderNode)												; and the accompanying node
-				eventlog("Cancelled order " e0.order ".")
+				eventlog("Cancelled order " e0.order ". " e0.name)
 				continue
 			}
 			FileDelete, % path.EpicHL7in "*_" e0.UID "Z.hl7"							; delete previously processed hl7 file
 			removeNode(e0.orderNode)													; and the accompanying node
-			eventlog("Cleared order " e0.order " node.")
+			eventlog("Cleared order " e0.order " node. " e0.name)
 		}
 		if (e0.orderCtrl="XO") {														; change an order
 			e0.orderNode := "/root/orders/enroll[accession='" e0.accession "']"
@@ -693,7 +693,7 @@ WQlist() {
 			e0.nodeUID := k.getAttribute("id")
 			FileDelete, % path.EpicHL7in "*_" e0.nodeUID "Z.hl7"
 			removeNode(e0.orderNode)
-			eventlog("Removed node id " e0.nodeUID " for replacement.")
+			eventlog("Removed node id " e0.nodeUID " for replacement. " e0.name)
 		}
 		
 		newID := "/root/orders/enroll[@id='" e0.UID "']"								; otherwise create a new node
@@ -714,7 +714,7 @@ WQlist() {
 			wq.addElement("acctnum",newID,e0.accountnum)
 			wq.addElement("encnum",newID,e0.encnum)
 			wq.addElement("ind",newID,e0.ind)
-		eventlog("Added order ID " e0.UID ".")
+		eventlog("Added order ID " e0.UID ". " e0.name)
 		
 		fileOut := (e0.mon="CUTOVER" ? "done\" : "")
 			. e0.MRN "_" 
