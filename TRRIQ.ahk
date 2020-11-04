@@ -1404,9 +1404,23 @@ checkEpicOrder() {
 		}
 	}
 	
+	SetTimer, checkEpicClip, 500
+	progress, hide
+	MsgBox, 262193
+		, Check for Epic order
+		, % "Check to see if patient has existing order.`n`n"
+		. "1) Search for """ fldval["dem-name"] """.`n"
+		. "2) Under Encounters, select the correct encounter on " fldval["dem-date"] ".`n"
+		. "3) Click on the " fldval.mon " order in Orders Performed.`n"
+		. "4) Right-click within the order, and select 'Copy all'.`n`n"
+		. "Select [Cancel] if there is no existing order."
+	SetTimer, checkEpicClip, off
+	
+	
+	
 	progress, hide
 	MsgBox, 262192
-		, Needs Epic Order
+		, Needs CUTOVER order
 		, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
 		. "1) Open ""Anc Orders"" from Epic top toolbar.`n"
 		. "2) Search for """ fldval["dem-name"] """.`n`n"
@@ -1429,6 +1443,21 @@ checkEpicOrder() {
 	
 	gosub MainLoop
 	return
+}
+
+checkEpicClip() {
+	global fldval
+	
+	i := substr(clipboard,1,350)
+	if instr(i,"Order #") {
+		settimer, checkEpicClip, off
+		ordernum := trim(stregX(i,"Order #:",1,1,"Accession",1))
+		accession := trim(stregX(i,"Accession #:",1,1,"\R+",1))
+		RegExMatch(i,"Oim)^(.*)\R+Order #",ret)
+		date := parsedate(stregX(i,"Ordered On ",1,1,"\s",1)).YMD
+		ControlClick, OK, Check for Epic order
+	
+	}
 }
 
 parseORM() {
