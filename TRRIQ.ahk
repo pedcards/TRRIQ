@@ -2995,35 +2995,24 @@ bgWqSave(sernum) {
 }
 
 moveHL7dem() {
-/*	Populate fldVal["dem-"] with data from wqlist (if valid), otherwise from hl7
+/*	Populate fldVal["dem-"] with data from hl7 first, and wqlist (if missing)
 */
 	global fldVal, obxVal
-	if (fldVal.acct) {																	; valid wqid has been previously processed
-		name := parseName(fldval.name)													; name from wqid (will have ^ sub)
-		fldVal["dem-Name"] := fldval.Name
-		fldVal["dem-Name_L"] := parseName(name.last).apostr								; replace [^] with [']
-		fldVal["dem-Name_F"] := parseName(name.first).apostr
-		fldVal["dem-MRN"] := fldval.MRN
-		fldVal["dem-DOB"] := fldval.DOB
-		fldVal["dem-Sex"] := fldval.Sex
-		fldVal["dem-Indication"] := fldVal.ind
-		fldVal["dem-Site"] := fldVal.site
-		fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
-		fldVal["dem-Ordering"] := (fldval.fellow) ? fldval.fellow : fldval.prov
-		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
-	} else {
-		fldVal["dem-Name"] := obxVal["PID_NameL"] ", " obxVal["PID_NameF"]
-		fldVal["dem-Name_L"] := obxVal["PID_NameL"]
-		fldVal["dem-Name_F"] := obxVal["PID_NameF"]
-		fldVal["dem-MRN"] := obxVal["PID_PatMRN"]
-		fldVal["dem-DOB"] := niceDate(obxVal["PID_DOB"])
-		fldVal["dem-Sex"] := (obxVal["PID_Sex"]~="F") ? "Female" : "Male"
-		fldVal["dem-Indication"] := obxVal.Diagnosis
-		fldVal["dem-Site"] := fldVal.site
-		fldVal["dem-Billing"] := RegExReplace(fldVal.Accession,"[[:alpha:]]")
-		fldVal["dem-Ordering"] := filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name
-		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
-	}
+	
+	name := parseName(fldval.name)
+	fldVal["dem-Name_L"] := parseName(strQ(obxVal["PID_NameL"],"###",name.last)).apostr			; replace [^] with [']
+	fldVal["dem-Name_F"] := parseName(strQ(obxVal["PID_NameF"],"###",name.first)).apostr
+	fldVal["dem-Name"] := fldVal["dem-Name_L"] strQ(fldVal["dem-Name_F"],", ###")
+	fldVal["dem-MRN"] := strQ(obxVal["PID_PatMRN"],"###",fldval.MRN)
+	fldVal["dem-DOB"] := strQ(obxVal["PID_DOB"],niceDate(obxVal["PID_DOB"]),fldval.DOB)
+	fldVal["dem-Sex"] := strQ(obxVal["PID_Sex"],(obxVal["PID_Sex"]~="F") ? "Female" : "Male",fldval.Sex)
+	fldVal["dem-Indication"] := strQ(obxVal.Indications,"###",fldval.ind)
+	fldVal["dem-Site"] := fldVal.site
+	fldVal["dem-Billing"] := strQ(RegExReplace(fldVal.Accession,"[[:alpha:]]"),"###",RegExReplace(fldVal.acct,"[[:alpha:]]"))
+	fldVal["dem-Ordering"] := strQ(fldval.fellow,"###",fldval.prov)
+	fldVal["dem-Ordering"] := strQ(fldval["dem-Ordering"],"###",filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name)
+	fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
+
 	return
 }
 
