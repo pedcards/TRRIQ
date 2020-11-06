@@ -1409,20 +1409,36 @@ checkEpicOrder() {
 		}
 	}
 	
-	SetTimer, checkEpicClip, 500
-	progress, hide
-	MsgBox, 262193
-		, Check for Epic order
-		, % "Check to see if patient has existing order.`n`n"
-		. "1) Search for """ fldval["dem-name"] """.`n"
-		. "2) Under Encounters, select the correct encounter on " fldval["dem-date"] ".`n"
-		. "3) Click on the " fldval.mon " order in Orders Performed.`n"
-		. "4) Right-click within the order, and select 'Copy all'.`n`n"
-		. "Select [Cancel] if there is no existing order."
+	/*	Check if valid order already exists
+		Tech must find Order Report that includes "Order #" and "Accession #"
+		Return if found, or Cancel to move on
+	*/
+	Loop
+	{
+		SetTimer, checkEpicClip, 500
+		progress, hide
+		MsgBox, 262193
+			, Check for Epic order
+			, % "Check to see if patient has existing order.`n`n"
+			. "1) Search for """ fldval["dem-name"] """.`n"
+			. "2) Under Encounters, select the correct encounter on " fldval["dem-date"] ".`n"
+			. "3) Click on the " fldval.mon " order in Orders Performed.`n"
+			. "4) Right-click within the order, and select 'Copy all'.`n`n"
+			. "Select [Cancel] if there is no existing order."
+		IfMsgBox, Cancel
+		{
+			break
+		}
+		if (fldval.accession) {
+			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
+			return
+		}
+	}
 	SetTimer, checkEpicClip, off
 	
-	
-	
+	/*	Can't find an order, use Cutover order method
+		This is the last resort, as it creates a lot of confusion with results
+	*/
 	progress, hide
 	MsgBox, 262192
 		, Needs CUTOVER order
@@ -1456,13 +1472,28 @@ checkEpicClip() {
 	i := substr(clipboard,1,350)
 	if instr(i,"Order #") {
 		settimer, checkEpicClip, off
+		ControlClick, OK, Check for Epic order
 		ordernum := trim(stregX(i,"Order #:",1,1,"Accession",1))
 		accession := trim(stregX(i,"Accession #:",1,1,"\R+",1))
-		RegExMatch(i,"Oim)^(.*)\R+Order #",ret)
-		date := parsedate(stregX(i,"Ordered On ",1,1,"\s",1)).YMD
-		ControlClick, OK, Check for Epic order
-	
+		RegExMatch(i,"im)^(.*)\R+Order #",dev)
+		date := parsedate(stregX(i,"Ordered On ",1,1,"\s",1)).MDY
+		mrn := trim(stregX(i,"MRN:",1,1,"\R+",1))
+		
+		MsgBox, 262180
+			, Order found, % ""
+			. "Type: " dev1 "`n"
+			. "Date placed: " date "`n"
+			. "Order #" ordernum "`n"
+			. "Accession #" accession "`n`n"
+			. "Use this order?"
+		IfMsgBox, yes
+		{
+			fldval.order := ordernum
+			fldval.accession := accession
+			fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
+		}
 	}
+	return
 }
 
 parseORM() {
