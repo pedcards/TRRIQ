@@ -1400,6 +1400,10 @@ checkEpicOrder() {
 				fldval.order := en.selectSingleNode("order").text
 				fldval.accession := en.selectSingleNode("accession").text
 				fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
+				wqsetval(fldval.wqid,"order",fldval.order)
+				wqsetval(fldval.wqid,"accession",fldval.accession)
+				wqsetval(fldval.wqid,"acct",fldval.acct)
+				writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
 				eventlog("Used order.")
 				return
 			} else {
@@ -1421,8 +1425,8 @@ checkEpicOrder() {
 			, Check for Epic order
 			, % "Check to see if patient has existing order.`n`n"
 			. "1) Search for """ fldval["dem-name"] """.`n"
-			. "2) Under Encounters, select the correct encounter on " fldval["dem-date"] ".`n"
-			. "3) Click on the " fldval.mon " order in Orders Performed.`n"
+			. "2) Under Encounters, select the correct encounter on " parsedate(fldval.date).mdy ".`n"
+			. "3) Click on the Holter/Event Monitor order in Orders Performed.`n"
 			. "4) Right-click within the order, and select 'Copy all'.`n`n"
 			. "Select [Cancel] if there is no existing order."
 		IfMsgBox, Cancel
@@ -1430,6 +1434,10 @@ checkEpicOrder() {
 			break
 		}
 		if (fldval.accession) {
+			wqsetval(fldval.wqid,"order",fldval.order)
+			wqsetval(fldval.wqid,"accession",fldval.accession)
+			wqsetval(fldval.wqid,"acct",fldval.acct)
+			writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
 			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
 			return
 		}
@@ -1478,6 +1486,7 @@ checkEpicClip() {
 		RegExMatch(i,"im)^(.*)\R+Order #",dev)
 		date := parsedate(stregX(i,"Ordered On ",1,1,"\s",1)).MDY
 		mrn := trim(stregX(i,"MRN:",1,1,"\R+",1))
+		clipboard :=
 		
 		MsgBox, 262180
 			, Order found, % ""
