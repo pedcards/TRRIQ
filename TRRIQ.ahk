@@ -1371,6 +1371,9 @@ checkEpicOrder() {
 		return
 	}
 	
+	/*	Search for <orders/enroll> node that matches name in this result
+		Only occurs if ORM parsed but has no matching registration
+	*/
 	loop, % (ens := wq.selectNodes("/root/orders/enroll")).Length
 	{
 		en := ens.item(A_Index-1)
@@ -1384,10 +1387,10 @@ checkEpicOrder() {
 				: ""
 		
 		if (en_name = fldval["dem-name"]) {
-			eventlog("Found order for " en_name " (" en_id ").")
+			eventlog("Found order for " en_name " (" en_id "), " en_mon ".")
 			progress, hide
 			MsgBox, 262196, 
-			, % "No exact order, but found this:`n"
+			, % "Found this:`n"
 			.   "   " en_name "`n"
 			.   "   " parseDate(en_date).MDY "`n"
 			.   "   " en_mon "`n`n"
@@ -1399,6 +1402,8 @@ checkEpicOrder() {
 				fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
 				eventlog("Used order.")
 				return
+			} else {
+				eventlog("Cancelled.")
 			}
 			progress, show
 		}
