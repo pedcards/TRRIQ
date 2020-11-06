@@ -1371,6 +1371,9 @@ checkEpicOrder() {
 		return
 	}
 	
+	/*	Search for <orders/enroll> node that matches name in this result
+		Only occurs if ORM parsed but has no matching registration
+	*/
 	loop, % (ens := wq.selectNodes("/root/orders/enroll")).Length
 	{
 		en := ens.item(A_Index-1)
@@ -1384,10 +1387,10 @@ checkEpicOrder() {
 				: ""
 		
 		if (en_name = fldval["dem-name"]) {
-			eventlog("Found order for " en_name " (" en_id ").")
+			eventlog("Found order for " en_name " (" en_id "), " en_mon ".")
 			progress, hide
 			MsgBox, 262196, 
-			, % "No exact order, but found this:`n"
+			, % "Found this:`n"
 			.   "   " en_name "`n"
 			.   "   " parseDate(en_date).MDY "`n"
 			.   "   " en_mon "`n`n"
@@ -1397,16 +1400,56 @@ checkEpicOrder() {
 				fldval.order := en.selectSingleNode("order").text
 				fldval.accession := en.selectSingleNode("accession").text
 				fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
+				wqsetval(fldval.wqid,"order",fldval.order)
+				wqsetval(fldval.wqid,"accession",fldval.accession)
+				wqsetval(fldval.wqid,"acct",fldval.acct)
+				writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
 				eventlog("Used order.")
 				return
+			} else {
+				eventlog("Cancelled.")
 			}
 			progress, show
 		}
 	}
 	
+	/*	Check if valid order already exists
+		Tech must find Order Report that includes "Order #" and "Accession #"
+		Return if found, or Cancel to move on
+	*/
+	Loop
+	{
+		SetTimer, checkEpicClip, 500
+		progress, hide
+		MsgBox, 262193
+			, Check for Epic order
+			, % "Check to see if patient has existing order.`n`n"
+			. "1) Search for """ fldval["dem-name"] """.`n"
+			. "2) Under Encounters, select the correct encounter on " parsedate(fldval.date).mdy ".`n"
+			. "3) Click on the Holter/Event Monitor order in Orders Performed.`n"
+			. "4) Right-click within the order, and select 'Copy all'.`n`n"
+			. "Select [Cancel] if there is no existing order."
+		IfMsgBox, Cancel
+		{
+			break
+		}
+		if (fldval.accession) {
+			wqsetval(fldval.wqid,"order",fldval.order)
+			wqsetval(fldval.wqid,"accession",fldval.accession)
+			wqsetval(fldval.wqid,"acct",fldval.acct)
+			writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
+			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
+			return
+		}
+	}
+	SetTimer, checkEpicClip, off
+	
+	/*	Can't find an order, use Cutover order method
+		This is the last resort, as it creates a lot of confusion with results
+	*/
 	progress, hide
 	MsgBox, 262192
-		, Needs Epic Order
+		, Needs CUTOVER order
 		, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
 		. "1) Open ""Anc Orders"" from Epic top toolbar.`n"
 		. "2) Search for """ fldval["dem-name"] """.`n`n"
@@ -1428,6 +1471,37 @@ checkEpicOrder() {
 	progress, show
 	
 	gosub MainLoop
+	return
+}
+
+checkEpicClip() {
+	global fldval
+	
+	i := substr(clipboard,1,350)
+	if instr(i,"Order #") {
+		settimer, checkEpicClip, off
+		ControlClick, OK, Check for Epic order
+		ordernum := trim(stregX(i,"Order #:",1,1,"Accession",1))
+		accession := trim(stregX(i,"Accession #:",1,1,"\R+",1))
+		RegExMatch(i,"im)^(.*)\R+Order #",dev)
+		date := parsedate(stregX(i,"Ordered On ",1,1,"\s",1)).MDY
+		mrn := trim(stregX(i,"MRN:",1,1,"\R+",1))
+		clipboard :=
+		
+		MsgBox, 262180
+			, Order found, % ""
+			. "Type: " dev1 "`n"
+			. "Date placed: " date "`n"
+			. "Order #" ordernum "`n"
+			. "Accession #" accession "`n`n"
+			. "Use this order?"
+		IfMsgBox, yes
+		{
+			fldval.order := ordernum
+			fldval.accession := accession
+			fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
+		}
+	}
 	return
 }
 
