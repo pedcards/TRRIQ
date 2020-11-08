@@ -1468,6 +1468,7 @@ checkEpicOrder() {
 	wqid := fldval.wqid
 	wqsetval(wqid,"oldUID",wqid)
 	writeOut("/root/pending","enroll[@id='" wqid "']")
+	eventlog("Created CUTOVER order for " wqid)
 	progress, show
 	
 	gosub MainLoop
