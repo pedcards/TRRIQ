@@ -143,6 +143,7 @@ MainLoop: ; ===================== This is the main part ========================
 	}
 	
 	checkPreventiceOrdersOut()
+	cleanDone()
 	
 	ExitApp
 }
@@ -291,6 +292,8 @@ PhaseGUIclose:
 	MsgBox, 262161, Exit, Really quit TRRIQ?
 	IfMsgBox, OK
 	{
+		checkPreventiceOrdersOut()
+		cleanDone()
 		eventlog("<<<<< Session end.")
 		ExitApp
 	}
@@ -637,6 +640,7 @@ WQlist() {
 		}
 		processhl7(A_LoopFileFullPath)
 		e0:=parseORM()
+		eventlog("New order " fileIn ". " e0.name " " e0.mrn )
 		
 		loop, % (ens:=wq.selectNodes("/root/pending/enroll[oldUID]")).Length			; find enroll nodes with result but no order
 		{
@@ -654,11 +658,13 @@ WQlist() {
 				
 				wqSetVal(id,"order",e0.order)
 				wqSetVal(id,"accession",e0.accession)
-				eventlog("Found pending/enroll/oldUID=" id " that matches new Epic order " e0.order)
+				eventlog("Found pending/enroll/oldUID=" id " that matches new Epic order " e0.order ". " e0.match_NM)
+				break
 			}
 		}
 		if (e0.match_UID) {
-			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
+			FileMove, %A_LoopFileFullPath%, .\tempfiles\*, 1
+			eventlog("Moved: " A_LoopFileFullPath)
 			continue
 		}
 		
@@ -667,19 +673,19 @@ WQlist() {
 			e0.nodeCtrlID := k.selectSingleNode("ctrlID").text
 			if (e0.CtrlID < e0.nodeCtrlID) {											; order CtrlID is older than existing, somehow
 				FileDelete, % path.EpicHL7in fileIn
-				eventlog("Order msg " fileIn " is outdated.")
+				eventlog("Order msg " fileIn " is outdated. " e0.name)
 				continue
 			}
 			if (e0.orderCtrl="CA") {													; CAncel an order
 				FileDelete, % path.EpicHL7in fileIn										; delete this order message
 				FileDelete, % path.EpicHL7in "*_" e0.UID "Z.hl7"						; and the previously processed hl7 file
 				removeNode(e0.orderNode)												; and the accompanying node
-				eventlog("Cancelled order " e0.order ".")
+				eventlog("Cancelled order " e0.order ". " e0.name)
 				continue
 			}
 			FileDelete, % path.EpicHL7in "*_" e0.UID "Z.hl7"							; delete previously processed hl7 file
 			removeNode(e0.orderNode)													; and the accompanying node
-			eventlog("Cleared order " e0.order " node.")
+			eventlog("Cleared order " e0.order " node. " e0.name)
 		}
 		if (e0.orderCtrl="XO") {														; change an order
 			e0.orderNode := "/root/orders/enroll[accession='" e0.accession "']"
@@ -687,7 +693,7 @@ WQlist() {
 			e0.nodeUID := k.getAttribute("id")
 			FileDelete, % path.EpicHL7in "*_" e0.nodeUID "Z.hl7"
 			removeNode(e0.orderNode)
-			eventlog("Removed node id " e0.nodeUID " for replacement.")
+			eventlog("Removed node id " e0.nodeUID " for replacement. " e0.name)
 		}
 		
 		newID := "/root/orders/enroll[@id='" e0.UID "']"								; otherwise create a new node
@@ -708,7 +714,7 @@ WQlist() {
 			wq.addElement("acctnum",newID,e0.accountnum)
 			wq.addElement("encnum",newID,e0.encnum)
 			wq.addElement("ind",newID,e0.ind)
-		eventlog("Added order ID " e0.UID ".")
+		eventlog("Added order ID " e0.UID ". " e0.name)
 		
 		fileOut := (e0.mon="CUTOVER" ? "done\" : "")
 			. e0.MRN "_" 
@@ -729,6 +735,13 @@ WQlist() {
 		if RegExMatch(fileIn,"_([a-zA-Z0-9]{4,})Z.hl7",i) {								; file appears to have been parsed
 			e0 := readWQ(i1)
 		} else {
+			continue
+		}
+		
+		if instr(sites0,e0.site) {														; sites0 location
+			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
+			removeNode("/root/orders/enroll[@id='" i1 "']")
+			eventlog("Non-tracked order " fileIn " moved to tempfiles.")
 			continue
 		}
 		if (e0.node != "orders") {														; remnant orders file
@@ -795,17 +808,6 @@ WQlist() {
 			continue
 		}
 		FileGetSize,full,% path.PrevHL7in fileIn,M
-		
-		/*	disable showing mystery files and BGH files
-		;*/																				; comment this line to show regardless
-			if !(res.dev) {
-				continue
-			}
-			if (res.dev~="BG") {
-				continue
-			}
-		/*
-		*/
 		
 		LV_Add(""
 			, path.PrevHL7in fileIn														; path and filename
@@ -949,6 +951,48 @@ checkPreventiceOrdersOut() {
 	return
 }
 
+cleanDone() {
+	global wq
+	
+	fileCheck()
+	FileOpen(".lock", "W")																; Create lock file.
+	
+	if fileexist("archive.xml") {
+		arc := new XML("archive.xml")
+	} else {
+		arc := new XML("<root/>")
+		arc.addElement("done","/root")
+		arc.save("archive.xml")
+	}
+	
+	ens := wq.selectNodes("/root/done/enroll")
+	t := ens.length
+	progress,,,Cleaning old records
+	loop, % t
+	{
+		progress, % (A_Index/t)*100
+		en := ens.item(A_Index-1)
+		dt := en.selectSingleNode("date").text
+		name := en.selectSingleNode("name").text
+		dtDiff := A_now
+		dtDiff -= dt, Days
+		if (dtDiff<180) {																; skip dates less than 180 days
+			continue
+		}
+		clone := en.cloneNode(true)
+		arc.selectSingleNode("/root/done").appendChild(clone)
+		en.parentNode.removeChild(en)
+	}
+	
+	arc.save("archive.xml")
+	writeSave(wq)
+	FileDelete, .lock
+	
+	
+	return
+}
+
+
 readPrevTxt() {
 	global wq
 	
@@ -1050,6 +1094,16 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			if (en.node="orders") {														; falls through if not in <pending> or <done>
+				addPrevEnroll(id,res)													; create a <pending> record
+				wqSetVal(id,"acct",en.acct)
+				wqSetVal(id,"order",en.order)
+				wqSetVal(id,"accession",en.accession)
+				wqSetVal(id,"accountnum",en.acctnum)
+				wqSetVal(id,"encnum",en.encnum)
+				removeNode("/root/orders/enroll[@id='" id "']")
+				eventlog("Moved Order ID " id " for " en.name " to Pending.")
+			}
 			parsePrevElement(id,en,res,"dev")
 			return
 		}
@@ -1076,18 +1130,25 @@ parsePrevEnroll(txt) {
 	 *	add new record to PENDING
 	 */
 		id := makeUID()
-		newID := "/root/pending/enroll[@id='" id "']"
-		wq.addElement("enroll","/root/pending",{id:id})
-		wq.addElement("date",newID,res.date)
-		wq.addElement("name",newID,res.name)
-		wq.addElement("mrn",newID,res.mrn)
-		wq.addElement("dev",newID,res.dev)
-		wq.addElement("prov",newID,res.prov)
-		wq.addElement("site",newID,res.site)
-		wq.addElement("webgrab",newID,A_now)
-		
-		eventlog("Found new web registration " res.mrn " " res.name " " res.date ".")
+		addPrevEnroll(id,res)
 	
+	return
+}
+
+addPrevEnroll(id,res) {
+	global wq
+	
+	newID := "/root/pending/enroll[@id='" id "']"
+	wq.addElement("enroll","/root/pending",{id:id})
+	wq.addElement("date",newID,res.date)
+	wq.addElement("name",newID,res.name)
+	wq.addElement("mrn",newID,res.mrn)
+	wq.addElement("dev",newID,res.dev)
+	wq.addElement("prov",newID,res.prov)
+	wq.addElement("site",newID,res.site)
+	wq.addElement("webgrab",newID,A_now)
+	
+	eventlog("Found new web registration " res.mrn " " res.name " " res.date ".")
 	return
 }
 
@@ -1252,6 +1313,7 @@ readWQorder() {
 /*	Retrieve info from WQlist line
 */
 	global wq, fldval, ptDem, sitesLong, mwuPhase
+	fldval := {}
 	ptDem := {}
 	pt := {}
 	
@@ -1290,11 +1352,16 @@ readWQorder() {
 		BGregister("BGH")
 	}
 	
+	wqlist()
 	return
 }
 
 checkEpicOrder() {
-/*	"In-flight" legacy results will not have existing Epic orders
+/*	Check for presence of valid <pending> node (has accession number)
+	
+	Check for <orders> node that matches the parsed ORU
+	
+	"In-flight" legacy results will not have existing Epic orders
 	Epic order number necessary to move forward with resulting
 	If needed, MA will place order and check-in study to create ORM
 */
@@ -1304,9 +1371,85 @@ checkEpicOrder() {
 		return
 	}
 	
+	/*	Search for <orders/enroll> node that matches name in this result
+		Only occurs if ORM parsed but has no matching registration
+	*/
+	loop, % (ens := wq.selectNodes("/root/orders/enroll")).Length
+	{
+		en := ens.item(A_Index-1)
+		en_id := en.getAttribute("id")
+		en_name := en.selectSingleNode("name").text
+		en_date := en.selectSingleNode("date").text
+		en_mrn := en.selectSingleNode("mrn").text
+		en_mon := en.selectSingleNode("mon").text										; en_mon=order HOL|BGM|BGH 
+		fld_mon := (en_mon~="HOL|BGM") ? "Holter"										; fld_mon => Holter|CEM
+				:  (en_mon~="BGH") ? "CEM"  											; fldval.OBR_TestCode=Holter|CEM
+				: ""
+		
+		if (en_name = fldval["dem-name"]) {
+			eventlog("Found order for " en_name " (" en_id "), " en_mon ".")
+			progress, hide
+			MsgBox, 262196, 
+			, % "Found this:`n"
+			.   "   " en_name "`n"
+			.   "   " parseDate(en_date).MDY "`n"
+			.   "   " en_mon "`n`n"
+			. "Use this order?"
+			IfMsgBox, Yes
+			{
+				fldval.order := en.selectSingleNode("order").text
+				fldval.accession := en.selectSingleNode("accession").text
+				fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
+				wqsetval(fldval.wqid,"order",fldval.order)
+				wqsetval(fldval.wqid,"accession",fldval.accession)
+				wqsetval(fldval.wqid,"acct",fldval.acct)
+				writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
+				eventlog("Used order.")
+				return
+			} else {
+				eventlog("Cancelled.")
+			}
+			progress, show
+		}
+	}
+	
+	/*	Check if valid order already exists
+		Tech must find Order Report that includes "Order #" and "Accession #"
+		Return if found, or Cancel to move on
+	*/
+	Loop
+	{
+		SetTimer, checkEpicClip, 500
+		progress, hide
+		MsgBox, 262193
+			, Check for Epic order
+			, % "Check to see if patient has existing order.`n`n"
+			. "1) Search for """ fldval["dem-name"] """.`n"
+			. "2) Under Encounters, select the correct encounter on " parsedate(fldval.date).mdy ".`n"
+			. "3) Click on the Holter/Event Monitor order in Orders Performed.`n"
+			. "4) Right-click within the order, and select 'Copy all'.`n`n"
+			. "Select [Cancel] if there is no existing order."
+		IfMsgBox, Cancel
+		{
+			break
+		}
+		if (fldval.accession) {
+			wqsetval(fldval.wqid,"order",fldval.order)
+			wqsetval(fldval.wqid,"accession",fldval.accession)
+			wqsetval(fldval.wqid,"acct",fldval.acct)
+			writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
+			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
+			return
+		}
+	}
+	SetTimer, checkEpicClip, off
+	
+	/*	Can't find an order, use Cutover order method
+		This is the last resort, as it creates a lot of confusion with results
+	*/
 	progress, hide
 	MsgBox, 262192
-		, Needs Epic Order
+		, Needs CUTOVER order
 		, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
 		. "1) Open ""Anc Orders"" from Epic top toolbar.`n"
 		. "2) Search for """ fldval["dem-name"] """.`n`n"
@@ -1328,6 +1471,37 @@ checkEpicOrder() {
 	progress, show
 	
 	gosub MainLoop
+	return
+}
+
+checkEpicClip() {
+	global fldval
+	
+	i := substr(clipboard,1,350)
+	if instr(i,"Order #") {
+		settimer, checkEpicClip, off
+		ControlClick, OK, Check for Epic order
+		ordernum := trim(stregX(i,"Order #:",1,1,"Accession",1))
+		accession := trim(stregX(i,"Accession #:",1,1,"\R+",1))
+		RegExMatch(i,"im)^(.*)\R+Order #",dev)
+		date := parsedate(stregX(i,"Ordered On ",1,1,"\s",1)).MDY
+		mrn := trim(stregX(i,"MRN:",1,1,"\R+",1))
+		clipboard :=
+		
+		MsgBox, 262180
+			, Order found, % ""
+			. "Type: " dev1 "`n"
+			. "Date placed: " date "`n"
+			. "Order #" ordernum "`n"
+			. "Accession #" accession "`n`n"
+			. "Use this order?"
+		IfMsgBox, yes
+		{
+			fldval.order := ordernum
+			fldval.accession := accession
+			fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
+		}
+	}
 	return
 }
 
@@ -1921,7 +2095,7 @@ MortaraUpload(tabnum="")
 		eventlog("Transfer recording selected.")
 		
 		if (mwuPhase != Tabnum) {
-			MsgBox, 262160, Mortara app selection, Switch the Mortara app tab to`n"Prepare Recorder Media".`n`nClick "OK" to continue
+			MsgBox, 262160, Mortara app selection, Switch the Mortara app tab to`n"Transfer Recording".`n`nClick "OK" to continue
 			SetTimer, idleTimer, 500
 			return
 		}
@@ -1982,43 +2156,58 @@ MortaraUpload(tabnum="")
 		wq := new XML("worklist.xml")													; refresh WQ
 		wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" wuDir.MRN "']"
 		wqTR:=wq.selectSingleNode(wqStr)
-		if IsObject(wqTR.selectSingleNode("acct")) {									; S/N exists, and valid
-			pt := readwq(wqTR.getAttribute("id"))
-			ptDem["mrn"] := pt.mrn														; fill ptDem[] with values
-			ptDem["loc"] := pt.site
-			ptDem["date"] := pt.date
-			ptDem["Account"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
-			ptDem["nameL"] := parseName(pt.name).last
-			ptDem["nameF"] := parseName(pt.name).first
-			ptDem["Sex"] := pt.sex
-			ptDem["dob"] := pt.dob
-			ptDem["Provider"] := pt.prov
-			ptDem["Indication"] := pt.ind
-			ptDem["loc"] := z1
-			ptDem["wqid"] := wqTR.getAttribute("id")
+		
+		pt := readwq(wqTR.getAttribute("id"))
+		ptDem["mrn"] := pt.mrn															; fill ptDem[] with values
+		ptDem["loc"] := pt.site
+		ptDem["date"] := pt.date
+		ptDem["Account"] := RegExMatch(pt.acct,"([[:alpha:]]+)(\d{8,})",z) ? z2 : pt.acct
+		ptDem["nameL"] := parseName(pt.name).last
+		ptDem["nameF"] := parseName(pt.name).first
+		ptDem["Sex"] := pt.sex
+		ptDem["dob"] := pt.dob
+		ptDem["Provider"] := pt.prov
+		ptDem["Indication"] := pt.ind
+		ptDem["loc"] := z1
+		ptDem["wqid"] := wqTR.getAttribute("id")
+		
+		if IsObject(wqTR.selectSingleNode("acct")) {									; node exists, and valid
 			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
 			MsgBox, 262193
 				, Match!
-				, % "Found valid registration for:`n" pt.name "`n" pt.mrn "`n" pt.date
+				, % "Found valid registration for:`n   " pt.name "`n   " pt.mrn "`n   " pt.date "`n`nContinue?"
 			IfMsgBox, Cancel
 			{
 				eventlog("Cancelled GUI.")
 				muPushButton(muWinID,"Back")
 				return
 			}
-		} else {																		; no valid S/N exists
-			gosub getDem																; fill ptDem[] with values
-			if (fetchQuit=true) {
-				fetchQuit:=false
-				eventlog("Cancelled getDem.")
+		} 
+		else if (wqTR.getAttribute("id")) {												; node exists, but not validated
+			eventlog("Found unvalidated registration for " pt.name " " pt.mrn " " pt.date)
+			MsgBox, 262193
+				, Match?
+				, % "Found unvalidated registration for:`n   " pt.name "`n   " pt.mrn "`n   " parseDate(pt.date).mdy "`n`nContinue?"
+			IfMsgBox, Cancel
+			{
+				eventlog("Cancelled GUI.")
 				muPushButton(muWinID,"Back")
 				return
 			}
-			ptDem["muphase"] := "upload"
-			muWqSave(SerNum)
-			eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
-			wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']"
 		}
+		else {																			; no matching node found
+			eventlog("No registration found for " pt.name " " pt.mrn " " pt.date)
+			MsgBox, 262193
+				, No match
+				, % "No registration found for:`n   " pt.name "`n   " pt.mrn "`n   " pt.date "`n`nContinue?"
+			IfMsgBox, Cancel
+			{
+				eventlog("Cancelled GUI.")
+				muPushButton(muWinID,"Back")
+				return
+			}
+		}
+			
 		MorUIfill(mu_UI.TRct,muWinID)
 		
 		Gui, muTm:Add, Progress, w150 h6 -smooth hwndMtCt 0x8
@@ -2061,6 +2250,17 @@ MortaraUpload(tabnum="")
 			SetTimer, idleTimer, 500
 			return
 		}
+		
+		if (ptDem.filename="") {
+			MsgBox, 262160, Mortara app selection, Please reselect order from ORDERS tab.
+			SetTimer, idleTimer, 500
+			return
+		}
+		filein := ptDem.filename														; refresh ptDem and fldval from ORM
+		processhl7(fileIn)																; because WQlist wipes out fldval
+		ptDem:=parseORM()
+		ptDem.filename := fileIn
+		ptDem.Provider := ptDem.provname
 		
 		gosub getDem
 		if (fetchQuit=true) {
@@ -2689,7 +2889,6 @@ getPatInfo() {
 	ptDem.phone := formatPhone(fldval.PID_phone)														; get phone num from PID
 	
 ;	Now separate the "Family contact" members, grab relevant contact info from each parsed line
-	famInfo := cleanBlank(stregX(txt "<<<<<","i)Family contact info.*?\R+",1,1,"<<<<<",1))
 	relStr := "FAT|MOT|FOS|GPR|AOU|STP|INS"
 	rel := Object()
 	
@@ -2734,14 +2933,15 @@ getPatInfo() {
 	}
 	
 ;	Generate parent name menu for cmsgbox selection
-	loop, % rel.MaxIndex()
-	{
-		nm .= A_index ") " rel[A_index].name "|"
-	}
 	if (rel.MaxIndex() > 1) {
+		loop, % rel.MaxIndex()
+		{
+			nm .= A_index ") " rel[A_index].name "|"
+		}
 		eventlog("Multiple potential parent matches (" rel.MaxIndex() ").")
 		q := cmsgbox("Parent","Who is the guarantor?",trim(nm,"|"))
 		if (q="xClose") {
+			eventlog("Quit registration at parent selection.")
 			fetchQuit:=true
 			return
 		}
@@ -2749,6 +2949,7 @@ getPatInfo() {
 	} else {
 		choice := 1
 	}
+	eventlog("Parent selection " choice ": " rel[choice].Name "|" rel[choice].livesaddr)
 	
 	ptDem.parent := rel[choice].Name
 	ptDem.parentL := parseName(ptDem.parent).last
@@ -2780,12 +2981,23 @@ getPatInfo() {
 			ptDem[addr] := trim(i)
 		}
 	}
+	if (ptDem.addr1="") {
+		InputBox(addr1, "Registration requires street address","`n`nEnter valid street address","")
+		InputBox(addr2, "Registration requires street address","`n`nEnter city", ptDem.city)
+		if (addr1) {
+			ptDem.addr1 := addr1
+			eventlog("Entered street address.")
+		} else {
+			fetchQuit := true
+			return
+		}
+	}
 	if (ptDem.addr1~="i)^P[\. ]+?O[\. ]+?Box") {
 		InputBox(addr1, "Cannot use P.O. Box","`n`nEnter valid street address","")
 		InputBox(addr2, "Cannot use P.O. Box","`n`nEnter city", ptDem.city)
 		if (addr1) {
 			ptDem.addr1 := addr1
-			eventlog("Replaced PO box with valid address.")
+			eventlog("Replaced PO box with street address.")
 		} else {
 			fetchQuit := true
 			return
@@ -2857,35 +3069,24 @@ bgWqSave(sernum) {
 }
 
 moveHL7dem() {
-/*	Populate fldVal["dem-"] with data from wqlist (if valid), otherwise from hl7
+/*	Populate fldVal["dem-"] with data from hl7 first, and wqlist (if missing)
 */
 	global fldVal, obxVal
-	if (fldVal.acct) {																	; valid wqid has been previously processed
-		name := parseName(fldval.name)													; name from wqid (will have ^ sub)
-		fldVal["dem-Name"] := fldval.Name
-		fldVal["dem-Name_L"] := parseName(name.last).apostr								; replace [^] with [']
-		fldVal["dem-Name_F"] := parseName(name.first).apostr
-		fldVal["dem-MRN"] := fldval.MRN
-		fldVal["dem-DOB"] := fldval.DOB
-		fldVal["dem-Sex"] := fldval.Sex
-		fldVal["dem-Indication"] := fldVal.ind
-		fldVal["dem-Site"] := fldVal.site
-		fldVal["dem-Billing"] := RegExReplace(fldVal.acct,"[[:alpha:]]")
-		fldVal["dem-Ordering"] := (fldval.fellow) ? fldval.fellow : fldval.prov
-		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
-	} else {
-		fldVal["dem-Name"] := obxVal["PID_NameL"] ", " obxVal["PID_NameF"]
-		fldVal["dem-Name_L"] := obxVal["PID_NameL"]
-		fldVal["dem-Name_F"] := obxVal["PID_NameF"]
-		fldVal["dem-MRN"] := obxVal["PID_PatMRN"]
-		fldVal["dem-DOB"] := niceDate(obxVal["PID_DOB"])
-		fldVal["dem-Sex"] := (obxVal["PID_Sex"]~="F") ? "Female" : "Male"
-		fldVal["dem-Indication"] := obxVal.Diagnosis
-		fldVal["dem-Site"] := fldVal.site
-		fldVal["dem-Billing"] := RegExReplace(fldVal.Accession,"[[:alpha:]]")
-		fldVal["dem-Ordering"] := filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name
-		fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
-	}
+	
+	name := parseName(fldval.name)
+	fldVal["dem-Name_L"] := parseName(strQ(obxVal["PID_NameL"],"###",name.last)).apostr			; replace [^] with [']
+	fldVal["dem-Name_F"] := parseName(strQ(obxVal["PID_NameF"],"###",name.first)).apostr
+	fldVal["dem-Name"] := fldVal["dem-Name_L"] strQ(fldVal["dem-Name_F"],", ###")
+	fldVal["dem-MRN"] := strQ(obxVal["PID_PatMRN"],"###",fldval.MRN)
+	fldVal["dem-DOB"] := strQ(obxVal["PID_DOB"],niceDate(obxVal["PID_DOB"]),fldval.DOB)
+	fldVal["dem-Sex"] := strQ(obxVal["PID_Sex"],(obxVal["PID_Sex"]~="F") ? "Female" : "Male",fldval.Sex)
+	fldVal["dem-Indication"] := strQ(obxVal.Indications,"###",fldval.ind)
+	fldVal["dem-Site"] := fldVal.site
+	fldVal["dem-Billing"] := strQ(RegExReplace(fldVal.Accession,"[[:alpha:]]"),"###",RegExReplace(fldVal.acct,"[[:alpha:]]"))
+	fldVal["dem-Ordering"] := strQ(fldval.fellow,"###",fldval.prov)
+	fldVal["dem-Ordering"] := strQ(fldval["dem-Ordering"],"###",filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name)
+	fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
+
 	return
 }
 
@@ -5068,7 +5269,7 @@ ParseDate(x) {
 		date.dd := d3
 		date.date := trim(d)
 	}
-	else if RegExMatch(x,"\b(19|20\d{2})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {	; 20150103174307 or 20150103
+	else if RegExMatch(x,"\b(19\d{2}|20\d{2})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {	; 20150103174307 or 20150103
 		date.yyyy := d1
 		date.mm := d2
 		date.mmm := mo[d2]
@@ -5185,6 +5386,7 @@ WriteSave(z) {
 	
 	loop, 3
 	{
+		z.transformXML()
 		z.save("worklist.xml")
 		FileRead,wltxt,worklist.xml
 		
