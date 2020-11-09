@@ -5132,12 +5132,15 @@ ObjHasValue(aObj, aValue, rx:="") {
 ; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
     for key, val in aObj
 		if (rx) {
-			if (val ~= aValue) {
+			if (aValue="") {															; null aValue in "RX" is error
+				return, false, errorlevel := 1
+			}
+			if (val ~= aValue) {														; val=text, aValue=RX
 				return, key, Errorlevel := 0
 			}
-			;~ if (aValue ~= val) {
-				;~ return, key, Errorlevel := 0
-			;~ }
+			if (aValue ~= val) {														; aValue=text, val=RX
+				return, key, Errorlevel := 0
+			}
 		} else {
 			if (val = aValue) {
 				return, key, ErrorLevel := 0
