@@ -104,6 +104,17 @@ if fileexist("worklist.xml") {
 	wq.save("worklist.xml")
 }
 
+fcVals := readIni("Forecast")
+Forecast_svc := []
+Forecast_val := []
+for key,val in fcVals
+{
+	tmpVal := strX(val,"",1,0,":",1)
+	tmpStr := strX(val,":",1,1,"",0)
+	Forecast_svc.Insert(tmpVal)
+	Forecast_val.Insert(tmpStr)
+}
+
 demVals := readIni("demVals")																		; valid field names for parseClip()
 
 indCodes := readIni("indCodes")
