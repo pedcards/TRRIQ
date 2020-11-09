@@ -265,12 +265,11 @@ readQgenda() {
 			qnameL:="Friedland-Little"
 		}
 		
-		tmpDt := qDate.YYYY . qDate.MM . qDate.DD								; tmpDt in format YYYYMMDD
-		if !IsObject(y.selectSingleNode("/root/lists/forecast/call[@date='" tmpDt "']")) {
-			y.addElement("call","/root/lists/forecast", {date:tmpDt})			; create node if doesn't exist
+		if !IsObject(y.selectSingleNode("/root/lists/forecast/call[@date='" qDate.YMD "']")) {
+			y.addElement("call","/root/lists/forecast", {date:qDate.YMD})		; create node if doesn't exist
 		}
 		
-		fcNode := "/root/lists/forecast/call[@date='" tmpDt "']"
+		fcNode := "/root/lists/forecast/call[@date='" qDate.YMD "']"
 		if !IsObject(y.selectSingleNode(fcNode "/" qTask)) {					; create node for service person if not present
 			y.addElement(qTask,fcNode)
 		}
@@ -278,11 +277,8 @@ readQgenda() {
 		y.selectSingleNode("/root/lists/forecast").setAttribute("mod",A_Now)	; change forecast[@mod] to now
 	}
 	
-	Writeout("/root/lists","forecast")
+	y.save(path.chip "currlist.xml")
 	Eventlog("Qgenda " t0 "-" t1 " updated.")
-	
-	FileCopy, archlist.xml, archback\%A_now%.xml
-	eventLog("archlist.xml backed up.")
 	
 return
 }
