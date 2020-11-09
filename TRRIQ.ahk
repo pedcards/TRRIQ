@@ -285,6 +285,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Change clinic location, changeLoc
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuSys, Add, Generate registration locations report, regReport
+	Menu, menuSys, Add, Update call schedules, readForecast
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
