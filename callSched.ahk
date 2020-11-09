@@ -191,14 +191,14 @@ readQgenda() {
 	Parse JSON into call elements
 	Move into /lists/forecast/call {date=20150301}/<PM_We_F>Del Toro</PM_We_F>
 */
-	global y
+	global y, path
 	
 	t0 := t1 := A_now
 	t1 += 14, Days
 	FormatTime,t0, %t0%, MM/dd/yyyy
 	FormatTime,t1, %t1%, MM/dd/yyyy
-	IniRead, q_com, qgenda.ppk, api, com
-	IniRead, q_eml, qgenda.ppk, api, eml
+	IniRead, q_com, % path.chip "qgenda.ppk", api, com
+	IniRead, q_eml, % path.chip "qgenda.ppk", api, eml
 	
 	qg_fc := {"CALL":"PM_We_A"
 			, "fCall":"PM_We_F"
