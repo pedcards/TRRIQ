@@ -82,7 +82,7 @@ return
 }
 
 parseForecast(fcRecent) {
-	global y
+	global y, path
 		, forecast_val, forecast_svc
 	
 	; Initialize some stuff
@@ -120,13 +120,12 @@ parseForecast(fcRecent) {
 			if ((cel="") && (colnum=maxcol)) {											; at maxCol and empty, break this cols loop
 				break
 			}
-			if (cel~="\b\d{1,2}.\d{1,2}(.\d{2,4})?\b") {								; matches date format
+			if (RegExMatch(cel,"\b(\d{1,2})\D(\d{1,2})(\D\d{2,4})?\b",tmp)) {			; matches date format
 				getVals := true
-				tmp := parseDate(cel)													; cel date parts into tmp[]
-				if !tmp.YYYY {															; get today's YYYY if not given
-					tmp.YYYY := substr(sessdate,1,4)
+				if !(tmp3) {															; get today's YYYY if not given
+					tmp3 := substr(A_now,1,4)
 				}
-				tmpDt := tmp.YYYY . tmp.MM . tmp.DD										; tmpDt in format YYYYMMDD
+				tmpDt := RegExReplace(tmp3,"\D") zDigit(tmp1) zDigit(tmp2) 				; tmpDt in format YYYYMMDD
 				fcDate[colNum] := tmpDt													; fill fcDate[1-7] with date strings
 				if !IsObject(y.selectSingleNode("/root/lists/forecast/call[@date='" tmpDt "']")) {
 					y.addElement("call","/root/lists/forecast", {date:tmpDt})			; create node if doesn't exist
@@ -153,6 +152,9 @@ parseForecast(fcRecent) {
 				progress,, Scanning forecast, % row_nm
 				continue																; results in some ROW NAME, now move to the next column
 			}
+			if !(cel~="[a-zA-Z]") {
+				cel := ""
+			}
 			
 			fcNode := "/root/lists/forecast/call[@date='" fcDate[colNum] "']"
 			if !IsObject(y.selectSingleNode(fcNode "/" row_nm)) {						; create node for service person if not present
@@ -175,10 +177,11 @@ parseForecast(fcRecent) {
 		tmpDt := k.getAttribute("date")													; date attribute
 		tmpDt -= A_Now, Days															; diff dates
 		if (tmpDt < -21) {																; save call schedule for 3 weeks (for TRRIQ)
-			RemoveNode("/root/lists/forecast/call[@date='" k.getAttribute("date") "']")
+			q := y.selectSingleNode("/root/lists/forecast/call[@date='" k.getAttribute("date") "']")
+			q.parentNode.removeChild(q)
 		}
 	}
-	Writeout("/root/lists","forecast")
+	y.save(path.chip "currlist.xml")
 	Eventlog("Electronic Forecast " fcRecent " updated.")
 Return
 }
