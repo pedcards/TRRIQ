@@ -1942,7 +1942,7 @@ indSubmit:
 		InputBox(indOther, "Other", "Enter other indication","")
 		indChoices := RegExReplace(indChoices,"OTHER", "OTHER - " indOther)
 	}
-	ptDem["Indication"] := indChoices
+	ptDem["Indication"] := RegExReplace(indChoices,"\|","; ")
 	eventlog("Indications entered.")
 	return
 }
