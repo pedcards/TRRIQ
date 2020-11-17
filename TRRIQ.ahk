@@ -1460,30 +1460,38 @@ checkEpicOrder() {
 		This is the last resort, as it creates a lot of confusion with results
 	*/
 	progress, hide
-	MsgBox, 262192
-		, Needs CUTOVER order
-		, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
-		. "1) Open ""Anc Orders"" from Epic top toolbar.`n"
-		. "2) Search for """ fldval["dem-name"] """.`n`n"
-		. "3) Click the ""New Order"" button and fill out:`n"
-		. "   - Referring Prov: """ fldval["dem-ordering"] """`n"
-		. "   - Department: ordering clinic`n"
-		. "   - Procedure: Cutover Holter/Event Monitor`n"
-		. "   - Diagnosis: patient's primary diagnosis`n"
-		. "   - Reason for exam: choose the indication`n"
-		. "   - click ""Accept""`n`n"
-		. "4) Fill in """ fldval["dem-ordering"] """ as the Authorizing Provider.`n"
-		. "5) Click the ""Add-on"" button to move to the Technician Work List.`n`n"
-		. "6) You may need to complete the ""Check-in"" for the patient.`n`n"
-		. "7) Click [OK] here when you have done this."
-	
-	wqid := fldval.wqid
-	wqsetval(wqid,"oldUID",wqid)
-	writeOut("/root/pending","enroll[@id='" wqid "']")
-	eventlog("Created CUTOVER order for " wqid)
-	progress, show
-	
-	gosub MainLoop
+	MsgBox, 262196, Missing EPIC order, Do you want to start CUTOVER process?
+	IfMsgBox, Yes
+	{
+		MsgBox, 262192
+			, Needs CUTOVER order
+			, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
+			. "1) Open ""Anc Orders"" from Epic top toolbar.`n"
+			. "2) Search for """ fldval["dem-name"] """.`n`n"
+			. "3) Click the ""New Order"" button and fill out:`n"
+			. "   - Referring Prov: """ fldval["dem-ordering"] """`n"
+			. "   - Department: ordering clinic`n"
+			. "   - Procedure: Cutover Holter/Event Monitor`n"
+			. "   - Diagnosis: patient's primary diagnosis`n"
+			. "   - Reason for exam: choose the indication`n"
+			. "   - click ""Accept""`n`n"
+			. "4) Fill in """ fldval["dem-ordering"] """ as the Authorizing Provider.`n"
+			. "5) Click the ""Add-on"" button to move to the Technician Work List.`n`n"
+			. "6) You may need to complete the ""Check-in"" for the patient.`n`n"
+			. "7) Click [OK] here when you have done this."
+		
+		wqid := fldval.wqid
+		wqsetval(wqid,"oldUID",wqid)
+		writeOut("/root/pending","enroll[@id='" wqid "']")
+		eventlog("Created CUTOVER order for " wqid)
+		progress, show
+		
+		gosub MainLoop
+		return
+	} else {
+		eventlog("Did not want CUTOVER order.")
+		return
+	}
 	return
 }
 
