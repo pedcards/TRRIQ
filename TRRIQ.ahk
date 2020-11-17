@@ -33,7 +33,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
 	checkcitrix()
 }
-if (%1%="launch") {
+if (%1%~="launch") {
 	eventlog("***** launched from legacy shortcut.")
 }
 
