@@ -31,10 +31,10 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	FileGetTime, tmp, % A_ScriptName
 	isDevt := false
 	path:=readIni("paths")
-	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12) " " %1%)
+	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12) " " A_Args[1])
 	checkcitrix()
 }
-if (%1%~="launch") {
+if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
 }
 
