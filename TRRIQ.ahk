@@ -31,7 +31,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	FileGetTime, tmp, % A_ScriptName
 	isDevt := false
 	path:=readIni("paths")
-	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
+	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12) " " %1%)
 	checkcitrix()
 }
 if (%1%~="launch") {
