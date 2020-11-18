@@ -779,20 +779,21 @@ WQlist() {
 		GuiControl, Text, Register, Go to ORDERS tab
 	}
 	
-	loop, % (ens:=wq.selectNodes("/root/orders/enroll")).Length						; Third pass: remove extraneous orders
+	loop, % (ens:=wq.selectNodes("/root/orders/enroll")).Length							; Third pass: remove extraneous orders
 	{
 		e0 := {}
 		k := ens.item(A_Index-1)
 		e0.uid := k.getAttribute("id")
 		e0.order := k.selectSingleNode("order").text
 		e0.accession := k.selectSingleNode("accession").text
+		e0.name := k.selectSingleNode("name").text
 		
 		if IsObject(wq.selectSingleNode("/root/pending/enroll[order='" e0.order "'][accession='" e0.accession "']")) {
-			eventlog("Order node " e0.uid " already found in pending.")
+			eventlog("Order node " e0.uid " " e0.name " already found in pending.")
 			removenode("/root/orders/enroll[@id='" e0.uid "']")
 		}
 		if IsObject(wq.selectSingleNode("/root/done/enroll[order='" e0.order "'][accession='" e0.accession "']")) {
-			eventlog("Order node " e0.uid " already found in done.")
+			eventlog("Order node " e0.uid " " e0.name " already found in done.")
 			removenode("/root/orders/enroll[@id='" e0.uid "']")
 		}
 	}
