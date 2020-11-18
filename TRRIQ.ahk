@@ -757,7 +757,7 @@ WQlist() {
 			eventlog("Non-tracked order " fileIn " moved to tempfiles.")
 			continue
 		}
-		if (e0.node != "orders") {														; remnant orders file
+		if (e0.node ~= "pending|done") {												; remnant orders file
 			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
 			eventlog("Leftover HL7 file " fileIn " moved to tempfiles.")
 			continue
