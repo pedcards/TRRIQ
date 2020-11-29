@@ -24,7 +24,16 @@ updateCall() {
 	readForecast()																		; Check for Electronic Forecast changes each time
 	
 	if (callChg=true) {
-		
+		progress, , Updating schedules, Syncing...
+		dest := "pedcards@homer.u.washington.edu:public_html/patlist/call.xml"
+		Run .\files\pscp.exe -sftp -i .\files\trriq-pr.ppk -p .\files\call.xml %dest%,, Min
+		sleep 500																		; Citrix VM needs longer delay than 200ms to recognize window
+		ConsWin := WinExist("ahk_class ConsoleWindowClass")								; get window ID
+		IfWinExist ahk_id %consWin% 
+		{
+			ControlSend,, {y}{Enter}, ahk_id %consWin%									; blindly send {y}{enter} string to console
+		}
+		eventlog("Uploaded call list.")
 	}
 	
 	return
