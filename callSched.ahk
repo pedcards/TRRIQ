@@ -18,12 +18,20 @@ updateCall() {
 		y.addElement("forecast","/root")
 		y.save(path.chip "call.xml")
 	}
-
-	; Get Qgenda items
-	fcMod := substr(y.selectSingleNode("/root/forecast").getAttribute("mod"),1,8) 
-	if !(fcMod = substr(A_now,1,8)) {													; Forecast has not been scanned today
-		readQgenda()																	; Read Qgenda once daily
+	
+	callChg := false
+	readQgenda()																		; Read Qgenda once daily
+	readForecast()																		; Check for Electronic Forecast changes each time
+	
+	if (callChg=true) {
+		
 	}
+	
+	return
+}
+
+readForecast() {
+	global y, path
 	
 	; Find the most recently modified "*Electronic Forecast.xls" file
 	eventlog("Check electronic forecast.")
