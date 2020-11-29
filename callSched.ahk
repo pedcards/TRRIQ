@@ -11,12 +11,12 @@ updateCall() {
 */
 	global y, path, callChg
 	
-	if fileexist(path.chip "call.xml") {
-		y := new XML(path.chip "call.xml")
+	if fileexist(".\files\call.xml") {
+		y := new XML(".\files\call.xml")
 	} else {
 		y := new XML("<root/>")
 		y.addElement("forecast","/root")
-		y.save(path.chip "call.xml")
+		y.save(".\files\call.xml")
 	}
 	
 	callChg := false
@@ -199,7 +199,7 @@ parseForecast(fcRecent) {
 			q.parentNode.removeChild(q)
 		}
 	}
-	y.save(path.chip "call.xml")
+	y.save(".\files\call.xml")
 	Eventlog("Electronic Forecast " fcRecent " updated.")
 	callChg := true
 	
@@ -222,8 +222,8 @@ readQgenda() {
 	t1 += 14, Days
 	FormatTime,t0, %t0%, MM/dd/yyyy
 	FormatTime,t1, %t1%, MM/dd/yyyy
-	IniRead, q_com, % path.chip "qgenda.ppk", api, com
-	IniRead, q_eml, % path.chip "qgenda.ppk", api, eml
+	IniRead, q_com, .\files\qgenda.ppk, api, com
+	IniRead, q_eml, .\files\qgenda.ppk, api, eml
 	
 	qg_fc := {"CALL":"PM_We_A"
 			, "fCall":"PM_We_F"
@@ -301,7 +301,7 @@ readQgenda() {
 		y.selectSingleNode("/root/forecast").setAttribute("mod",A_Now)					; change forecast[@mod] to now
 	}
 	
-	y.save(path.chip "call.xml")
+	y.save(".\files\call.xml")
 	Eventlog("Qgenda " t0 "-" t1 " updated.")
 	callChg := true
 	
