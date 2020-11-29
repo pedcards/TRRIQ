@@ -204,7 +204,8 @@ readQgenda() {
 			, "fCall":"PM_We_F"
 			, "EP Call":"EP"
 			, "ICU":"ICU_A"
-			, "TXP Inpt":"Txp"
+			, "TXP Inpt CICU":"Txp_CICU"
+			, "TXP Inpt Floor":"Txp_Floor"
 			, "IW":"Ward_A"}
 	
 	progress, , Updating schedules, Auth Qgenda...
