@@ -114,6 +114,7 @@ for key,val in fcVals
 	Forecast_svc.Insert(tmpVal)
 	Forecast_val.Insert(tmpStr)
 }
+updateCall()
 
 demVals := readIni("demVals")																		; valid field names for parseClip()
 
