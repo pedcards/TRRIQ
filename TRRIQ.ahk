@@ -5288,6 +5288,13 @@ ParseDate(x) {
 		date.yyyy := d3
 		date.date := trim(d)
 	}
+	else if RegExMatch(x,"\b(\d{4})[\-\.](\d{2})[\-\.](\d{2})\b",d) {					; 2015-01-03
+		date.yyyy := d1
+		date.mm := d2
+		date.mmm := mo[d2]
+		date.dd := d3
+		date.date := trim(d)
+	}
 	else if RegExMatch(x,"i)(" moStr "|\d{1,2})" dSep "(\d{1,2})" dSep "(\d{4}|\d{2})",d) {	; Jan-03-2015, 01-03-2015
 		date.dd := zdigit(d2)
 		date.mmm := objhasvalue(mo,d1) 
@@ -5308,13 +5315,6 @@ ParseDate(x) {
 		date.mm := zdigit(objhasvalue(mo,d1))
 		date.dd := zdigit(d2)
 		date.yyyy := d3
-		date.date := trim(d)
-	}
-	else if RegExMatch(x,"\b(\d{4})[\-\.](\d{2})[\-\.](\d{2})\b",d) {					; 2015-01-03
-		date.yyyy := d1
-		date.mm := d2
-		date.mmm := mo[d2]
-		date.dd := d3
 		date.date := trim(d)
 	}
 	else if RegExMatch(x,"\b(19\d{2}|20\d{2})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {	; 20150103174307 or 20150103
