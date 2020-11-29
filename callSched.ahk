@@ -220,7 +220,7 @@ readQgenda() {
 	url := "https://api.qgenda.com/v2/login"
 	str := httpGetter("POST",url,q_eml
 		,"Content-Type=application/x-www-form-urlencoded")
-	qAuth := parseJSON(str)[1]																; MsgBox % qAuth[1].access_token
+	qAuth := parseJSON(str)[1]															; MsgBox % qAuth[1].access_token
 	
 	progress, , Updating schedules, Reading Qgenda...
 	url := "https://api.qgenda.com/v2/schedule"
@@ -258,20 +258,20 @@ readQgenda() {
 	Loop, % qOut.MaxIndex()
 	{
 		i := A_Index
-		qDate := parseDate(qOut[i,"Date"])										; Date array
-		qTask := qg_fc[qOut[i,"TaskName"]]										; Call name
+		qDate := parseDate(qOut[i,"Date"])												; Date array
+		qTask := qg_fc[qOut[i,"TaskName"]]												; Call name
 		qNameF := qOut[i,"StaffFName"]
 		qNameL := qOut[i,"StaffLName"]
-		if (qNameL~="^[A-Z]{2}[a-z]") {											; Remove first initial if present
+		if (qNameL~="^[A-Z]{2}[a-z]") {													; Remove first initial if present
 			qNameL := SubStr(qNameL,2)
 		}
-		if (qNameL~="Mallenahalli|Chikkabyrappa") {								; Special fix for Sathish and his extra long name
+		if (qNameL~="Mallenahalli|Chikkabyrappa") {										; Special fix for Sathish and his extra long name
 			qNameL:="Mallenahalli Chikkabyrappa"
 		}
-		if (qNameL qNameF = "NelsonJames") {									; Special fix to make Tony findable on paging call site
+		if (qNameL qNameF = "NelsonJames") {											; Special fix to make Tony findable on paging call site
 			qNameF:="Tony"
 		}
-		if (qnameF qNameL = "JoshFriedland") {									; Special fix for Josh who is registered incorrectly on Qgenda
+		if (qnameF qNameL = "JoshFriedland") {											; Special fix for Josh who is registered incorrectly on Qgenda
 			qnameL:="Friedland-Little"
 		}
 		
