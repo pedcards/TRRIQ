@@ -5277,6 +5277,10 @@ ParseDate(x) {
 	if (x~="\d{4}.\d{2}.\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z") {
 		x := RegExReplace(x,"[TZ]","|")
 	}
+	if (x~="\d{4}.\d{2}.\d{2}T\d{2,}") {
+		x := RegExReplace(x,"T","|")
+	}
+	
 	if RegExMatch(x,"i)(\d{1,2})" dSep "(" moStr ")" dSep "(\d{4}|\d{2})",d) {			; 03-Jan-2015
 		date.dd := zdigit(d1)
 		date.mmm := d2
