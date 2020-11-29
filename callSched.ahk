@@ -40,7 +40,6 @@ updateCall() {
 		}
 		eventlog("Uploaded call list.")
 	}
-	Progress, off
 	FileDelete, .lock
 	
 	return
