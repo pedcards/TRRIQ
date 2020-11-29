@@ -3367,6 +3367,8 @@ assignMD:
 	if !(ptDem.date) {																	; must have a date to figure it out
 		return
 	}
+	
+	y := new XML(path.chip "call.xml")													; get most recent schedule
 	yNode := "//call[@date='" ptDem.date "']"
 	ymatch := (ptDem.loc~="ICU") 
 		? y.selectSingleNode(yNode "/ICU_A").text										; if order came from ICU
@@ -3388,7 +3390,9 @@ return
 }
 
 epRead() {
-	global y, user, ma_date, fldval
+	global y, path, user, ma_date, fldval
+	
+	y := new XML(path.chip "call.xml")
 	dlDate := A_Now
 	FormatTime, dlDay, %dlDate%, dddd
 	if (dlDay="Friday") {
