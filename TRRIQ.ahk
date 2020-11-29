@@ -21,9 +21,6 @@ user := A_UserName
 userinstance := substr(tobase(A_TickCount,36),-3)
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
-	;~ chip := httpComm("","full")
-	;~ FileDelete, .\Chipotle\currlist.xml
-	;~ FileAppend, % chip, .\Chipotle\currlist.xml
 	isDevt := true
 	path:=readIni("devtpaths")
 	eventlog(">>>>> Started in DEVT mode.")
@@ -3369,7 +3366,7 @@ assignMD:
 		return
 	}
 	
-	y := new XML(path.chip "call.xml")													; get most recent schedule
+	y := new XML(".\files\call.xml")													; get most recent schedule
 	yNode := "//call[@date='" ptDem.date "']"
 	ymatch := (ptDem.loc~="ICU") 
 		? y.selectSingleNode(yNode "/ICU_A").text										; if order came from ICU
@@ -3393,7 +3390,7 @@ return
 epRead() {
 	global y, path, user, ma_date, fldval
 	
-	y := new XML(path.chip "call.xml")
+	y := new XML(".\files\call.xml")
 	dlDate := A_Now
 	FormatTime, dlDay, %dlDate%, dddd
 	if (dlDay="Friday") {
