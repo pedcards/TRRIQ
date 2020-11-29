@@ -9,7 +9,7 @@ updateCall() {
 		\\childrens\files\HCSchedules\Electronic Forecast\2016\11-7 thru 11-13_2016 Electronic Forecast.xlsx
 		Move into /root/forecast/call {date=20150301}/<PM_We_F>Del Toro</PM_We_F>
 */
-	global y, path
+	global y, path, callChg
 	
 	if fileexist(path.chip "call.xml") {
 		y := new XML(path.chip "call.xml")
@@ -100,7 +100,7 @@ return
 }
 
 parseForecast(fcRecent) {
-	global y, path
+	global y, path, callChg
 		, forecast_val, forecast_svc
 	
 	; Initialize some stuff
@@ -201,6 +201,8 @@ parseForecast(fcRecent) {
 	}
 	y.save(path.chip "call.xml")
 	Eventlog("Electronic Forecast " fcRecent " updated.")
+	callChg := true
+	
 Return
 }
 
@@ -209,7 +211,12 @@ readQgenda() {
 	Parse JSON into call elements
 	Move into /lists/forecast/call {date=20150301}/<PM_We_F>Del Toro</PM_We_F>
 */
-	global y, path
+	global y, path, callChg
+	
+	fcMod := substr(y.selectSingleNode("/root/forecast").getAttribute("mod"),1,8) 
+	if (fcMod = substr(A_now,1,8)) {													; Return if already scanned today
+		return
+	}
 	
 	t0 := t1 := A_now
 	t1 += 14, Days
@@ -296,6 +303,7 @@ readQgenda() {
 	
 	y.save(path.chip "call.xml")
 	Eventlog("Qgenda " t0 "-" t1 " updated.")
+	callChg := true
 	
 return
 }
