@@ -2,8 +2,8 @@
 	Extracted from chipotle.ahk
 */
 
-readForecast() {
-/*	Build call.xml 
+updateCall() {
+/*	Update call.xml 
 	- Read Qgenda schedule for base Call, Ward, ICU, EP, TXP schedule
 	- Read electronic forecast XLS
 		\\childrens\files\HCSchedules\Electronic Forecast\2016\11-7 thru 11-13_2016 Electronic Forecast.xlsx
