@@ -3,9 +3,11 @@
 */
 
 readForecast() {
-/*	Read electronic forecast XLS
-	\\childrens\files\HCSchedules\Electronic Forecast\2016\11-7 thru 11-13_2016 Electronic Forecast.xlsx
-	Move into /lists/forecast/call {date=20150301}/<PM_We_F>Del Toro</PM_We_F>
+/*	Build call.xml 
+	- Read Qgenda schedule for base Call, Ward, ICU, EP, TXP schedule
+	- Read electronic forecast XLS
+		\\childrens\files\HCSchedules\Electronic Forecast\2016\11-7 thru 11-13_2016 Electronic Forecast.xlsx
+		Move into /root/forecast/call {date=20150301}/<PM_We_F>Del Toro</PM_We_F>
 */
 	global y, path
 	
