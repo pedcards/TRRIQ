@@ -18,7 +18,7 @@ readForecast() {
 	}
 
 	; Get Qgenda items
-	fcMod := substr(y.selectSingleNode("/root/lists/forecast").getAttribute("mod"),1,8) 
+	fcMod := substr(y.selectSingleNode("/root/forecast").getAttribute("mod"),1,8) 
 	if !(fcMod = substr(A_now,1,8)) {													; Forecast has not been scanned today
 		readQgenda()																	; Read Qgenda once daily
 	}
@@ -53,7 +53,7 @@ readForecast() {
 			continue																	; skip ~tmp files
 		}
 		d1 := zDigit(strX(fcFile,"",1,0,"-",1,1)) . zDigit(strX(fcFile,"-",1,1," ",1,1))	; zdigit numerals string from filename "2-19 thru..."
-		fcNode := y.selectSingleNode("/root/lists/forecast")							; fcNode = Forecast Node
+		fcNode := y.selectSingleNode("/root/forecast")									; fcNode = Forecast Node
 		
 		if (d1=fcNext) {																; this is next week's schedule
 			tmp := fcNode.getAttribute("next")											; read the fcNode attr for next week DT-mod (0205-20180202155212)
@@ -94,8 +94,8 @@ parseForecast(fcRecent) {
 		, forecast_val, forecast_svc
 	
 	; Initialize some stuff
-	if !IsObject(y.selectSingleNode("/root/lists/forecast")) {							; create if for some reason doesn't exist
-		y.addElement("forecast","/root/lists")
+	if !IsObject(y.selectSingleNode("/root/forecast")) {								; create if for some reason doesn't exist
+		y.addElement("forecast","/root")
 	} 
 	colArr := ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"] 	; array of column letters
 	fcDate:=[]																			; array of dates
@@ -135,8 +135,8 @@ parseForecast(fcRecent) {
 				}
 				tmpDt := RegExReplace(tmp3,"\D") zDigit(tmp1) zDigit(tmp2) 				; tmpDt in format YYYYMMDD
 				fcDate[colNum] := tmpDt													; fill fcDate[1-7] with date strings
-				if !IsObject(y.selectSingleNode("/root/lists/forecast/call[@date='" tmpDt "']")) {
-					y.addElement("call","/root/lists/forecast", {date:tmpDt})			; create node if doesn't exist
+				if !IsObject(y.selectSingleNode("/root/forecast/call[@date='" tmpDt "']")) {
+					y.addElement("call","/root/forecast", {date:tmpDt})					; create node if doesn't exist
 				}
 				continue																; keep getting col dates but don't get values yet
 			}
@@ -164,7 +164,7 @@ parseForecast(fcRecent) {
 				cel := ""
 			}
 			
-			fcNode := "/root/lists/forecast/call[@date='" fcDate[colNum] "']"
+			fcNode := "/root/forecast/call[@date='" fcDate[colNum] "']"
 			if !IsObject(y.selectSingleNode(fcNode "/" row_nm)) {						; create node for service person if not present
 				y.addElement(row_nm,fcNode)
 			}
@@ -176,16 +176,16 @@ parseForecast(fcRecent) {
 	oExcel.DisplayAlerts := false
 	oExcel.quit
 	
-	y.selectSingleNode("/root/lists/forecast").setAttribute("xlsdate",fcRecent)			; change forecast[@xlsdate] to the XLS mod date
-	y.selectSingleNode("/root/lists/forecast").setAttribute("mod",A_Now)				; change forecast[@mod] to now
+	y.selectSingleNode("/root/forecast").setAttribute("xlsdate",fcRecent)				; change forecast[@xlsdate] to the XLS mod date
+	y.selectSingleNode("/root/forecast").setAttribute("mod",A_Now)						; change forecast[@mod] to now
 
-	loop, % (fcN := y.selectNodes("/root/lists/forecast/call")).length					; Remove old call elements
+	loop, % (fcN := y.selectNodes("/root/forecast/call")).length						; Remove old call elements
 	{
 		k:=fcN.item(A_index-1)															; each item[0] on forward
 		tmpDt := k.getAttribute("date")													; date attribute
 		tmpDt -= A_Now, Days															; diff dates
 		if (tmpDt < -21) {																; save call schedule for 3 weeks (for TRRIQ)
-			q := y.selectSingleNode("/root/lists/forecast/call[@date='" k.getAttribute("date") "']")
+			q := y.selectSingleNode("/root/forecast/call[@date='" k.getAttribute("date") "']")
 			q.parentNode.removeChild(q)
 		}
 	}
@@ -275,16 +275,16 @@ readQgenda() {
 			qnameL:="Friedland-Little"
 		}
 		
-		if !IsObject(y.selectSingleNode("/root/lists/forecast/call[@date='" qDate.YMD "']")) {
-			y.addElement("call","/root/lists/forecast", {date:qDate.YMD})		; create node if doesn't exist
+		if !IsObject(y.selectSingleNode("/root/forecast/call[@date='" qDate.YMD "']")) {
+			y.addElement("call","/root/forecast", {date:qDate.YMD})						; create node if doesn't exist
 		}
 		
-		fcNode := "/root/lists/forecast/call[@date='" qDate.YMD "']"
-		if !IsObject(y.selectSingleNode(fcNode "/" qTask)) {					; create node for service person if not present
+		fcNode := "/root/forecast/call[@date='" qDate.YMD "']"
+		if !IsObject(y.selectSingleNode(fcNode "/" qTask)) {							; create node for service person if not present
 			y.addElement(qTask,fcNode)
 		}
-		y.setText(fcNode "/" qTask, qNameF " " qNameL)							; setText changes text value for that node
-		y.selectSingleNode("/root/lists/forecast").setAttribute("mod",A_Now)	; change forecast[@mod] to now
+		y.setText(fcNode "/" qTask, qNameF " " qNameL)									; setText changes text value for that node
+		y.selectSingleNode("/root/forecast").setAttribute("mod",A_Now)					; change forecast[@mod] to now
 	}
 	
 	y.save(path.chip "call.xml")
@@ -296,7 +296,7 @@ return
 getCall(dt) {
 	global y
 	callObj := {}
-	Loop, % (callDate:=y.selectNodes("/root/lists/forecast/call[@date='" dt "']/*")).length {
+	Loop, % (callDate:=y.selectNodes("/root/forecast/call[@date='" dt "']/*")).length {
 		k := callDate.item(A_Index-1)
 		callEl := k.nodeName
 		callVal := k.text
