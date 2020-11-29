@@ -95,7 +95,6 @@ Loop, Read, .\files\outdocs.csv
 	Docs[tmpGrp ".npi",tmpIdx] := tmp.5
 }
 
-y := new XML(path.chip "currlist.xml")
 if fileexist("worklist.xml") {
 	wq := new XML("worklist.xml")
 } else {

@@ -9,6 +9,14 @@ readForecast() {
 */
 	global y, path
 	
+	if fileexist(path.chip "call.xml") {
+		y := new XML(path.chip "call.xml")
+	} else {
+		y := new XML("<root/>")
+		y.addElement("forecast","/root")
+		y.save(path.chip "call.xml")
+	}
+
 	; Get Qgenda items
 	fcMod := substr(y.selectSingleNode("/root/lists/forecast").getAttribute("mod"),1,8) 
 	if !(fcMod = substr(A_now,1,8)) {													; Forecast has not been scanned today
