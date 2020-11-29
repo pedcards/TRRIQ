@@ -270,9 +270,6 @@ readQgenda() {
 		if (qNameL~="Mallenahalli|Chikkabyrappa") {										; Special fix for Sathish and his extra long name
 			qNameL:="Mallenahalli Chikkabyrappa"
 		}
-		if (qNameL qNameF = "NelsonJames") {											; Special fix to make Tony findable on paging call site
-			qNameF:="Tony"
-		}
 		if (qnameF qNameL = "JoshFriedland") {											; Special fix for Josh who is registered incorrectly on Qgenda
 			qnameL:="Friedland-Little"
 		}
