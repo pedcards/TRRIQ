@@ -11,6 +11,11 @@ updateCall() {
 */
 	global y, path, callChg
 	
+	if FileExist(".lock") {
+		return
+	}
+	FileOpen(".lock", "W")
+	
 	if fileexist(".\files\call.xml") {
 		y := new XML(".\files\call.xml")
 	} else {
@@ -35,6 +40,8 @@ updateCall() {
 		}
 		eventlog("Uploaded call list.")
 	}
+	Progress, off
+	FileDelete, .lock
 	
 	return
 }
@@ -102,8 +109,6 @@ readForecast() {
 	if !FileExist(fcFileLong) {															; no file found
 		EventLog("Electronic Forecast.xlsx file not found!")
 	}
-	
-	Progress, off	
 	
 return
 }
