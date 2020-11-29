@@ -189,7 +189,7 @@ parseForecast(fcRecent) {
 			q.parentNode.removeChild(q)
 		}
 	}
-	y.save(path.chip "currlist.xml")
+	y.save(path.chip "call.xml")
 	Eventlog("Electronic Forecast " fcRecent " updated.")
 Return
 }
@@ -287,7 +287,7 @@ readQgenda() {
 		y.selectSingleNode("/root/lists/forecast").setAttribute("mod",A_Now)	; change forecast[@mod] to now
 	}
 	
-	y.save(path.chip "currlist.xml")
+	y.save(path.chip "call.xml")
 	Eventlog("Qgenda " t0 "-" t1 " updated.")
 	
 return
