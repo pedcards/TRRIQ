@@ -7,6 +7,7 @@
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force  ; only allow one running instance per user
 #MaxMem 128
+#Include %A_ScriptDir%
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 
 SetWorkingDir %A_ScriptDir%
@@ -20,9 +21,6 @@ user := A_UserName
 userinstance := substr(tobase(A_TickCount,36),-3)
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
-	;~ chip := httpComm("","full")
-	;~ FileDelete, .\Chipotle\currlist.xml
-	;~ FileAppend, % chip, .\Chipotle\currlist.xml
 	isDevt := true
 	path:=readIni("devtpaths")
 	eventlog(">>>>> Started in DEVT mode.")
@@ -30,10 +28,10 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	FileGetTime, tmp, % A_ScriptName
 	isDevt := false
 	path:=readIni("paths")
-	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12))
+	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12) " " A_Args[1])
 	checkcitrix()
 }
-if (%1%="launch") {
+if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
 }
 
@@ -94,7 +92,6 @@ Loop, Read, .\files\outdocs.csv
 	Docs[tmpGrp ".npi",tmpIdx] := tmp.5
 }
 
-y := new XML(path.chip "currlist.xml")
 if fileexist("worklist.xml") {
 	wq := new XML("worklist.xml")
 } else {
@@ -103,6 +100,18 @@ if fileexist("worklist.xml") {
 	wq.addElement("done","/root")
 	wq.save("worklist.xml")
 }
+
+fcVals := readIni("Forecast")
+Forecast_svc := []
+Forecast_val := []
+for key,val in fcVals
+{
+	tmpVal := strX(val,"",1,0,":",1)
+	tmpStr := strX(val,":",1,1,"",0)
+	Forecast_svc.Insert(tmpVal)
+	Forecast_val.Insert(tmpStr)
+}
+updateCall()
 
 demVals := readIni("demVals")																		; valid field names for parseClip()
 
@@ -274,6 +283,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Change clinic location, changeLoc
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuSys, Add, Generate registration locations report, regReport
+	Menu, menuSys, Add, Update call schedules, updateCall
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -744,7 +754,7 @@ WQlist() {
 			eventlog("Non-tracked order " fileIn " moved to tempfiles.")
 			continue
 		}
-		if (e0.node != "orders") {														; remnant orders file
+		if (e0.node ~= "pending|done") {												; remnant orders file
 			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
 			eventlog("Leftover HL7 file " fileIn " moved to tempfiles.")
 			continue
@@ -764,6 +774,25 @@ WQlist() {
 			, "")																		; fulldisc present, make blank
 		GuiControl, Enable, Register
 		GuiControl, Text, Register, Go to ORDERS tab
+	}
+	
+	loop, % (ens:=wq.selectNodes("/root/orders/enroll")).Length							; Third pass: remove extraneous orders
+	{
+		e0 := {}
+		k := ens.item(A_Index-1)
+		e0.uid := k.getAttribute("id")
+		e0.order := k.selectSingleNode("order").text
+		e0.accession := k.selectSingleNode("accession").text
+		e0.name := k.selectSingleNode("name").text
+		
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[order='" e0.order "'][accession='" e0.accession "']")) {
+			eventlog("Order node " e0.uid " " e0.name " already found in pending.")
+			removenode("/root/orders/enroll[@id='" e0.uid "']")
+		}
+		if IsObject(wq.selectSingleNode("/root/done/enroll[order='" e0.order "'][accession='" e0.accession "']")) {
+			eventlog("Order node " e0.uid " " e0.name " already found in done.")
+			removenode("/root/orders/enroll[@id='" e0.uid "']")
+		}
 	}
 	
 	WriteSave(wq)
@@ -1448,29 +1477,38 @@ checkEpicOrder() {
 		This is the last resort, as it creates a lot of confusion with results
 	*/
 	progress, hide
-	MsgBox, 262192
-		, Needs CUTOVER order
-		, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
-		. "1) Open ""Anc Orders"" from Epic top toolbar.`n"
-		. "2) Search for """ fldval["dem-name"] """.`n`n"
-		. "3) Click the ""New Order"" button and fill out:`n"
-		. "   - Referring Prov: """ fldval["dem-ordering"] """`n"
-		. "   - Department: ordering clinic`n"
-		. "   - Procedure: Cutover Holter/Event Monitor`n"
-		. "   - Diagnosis: patient's primary diagnosis`n"
-		. "   - Reason for exam: choose the indication`n"
-		. "   - click ""Accept""`n`n"
-		. "4) Fill in """ fldval["dem-ordering"] """ as the Authorizing Provider.`n"
-		. "5) Click the ""Add-on"" button to move to the Technician Work List.`n`n"
-		. "6) You may need to complete the ""Check-in"" for the patient.`n`n"
-		. "7) Click [OK] here when you have done this."
-	
-	wqid := fldval.wqid
-	wqsetval(wqid,"oldUID",wqid)
-	writeOut("/root/pending","enroll[@id='" wqid "']")
-	progress, show
-	
-	gosub MainLoop
+	MsgBox, 262196, Missing EPIC order, Do you want to start CUTOVER process?
+	IfMsgBox, Yes
+	{
+		MsgBox, 262192
+			, Needs CUTOVER order
+			, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
+			. "1) Open ""Anc Orders"" from Epic top toolbar.`n"
+			. "2) Search for """ fldval["dem-name"] """.`n`n"
+			. "3) Click the ""New Order"" button and fill out:`n"
+			. "   - Referring Prov: """ fldval["dem-ordering"] """`n"
+			. "   - Department: ordering clinic`n"
+			. "   - Procedure: Cutover Holter/Event Monitor`n"
+			. "   - Diagnosis: patient's primary diagnosis`n"
+			. "   - Reason for exam: choose the indication`n"
+			. "   - click ""Accept""`n`n"
+			. "4) Fill in """ fldval["dem-ordering"] """ as the Authorizing Provider.`n"
+			. "5) Click the ""Add-on"" button to move to the Technician Work List.`n`n"
+			. "6) You may need to complete the ""Check-in"" for the patient.`n`n"
+			. "7) Click [OK] here when you have done this."
+		
+		wqid := fldval.wqid
+		wqsetval(wqid,"oldUID",wqid)
+		writeOut("/root/pending","enroll[@id='" wqid "']")
+		eventlog("Created CUTOVER order for " wqid)
+		progress, show
+		
+		gosub MainLoop
+		return
+	} else {
+		eventlog("Did not want CUTOVER order.")
+		return
+	}
 	return
 }
 
@@ -1929,7 +1967,7 @@ indSubmit:
 		InputBox(indOther, "Other", "Enter other indication","")
 		indChoices := RegExReplace(indChoices,"OTHER", "OTHER - " indOther)
 	}
-	ptDem["Indication"] := indChoices
+	ptDem["Indication"] := RegExReplace(indChoices,"\|","; ")
 	eventlog("Indications entered.")
 	return
 }
@@ -3327,6 +3365,8 @@ assignMD:
 	if !(ptDem.date) {																	; must have a date to figure it out
 		return
 	}
+	
+	y := new XML(".\files\call.xml")													; get most recent schedule
 	yNode := "//call[@date='" ptDem.date "']"
 	ymatch := (ptDem.loc~="ICU") 
 		? y.selectSingleNode(yNode "/ICU_A").text										; if order came from ICU
@@ -3348,7 +3388,9 @@ return
 }
 
 epRead() {
-	global y, user, ma_date, fldval
+	global y, path, user, ma_date, fldval
+	
+	y := new XML(".\files\call.xml")
 	dlDate := A_Now
 	FormatTime, dlDay, %dlDate%, dddd
 	if (dlDay="Friday") {
@@ -5119,12 +5161,15 @@ ObjHasValue(aObj, aValue, rx:="") {
 ; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
     for key, val in aObj
 		if (rx) {
-			if (val ~= aValue) {
+			if (aValue="") {															; null aValue in "RX" is error
+				return, false, errorlevel := 1
+			}
+			if (val ~= aValue) {														; val=text, aValue=RX
 				return, key, Errorlevel := 0
 			}
-			;~ if (aValue ~= val) {
-				;~ return, key, Errorlevel := 0
-			;~ }
+			if (aValue ~= val) {														; aValue=text, val=RX
+				return, key, Errorlevel := 0
+			}
 		} else {
 			if (val = aValue) {
 				return, key, ErrorLevel := 0
@@ -5233,11 +5278,22 @@ ParseDate(x) {
 	if (x~="\d{4}.\d{2}.\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z") {
 		x := RegExReplace(x,"[TZ]","|")
 	}
+	if (x~="\d{4}.\d{2}.\d{2}T\d{2,}") {
+		x := RegExReplace(x,"T","|")
+	}
+	
 	if RegExMatch(x,"i)(\d{1,2})" dSep "(" moStr ")" dSep "(\d{4}|\d{2})",d) {			; 03-Jan-2015
 		date.dd := zdigit(d1)
 		date.mmm := d2
 		date.mm := zdigit(objhasvalue(mo,d2))
 		date.yyyy := d3
+		date.date := trim(d)
+	}
+	else if RegExMatch(x,"\b(\d{4})[\-\.](\d{2})[\-\.](\d{2})\b",d) {					; 2015-01-03
+		date.yyyy := d1
+		date.mm := d2
+		date.mmm := mo[d2]
+		date.dd := d3
 		date.date := trim(d)
 	}
 	else if RegExMatch(x,"i)(" moStr "|\d{1,2})" dSep "(\d{1,2})" dSep "(\d{4}|\d{2})",d) {	; Jan-03-2015, 01-03-2015
@@ -5260,13 +5316,6 @@ ParseDate(x) {
 		date.mm := zdigit(objhasvalue(mo,d1))
 		date.dd := zdigit(d2)
 		date.yyyy := d3
-		date.date := trim(d)
-	}
-	else if RegExMatch(x,"\b(\d{4})[\-\.](\d{2})[\-\.](\d{2})\b",d) {					; 2015-01-03
-		date.yyyy := d1
-		date.mm := d2
-		date.mmm := mo[d2]
-		date.dd := d3
 		date.date := trim(d)
 	}
 	else if RegExMatch(x,"\b(19\d{2}|20\d{2})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {	; 20150103174307 or 20150103
@@ -5510,3 +5559,4 @@ readIni(section) {
 #Include xml.ahk
 #Include sift3.ahk
 #Include hl7.ahk
+#Include callSched.ahk
