@@ -1011,6 +1011,7 @@ cleanDone() {
 		clone := en.cloneNode(true)
 		arc.selectSingleNode("/root/done").appendChild(clone)
 		en.parentNode.removeChild(en)
+		eventlog("Removed old record (" dtDiff " days) for " name " " dt ".")
 	}
 	
 	arc.save("archive.xml")
