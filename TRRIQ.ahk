@@ -1015,8 +1015,8 @@ cleanDone() {
 	
 	arc.save("archive.xml")
 	writeSave(wq)
+	wq := new XML("worklist.xml")
 	FileDelete, .lock
-	
 	
 	return
 }
@@ -2360,6 +2360,7 @@ MortaraUpload(tabnum="")
 		
 		removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
 		writeOut("root","orders")
+		wq := new XML("worklist.xml")
 		FileMove, % ptDem.filename, .\tempfiles, 1
 		
 		makePreventiceORM()
@@ -2418,6 +2419,7 @@ muWqSave(sernum) {
 			WriteSave(wq)
 		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
 	}
+	wq := new XML("worklist.xml")
 	
 	id := ptDem.UID
 	ptDem["model"] := "Mortara H3+"
@@ -2452,6 +2454,7 @@ muWqSave(sernum) {
 	
 	filedelete, .lock
 	writeOut("/root/pending","enroll[@id='" id "']")
+	wq := new XML("worklist.xml")
 	
 	return
 }
