@@ -228,6 +228,7 @@ readQgenda() {
 	
 	fcMod := substr(y.selectSingleNode("/root/forecast").getAttribute("mod"),1,8) 
 	if (fcMod = substr(A_now,1,8)) {													; Return if already scanned today
+		eventlog("Qgenda already done today.")
 		return
 	}
 	
