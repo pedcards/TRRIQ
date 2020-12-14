@@ -3470,6 +3470,8 @@ Holter_Pr_Hl7:
 		labels[3] := ["Total","Aberrant","Single","Pairs","Runs","Fastest","Slowest","Longest","null"
 			, "Pauses","LongestRR","null"]
 		fieldvals(rateStat,3,"sve")
+		
+		eventlog("<<< Missing DDE, parsed from extracted PDF >>>")
 	}
 	
 	if !(fldval.acct) {																	; fldval.acct exists if Holter has been processed
