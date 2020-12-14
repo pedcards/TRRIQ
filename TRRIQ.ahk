@@ -2733,7 +2733,7 @@ BGregister(type) {
 	SetTimer, idleTimer, Off
 	checkCitrix()
 	
-	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini" : "")
+	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini EL" : "")
 	
 	tmp:=CMsgBox(ptDem.Monitor
 		, "Register type`n`n" typeLong
@@ -2779,7 +2779,7 @@ BGregister(type) {
 		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
 		
 		if !(ptDem.model) {																; Types in an ad hoc number
-			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart|BodyGuardian Mini")
+			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart|BodyGuardian Mini EL")
 			if (i="xClose") {
 				eventlog("Cancelled ad hoc S/N.")
 				return
