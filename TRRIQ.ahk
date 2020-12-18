@@ -2738,13 +2738,24 @@ BGregister(type) {
 	tmp:=CMsgBox(ptDem.Monitor
 		, "Register type`n`n" typeLong
 			. (type="BGH" ? "`n30-day Event Recorder" : "")
-			. (type="BGM" ? "`n14-day Holter" : "")
+			. (type="BGM" ? "`nExtended Holter (3-14 day)" : "")
 		, "Yes|No"
 		, "Q", "V", 
 		, (type="BGH" ? ".\files\BGHeart.png" : "") 
 		. (type="BGM" ? ".\files\BGMini.png" : "") )
 	if (tmp!="Yes") {
 		return
+	}
+	
+	if (type="BGM") {
+		tmp:=CMsgBox("Extended Holter duration"
+			, "Select expected duration of recording"
+			, "3 days|7 days|14 days"
+			, "Q")
+		if (tmp="xClose") {
+			return
+		}
+		ptDem.HolterDuration := strX(tmp,"",1,0," ",1,1)
 	}
 	
 	fetchQuit := false
