@@ -2718,7 +2718,7 @@ makePreventiceORM() {
 		, 3:"12918^Deploy Duration (In Days)"
 		, 5:(ptDem.model~="Mortara" ? "1" : "")
 			. (ptDem.model~="Heart" ? "30" : "")
-			. (ptDem.model~="Mini" ? "14" : "") })
+			. (ptDem.model~="Mini" ? strQ(ptDem.HolterDuration,"###","14") : "") })
 	
 	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
