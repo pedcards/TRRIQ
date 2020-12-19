@@ -1888,7 +1888,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		encDT := ptDem.date
 		ptDem.EncDate := niceDate(ptDem.date)											; set formatted EncDate
 		gosub assignMD																	; find who recommended it from the Chipotle schedule
-		ptDem.loc:="Inpatient"
+		ptDem.loc:="MAIN"
 		eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
 	}
 	else if (matchProv.group="FELLOWS") {												; using fellow encounter
