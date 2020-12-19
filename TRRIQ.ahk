@@ -13,7 +13,7 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%
 SetTitleMatchMode, 2
 
-progress,,,TRRIQ intializing...
+progress,,% " ",TRRIQ intializing...
 FileGetTime, wqfileDT, .\files\wqupdate
 
 SplitPath, A_ScriptDir,,fileDir
@@ -40,7 +40,7 @@ readini("setup")
 /*	Get location info
 */
 #Include HostName.ahk
-progress,,,Identifying workstation...
+progress,,% " ",Identifying workstation...
 if !(wksLoc := GetLocation()) {
 	progress, off
 	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
@@ -60,7 +60,7 @@ webUploadDir := check_h3(path.webupload,webUploadStr) "\"								; Find the loca
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
-progress,,,Scanning providers...
+progress,,% " ",Scanning providers...
 Docs := Object()
 tmpChk := false
 if FileExist(path.chip "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
@@ -610,7 +610,7 @@ WQlist() {
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
-	Progress,,,Scanning worklist...
+	Progress,,% " ",Scanning worklist...
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
@@ -996,7 +996,7 @@ cleanDone() {
 	
 	ens := wq.selectNodes("/root/done/enroll")
 	t := ens.length
-	progress,,,Cleaning old records
+	progress,,% " ",Cleaning old records
 	loop, % t
 	{
 		progress, % (A_Index/t)*100
@@ -3790,7 +3790,7 @@ shortenPDF(find) {
 	sleep 500
 	fullNam := filenam "full.txt"
 
-	Progress,,,Scanning full size PDF...
+	Progress,,% " ",Scanning full size PDF...
 	RunWait, .\files\pdftotext.exe "%fileIn%" "%fullnam%",,min,wincons					; convert PDF all pages to txt file
 	eventlog("Extracting full text.")
 	progress,100,, Shrinking PDF...
