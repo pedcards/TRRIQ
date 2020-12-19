@@ -92,6 +92,8 @@ Loop, Read, .\files\outdocs.csv
 	Docs[tmpGrp ".npi",tmpIdx] := tmp.5
 }
 
+/*	Generate worklist.xml if missing
+*/
 if fileexist("worklist.xml") {
 	wq := new XML("worklist.xml")
 } else {
@@ -101,6 +103,8 @@ if fileexist("worklist.xml") {
 	wq.save("worklist.xml")
 }
 
+/*	Read call schedule (Electronic Forecast and Qgenda)
+*/
 fcVals := readIni("Forecast")
 Forecast_svc := []
 Forecast_val := []
@@ -113,6 +117,8 @@ for key,val in fcVals
 }
 updateCall()
 
+/*	Initialize rest of vars and strings
+*/
 demVals := readIni("demVals")																		; valid field names for parseClip()
 
 indCodes := readIni("indCodes")
