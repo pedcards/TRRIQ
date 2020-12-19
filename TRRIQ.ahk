@@ -572,7 +572,7 @@ WQtask() {
 	if instr(choice,"done") {
 		reason := cmsgbox("Reason"
 				, "What is the reason to remove this record from the active worklist?"
-				, "Report in CIS|"
+				, "Report in Epic|"
 				. "Device missing|"
 				. "Other (explain)"
 				, "E")
@@ -4084,7 +4084,7 @@ CheckProc:
 			. "   " ptDem.nameL ", " ptDem.nameF "`n"
 			. "   " ptDem.mrn "`n"
 			. "   " ptDem.EncDate "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
+			. "Paste clipboard into Epic search to select patient and encounter"
 		
 		gosub fetchGUI
 		gosub fetchDem
