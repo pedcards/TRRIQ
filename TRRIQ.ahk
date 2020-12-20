@@ -13,8 +13,9 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%
 SetTitleMatchMode, 2
 
-progress,,,TRRIQ intializing...
+progress,,% " ",TRRIQ intializing...
 FileGetTime, wqfileDT, .\files\wqupdate
+FileGetTime, runningVer, % A_ScriptName
 
 SplitPath, A_ScriptDir,,fileDir
 user := A_UserName
@@ -25,10 +26,9 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	path:=readIni("devtpaths")
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
-	FileGetTime, tmp, % A_ScriptName
 	isDevt := false
 	path:=readIni("paths")
-	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12) " " A_Args[1])
+	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(runningVer,1,12) " " A_Args[1])
 	checkcitrix()
 }
 if (A_Args[1]~="launch") {
@@ -40,7 +40,7 @@ readini("setup")
 /*	Get location info
 */
 #Include HostName.ahk
-progress,,,Identifying workstation...
+progress,,% " ",Identifying workstation...
 if !(wksLoc := GetLocation()) {
 	progress, off
 	MsgBox, 262160, Location error, No clinic location specified!`n`nExiting
@@ -60,7 +60,7 @@ webUploadDir := check_h3(path.webupload,webUploadStr) "\"								; Find the loca
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
-progress,,,Scanning providers...
+progress,,% " ",Scanning providers...
 Docs := Object()
 tmpChk := false
 if FileExist(path.chip "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
@@ -92,6 +92,8 @@ Loop, Read, .\files\outdocs.csv
 	Docs[tmpGrp ".npi",tmpIdx] := tmp.5
 }
 
+/*	Generate worklist.xml if missing
+*/
 if fileexist("worklist.xml") {
 	wq := new XML("worklist.xml")
 } else {
@@ -101,6 +103,8 @@ if fileexist("worklist.xml") {
 	wq.save("worklist.xml")
 }
 
+/*	Read call schedule (Electronic Forecast and Qgenda)
+*/
 fcVals := readIni("Forecast")
 Forecast_svc := []
 Forecast_val := []
@@ -113,6 +117,8 @@ for key,val in fcVals
 }
 updateCall()
 
+/*	Initialize rest of vars and strings
+*/
 demVals := readIni("demVals")																		; valid field names for parseClip()
 
 indCodes := readIni("indCodes")
@@ -483,6 +489,17 @@ checkCitrix() {
 	}
 }
 
+checkVersion(ver) {
+	FileGetTime, chk, % A_ScriptName
+	if (chk != ver) {
+		MsgBox, 262193, New version!, There is an updated version of the script. `nRestart to launch new version?
+		IfMsgBox, Ok
+			run, % A_ScriptName
+		ExitApp
+	}
+	return
+}
+
 WQtask() {
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {
@@ -572,7 +589,7 @@ WQtask() {
 	if instr(choice,"done") {
 		reason := cmsgbox("Reason"
 				, "What is the reason to remove this record from the active worklist?"
-				, "Report in CIS|"
+				, "Report in Epic|"
 				. "Device missing|"
 				. "Other (explain)"
 				, "E")
@@ -610,7 +627,9 @@ WQlist() {
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
-	Progress,,,Scanning worklist...
+	checkversion(runningVer)															; make sure we are running latest version
+
+	Progress,,% " ",Scanning worklist...
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
@@ -996,7 +1015,7 @@ cleanDone() {
 	
 	ens := wq.selectNodes("/root/done/enroll")
 	t := ens.length
-	progress,,,Cleaning old records
+	progress,,% " ",Cleaning old records
 	loop, % t
 	{
 		progress, % (A_Index/t)*100
@@ -1011,12 +1030,13 @@ cleanDone() {
 		clone := en.cloneNode(true)
 		arc.selectSingleNode("/root/done").appendChild(clone)
 		en.parentNode.removeChild(en)
+		eventlog("Removed old record (" dtDiff " days) for " name " " dt ".")
 	}
 	
 	arc.save("archive.xml")
 	writeSave(wq)
+	wq := new XML("worklist.xml")
 	FileDelete, .lock
-	
 	
 	return
 }
@@ -1887,7 +1907,7 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		encDT := ptDem.date
 		ptDem.EncDate := niceDate(ptDem.date)											; set formatted EncDate
 		gosub assignMD																	; find who recommended it from the Chipotle schedule
-		ptDem.loc:="Inpatient"
+		ptDem.loc:="MAIN"
 		eventlog(ptDem.Type " location. Provider assigned to " ptDem.Provider ".")
 	}
 	else if (matchProv.group="FELLOWS") {												; using fellow encounter
@@ -1920,7 +1940,9 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		gosub getMD
 	}
 	
-	ptDem.acct := ptDem.loc strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
+	if (ptDem.acct="") {
+		ptDem.acct := ptDem.loc strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
+	}
 	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
 	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
 	ptDem["Account"] := EncNum															; make sure array has submitted EncNum value
@@ -2360,6 +2382,7 @@ MortaraUpload(tabnum="")
 		
 		removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
 		writeOut("root","orders")
+		wq := new XML("worklist.xml")
 		FileMove, % ptDem.filename, .\tempfiles, 1
 		
 		makePreventiceORM()
@@ -2418,6 +2441,7 @@ muWqSave(sernum) {
 			WriteSave(wq)
 		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
 	}
+	wq := new XML("worklist.xml")
 	
 	id := ptDem.UID
 	ptDem["model"] := "Mortara H3+"
@@ -2452,6 +2476,7 @@ muWqSave(sernum) {
 	
 	filedelete, .lock
 	writeOut("/root/pending","enroll[@id='" id "']")
+	wq := new XML("worklist.xml")
 	
 	return
 }
@@ -2714,7 +2739,7 @@ makePreventiceORM() {
 		, 3:"12918^Deploy Duration (In Days)"
 		, 5:(ptDem.model~="Mortara" ? "1" : "")
 			. (ptDem.model~="Heart" ? "30" : "")
-			. (ptDem.model~="Mini" ? "14" : "") })
+			. (ptDem.model~="Mini" ? strQ(ptDem.HolterDuration,"###","14") : "") })
 	
 	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
@@ -2729,18 +2754,29 @@ BGregister(type) {
 	SetTimer, idleTimer, Off
 	checkCitrix()
 	
-	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini" : "")
+	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini EL" : "")
 	
 	tmp:=CMsgBox(ptDem.Monitor
 		, "Register type`n`n" typeLong
 			. (type="BGH" ? "`n30-day Event Recorder" : "")
-			. (type="BGM" ? "`n14-day Holter" : "")
+			. (type="BGM" ? "`nExtended Holter (3-14 day)" : "")
 		, "Yes|No"
 		, "Q", "V", 
 		, (type="BGH" ? ".\files\BGHeart.png" : "") 
 		. (type="BGM" ? ".\files\BGMini.png" : "") )
 	if (tmp!="Yes") {
 		return
+	}
+	
+	if (type="BGM") {
+		tmp:=CMsgBox("Extended Holter duration"
+			, "Select expected duration of recording"
+			, "3 days|7 days|14 days"
+			, "Q")
+		if (tmp="xClose") {
+			return
+		}
+		ptDem.HolterDuration := strX(tmp,"",1,0," ",1,1)
 	}
 	
 	fetchQuit := false
@@ -2775,7 +2811,7 @@ BGregister(type) {
 		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
 		
 		if !(ptDem.model) {																; Types in an ad hoc number
-			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart|BodyGuardian Mini")
+			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart|BodyGuardian Mini EL")
 			if (i="xClose") {
 				eventlog("Cancelled ad hoc S/N.")
 				return
@@ -3445,6 +3481,31 @@ Holter_Pr_Hl7:
 	fieldvals(duration,1,"dem")
 	formatfield("dem","Test_end",fldval["dem-Recording_time"])
 	
+	if (fldval["hrd-Total_beats"]="") {													; apparently no DDE present
+		rateStat := stregX(newtxt,"(\R)ALL BEATS",1,0,"(\R)VENTRICULAR ECTOPY",1) "<<<"
+		fields[1] := ["Total QRS", "Normal Beats"
+			, "Minimum HR","Maximum HR","Average HR","Tachycardia"
+			, "Longest Tachycardia","Fastest Tachycardia","Longest Bradycardia","Slowest Bradycardia","<<<"]
+		labels[1] := ["Total_beats","null"
+			, "Min","Max","Avg","null"
+			, "Longest_tachy","Fastest","Longest_brady","Slowest","null"]
+		fieldvals(rateStat,1,"hrd")
+		
+		rateStat := stregX(newtxt,"(\R)VENTRICULAR ECTOPY",1,0,"PACED|SUPRAVENTRICULAR ECTOPY",1)
+		fields[2] := ["Ventricular Beats","Singlets","Couplets","Runs","Fastest Run","Slowest Run","Longest Run","R on T Beats"]
+		labels[2] := ["Total","SingleVE","Couplets","Runs","Fastest","Slowest","Longest","R on T"]
+		fieldvals(rateStat,2,"ve")
+		
+		rateStat := stregX(newtxt,"(\R)SUPRAVENTRICULAR ECTOPY",1,0,"(\R)OTHER RHYTHM EPISODES|(\R)RR VARIABILITY",1) "<<<"
+		fields[3] := ["Supraventricular Beats","Aberrant Beats","Singlets","Pairs","Runs","Fastest Run","Slowest Run","Longest Run","SVE"
+			, "Pauses .* ms","Longest RR","<<<"]
+		labels[3] := ["Total","Aberrant","Single","Pairs","Runs","Fastest","Slowest","Longest","null"
+			, "Pauses","LongestRR","null"]
+		fieldvals(rateStat,3,"sve")
+		
+		eventlog("<<< Missing DDE, parsed from extracted PDF >>>")
+	}
+	
 	if !(fldval.acct) {																	; fldval.acct exists if Holter has been processed
 		gosub checkProc																	; get valid demographics
 		if (fetchQuit=true) {
@@ -3748,7 +3809,7 @@ shortenPDF(find) {
 	sleep 500
 	fullNam := filenam "full.txt"
 
-	Progress,,,Scanning full size PDF...
+	Progress,,% " ",Scanning full size PDF...
 	RunWait, .\files\pdftotext.exe "%fileIn%" "%fullnam%",,min,wincons					; convert PDF all pages to txt file
 	eventlog("Extracting full text.")
 	progress,100,, Shrinking PDF...
@@ -4042,7 +4103,7 @@ CheckProc:
 			. "   " ptDem.nameL ", " ptDem.nameF "`n"
 			. "   " ptDem.mrn "`n"
 			. "   " ptDem.EncDate "`n`n"
-			. "Paste clipboard into CIS search to select patient and encounter"
+			. "Paste clipboard into Epic search to select patient and encounter"
 		
 		gosub fetchGUI
 		gosub fetchDem

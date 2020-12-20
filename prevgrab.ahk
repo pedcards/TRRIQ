@@ -197,7 +197,7 @@ parsePreventiceEnrollment(tbl) {
 			}
 		}
 		
-		res.name := parsename(res.name).lastfirst
+		res.name := format("{:U}",parsename(res.name).lastfirst)
 		date := parseDate(res.date).YMD
 		
 		dt := A_Now

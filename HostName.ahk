@@ -156,6 +156,12 @@ GetLocations()
 ;
 AddWorkstation(location)
 {
+	global wksVM
+	wksVoid := StrSplit(wksVM, "|")
+	if (ObjHasValue(wksVoid,A_ComputerName,1)) {								; don't write if in wksVM list
+		Return
+	}
+
 	locationData := new xml(m_strXmlFilename) 
 	
 	workstations := locationData.SelectSingleNode(m_strXmlWorkstationsPath)
