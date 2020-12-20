@@ -489,6 +489,15 @@ checkCitrix() {
 	}
 }
 
+checkVersion(ver) {
+	FileGetTime, chk, % A_ScriptName
+	if (chk != ver) {
+		run, % A_ScriptName
+		ExitApp
+	}
+	return
+}
+
 WQtask() {
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {
@@ -616,6 +625,8 @@ WQlist() {
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
+	checkversion(runningVer)															; make sure we are running latest version
+
 	Progress,,% " ",Scanning worklist...
 	
 	fileCheck()
