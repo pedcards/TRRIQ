@@ -15,6 +15,7 @@ SetTitleMatchMode, 2
 
 progress,,% " ",TRRIQ intializing...
 FileGetTime, wqfileDT, .\files\wqupdate
+FileGetTime, runningVer, % A_ScriptName
 
 SplitPath, A_ScriptDir,,fileDir
 user := A_UserName
@@ -25,10 +26,9 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	path:=readIni("devtpaths")
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
-	FileGetTime, tmp, % A_ScriptName
 	isDevt := false
 	path:=readIni("paths")
-	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(tmp,1,12) " " A_Args[1])
+	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(runningVer,1,12) " " A_Args[1])
 	checkcitrix()
 }
 if (A_Args[1]~="launch") {
