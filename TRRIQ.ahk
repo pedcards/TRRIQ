@@ -492,7 +492,9 @@ checkCitrix() {
 checkVersion(ver) {
 	FileGetTime, chk, % A_ScriptName
 	if (chk != ver) {
-		run, % A_ScriptName
+		MsgBox, 262193, New version!, There is an updated version of the script. `nRestart to launch new version?
+		IfMsgBox, Ok
+			run, % A_ScriptName
 		ExitApp
 	}
 	return
