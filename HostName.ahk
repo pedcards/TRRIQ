@@ -225,7 +225,13 @@ check_H3(root,match) {
 	If not already defined, scan C: drive for deepest h3.preventice.com folder
 	Still not sure why some machines are not returning proper RECORD.LOG and DEVICE.LOG files
 */
+	global wksVM
 	wks := A_ComputerName
+
+	wksVoid := StrSplit(wksVM, "|")
+	if (ObjHasValue(wksVoid,wks,1)) {													; don't check if in wksVM list
+		Return
+	}
 	
 	m := new XML(m_strXmlFilename)
 	node := "//workstations/workstation[wsname='" wks "']"
