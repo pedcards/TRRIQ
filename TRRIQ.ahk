@@ -3148,8 +3148,8 @@ moveHL7dem() {
 	global fldVal, obxVal
 	
 	name := parseName(fldval.name)
-	fldVal["dem-Name_L"] := parseName(strQ(obxVal["PID_NameL"],"###",name.last)).apostr			; replace [^] with [']
-	fldVal["dem-Name_F"] := parseName(strQ(obxVal["PID_NameF"],"###",name.first)).apostr
+	fldVal["dem-Name_L"] := strQ(obxVal["PID_NameL"],"###",RegExReplace(name.last,"\^","'"))		; replace [^] with [']
+	fldVal["dem-Name_F"] := strQ(obxVal["PID_NameF"],"###",RegExReplace(name.first,"\^","'"))
 	fldVal["dem-Name"] := fldVal["dem-Name_L"] strQ(fldVal["dem-Name_F"],", ###")
 	fldVal["dem-MRN"] := strQ(obxVal["PID_PatMRN"],"###",fldval.MRN)
 	fldVal["dem-DOB"] := strQ(obxVal["PID_DOB"],niceDate(obxVal["PID_DOB"]),fldval.DOB)
