@@ -4454,15 +4454,15 @@ Event_BGH_Hl7:
 	fieldcoladd("dem","Test_end",niceDate(obxVal["Enroll_End_Dt"]))
 	
 	count_block := stregX(newtxt,"Event Counts",1,1,"Summarized",1)
-	count_block := RegExReplace(count_block,"(\d) ","$1`n")
+	count_block := RegExReplace(count_block,"(\d) ","$1`r`n")
 	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger","\R"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto","null"]
 	
-	if (fldval["counts-Auto"]!="" && fldval["counts-Manual"]!="")						; Event Counts valid
-	{
+	if (fldval["counts-Auto"]="" && fldval["counts-Manual"]="")							; No Event Counts values
+	{																					; parse from PDF
 		fieldvals(count_block,3,"counts")
 	} 
-	else																				; Event Counts block not parsed
+	else																				; Still no Event Counts (bad PDF)
 	{
 		count:=[]																		; create object for counts
 		count["Patient-Activated"]:=0													; zero the results instead of null
