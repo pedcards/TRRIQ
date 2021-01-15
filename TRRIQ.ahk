@@ -1570,6 +1570,7 @@ parseORM() {
 	global fldval, sitesLong, indCodes
 	
 	monType:=(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
+		: tmp~="i)15 DAY" ? "BGM"
 		: tmp~="i)24 HOUR" ? "HOL"
 		: tmp~="i)RECORDER|EVENT" ? "BGH"
 		: tmp~="i)CUTOVER" ? "CUTOVER"
@@ -3671,7 +3672,7 @@ makeORU(wqid) {
 	}
 	obr4 := (montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP"
 			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP"
-			: (montype~="i)Mini|ZIO") ? "CVCAR102^14 DAY HOLTER MONITOR^IMGEAP"
+			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR 3-15 DAY^IMGEAP"
 			: ""
 	if (fldval.oldUID) {
 		obr4 := RegExReplace(obr4,"^(.*?)\^","CVCAR104^")
