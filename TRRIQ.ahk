@@ -1013,6 +1013,7 @@ cleanDone() {
 		arc.save("archive.xml")
 	}
 	
+	wq := new XML("worklist.xml")														; get most recently saved
 	ens := wq.selectNodes("/root/done/enroll")
 	t := ens.length
 	progress,,% " ",Cleaning old records
