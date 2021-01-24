@@ -2660,7 +2660,7 @@ makePreventiceORM() {
 	buildHL7("PID"
 		,{2:ptDem.MRN
 		, 3:ptDem.MRN
-		, 5:parseName(ptDem.nameL).apostr "^" parseName(ptDem.nameF).apostr . strQ(ptDem.nameMI,"^###")
+		, 5:ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
 		, 7:parseDate(ptDem.dob).YMD
 		, 8:substr(ptDem.sex,1,1)
 		, 11:ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
@@ -2678,7 +2678,7 @@ makePreventiceORM() {
 	buildHL7("IN1"
 		,{2:"N/A"
 		, 4:"Seattle Childrens - GB" ;"Insurance Company Name"
-		, 16:parseName(ptDem.parentL).apostr "^" parseName(ptDem.parentF).apostr
+		, 16:ptDem.parentL "^" ptDem.parentF
 		, 17:"Legal Guardian"
 		, 18:parseDate(ptDem.dob).YMD })
 	
@@ -5287,7 +5287,7 @@ ParseName(x) {
 		return error
 	}
 	x := trim(x)																		; trim edges
-	x := RegExReplace(x,"\'","^")														; replace ['] with [^] to avoid XPATH errors
+	; x := RegExReplace(x,"\'","^")														; replace ['] with [^] to avoid XPATH errors
 	x := RegExReplace(x," \w "," ")														; remove middle initial: Troy A Johnson => Troy Johnson
 	x := RegExReplace(x,"(,.*?)( \w)$","$1")											; remove trailing MI: Johnston, Troy A => Johnston, Troy
 	x := RegExReplace(x,"i),?( JR| III| IV)$")											; Filter out name suffixes
@@ -5326,8 +5326,7 @@ ParseName(x) {
 	return {first:first
 			,last:last
 			,firstlast:first " " last
-			,lastfirst:last ", " first
-			,apostr:RegExReplace(x,"\^","'")}
+			,lastfirst:last ", " first }
 }
 
 ParseDate(x) {
