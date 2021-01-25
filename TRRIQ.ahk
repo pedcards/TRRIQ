@@ -3439,6 +3439,9 @@ epRead() {
 	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun|Salerno|Seslar)", ymatch)
 	if !(ep := ymatch.value()) {
 		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
+		if (ep="xClose") {
+			eventlog("Elec Forecast not complete. Quit EP selection.")
+		}
 		eventlog("Reading EP assigned to " ep ".")
 	}
 	
@@ -3545,7 +3548,7 @@ Holter_Pr_Hl7:
 				findFullPDF()
 				continue
 			}
-			if (msg~="Cancel|Close") {
+			if (msg~="Cancel|Close|xClose") {
 				FileDelete, % fileIn
 				eventlog("Refused to get full disclosure. Extracted PDF deleted.")
 				Exit																	; either Cancel or X, go back to main GUI
