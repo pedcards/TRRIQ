@@ -1576,21 +1576,24 @@ parseORM() {
 		: tmp~="i)RECORDER|EVENT" ? "BGH"
 		: tmp~="i)CUTOVER" ? "CUTOVER"
 		: ""
-	encType:=(tmp:=fldval.PV1_PtClass)="O" ? "Outpatient" 
-		: tmp="I" ? "Inpatient"
-		: "Outpatient"
-	switch encType
+	
+	switch fldval.PV1_PtClass
 	{
-		case "Outpatient":
+		case "O":
+			encType := "Outpatient"
 			location := sitesLong[fldval.PV1_Location]
-		case "Inpatient":
+		case "I":
+			encType := "Inpatient"
 			location := fldval.PV1_Location
-		case "SurgCntr":
-			location := "SurgCntr"
-		case "Emergency":
+		case "DS":
+			encType := "Outpatient"
+			location := "MAIN"
+		case "E":
+			encType := "Inpatient"
 			location := "Emergency"
 		default:
-			location := encType
+			encType := "Outpatient"
+			location := fldval.PV1_Location
 	}
 	prov := strQ(fldval.ORC_ProvCode
 			, fldval.ORC_ProvCode "^" fldval.ORC_ProvNameL "^" fldval.ORC_ProvNameF
