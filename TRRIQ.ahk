@@ -3317,6 +3317,13 @@ outputfiles:
 	wq := new XML("worklist.xml")
 	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
 	
+	if (RegExMatch(fldval["dem-Ordering"], "Oi)(Chun|Salerno|Seslar)"))  {
+		tmp := parseName(fldval["dem-Ordering"])
+		enc_MD := substr(tmp.First,1,1) substr(tmp.Last,1,1)
+		httpComm("sign&to=" enc_MD)
+		eventlog("Notification email sent to " enc_MD)
+	}
+
 Return
 }
 
