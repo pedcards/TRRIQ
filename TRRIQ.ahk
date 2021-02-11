@@ -5179,20 +5179,18 @@ IEclose() {
 	return
 }
 
-httpComm(url:="",verb:="") {
-	global servFold
-	if (url="") {
-		url := "https://depts.washington.edu/pedcards/change/direct.php?" 
-				. ((servFold="testlist") ? "test=true&" : "") 
-				. "do=" . verb
-	}
+httpComm(verb) {
+	url := "https://depts.washington.edu/pedcards/change/direct.php?" 
+			. "do=" . verb
+	
 	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr
-		whr.Open("GET"															; set the http verb to GET file "change"
-			, url
-			, true)
-		whr.Send()																; SEND the command to the address
-		whr.WaitForResponse()													; and wait for
-	return whr.ResponseText														; the http response
+	whr.Open("GET"																; set the http verb to GET file "change"
+		, url
+		, true)
+	whr.Send()																	; SEND the command to the address
+	; whr.WaitForResponse()															; and wait for
+	; return whr.ResponseText														; the http response
+	return
 }
 
 cleancolon(ByRef txt) {
