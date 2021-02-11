@@ -119,6 +119,7 @@ updateCall()
 
 /*	Initialize rest of vars and strings
 */
+Progress, , % " ", Initializing variables
 demVals := readIni("demVals")																		; valid field names for parseClip()
 
 indCodes := readIni("indCodes")
@@ -134,6 +135,7 @@ monCodes := readIni("EpicMonitorType")
 initHL7()
 hl7DirMap := {}
 
+Progress, , % " ", Cleaning old .bak files
 Loop, files, bak\*.bak
 {
 	dt := A_now
@@ -142,6 +144,7 @@ Loop, files, bak\*.bak
 		FileDelete, bak\%A_LoopFileName%.bak
 	}
 }
+Progress, Off
 
 MainLoop: ; ===================== This is the main part ====================================
 {
