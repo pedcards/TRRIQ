@@ -141,7 +141,7 @@ Loop, files, bak\*.bak
 	dt := A_now
 	dt -= RegExReplace(A_LoopFileName,"\.bak"), Days
 	if (dt > 7) {
-		FileDelete, bak\%A_LoopFileName%.bak
+		FileDelete, bak\%A_LoopFileName%
 	}
 }
 Progress, Off
