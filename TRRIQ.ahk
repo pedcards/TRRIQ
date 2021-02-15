@@ -1177,6 +1177,26 @@ parsePrevEnroll(txt) {
 				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
 				return
 			}
+		}
+		if (id:=wq.selectSingleNode("/root/orders/enroll[mrn='" res.mrn "']").getAttribute("id")) {
+			en:=readWQ(id)																; MRN found in Orders
+			dt0:=res.date
+			dt0 -= en.date, days
+			
+			if abs(dt0) < 5 {															; res.date less than 5d from en.date
+				addPrevEnroll(id,res)													; create a <pending> record
+				wqSetVal(id,"acct",en.acct)
+				wqSetVal(id,"order",en.order)
+				wqSetVal(id,"accession",en.accession)
+				wqSetVal(id,"accountnum",en.acctnum)
+				wqSetVal(id,"encnum",en.encnum)
+				wqSetVal(id,"prov",en.provname)
+				wqSetVal(id,"dev",res.dev)
+				wqSetVal(id,"date",res.date)
+				removeNode("/root/orders/enroll[@id='" id "']")
+				eventlog("Moved Order ID " id " for " en.name " to Pending.")
+				return
+			}
 		}																				; anything else is probably a new registration
 		
 	/*	No match (i.e. unique record)
