@@ -1195,7 +1195,7 @@ parsePrevEnroll(txt) {
 				wqSetVal(id,"date",res.date)
 				wqSetVal(id,"ind",en.ind)
 				removeNode("/root/orders/enroll[@id='" id "']")
-				eventlog("Moved Order ID " id " for " en.name " to Pending.")
+				eventlog("Order ID " id " for " en.name " " en.mrn " matched MRN only, moved to Pending.")
 				return
 			}
 		}																				; anything else is probably a new registration
