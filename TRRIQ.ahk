@@ -4198,9 +4198,11 @@ Holter_BGM_HL7:
 	
 	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
-	fldval["dem-Recording_time"] := parsedate(fldval["Monitoring_Period"]).DHM
-	fldval["dem-Analysis_time"] := parsedate(fldval["Analyzed_Data"]).DHM
-	
+	fldval["dem-Recording_time"] := strQ(fldval["Monitoring_Period"], parsedate("###").DHM
+									, calcDuration(fldval["hrd-Total_Time"]).DHM " (DD:HH:MM)")
+	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
+									, calcDuration(fldval["hrd-Analyzed_Time"]).DHM " (DD:HH:MM)")
+
 	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
@@ -5452,6 +5454,24 @@ year4dig(x) {
 zDigit(x) {
 ; Add leading zero to a number
 	return SubStr("0" . x, -1)
+}
+
+; Convert duration secs to DDHHMMSS
+calcDuration(sec) {
+	DD := divTime(sec,"D")
+	HH := divTime(DD.rem,"H")
+	MM := divTime(HH.rem,"M")
+	SS := MM.rem
+
+	return { DHM: zDigit(DD.val) ":" zDigit(HH.val) ":" zDigit(MM.val)
+			, DHMS: zDigit(DD.val) ":" zDigit(HH.val) ":" zDigit(MM.val) ":" zDigit(SS.val) }
+}
+
+divTime(sec,div) {
+	static T:={D:86400,H:3600,M:60,S:1}
+	xx := Floor(sec/T[div])
+	rem := sec-xx*T[div]
+	Return {val:xx,rem:rem}
 }
 
 ThousandsSep(x, s=",") {
