@@ -3521,13 +3521,22 @@ Holter_Pr_Hl7:
 	formatfield("dem","Test_end",fldval["dem-Recording_time"])
 	
 	if (fldval["hrd-Total_beats"]="") {													; apparently no DDE present
-		rateStat := stregX(newtxt,"(\R)ALL BEATS",1,0,"(\R)VENTRICULAR ECTOPY",1) "<<<"
-		fields[1] := ["Total QRS", "Normal Beats"
-			, "Minimum HR","Maximum HR","Average HR","Tachycardia"
-			, "Longest Tachycardia","Fastest Tachycardia","Longest Bradycardia","Slowest Bradycardia","<<<"]
-		labels[1] := ["Total_beats","null"
-			, "Min","Max","Avg","null"
-			, "Longest_tachy","Fastest","Longest_brady","Slowest","null"]
+		rateStat := stregX(newtxt,"(\R)ALL BEATS",1,0,"(\R)PAUSES",1) "<<<"
+		if RegExMatch(rateStat, "Minimum HR.*?Average HR") {
+			fields[1] := ["Total QRS", "Normal Beats"
+				, "Minimum HR","Maximum HR","Average HR","Tachycardia"
+				, "Longest Tachycardia","Fastest Tachycardia","Longest Bradycardia","Slowest Bradycardia","<<<"]
+			labels[1] := ["Total_beats","null"
+				, "Min","Max","Avg","null"
+				, "Longest_tachy","Fastest","Longest_brady","Slowest","null"]
+		} else {
+			fields[1] := ["Total QRS", "Normal Beats"
+				, "Minimum HR","Maximum HR","\R","Average HR","\R"
+				, "Longest Tachycardia","Fastest Tachycardia","Longest Bradycardia","Slowest Bradycardia","<<<"]
+			labels[1] := ["Total_beats","null"
+				, "Min","Max","null","Avg","null"
+				, "Longest_tachy","Fastest","Longest_brady","Slowest","null"]
+		}
 		fieldvals(rateStat,1,"hrd")
 		
 		rateStat := stregX(newtxt,"(\R)VENTRICULAR ECTOPY",1,0,"PACED|SUPRAVENTRICULAR ECTOPY",1)
