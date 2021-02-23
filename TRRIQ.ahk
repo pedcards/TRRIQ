@@ -1170,9 +1170,11 @@ parsePrevEnroll(txt) {
 		} 
 		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
 			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
 			dt0:=res.date
 			dt0 -= en.date, days
-			
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
 				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
 				return
