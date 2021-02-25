@@ -5232,8 +5232,9 @@ httpComm(verb) {
 		, url
 		, true)
 	whr.Send()																	; SEND the command to the address
-	; whr.WaitForResponse()															; and wait for
-	; return whr.ResponseText														; the http response
+	whr.WaitForResponse()														; and wait for
+	eventlog(url)
+	eventlog(whr.ResponseText)													; the http response
 	return
 }
 
