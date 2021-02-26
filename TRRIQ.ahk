@@ -684,7 +684,13 @@ WQlist() {
 			e0.match_MRN := fuzzysearch(e0.mrn,k.selectSingleNode("mrn").text)
 			if (e0.match_NM > 0.15) && (e0.match_MRN > 0.15) {							; Name and MRN each vary by more than 15%
 				continue
-			} else {
+			}
+			dt0 := k.selectSingleNode("date").text
+			dt0 -= e0.date, days
+			if abs(dt0) > 5 {															; Date differs by more than 5d
+				Continue
+			}
+
 				id := k.getAttribute("id")
 				e0.match_UID := true
 				
