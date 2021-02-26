@@ -691,14 +691,18 @@ WQlist() {
 				Continue
 			}
 
-				id := k.getAttribute("id")
-				e0.match_UID := true
-				
-				wqSetVal(id,"order",e0.order)
-				wqSetVal(id,"accession",e0.accession)
-				eventlog("Found pending/enroll/oldUID=" id " that matches new Epic order " e0.order ". " e0.match_NM)
-				break
-			}
+			id := k.getAttribute("id")
+			e0.match_UID := true
+			
+			wqSetVal(id,"order",e0.order)
+			wqSetVal(id,"accession",e0.accession)
+			wqSetVal(id,"acct",e0.acct)
+			wqSetVal(id,"acctnum",e0.accountnum)
+			wqSetVal(id,"encnum",e0.encnum)
+			k.setAttribute("id",e0.UID)
+			eventlog("Found pending/enroll=" id " that matches new Epic order " e0.order ". " e0.match_NM)
+			eventlog("enroll id " id " changed to " e0.UID)
+			break
 		}
 		if (e0.match_UID) {
 			FileMove, %A_LoopFileFullPath%, .\tempfiles\*, 1
