@@ -674,7 +674,7 @@ WQlist() {
 		e0:=parseORM()
 		eventlog("New order " fileIn ". " e0.name " " e0.mrn )
 		
-		loop, % (ens:=wq.selectNodes("/root/pending/enroll[oldUID]")).Length			; find enroll nodes with result but no order
+		loop, % (ens:=wq.selectNodes("/root/pending/enroll")).Length					; find enroll nodes with result but no order
 		{
 			k := ens.item(A_Index-1)
 			if IsObject(k.selectSingleNode("accession")) {								; skip nodes that already have accession
