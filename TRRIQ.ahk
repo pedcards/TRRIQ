@@ -119,6 +119,7 @@ updateCall()
 
 /*	Initialize rest of vars and strings
 */
+Progress, , % " ", Initializing variables
 demVals := readIni("demVals")																		; valid field names for parseClip()
 
 indCodes := readIni("indCodes")
@@ -134,14 +135,16 @@ monCodes := readIni("EpicMonitorType")
 initHL7()
 hl7DirMap := {}
 
+Progress, , % " ", Cleaning old .bak files
 Loop, files, bak\*.bak
 {
 	dt := A_now
 	dt -= RegExReplace(A_LoopFileName,"\.bak"), Days
 	if (dt > 7) {
-		FileDelete, bak\%A_LoopFileName%.bak
+		FileDelete, bak\%A_LoopFileName%
 	}
 }
+Progress, Off
 
 MainLoop: ; ===================== This is the main part ====================================
 {
@@ -671,7 +674,7 @@ WQlist() {
 		e0:=parseORM()
 		eventlog("New order " fileIn ". " e0.name " " e0.mrn )
 		
-		loop, % (ens:=wq.selectNodes("/root/pending/enroll[oldUID]")).Length			; find enroll nodes with result but no order
+		loop, % (ens:=wq.selectNodes("/root/pending/enroll")).Length					; find enroll nodes with result but no order
 		{
 			k := ens.item(A_Index-1)
 			if IsObject(k.selectSingleNode("accession")) {								; skip nodes that already have accession
@@ -681,15 +684,25 @@ WQlist() {
 			e0.match_MRN := fuzzysearch(e0.mrn,k.selectSingleNode("mrn").text)
 			if (e0.match_NM > 0.15) && (e0.match_MRN > 0.15) {							; Name and MRN each vary by more than 15%
 				continue
-			} else {
-				id := k.getAttribute("id")
-				e0.match_UID := true
-				
-				wqSetVal(id,"order",e0.order)
-				wqSetVal(id,"accession",e0.accession)
-				eventlog("Found pending/enroll/oldUID=" id " that matches new Epic order " e0.order ". " e0.match_NM)
-				break
 			}
+			dt0 := k.selectSingleNode("date").text
+			dt0 -= e0.date, days
+			if abs(dt0) > 5 {															; Date differs by more than 5d
+				Continue
+			}
+
+			id := k.getAttribute("id")
+			e0.match_UID := true
+			
+			wqSetVal(id,"order",e0.order)
+			wqSetVal(id,"accession",e0.accession)
+			wqSetVal(id,"acct",e0.acct)
+			wqSetVal(id,"acctnum",e0.accountnum)
+			wqSetVal(id,"encnum",e0.encnum)
+			k.setAttribute("id",e0.UID)
+			eventlog("Found pending/enroll=" id " that matches new Epic order " e0.order ". " e0.match_NM)
+			eventlog("enroll id " id " changed to " e0.UID)
+			break
 		}
 		if (e0.match_UID) {
 			FileMove, %A_LoopFileFullPath%, .\tempfiles\*, 1
@@ -1013,6 +1026,7 @@ cleanDone() {
 		arc.save("archive.xml")
 	}
 	
+	wq := new XML("worklist.xml")														; get most recently saved
 	ens := wq.selectNodes("/root/done/enroll")
 	t := ens.length
 	progress,,% " ",Cleaning old records
@@ -1166,11 +1180,34 @@ parsePrevEnroll(txt) {
 		} 
 		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
 			en:=readWQ(id)
+			if (en.node="done") {
+				return
+			}
+			dt0:=res.date
+			dt0 -= en.date, days
+			if abs(dt0) < 5 {															; res.date less than 5d from en.date
+				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
+				return
+			}
+		}
+		if (id:=wq.selectSingleNode("/root/orders/enroll[mrn='" res.mrn "']").getAttribute("id")) {
+			en:=readWQ(id)																; MRN found in Orders
 			dt0:=res.date
 			dt0 -= en.date, days
 			
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
-				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
+				addPrevEnroll(id,res)													; create a <pending> record
+				wqSetVal(id,"acct",en.acct)
+				wqSetVal(id,"order",en.order)
+				wqSetVal(id,"accession",en.accession)
+				wqSetVal(id,"accountnum",en.acctnum)
+				wqSetVal(id,"encnum",en.encnum)
+				wqSetVal(id,"prov",en.provname)
+				wqSetVal(id,"dev",res.dev)
+				wqSetVal(id,"date",res.date)
+				wqSetVal(id,"ind",en.ind)
+				removeNode("/root/orders/enroll[@id='" id "']")
+				eventlog("Order ID " id " for " en.name " " en.mrn " matched MRN only, moved to Pending.")
 				return
 			}
 		}																				; anything else is probably a new registration
@@ -1570,25 +1607,29 @@ parseORM() {
 	global fldval, sitesLong, indCodes
 	
 	monType:=(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
+		: tmp~="i)15 DAY" ? "BGM"
 		: tmp~="i)24 HOUR" ? "HOL"
 		: tmp~="i)RECORDER|EVENT" ? "BGH"
 		: tmp~="i)CUTOVER" ? "CUTOVER"
 		: ""
-	encType:=(tmp:=fldval.PV1_PtClass)="O" ? "Outpatient" 
-		: tmp="I" ? "Inpatient"
-		: "Outpatient"
-	switch encType
+	
+	switch fldval.PV1_PtClass
 	{
-		case "Outpatient":
+		case "O":
+			encType := "Outpatient"
 			location := sitesLong[fldval.PV1_Location]
-		case "Inpatient":
+		case "I":
+			encType := "Inpatient"
 			location := fldval.PV1_Location
-		case "SurgCntr":
-			location := "SurgCntr"
-		case "Emergency":
+		case "DS":
+			encType := "Outpatient"
+			location := "MAIN"
+		case "E":
+			encType := "Inpatient"
 			location := "Emergency"
 		default:
-			location := encType
+			encType := "Outpatient"
+			location := fldval.PV1_Location
 	}
 	prov := strQ(fldval.ORC_ProvCode
 			, fldval.ORC_ProvCode "^" fldval.ORC_ProvNameL "^" fldval.ORC_ProvNameF
@@ -2658,7 +2699,7 @@ makePreventiceORM() {
 	buildHL7("PID"
 		,{2:ptDem.MRN
 		, 3:ptDem.MRN
-		, 5:parseName(ptDem.nameL).apostr "^" parseName(ptDem.nameF).apostr . strQ(ptDem.nameMI,"^###")
+		, 5:ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
 		, 7:parseDate(ptDem.dob).YMD
 		, 8:substr(ptDem.sex,1,1)
 		, 11:ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
@@ -2676,7 +2717,7 @@ makePreventiceORM() {
 	buildHL7("IN1"
 		,{2:"N/A"
 		, 4:"Seattle Childrens - GB" ;"Insurance Company Name"
-		, 16:parseName(ptDem.parentL).apostr "^" parseName(ptDem.parentF).apostr
+		, 16:ptDem.parentL "^" ptDem.parentF
 		, 17:"Legal Guardian"
 		, 18:parseDate(ptDem.dob).YMD })
 	
@@ -3148,8 +3189,8 @@ moveHL7dem() {
 	global fldVal, obxVal
 	
 	name := parseName(fldval.name)
-	fldVal["dem-Name_L"] := parseName(strQ(obxVal["PID_NameL"],"###",name.last)).apostr			; replace [^] with [']
-	fldVal["dem-Name_F"] := parseName(strQ(obxVal["PID_NameF"],"###",name.first)).apostr
+	fldVal["dem-Name_L"] := strQ(obxVal["PID_NameL"],"###",RegExReplace(name.last,"\^","'"))		; replace [^] with [']
+	fldVal["dem-Name_F"] := strQ(obxVal["PID_NameF"],"###",RegExReplace(name.first,"\^","'"))
 	fldVal["dem-Name"] := fldVal["dem-Name_L"] strQ(fldVal["dem-Name_F"],", ###")
 	fldVal["dem-MRN"] := strQ(obxVal["PID_PatMRN"],"###",fldval.MRN)
 	fldVal["dem-DOB"] := strQ(obxVal["PID_DOB"],niceDate(obxVal["PID_DOB"]),fldval.DOB)
@@ -3312,6 +3353,13 @@ outputfiles:
 	wq := new XML("worklist.xml")
 	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
 	
+	if (RegExMatch(fldval["dem-Ordering"], "Oi)(Chun|Salerno|Seslar)"))  {
+		tmp := parseName(fldval["dem-Ordering"])
+		enc_MD := substr(tmp.First,1,1) substr(tmp.Last,1,1)
+		httpComm("read&to=" enc_MD)
+		eventlog("Notification email sent to " enc_MD)
+	}
+
 Return
 }
 
@@ -3437,6 +3485,9 @@ epRead() {
 	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun|Salerno|Seslar)", ymatch)
 	if !(ep := ymatch.value()) {
 		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
+		if (ep="xClose") {
+			eventlog("Elec Forecast not complete. Quit EP selection.")
+		}
 		eventlog("Reading EP assigned to " ep ".")
 	}
 	
@@ -3482,13 +3533,22 @@ Holter_Pr_Hl7:
 	formatfield("dem","Test_end",fldval["dem-Recording_time"])
 	
 	if (fldval["hrd-Total_beats"]="") {													; apparently no DDE present
-		rateStat := stregX(newtxt,"(\R)ALL BEATS",1,0,"(\R)VENTRICULAR ECTOPY",1) "<<<"
-		fields[1] := ["Total QRS", "Normal Beats"
-			, "Minimum HR","Maximum HR","Average HR","Tachycardia"
-			, "Longest Tachycardia","Fastest Tachycardia","Longest Bradycardia","Slowest Bradycardia","<<<"]
-		labels[1] := ["Total_beats","null"
-			, "Min","Max","Avg","null"
-			, "Longest_tachy","Fastest","Longest_brady","Slowest","null"]
+		rateStat := stregX(newtxt,"(\R)ALL BEATS",1,0,"(\R)PAUSES",1) "<<<"
+		if RegExMatch(rateStat, "Minimum HR.*?Average HR") {
+			fields[1] := ["Total QRS", "Normal Beats"
+				, "Minimum HR","Maximum HR","Average HR","Tachycardia"
+				, "Longest Tachycardia","Fastest Tachycardia","Longest Bradycardia","Slowest Bradycardia","<<<"]
+			labels[1] := ["Total_beats","null"
+				, "Min","Max","Avg","null"
+				, "Longest_tachy","Fastest","Longest_brady","Slowest","null"]
+		} else {
+			fields[1] := ["Total QRS", "Normal Beats"
+				, "Minimum HR","Maximum HR","\R","Average HR","\R"
+				, "Longest Tachycardia","Fastest Tachycardia","Longest Bradycardia","Slowest Bradycardia","<<<"]
+			labels[1] := ["Total_beats","null"
+				, "Min","Max","null","Avg","null"
+				, "Longest_tachy","Fastest","Longest_brady","Slowest","null"]
+		}
 		fieldvals(rateStat,1,"hrd")
 		
 		rateStat := stregX(newtxt,"(\R)VENTRICULAR ECTOPY",1,0,"PACED|SUPRAVENTRICULAR ECTOPY",1)
@@ -3543,7 +3603,7 @@ Holter_Pr_Hl7:
 				findFullPDF()
 				continue
 			}
-			if (msg~="Cancel|Close") {
+			if (msg~="Cancel|Close|xClose") {
 				FileDelete, % fileIn
 				eventlog("Refused to get full disclosure. Extracted PDF deleted.")
 				Exit																	; either Cancel or X, go back to main GUI
@@ -3669,9 +3729,9 @@ makeORU(wqid) {
 		rtf := "###"
 		EPdoc := "###"
 	}
-	obr4 := (montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP"
-			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP"
-			: (montype~="i)Mini|ZIO") ? "CVCAR102^14 DAY HOLTER MONITOR^IMGEAP"
+	obr4 := (montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR 24 HOUR^IMGEAP"
+			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT MONITOR^IMGEAP"
+			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR 3-15 DAY^IMGEAP"
 			: ""
 	if (fldval.oldUID) {
 		obr4 := RegExReplace(obr4,"^(.*?)\^","CVCAR104^")
@@ -4180,9 +4240,11 @@ Holter_BGM_HL7:
 	
 	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
-	fldval["dem-Recording_time"] := parsedate(fldval["Monitoring_Period"]).DHM
-	fldval["dem-Analysis_time"] := parsedate(fldval["Analyzed_Data"]).DHM
-	
+	fldval["dem-Recording_time"] := strQ(fldval["Monitoring_Period"], parsedate("###").DHM
+									, calcDuration(fldval["hrd-Total_Time"]).DHM " (DD:HH:MM)")
+	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
+									, calcDuration(fldval["hrd-Analyzed_Time"]).DHM " (DD:HH:MM)")
+
 	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
@@ -4453,16 +4515,16 @@ Event_BGH_Hl7:
 	fieldcoladd("dem","Test_date",niceDate(obxVal["Enroll_Start_Dt"]))
 	fieldcoladd("dem","Test_end",niceDate(obxVal["Enroll_End_Dt"]))
 	
-	count_block := stregX(newtxt,"Event Counts",1,1,"Summarized",1)
-	count_block := RegExReplace(count_block,"(\d) ","$1`n")
+	count_block := stregX(newtxt,"Event Counts",1,1,"Summarized|Rhythm",1)
+	count_block := RegExReplace(count_block,"(\d) ","$1`r`n")
 	fields[3] := ["Critical","Total","Serious","(Manual|Pt Trigger)","Stable","Auto Trigger","\R"]
 	labels[3] := ["Critical","Total","Serious","Manual","Stable","Auto","null"]
 	
-	if (fldval["counts-Auto"]!="" && fldval["counts-Manual"]!="")						; Event Counts valid
-	{
+	if (fldval["counts-Auto"]="" && fldval["counts-Manual"]="")							; No Event Counts values
+	{																					; parse from PDF
 		fieldvals(count_block,3,"counts")
 	} 
-	else																				; Event Counts block not parsed
+	else																				; Still no Event Counts (bad PDF)
 	{
 		count:=[]																		; create object for counts
 		count["Patient-Activated"]:=0													; zero the results instead of null
@@ -5171,20 +5233,19 @@ IEclose() {
 	return
 }
 
-httpComm(url:="",verb:="") {
-	global servFold
-	if (url="") {
-		url := "https://depts.washington.edu/pedcards/change/direct.php?" 
-				. ((servFold="testlist") ? "test=true&" : "") 
-				. "do=" . verb
-	}
+httpComm(verb) {
+	url := "https://depts.washington.edu/pedcards/change/direct.php?" 
+			. "do=" . verb
+	
 	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr
-		whr.Open("GET"															; set the http verb to GET file "change"
-			, url
-			, true)
-		whr.Send()																; SEND the command to the address
-		whr.WaitForResponse()													; and wait for
-	return whr.ResponseText														; the http response
+	whr.Open("GET"																; set the http verb to GET file "change"
+		, url
+		, true)
+	whr.Send()																	; SEND the command to the address
+	whr.WaitForResponse()														; and wait for
+	eventlog(url)
+	eventlog(whr.ResponseText)													; the http response
+	return
 }
 
 cleancolon(ByRef txt) {
@@ -5285,7 +5346,7 @@ ParseName(x) {
 		return error
 	}
 	x := trim(x)																		; trim edges
-	x := RegExReplace(x,"\'","^")														; replace ['] with [^] to avoid XPATH errors
+	; x := RegExReplace(x,"\'","^")														; replace ['] with [^] to avoid XPATH errors
 	x := RegExReplace(x," \w "," ")														; remove middle initial: Troy A Johnson => Troy Johnson
 	x := RegExReplace(x,"(,.*?)( \w)$","$1")											; remove trailing MI: Johnston, Troy A => Johnston, Troy
 	x := RegExReplace(x,"i),?( JR| III| IV)$")											; Filter out name suffixes
@@ -5324,8 +5385,7 @@ ParseName(x) {
 	return {first:first
 			,last:last
 			,firstlast:first " " last
-			,lastfirst:last ", " first
-			,apostr:RegExReplace(x,"\^","'")}
+			,lastfirst:last ", " first }
 }
 
 ParseDate(x) {
@@ -5437,6 +5497,24 @@ year4dig(x) {
 zDigit(x) {
 ; Add leading zero to a number
 	return SubStr("0" . x, -1)
+}
+
+; Convert duration secs to DDHHMMSS
+calcDuration(sec) {
+	DD := divTime(sec,"D")
+	HH := divTime(DD.rem,"H")
+	MM := divTime(HH.rem,"M")
+	SS := MM.rem
+
+	return { DHM: zDigit(DD.val) ":" zDigit(HH.val) ":" zDigit(MM.val)
+			, DHMS: zDigit(DD.val) ":" zDigit(HH.val) ":" zDigit(MM.val) ":" zDigit(SS.val) }
+}
+
+divTime(sec,div) {
+	static T:={D:86400,H:3600,M:60,S:1}
+	xx := Floor(sec/T[div])
+	rem := sec-xx*T[div]
+	Return {val:xx,rem:rem}
 }
 
 ThousandsSep(x, s=",") {
