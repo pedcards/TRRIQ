@@ -3729,8 +3729,8 @@ makeORU(wqid) {
 		rtf := "###"
 		EPdoc := "###"
 	}
-	obr4 := (montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR - 24 HOUR^IMGEAP"
-			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT RECORDER^IMGEAP"
+	obr4 := (montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR 24 HOUR^IMGEAP"
+			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT MONITOR^IMGEAP"
 			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR 3-15 DAY^IMGEAP"
 			: ""
 	if (fldval.oldUID) {
