@@ -4919,9 +4919,9 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 
 formatField(pre, lab, txt) {
 	global monType, Docs, ptDem, fldval
-	if (txt ~= "\d{1,2} hr \d{1,2} min") {
-		StringReplace, txt, txt, %A_Space%hr%A_space% , :
-		StringReplace, txt, txt, %A_Space%min , 
+
+	if RegExMatch(txt,"(\d{1,2}) hr (\d{1,2}) min",t) {						; convert "24 hr 0 min" to "24:00"
+		txt := t1 ":" zDigit(t2)
 	}
 	txt:=RegExReplace(txt,"i)( BPM)|( Event(s)?)|( Beat(s)?)|( sec(ond)?(s)?)")		; Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						; Fix time strings without space before AM|PM
