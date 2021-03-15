@@ -1525,6 +1525,7 @@ checkEpicOrder() {
 			break
 		}
 		if (fldval.accession) {
+			wqSetVal(fldval.wqid,"name",fldval["dem-Name"])								; make sure name matches Epic result
 			wqsetval(fldval.wqid,"order",fldval.order)
 			wqsetval(fldval.wqid,"accession",fldval.accession)
 			wqsetval(fldval.wqid,"acct",fldval.acct)
