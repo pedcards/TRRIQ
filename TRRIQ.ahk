@@ -3952,7 +3952,7 @@ findFullPdf(wqid:="") {
 			continue
 		}
 		
-		if (fnID.0 = "") {																; Unprocessed full disclosure PDF
+		if (fnID.0 = "") {																; Unmatched full disclosure PDF
 			RunWait, .\files\pdftotext.exe -l %pdfScanPages% "%fileIn%" "%fnam%.txt",,min		; convert PDF pages with no tabular structure
 			FileRead, newtxt, %fnam%.txt												; load into newtxt
 			FileDelete, %fnam%.txt
@@ -3960,12 +3960,17 @@ findFullPdf(wqid:="") {
 			
 			flds := getPdfID(newtxt)
 			
+			if (AllowSavedPDF="true") && InStr(flds.wqid,"00000") {
+				eventlog("Unmatched PDF: " fileIn)
+				continue
+			}
 			if (AllowSavedPDF!="true") && (flds.type = "E") {
 				MsgBox, 262160, File error
 					, % path.holterPDF "`n" fName "`n"
 					. "saved from email.`n`n"
 					. "DO NOT SAVE FROM EMAIL!`n`n"
 					. "(delete the file to stop getting this message)"
+				eventlog("CEM saved from email: " fileIn)
 				continue
 			}
 			
