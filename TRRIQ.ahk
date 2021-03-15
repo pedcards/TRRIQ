@@ -1586,6 +1586,7 @@ checkEpicClip() {
 		RegExMatch(i,"im)^(.*)\R+Order #",dev)
 		date := parsedate(stregX(i,"Ordered On ",1,1,"\s",1)).MDY
 		mrn := trim(stregX(i,"MRN:",1,1,"\R+",1))
+		name := stRegX(i,"^",1,0,"`r`nMRN:",1)
 		clipboard :=
 		
 		MsgBox, 262180
@@ -1600,6 +1601,20 @@ checkEpicClip() {
 			fldval.order := ordernum
 			fldval.accession := accession
 			fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
+
+			if (name!=fldval.name) {
+				MsgBox, 0x40031
+					, Name Mismatch, % ""
+					. "Correct the name`n     '" fldval["dem-Name"] "'`n"
+					. "to this:`n     '" name "'"
+				IfMsgBox, OK
+				{
+					eventlog("dem-Name changed '" fldval["dem-Name"] "' ==> '" name "'")
+					fldval["dem-Name"] := name
+					fldval["dem-NameL"] := parseName(x).last
+					fldval["dem-NameF"] := ParseName(x).first
+				}
+			}
 		}
 	}
 	return
