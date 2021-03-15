@@ -1520,6 +1520,7 @@ checkEpicOrder() {
 			. "3) Click on the Holter/Event Monitor order in Orders Performed.`n"
 			. "4) Right-click within the order, and select 'Copy all'.`n`n"
 			. "Select [Cancel] if there is no existing order."
+		SetTimer, checkEpicClip, off
 		IfMsgBox, Cancel
 		{
 			break
@@ -1528,7 +1529,6 @@ checkEpicOrder() {
 			return
 		}
 	}
-	SetTimer, checkEpicClip, off
 	
 	/*	Can't find an order, use Cutover order method
 		This is the last resort, as it creates a lot of confusion with results
