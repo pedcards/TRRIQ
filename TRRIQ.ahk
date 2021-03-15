@@ -868,6 +868,11 @@ WQlist() {
 			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			continue
 		}
+		if !(id) {
+			obr_prov := obr.17
+			res.site := strX(obr_prov,"^",1,1,"^",1)
+			res.site := strX(res.site,"-",0,1,"",0)
+		}
 		FileGetSize,full,% path.PrevHL7in fileIn,M
 		
 		LV_Add(""
