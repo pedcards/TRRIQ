@@ -1525,12 +1525,6 @@ checkEpicOrder() {
 			break
 		}
 		if (fldval.accession) {
-			wqSetVal(fldval.wqid,"name",fldval["dem-Name"])								; make sure name matches Epic result
-			wqsetval(fldval.wqid,"order",fldval.order)
-			wqsetval(fldval.wqid,"accession",fldval.accession)
-			wqsetval(fldval.wqid,"acct",fldval.acct)
-			writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
-			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
 			return
 		}
 	}
@@ -1602,6 +1596,10 @@ checkEpicClip() {
 			fldval.order := ordernum
 			fldval.accession := accession
 			fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
+			wqsetval(fldval.wqid,"order",fldval.order)
+			wqsetval(fldval.wqid,"accession",fldval.accession)
+			wqsetval(fldval.wqid,"acct",fldval.acct)
+			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
 
 			if (name!=fldval.name) {
 				MsgBox, 0x40031
@@ -1610,12 +1608,14 @@ checkEpicClip() {
 					. "to this:`n     '" name "'"
 				IfMsgBox, OK
 				{
-					eventlog("dem-Name changed '" fldval["dem-Name"] "' ==> '" name "'")
 					fldval["dem-Name"] := name
-					fldval["dem-NameL"] := parseName(x).last
-					fldval["dem-NameF"] := ParseName(x).first
+					fldval["dem-NameL"] := ParseName(name).last
+					fldval["dem-NameF"] := ParseName(name).first
+					wqSetVal(fldval.wqid,"name",fldval["dem-Name"])								; make sure name matches Epic result
+					eventlog("dem-Name changed '" fldval["dem-Name"] "' ==> '" name "'")
 				}
 			}
+			writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
 		}
 	}
 	return
