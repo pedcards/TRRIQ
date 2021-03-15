@@ -4019,7 +4019,7 @@ getPdfID(txt) {
 		res.wqid := strQ(findWQid(res.date,res.mrn,"Mortara H3+ - " res.ser).id,"###","00000") "_H"
 	} else if instr(txt,"BodyGuardian Heart") {											; BG Heart
 		res.type := "E"
-		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1)," `t`r`n"))
+		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Enrollment Info|Patient ID",1)," `t`r`n"))
 			res.nameL := name.last
 			res.nameF := name.first
 		dt := parseDate(trim(stregX(txt,"Period \(.*?\R",1,1," - ",1)," `t`r`n"))
