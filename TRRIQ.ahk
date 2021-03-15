@@ -847,9 +847,16 @@ WQlist() {
 			fileread, tmptxt, % path.PrevHL7in fileIn
 			obr:= strsplit(stregX(tmptxt,"\R+OBR",1,0,"\R+",0),"|")						; get OBR segment
 			obr_req := trim(obr.3," ^")													; wqid from Preventice registration (PV1_19)
+			obr_prov := strX(obr.17,"^",1,1,"^",1)
+			obr_site := strX(obr_prov,"-",0,1,"",0)
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
 			pv1_dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
 			
+			if instr(sites0,obr_site) {
+				eventlog("Unregistered Sites0 report (" fileIn " - " obr_site ")")
+				FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
+				continue
+			}
 			if (readWQ(obr_req).mrn) {													; check if obr_req is valid wqid
 				id := obr_req
 				hl7dirMap[fileIn] := id
@@ -868,11 +875,6 @@ WQlist() {
 			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			continue
 		}
-		if !(id) {
-			obr_prov := obr.17
-			res.site := strX(obr_prov,"^",1,1,"^",1)
-			res.site := strX(res.site,"-",0,1,"",0)
-		}
 		FileGetSize,full,% path.PrevHL7in fileIn,M
 		
 		LV_Add(""
@@ -880,7 +882,7 @@ WQlist() {
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
 			, strQ(res.mrn,"###",x.3)													; mrn
 			, strQ(niceDate(res.dob),"###",niceDate(x.4))								; dob
-			, strQ(res.site,"###","???")												; site
+			, strQ(res.site,"###",obr_site)												; site
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, (res.dev~="Heart|IMD POST EVENT") ? "BGH"									; extracted
