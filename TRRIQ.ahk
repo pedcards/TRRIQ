@@ -673,8 +673,8 @@ WQlist() {
 		processhl7(A_LoopFileFullPath)
 		e0:=parseORM()
 		if InStr(sites0, e0.loc) {														; skip non-tracked orders
-			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
-			eventlog("Non-tracked order " fileIn " moved to tempfiles.")
+			FileMove, %A_LoopFileFullPath%, % ".\tempfiles\" e0.mrn "_" e0.nameL "_" A_LoopFileName, 1
+			eventlog("Non-tracked order " fileIn " moved to tempfiles. " e0.loc " " e0.mrn " " e0.nameL)
 			continue
 		}
 		eventlog("New order " fileIn ". " e0.name " " e0.mrn )
