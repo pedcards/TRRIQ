@@ -672,6 +672,11 @@ WQlist() {
 		}
 		processhl7(A_LoopFileFullPath)
 		e0:=parseORM()
+		if InStr(sites0, e0.loc) {														; skip non-tracked orders
+			FileMove, %A_LoopFileFullPath%, % ".\tempfiles\" e0.mrn "_" e0.nameL "_" A_LoopFileName, 1
+			eventlog("Non-tracked order " fileIn " moved to tempfiles. " e0.loc " " e0.mrn " " e0.nameL)
+			continue
+		}
 		eventlog("New order " fileIn ". " e0.name " " e0.mrn )
 		
 		loop, % (ens:=wq.selectNodes("/root/pending/enroll")).Length					; find enroll nodes with result but no order
@@ -846,10 +851,17 @@ WQlist() {
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % path.PrevHL7in fileIn
 			obr:= strsplit(stregX(tmptxt,"\R+OBR",1,0,"\R+",0),"|")						; get OBR segment
-			obr_req := trim(obr.3," ^")													; requision num from registration PV1.21
+			obr_req := trim(obr.3," ^")													; wqid from Preventice registration (PV1_19)
+			obr_prov := strX(obr.17,"^",1,1,"^",1)
+			obr_site := strX(obr_prov,"-",0,1,"",0)
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
 			pv1_dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
 			
+			if instr(sites0,obr_site) {
+				eventlog("Unregistered Sites0 report (" fileIn " - " obr_site ")")
+				FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
+				continue
+			}
 			if (readWQ(obr_req).mrn) {													; check if obr_req is valid wqid
 				id := obr_req
 				hl7dirMap[fileIn] := id
@@ -875,7 +887,7 @@ WQlist() {
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
 			, strQ(res.mrn,"###",x.3)													; mrn
 			, strQ(niceDate(res.dob),"###",niceDate(x.4))								; dob
-			, strQ(res.site,"###","???")												; site
+			, strQ(res.site,"###",obr_site)												; site
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, (res.dev~="Heart|IMD POST EVENT") ? "BGH"									; extracted
@@ -1515,20 +1527,15 @@ checkEpicOrder() {
 			. "3) Click on the Holter/Event Monitor order in Orders Performed.`n"
 			. "4) Right-click within the order, and select 'Copy all'.`n`n"
 			. "Select [Cancel] if there is no existing order."
+		SetTimer, checkEpicClip, off
 		IfMsgBox, Cancel
 		{
 			break
 		}
 		if (fldval.accession) {
-			wqsetval(fldval.wqid,"order",fldval.order)
-			wqsetval(fldval.wqid,"accession",fldval.accession)
-			wqsetval(fldval.wqid,"acct",fldval.acct)
-			writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
-			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
 			return
 		}
 	}
-	SetTimer, checkEpicClip, off
 	
 	/*	Can't find an order, use Cutover order method
 		This is the last resort, as it creates a lot of confusion with results
@@ -1581,6 +1588,7 @@ checkEpicClip() {
 		RegExMatch(i,"im)^(.*)\R+Order #",dev)
 		date := parsedate(stregX(i,"Ordered On ",1,1,"\s",1)).MDY
 		mrn := trim(stregX(i,"MRN:",1,1,"\R+",1))
+		name := stRegX(i,"^",1,0,"`r`nMRN:",1)
 		clipboard :=
 		
 		MsgBox, 262180
@@ -1595,6 +1603,26 @@ checkEpicClip() {
 			fldval.order := ordernum
 			fldval.accession := accession
 			fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
+			wqsetval(fldval.wqid,"order",fldval.order)
+			wqsetval(fldval.wqid,"accession",fldval.accession)
+			wqsetval(fldval.wqid,"acct",fldval.acct)
+			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
+
+			if (name!=fldval.name) {
+				MsgBox, 0x40031
+					, Name Mismatch, % ""
+					. "Correct the name`n     '" fldval["dem-Name"] "'`n"
+					. "to this:`n     '" name "'"
+				IfMsgBox, OK
+				{
+					fldval["dem-Name"] := name
+					fldval["dem-NameL"] := ParseName(name).last
+					fldval["dem-NameF"] := ParseName(name).first
+					wqSetVal(fldval.wqid,"name",fldval["dem-Name"])								; make sure name matches Epic result
+					eventlog("dem-Name changed '" fldval["dem-Name"] "' ==> '" name "'")
+				}
+			}
+			writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
 		}
 	}
 	return
@@ -3924,7 +3952,7 @@ findFullPdf(wqid:="") {
 			continue
 		}
 		
-		if (fnID.0 = "") {																; Unprocessed full disclosure PDF
+		if (fnID.0 = "") {																; Unmatched full disclosure PDF
 			RunWait, .\files\pdftotext.exe -l %pdfScanPages% "%fileIn%" "%fnam%.txt",,min		; convert PDF pages with no tabular structure
 			FileRead, newtxt, %fnam%.txt												; load into newtxt
 			FileDelete, %fnam%.txt
@@ -3932,12 +3960,17 @@ findFullPdf(wqid:="") {
 			
 			flds := getPdfID(newtxt)
 			
+			if (AllowSavedPDF="true") && InStr(flds.wqid,"00000") {
+				eventlog("Unmatched PDF: " fileIn)
+				continue
+			}
 			if (AllowSavedPDF!="true") && (flds.type = "E") {
 				MsgBox, 262160, File error
 					, % path.holterPDF "`n" fName "`n"
 					. "saved from email.`n`n"
 					. "DO NOT SAVE FROM EMAIL!`n`n"
 					. "(delete the file to stop getting this message)"
+				eventlog("CEM saved from email: " fileIn)
 				continue
 			}
 			
@@ -3991,7 +4024,7 @@ getPdfID(txt) {
 		res.wqid := strQ(findWQid(res.date,res.mrn,"Mortara H3+ - " res.ser).id,"###","00000") "_H"
 	} else if instr(txt,"BodyGuardian Heart") {											; BG Heart
 		res.type := "E"
-		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Patient ID",1)," `t`r`n"))
+		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Enrollment Info|Patient ID",1)," `t`r`n"))
 			res.nameL := name.last
 			res.nameF := name.first
 		dt := parseDate(trim(stregX(txt,"Period \(.*?\R",1,1," - ",1)," `t`r`n"))
@@ -4919,9 +4952,9 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 
 formatField(pre, lab, txt) {
 	global monType, Docs, ptDem, fldval
-	if (txt ~= "\d{1,2} hr \d{1,2} min") {
-		StringReplace, txt, txt, %A_Space%hr%A_space% , :
-		StringReplace, txt, txt, %A_Space%min , 
+
+	if RegExMatch(txt,"(\d{1,2}) hr (\d{1,2}) min",t) {						; convert "24 hr 0 min" to "24:00"
+		txt := t1 ":" zDigit(t2)
 	}
 	txt:=RegExReplace(txt,"i)( BPM)|( Event(s)?)|( Beat(s)?)|( sec(ond)?(s)?)")		; Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						; Fix time strings without space before AM|PM
