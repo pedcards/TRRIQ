@@ -5416,9 +5416,10 @@ ParseName(x) {
 	}
 	
 	return {first:first
-			,last:last
-			,firstlast:first " " last
-			,lastfirst:last ", " first }
+			, last:last
+			, firstlast:first " " last
+			, lastfirst:last ", " first 
+			, init:substr(first,1,1) substr(last,1,1) }
 }
 
 ParseDate(x) {
