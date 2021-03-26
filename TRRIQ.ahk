@@ -5275,10 +5275,8 @@ httpComm(verb) {
 		, url
 		, true)
 	whr.Send()																	; SEND the command to the address
-	whr.WaitForResponse()														; and wait for
-	eventlog(url)
-	eventlog(whr.ResponseText)													; the http response
-	return
+	whr.WaitForResponse()														; and wait for the http response
+	return whr.ResponseText
 }
 
 cleancolon(ByRef txt) {
