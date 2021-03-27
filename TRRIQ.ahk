@@ -2199,8 +2199,11 @@ checkMWUapp()
 
 MortaraUpload(tabnum="")
 {
-	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt, mwuPhase
+	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt, mwuPhase, has_H3
 	checkPCwks()
+	if (has_H3=False) {
+		return
+	}
 	SetTimer, idleTimer, Off
 	
 	checkMWUapp()
