@@ -200,7 +200,7 @@ getSites(wksName) {
 		tabname := location.selectSingleNode("tabname").text
 		locationList[tracked] .= tabname . "|"
 	}
-	loop, % (wksNodes := wksList.SelectNodes(m_strXmlLocationName "/cisalias")).Length
+	loop, % (wksNodes := wksList.SelectNodes(m_strXmlLocationName "/alias")).Length
 	{
 		node := wksNodes.item(A_Index-1)
 		aliasName := node.text
