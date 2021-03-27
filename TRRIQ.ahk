@@ -57,7 +57,7 @@ wksVoid := StrSplit(wksVM, "|")
 /*	Get valid WebUploadDir
 */
 webUploadDir := check_h3(path.webupload,webUploadStr)									; Find the location of H3 data files
-checkMachine()
+checkPCwks()
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -468,7 +468,7 @@ checkMUwin() {
 	return 
 }
 
-checkMachine() {
+checkPCwks() {
 /*	Check if current machine has H3 software installed
 	local machine names begin with EWCSS and Citrix machines start with PPWC,VMWIN10
 */
@@ -2200,7 +2200,7 @@ checkMWUapp()
 MortaraUpload(tabnum="")
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt, mwuPhase
-	checkMachine()
+	checkPCwks()
 	SetTimer, idleTimer, Off
 	
 	checkMWUapp()
