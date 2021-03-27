@@ -39,6 +39,7 @@ readini("setup")
 /*	Get location info
 */
 #Include HostName.ahk
+wksVoid := StrSplit(wksVM, "|")
 progress,,% " ",Identifying workstation...
 if !(wksLoc := GetLocation()) {
 	progress, off
@@ -52,7 +53,6 @@ sites0 := site.ignored																	; sites we are not tracking <tracked>N</t
 sitesLong := site.long																	; {CIS:TAB}
 sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
 sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
-wksVoid := StrSplit(wksVM, "|")
 
 /*	Get valid WebUploadDir
 */
