@@ -156,8 +156,7 @@ GetLocations()
 ;
 AddWorkstation(location)
 {
-	global wksVM
-	wksVoid := StrSplit(wksVM, "|")
+	global wksVoid
 	if (ObjHasValue(wksVoid,A_ComputerName,1)) {								; don't write if in wksVM list
 		Return
 	}
@@ -225,19 +224,18 @@ check_H3(root,match) {
 	If not already defined, scan C: drive for deepest h3.preventice.com folder
 	Still not sure why some machines are not returning proper RECORD.LOG and DEVICE.LOG files
 */
-	global wksVM, hasH3
+	global wksVoid, has_H3
 	wks := A_ComputerName
 
-	wksVoid := StrSplit(wksVM, "|")
 	if (ObjHasValue(wksVoid,wks,1)) {													; don't check if in wksVM list
-		hasH3 := false
+		has_H3 := false
 		Return
 	}
 	
 	m := new XML(m_strXmlFilename)
 	node := "//workstations/workstation[wsname='" wks "']"
 	if (path := m.selectSingleNode(node "/h3path").text) {
-		hasH3 := true
+		has_H3 := true
 		return path
 	}
 	
@@ -248,7 +246,7 @@ check_H3(root,match) {
 	}
 	if (hit=root) {
 		eventlog("ERROR: Can't find H3 data files.")
-		hasH3 := false
+		has_H3 := false
 		return error
 	}
 	else {
@@ -256,7 +254,7 @@ check_H3(root,match) {
 		m.transformXML()
 		m.saveXML()
 		eventlog("Found new H3 data path for " wks ".")
-		hasH3 := true
+		has_H3 := true
 		return hit
 	}
 }
