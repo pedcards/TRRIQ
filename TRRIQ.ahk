@@ -29,7 +29,6 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	isDevt := false
 	path:=readIni("paths")
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(runningVer,1,12) " " A_Args[1])
-	checkMachine()
 }
 if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
@@ -53,10 +52,12 @@ sites0 := site.ignored																	; sites we are not tracking <tracked>N</t
 sitesLong := site.long																	; {CIS:TAB}
 sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
 sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
+wksVoid := StrSplit(wksVM, "|")
 
 /*	Get valid WebUploadDir
 */
 webUploadDir := check_h3(path.webupload,webUploadStr)									; Find the location of H3 data files
+checkMachine()
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -468,23 +469,27 @@ checkMUwin() {
 }
 
 checkMachine() {
-/*	TRRIQ must be run from local machine
-	local machine names begin with EWCS and Citrix machines start with PPWC
+/*	Check if current machine has H3 software installed
+	local machine names begin with EWCSS and Citrix machines start with PPWC,VMWIN10
 */
+	global has_H3, wksVoid
+	is_VM := ObjHasValue(wksVoid,A_ComputerName,1)
 
 	if (A_UserName="tchun1") {
-		return
+		; return
+	}
+	if (has_H3=false) {
+		MsgBox 0x40030
+			, Environment Error, % ""
+			. (is_VM ? "Mortara H3 software not available on VDI/Citrix." : "Mortara H3 software not found!")
+			. "`n`n"
+			. "Switch to another computer if you will need to register/upload Mortara 24-hour Holter."
 	}
 	if (A_ComputerName~="EWC") {														; running on a local machine
 		return																			; return successfully
 	}
-	else if (A_ComputerName~="PPW") {
-		MsgBox, 4112, Environment error, TRRIQ cannot be run from Citrix/VDI`nWill now exit...
-		IfMsgBox, OK
-		{
-			eventlog("Exiting due to Citrix environment.")
-			ExitApp
-		} 
+	else if (is_VM=true) {
+		return
 	}
 	else {
 		eventlog("Unique machine name.")
