@@ -29,7 +29,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	isDevt := false
 	path:=readIni("paths")
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(runningVer,1,12) " " A_Args[1])
-	checkcitrix()
+	checkMachine()
 }
 if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
@@ -467,7 +467,7 @@ checkMUwin() {
 	return 
 }
 
-checkCitrix() {
+checkMachine() {
 /*	TRRIQ must be run from local machine
 	local machine names begin with EWCS and Citrix machines start with PPWC
 */
@@ -2195,7 +2195,7 @@ checkMWUapp()
 MortaraUpload(tabnum="")
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt, mwuPhase
-	checkCitrix()
+	checkMachine()
 	SetTimer, idleTimer, Off
 	
 	checkMWUapp()
@@ -2821,7 +2821,7 @@ makePreventiceORM() {
 BGregister(type) {
 	global wq, ptDem, fetchQuit, isDevt
 	SetTimer, idleTimer, Off
-	checkCitrix()
+	checkMachine()
 	
 	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini EL" : "")
 	
