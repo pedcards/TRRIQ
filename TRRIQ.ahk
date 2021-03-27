@@ -2826,7 +2826,6 @@ makePreventiceORM() {
 BGregister(type) {
 	global wq, ptDem, fetchQuit, isDevt
 	SetTimer, idleTimer, Off
-	checkMachine()
 	
 	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini EL" : "")
 	
