@@ -236,7 +236,7 @@ check_H3(root,match) {
 	node := "//workstations/workstation[wsname='" wks "']"
 	if (path := m.selectSingleNode(node "/h3path").text) {
 		has_H3 := true
-		return path
+		return path "\"
 	}
 	
 	hit := root																			; start at C: or .
@@ -255,7 +255,7 @@ check_H3(root,match) {
 		m.saveXML()
 		eventlog("Found new H3 data path for " wks ".")
 		has_H3 := true
-		return hit
+		return hit "\"
 	}
 }
 
