@@ -3550,7 +3550,7 @@ return
 }
 
 epRead() {
-	global y, path, user, ma_date, fldval
+	global y, path, user, ma_date, fldval, epStr
 	
 	y := new XML(".\files\call.xml")
 	dlDate := A_Now
@@ -3559,18 +3559,19 @@ epRead() {
 		dlDate += 3, Days
 	}
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
-	
-	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun|Salerno|Seslar)", ymatch)
+
+	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)" epStr, ymatch)
 	if !(ep := ymatch.value()) {
-		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
+		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?",epStr,"Q")
 		if (ep="xClose") {
 			eventlog("Elec Forecast not complete. Quit EP selection.")
 		}
 		eventlog("Reading EP assigned to " ep ".")
 	}
 	
-	if (RegExMatch(fldval["dem-Ordering"], "Oi)(Chun|Salerno|Seslar)", epOrder))  {
+	if (RegExMatch(fldval["dem-Ordering"], "Oi)" epStr, epOrder))  {
 		ep := epOrder.value()
+		fldval.MyPatient := ep
 	}
 	fldval["dem-Reading"] := ep
 	
@@ -3759,9 +3760,8 @@ makeORU(wqid) {
 	Real world incoming Preventice ORU MSH.8 is a Preventice number.
 	If MSH.8 contains "EPIC", was generated from MakeTestORU(),	so test ORU will set to OBR.32 and OBX.5 as "###" for filling in by Access DB
 */
-	global fldval, hl7out, montype, isDevt
+	global fldval, hl7out, montype, isDevt, epList
 	dict:=readIni("EpicResult")
-	ep:=readIni("epRead")
 	
 	hl7time := A_Now
 	hl7out := Object()
@@ -3800,7 +3800,7 @@ makeORU(wqid) {
 	{
 	;~ if (fldval.MSH_ctrlID~="EPIC") {
 		FileRead, rtf, .\files\test-RTF.txt
-		EPdoc := ep[fldval["dem-reading"]]
+		EPdoc := epList[fldval["dem-Reading"]]
 	} 
 	else
 	{
