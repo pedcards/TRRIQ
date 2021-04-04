@@ -1032,13 +1032,10 @@ WQlist() {
 	
 	loop, Files, % path.EpicHL7out "*"
 	{
-		e0:={}
 		fileIn := A_LoopFileName
-		FileRead, tmp, % path.EpicHL7out fileIn
 		wqid := strX(StrSplit(fileIn, "_").5,"@",1,1,".",1,1)
 		e0 := readWQ(wqid)
-		e0.OBR := StrX(tmp,"OBR",0,0,"`r`n",1,2)
-		e0.reading := strX(StrSplit(e0.OBR, "|").33,"^",1,1,"^",1,1)
+		e0.reading := wq.selectSingleNode("//enroll[@id='" wqid "']/done").getAttribute("read")
 		LV_Add(""
 			, e0.Name
 			, e0.MRN
