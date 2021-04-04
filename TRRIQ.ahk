@@ -3432,7 +3432,7 @@ outputfiles:
 	wq := new XML("worklist.xml")
 	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
 	
-	if (RegExMatch(fldval["dem-Ordering"], "Oi)(Chun|Salerno|Seslar)"))  {
+	if (fldval.MyPatient)  {
 		enc_MD := parseName(fldval["dem-Ordering"]).init
 		tmp := httpComm("read&to=" enc_MD)
 		eventlog("Notification email " tmp " to " enc_MD)
