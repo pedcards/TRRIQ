@@ -3454,6 +3454,7 @@ moveWQ(id) {
 	
 	if (mrn) {																			; record exists
 		wq.addElement("done",wqStr,{user:A_UserName},A_Now)								; set as done
+		wq.selectSingleNode(wqStr "/done").setAttribute("read",fldval["dem-Reading"])
 		x := wq.selectSingleNode("/root/pending/enroll[@id='" id "']")					; reload x node
 		clone := x.cloneNode(true)
 		wq.selectSingleNode("/root/done").appendChild(clone)							; copy x.clone to DONE
@@ -3467,6 +3468,7 @@ moveWQ(id) {
 		wq.addElement("name",newID,fldval["dem-Name"])
 		wq.addElement("mrn",newID,fldval["dem-MRN"])
 		wq.addElement("done",newID,{user:A_UserName},A_Now)
+		wq.selectSingleNode(wqStr "/done").setAttribute("read",fldval["dem-Reading"])
 		eventlog("No wqid. Saved new DONE record " fldval["dem-MRN"] ".")
 	}
 	writeSave(wq)
