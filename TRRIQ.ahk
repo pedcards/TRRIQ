@@ -3273,7 +3273,7 @@ moveHL7dem() {
 	fldVal["dem-Sex"] := strQ(obxVal["PID_Sex"],(obxVal["PID_Sex"]~="F") ? "Female" : "Male",fldval.Sex)
 	fldVal["dem-Indication"] := strQ(obxVal.Indications,"###",fldval.ind)
 	fldVal["dem-Site"] := fldVal.site
-	fldVal["dem-Billing"] := strQ(RegExReplace(fldVal.Accession,"[[:alpha:]]"),"###",RegExReplace(fldVal.acct,"[[:alpha:]]"))
+	fldVal["dem-Billing"] := strQ(fldVal.encnum,"###",RegExReplace(fldVal.acct,"[[:alpha:]]"))
 	fldVal["dem-Ordering"] := strQ(fldval.fellow,"###",fldval.prov)
 	fldVal["dem-Ordering"] := strQ(fldval["dem-Ordering"],"###",filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name)
 	fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
