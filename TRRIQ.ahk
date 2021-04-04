@@ -1017,6 +1017,30 @@ WQlist() {
 	}
 	Gui, ListView, WQlv_all														
 	LV_ModifyCol(2,"Sort")
+
+/*	Scan outbound RawHL7 for studies pending read
+*/
+	Gui, ListView, WQlv_unread
+	LV_Delete()
+	
+	loop, Files, % path.EpicHL7out "*"
+	{
+		e0:={}
+		fileIn := A_LoopFileName
+		FileRead, tmp, % path.EpicHL7out fileIn
+		wqid := strX(StrSplit(fileIn, "_").5,"@",1,1,".",1,1)
+		e0 := readWQ(wqid)
+		e0.OBR := StrX(tmp,"OBR",0,0,"`r`n",1,2)
+		e0.reading := strX(StrSplit(e0.OBR, "|").33,"^",1,1,"^",1,1)
+		LV_Add(""
+			, e0.Name
+			, e0.MRN
+			, parseDate(e0.Date).mdy
+			, parseDate(e0.Done).mdy
+			, e0.dev
+			, e0.prov
+			, e0.reading )
+	}
 	
 	tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update"))
 	GuiControl, Text, PhaseNumbers
