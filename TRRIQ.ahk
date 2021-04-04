@@ -136,6 +136,13 @@ monCodes := readIni("EpicMonitorType")
 initHL7()
 hl7DirMap := {}
 
+epList := readIni("epRead")
+for key in epList
+{
+	epStr .= key "|"
+}
+epStr := Trim(epStr,"|")
+	
 Progress, , % " ", Cleaning old .bak files
 Loop, files, bak\*.bak
 {
