@@ -215,7 +215,7 @@ PhaseGUI:
 		, -Wrap x10 y10 w640 h400 vWQtab +HwndWQtab
 		, % "ORDERS|" 
 		. (wksloc="Main Campus" ? "INBOX||" : "") 
-		. "ALL|" tmpsite
+		. "Unread|ALL|" tmpsite
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
@@ -248,6 +248,19 @@ PhaseGUI:
 	LV_ModifyCol(5,"100")																; Prov
 	LV_ModifyCol(6,"70")																; Type
 	
+	Gui, Tab, Unread
+	Gui, Add, Listview
+		, % "-Multi Grid BackgroundSilver ColorRed " lvDim " vWQlv_unread hwndHLV_unread"
+		, Name|MRN|Study Date|Processed|Monitor|Ordering|Assigned EP
+	Gui, ListView, WQlv_unread
+	LV_ModifyCol(1,"140")																; Name
+	LV_ModifyCol(2,"60")																; MRN
+	LV_ModifyCol(3,"80")																; Date
+	LV_ModifyCol(4,"80")																; Processed
+	LV_ModifyCol(5,"70")																; Mon Type
+	LV_ModifyCol(6,"80")																; Ordering
+	LV_ModifyCol(7,"80")																; Assigned EP
+
 	Gui, Tab, ALL
 	Gui, Add, Listview
 		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
