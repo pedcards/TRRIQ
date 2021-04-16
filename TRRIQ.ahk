@@ -29,7 +29,6 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	isDevt := false
 	path:=readIni("paths")
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(runningVer,1,12) " " A_Args[1])
-	checkcitrix()
 }
 if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
@@ -40,6 +39,7 @@ readini("setup")
 /*	Get location info
 */
 #Include HostName.ahk
+wksVoid := StrSplit(wksVM, "|")
 progress,,% " ",Identifying workstation...
 if !(wksLoc := GetLocation()) {
 	progress, off
@@ -56,7 +56,8 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 /*	Get valid WebUploadDir
 */
-webUploadDir := check_h3(path.webupload,webUploadStr) "\"								; Find the location of H3 data files
+webUploadDir := check_h3(path.webupload,webUploadStr)									; Find the location of H3 data files
+checkPCwks()
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -135,6 +136,13 @@ monCodes := readIni("EpicMonitorType")
 initHL7()
 hl7DirMap := {}
 
+epList := readIni("epRead")
+for key in epList
+{
+	epStr .= key "|"
+}
+epStr := Trim(epStr,"|")
+	
 Progress, , % " ", Cleaning old .bak files
 Loop, files, bak\*.bak
 {
@@ -214,7 +222,7 @@ PhaseGUI:
 		, -Wrap x10 y10 w640 h400 vWQtab +HwndWQtab
 		, % "ORDERS|" 
 		. (wksloc="Main Campus" ? "INBOX||" : "") 
-		. "ALL|" tmpsite
+		. "Unread|ALL|" tmpsite
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
@@ -247,6 +255,19 @@ PhaseGUI:
 	LV_ModifyCol(5,"100")																; Prov
 	LV_ModifyCol(6,"70")																; Type
 	
+	Gui, Tab, Unread
+	Gui, Add, Listview
+		, % "-Multi Grid BackgroundSilver ColorRed " lvDim " vWQlv_unread hwndHLV_unread"
+		, Name|MRN|Study Date|Processed|Monitor|Ordering|Assigned EP
+	Gui, ListView, WQlv_unread
+	LV_ModifyCol(1,"140")																; Name
+	LV_ModifyCol(2,"60")																; MRN
+	LV_ModifyCol(3,"80")																; Date
+	LV_ModifyCol(4,"80")																; Processed
+	LV_ModifyCol(5,"70")																; Mon Type
+	LV_ModifyCol(6,"80")																; Ordering
+	LV_ModifyCol(7,"80")																; Assigned EP
+
 	Gui, Tab, ALL
 	Gui, Add, Listview
 		, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv_all hwndHLV_all"
@@ -467,24 +488,28 @@ checkMUwin() {
 	return 
 }
 
-checkCitrix() {
-/*	TRRIQ must be run from local machine
-	local machine names begin with EWCS and Citrix machines start with PPWC
+checkPCwks() {
+/*	Check if current machine has H3 software installed
+	local machine names begin with EWCSS and Citrix machines start with PPWC,VMWIN10
 */
+	global has_H3, wksVoid
+	is_VM := ObjHasValue(wksVoid,A_ComputerName,1)
 
 	if (A_UserName="tchun1") {
-		return
+		; return
+	}
+	if (has_H3=false) {
+		MsgBox 0x40030
+			, Environment Error, % ""
+			. (is_VM ? "Mortara H3 software not available on VDI/Citrix." : "Mortara H3 software not found!")
+			. "`n`n"
+			. "Switch to another computer if you will need to register/upload Mortara 24-hour Holter."
 	}
 	if (A_ComputerName~="EWC") {														; running on a local machine
 		return																			; return successfully
 	}
-	else if (A_ComputerName~="PPW") {
-		MsgBox, 4112, Environment error, TRRIQ cannot be run from Citrix/VDI`nWill now exit...
-		IfMsgBox, OK
-		{
-			eventlog("Exiting due to Citrix environment.")
-			ExitApp
-		} 
+	else if (is_VM=true) {
+		return
 	}
 	else {
 		eventlog("Unique machine name.")
@@ -999,6 +1024,27 @@ WQlist() {
 	}
 	Gui, ListView, WQlv_all														
 	LV_ModifyCol(2,"Sort")
+
+/*	Scan outbound RawHL7 for studies pending read
+*/
+	Gui, ListView, WQlv_unread
+	LV_Delete()
+	
+	loop, Files, % path.EpicHL7out "*"
+	{
+		fileIn := A_LoopFileName
+		wqid := strX(StrSplit(fileIn, "_").5,"@",1,1,".",1,1)
+		e0 := readWQ(wqid)
+		e0.reading := wq.selectSingleNode("//enroll[@id='" wqid "']/done").getAttribute("read")
+		LV_Add(""
+			, e0.Name
+			, e0.MRN
+			, parseDate(e0.Date).mdy
+			, parseDate(e0.Done).mdy
+			, e0.dev
+			, e0.prov
+			, e0.reading )
+	}
 	
 	tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update"))
 	GuiControl, Text, PhaseNumbers
@@ -2194,8 +2240,11 @@ checkMWUapp()
 
 MortaraUpload(tabnum="")
 {
-	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt, mwuPhase
-	checkCitrix()
+	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt, mwuPhase, has_H3
+	checkPCwks()
+	if (has_H3=False) {
+		return
+	}
 	SetTimer, idleTimer, Off
 	
 	checkMWUapp()
@@ -2821,7 +2870,6 @@ makePreventiceORM() {
 BGregister(type) {
 	global wq, ptDem, fetchQuit, isDevt
 	SetTimer, idleTimer, Off
-	checkCitrix()
 	
 	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini EL" : "")
 	
@@ -3225,7 +3273,7 @@ moveHL7dem() {
 	fldVal["dem-Sex"] := strQ(obxVal["PID_Sex"],(obxVal["PID_Sex"]~="F") ? "Female" : "Male",fldval.Sex)
 	fldVal["dem-Indication"] := strQ(obxVal.Indications,"###",fldval.ind)
 	fldVal["dem-Site"] := fldVal.site
-	fldVal["dem-Billing"] := strQ(RegExReplace(fldVal.Accession,"[[:alpha:]]"),"###",RegExReplace(fldVal.acct,"[[:alpha:]]"))
+	fldVal["dem-Billing"] := strQ(fldVal.encnum,"###",RegExReplace(fldVal.acct,"[[:alpha:]]"))
 	fldVal["dem-Ordering"] := strQ(fldval.fellow,"###",fldval.prov)
 	fldVal["dem-Ordering"] := strQ(fldval["dem-Ordering"],"###",filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name)
 	fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
@@ -3381,11 +3429,10 @@ outputfiles:
 	wq := new XML("worklist.xml")
 	moveWQ(fldval["wqid"])																	; Move enroll[@id] from Pending to Done list
 	
-	if (RegExMatch(fldval["dem-Ordering"], "Oi)(Chun|Salerno|Seslar)"))  {
-		tmp := parseName(fldval["dem-Ordering"])
-		enc_MD := substr(tmp.First,1,1) substr(tmp.Last,1,1)
-		httpComm("read&to=" enc_MD)
-		eventlog("Notification email sent to " enc_MD)
+	if (fldval.MyPatient)  {
+		enc_MD := parseName(fldval["dem-Ordering"]).init
+		tmp := httpComm("read&to=" enc_MD)
+		eventlog("Notification email " tmp " to " enc_MD)
 	}
 
 Return
@@ -3404,6 +3451,7 @@ moveWQ(id) {
 	
 	if (mrn) {																			; record exists
 		wq.addElement("done",wqStr,{user:A_UserName},A_Now)								; set as done
+		wq.selectSingleNode(wqStr "/done").setAttribute("read",fldval["dem-Reading"])
 		x := wq.selectSingleNode("/root/pending/enroll[@id='" id "']")					; reload x node
 		clone := x.cloneNode(true)
 		wq.selectSingleNode("/root/done").appendChild(clone)							; copy x.clone to DONE
@@ -3417,6 +3465,7 @@ moveWQ(id) {
 		wq.addElement("name",newID,fldval["dem-Name"])
 		wq.addElement("mrn",newID,fldval["dem-MRN"])
 		wq.addElement("done",newID,{user:A_UserName},A_Now)
+		wq.selectSingleNode(wqStr "/done").setAttribute("read",fldval["dem-Reading"])
 		eventlog("No wqid. Saved new DONE record " fldval["dem-MRN"] ".")
 	}
 	writeSave(wq)
@@ -3500,7 +3549,7 @@ return
 }
 
 epRead() {
-	global y, path, user, ma_date, fldval
+	global y, path, user, ma_date, fldval, epStr
 	
 	y := new XML(".\files\call.xml")
 	dlDate := A_Now
@@ -3509,18 +3558,19 @@ epRead() {
 		dlDate += 3, Days
 	}
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
-	
-	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)(Chun|Salerno|Seslar)", ymatch)
+
+	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)" epStr, ymatch)
 	if !(ep := ymatch.value()) {
-		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?","Chun|Salerno|Seslar","Q")
+		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?",epStr,"Q")
 		if (ep="xClose") {
 			eventlog("Elec Forecast not complete. Quit EP selection.")
 		}
 		eventlog("Reading EP assigned to " ep ".")
 	}
 	
-	if (RegExMatch(fldval["dem-Ordering"], "Oi)(Chun|Salerno|Seslar)", epOrder))  {
+	if (RegExMatch(fldval["dem-Ordering"], "Oi)" epStr, epOrder))  {
 		ep := epOrder.value()
+		fldval.MyPatient := ep
 	}
 	fldval["dem-Reading"] := ep
 	
@@ -3709,9 +3759,8 @@ makeORU(wqid) {
 	Real world incoming Preventice ORU MSH.8 is a Preventice number.
 	If MSH.8 contains "EPIC", was generated from MakeTestORU(),	so test ORU will set to OBR.32 and OBX.5 as "###" for filling in by Access DB
 */
-	global fldval, hl7out, montype, isDevt
+	global fldval, hl7out, montype, isDevt, epList
 	dict:=readIni("EpicResult")
-	ep:=readIni("epRead")
 	
 	hl7time := A_Now
 	hl7out := Object()
@@ -3750,7 +3799,7 @@ makeORU(wqid) {
 	{
 	;~ if (fldval.MSH_ctrlID~="EPIC") {
 		FileRead, rtf, .\files\test-RTF.txt
-		EPdoc := ep[fldval["dem-reading"]]
+		EPdoc := epList[fldval["dem-Reading"]]
 	} 
 	else
 	{
@@ -4258,7 +4307,7 @@ CheckProc:
 	fldVal["dem-DOB"] := ptDem["DOB"] 
 	fldVal["dem-Sex"] := ptDem["Sex"]
 	fldVal["dem-Site"] := ptDem["Loc"]
-	fldVal["dem-Billing"] ptDem["Account"]
+	fldVal["dem-Billing"] := ptDem["Account"]
 	fldVal["dem-Ordering"] := ptDem["Provider"]
 	fldVal["dem-Test_date"] := ptDem["EncDate"]
 	fldVal["dem-Indication"] := ptDem["Indication"]
@@ -5275,10 +5324,8 @@ httpComm(verb) {
 		, url
 		, true)
 	whr.Send()																	; SEND the command to the address
-	whr.WaitForResponse()														; and wait for
-	eventlog(url)
-	eventlog(whr.ResponseText)													; the http response
-	return
+	whr.WaitForResponse()														; and wait for the http response
+	return whr.ResponseText
 }
 
 cleancolon(ByRef txt) {
@@ -5416,9 +5463,10 @@ ParseName(x) {
 	}
 	
 	return {first:first
-			,last:last
-			,firstlast:first " " last
-			,lastfirst:last ", " first }
+			, last:last
+			, firstlast:first " " last
+			, lastfirst:last ", " first 
+			, init:substr(first,1,1) substr(last,1,1) }
 }
 
 ParseDate(x) {
