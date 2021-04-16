@@ -2149,7 +2149,7 @@ MortaraUpload(tabnum="")
 		ptDem["loc"] := z1
 		ptDem["wqid"] := wqTR.getAttribute("id")
 		
-		if IsObject(wqTR.selectSingleNode("acct")) {									; node exists, and valid
+		if IsObject(wqTR.selectSingleNode("accession")) {								; node exists, and valid
 			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
 			MsgBox, 262193
 				, Match!
@@ -3071,7 +3071,7 @@ moveHL7dem() {
 	fldVal["dem-Sex"] := strQ(obxVal["PID_Sex"],(obxVal["PID_Sex"]~="F") ? "Female" : "Male",fldval.Sex)
 	fldVal["dem-Indication"] := strQ(obxVal.Indications,"###",fldval.ind)
 	fldVal["dem-Site"] := fldVal.site
-	fldVal["dem-Billing"] := strQ(fldVal.encnum,"###",RegExReplace(fldVal.acct,"[[:alpha:]]"))
+	fldVal["dem-Billing"] := strQ(fldVal.encnum,"###",fldVal.accession)
 	fldVal["dem-Ordering"] := strQ(fldval.fellow,"###",fldval.prov)
 	fldVal["dem-Ordering"] := strQ(fldval["dem-Ordering"],"###",filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name)
 	fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
@@ -3442,7 +3442,7 @@ Holter_Pr_Hl7:
 		eventlog("<<< Missing DDE, parsed from extracted PDF >>>")
 	}
 	
-	if !(fldval.acct) {																	; fldval.acct exists if Holter has been processed
+	if !(fldval.accession) {															; fldval.accession exists if Holter has been processed
 		gosub checkProc																	; get valid demographics
 		if (fetchQuit=true) {
 			return
@@ -4024,12 +4024,12 @@ CheckProc:
 	ptDem["Indication"] := fldVal["dem-Indication"]
 	eventlog("PDF demog: " ptDem.nameL ", " ptDem.nameF " " ptDem.mrn " " ptDem.EncDate)
 	
-	if (fldval.acct) {																	; <acct> exists, has been registered or uploaded through TRRIQ
+	if (fldval.accession) {																; <accession> exists, has been registered or uploaded through TRRIQ
 		eventlog("Pulled valid data for " fldval.name " " fldval.mrn " " fldval.date)
 		MsgBox, 4160, Found valid registration, % "" 
 		  . fldval.name "`n" 
 		  . "MRN " fldval.mrn "`n" 
-		  . "Acct " fldval.acct "`n" 
+		  . "Accession: " fldval.accession "`n" 
 		  . "Ordering: " fldval.prov "`n" 
 		  . "Study date: " fldval.date "`n`n" 
 	} 
