@@ -1813,9 +1813,8 @@ fetchValid(field,rx,neg:=0) {
 fetchGuiClose:
 {
 	Gui, fetch:destroy
-	getDem := false																	; break out of fetchDem loop
 	fetchQuit := true
-	eventlog("Manual [x] out of fetchDem.")
+	eventlog("Manual [x] out of fetchGUI.")
 Return
 }
 
@@ -1879,7 +1878,6 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 	ptDem["Account"] := EncNum															; make sure array has submitted EncNum value
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy												; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
-	getDem := false																; done getting demographics
 	Loop
 	{
 		if (ptDem.Indication) {													; loop until we have filled indChoices
@@ -1929,8 +1927,6 @@ getDem:
 {
 	gosub fetchGUI																		; Grab it first
 	WinWaitClose, Patient Demographics
-	/*	Need to get demo validating code from fetchDem
-	*/
 	if (fetchQuit=true) {
 		return
 	}
@@ -4064,12 +4060,11 @@ CheckProc:
 			. "Paste clipboard into Epic search to select patient and encounter"
 		
 		gosub fetchGUI
-		gosub fetchDem
-		checkFetchDem(fldVal["dem-Name_L"],fldVal["dem-Name_F"],fldVal["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldVal)
+		WinWaitClose, Patient Demographics
 		if (fetchQuit=true) {
 			return
 		}
-		/*	When fetchDem successfully completes,
+		/*	When fetchGUI successfully completes,
 		 *	replace fldVal with newly acquired values
 		 */
 		fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
