@@ -726,7 +726,6 @@ WQlist() {
 			
 			wqSetVal(id,"order",e0.order)
 			wqSetVal(id,"accession",e0.accession)
-			wqSetVal(id,"acct",e0.acct)
 			wqSetVal(id,"acctnum",e0.accountnum)
 			wqSetVal(id,"encnum",e0.encnum)
 			k.setAttribute("id",e0.UID)
@@ -782,7 +781,6 @@ WQlist() {
 			wq.addElement("prov",newID,e0.prov)
 			wq.addElement("provname",newID,e0.provname)
 			wq.addElement("site",newID,e0.loc)
-			wq.addElement("acct",newID,e0.acct)
 			wq.addElement("acctnum",newID,e0.accountnum)
 			wq.addElement("encnum",newID,e0.encnum)
 			wq.addElement("ind",newID,e0.ind)
@@ -1217,7 +1215,6 @@ parsePrevEnroll(txt) {
 			}
 			if (en.node="orders") {														; falls through if not in <pending> or <done>
 				addPrevEnroll(id,res)													; create a <pending> record
-				wqSetVal(id,"acct",en.acct)
 				wqSetVal(id,"order",en.order)
 				wqSetVal(id,"accession",en.accession)
 				wqSetVal(id,"accountnum",en.acctnum)
@@ -1255,7 +1252,6 @@ parsePrevEnroll(txt) {
 			
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
 				addPrevEnroll(id,res)													; create a <pending> record
-				wqSetVal(id,"acct",en.acct)
 				wqSetVal(id,"order",en.order)
 				wqSetVal(id,"accession",en.accession)
 				wqSetVal(id,"accountnum",en.acctnum)
@@ -1543,10 +1539,8 @@ checkEpicOrder() {
 			{
 				fldval.order := en.selectSingleNode("order").text
 				fldval.accession := en.selectSingleNode("accession").text
-				fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
 				wqsetval(fldval.wqid,"order",fldval.order)
 				wqsetval(fldval.wqid,"accession",fldval.accession)
-				wqsetval(fldval.wqid,"acct",fldval.acct)
 				writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
 				eventlog("Used order.")
 				return
@@ -1648,10 +1642,8 @@ checkEpicClip() {
 		{
 			fldval.order := ordernum
 			fldval.accession := accession
-			fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
 			wqsetval(fldval.wqid,"order",fldval.order)
 			wqsetval(fldval.wqid,"accession",fldval.accession)
-			wqsetval(fldval.wqid,"acct",fldval.acct)
 			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
 
 			if (name!=fldval.name) {
@@ -1744,7 +1736,6 @@ parseORM() {
 		, encnum:fldval.PV1_VisitNum
 		, order:fldval.ORC_ReqNum
 		, accession:fldval.ORC_FillerNum
-		, acct:location strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
 		, UID:tobase(fldval.ORC_ReqNum RegExReplace(fldval.ORC_FillerNum,"[^0-9]"),36)
 		, ind:indication
 		, indication:indication
@@ -1870,9 +1861,6 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		gosub getMD
 	}
 	
-	if (ptDem.acct="") {
-		ptDem.acct := ptDem.loc strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
-	}
 	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
 	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
 	ptDem["Account"] := EncNum															; make sure array has submitted EncNum value
@@ -2393,7 +2381,6 @@ muWqSave(sernum) {
 	}
 	wq.addElement("prov",ptDem.newID,ptDem.Provider)
 	wq.addElement("site",ptDem.newID,ptDem.loc)										; need to transform site abbrevs
-	wq.addElement("acct",ptDem.newID,ptDem.acct)
 	wq.addElement("order",ptDem.newID,ptDem.order)
 	wq.addElement("accession",ptDem.newID,ptDem.accession)
 	wq.addElement("accountnum",ptDem.newID,ptDem.accountnum)
@@ -3055,7 +3042,6 @@ bgWqSave(sernum) {
 	}
 	wq.addElement("prov",ptDem.newID,ptDem.Provider)
 	wq.addElement("site",ptDem.newID,ptDem.loc)										; need to transform site abbrevs
-	wq.addElement("acct",ptDem.newID,ptDem.acct)
 	wq.addElement("order",ptDem.newID,ptDem.order)
 	wq.addElement("accession",ptDem.newID,ptDem.accession)
 	wq.addElement("accountnum",ptDem.newID,ptDem.accountnum)
@@ -4102,7 +4088,6 @@ CheckProc:
 				. fldVal["dem-Device_SN"])
 			wqSetVal(id,"prov",ptDem["Provider"])
 			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
-			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
 			wqSetVal(id,"ind",ptDem["Indication"])
 		filedelete, .lock
 		writeOut("/root/pending","enroll[@id='" id "']")
