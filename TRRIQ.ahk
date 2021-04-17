@@ -726,7 +726,6 @@ WQlist() {
 			
 			wqSetVal(id,"order",e0.order)
 			wqSetVal(id,"accession",e0.accession)
-			wqSetVal(id,"acct",e0.acct)
 			wqSetVal(id,"acctnum",e0.accountnum)
 			wqSetVal(id,"encnum",e0.encnum)
 			k.setAttribute("id",e0.UID)
@@ -782,7 +781,6 @@ WQlist() {
 			wq.addElement("prov",newID,e0.prov)
 			wq.addElement("provname",newID,e0.provname)
 			wq.addElement("site",newID,e0.loc)
-			wq.addElement("acct",newID,e0.acct)
 			wq.addElement("acctnum",newID,e0.accountnum)
 			wq.addElement("encnum",newID,e0.encnum)
 			wq.addElement("ind",newID,e0.ind)
@@ -1217,7 +1215,6 @@ parsePrevEnroll(txt) {
 			}
 			if (en.node="orders") {														; falls through if not in <pending> or <done>
 				addPrevEnroll(id,res)													; create a <pending> record
-				wqSetVal(id,"acct",en.acct)
 				wqSetVal(id,"order",en.order)
 				wqSetVal(id,"accession",en.accession)
 				wqSetVal(id,"accountnum",en.acctnum)
@@ -1255,7 +1252,6 @@ parsePrevEnroll(txt) {
 			
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
 				addPrevEnroll(id,res)													; create a <pending> record
-				wqSetVal(id,"acct",en.acct)
 				wqSetVal(id,"order",en.order)
 				wqSetVal(id,"accession",en.accession)
 				wqSetVal(id,"accountnum",en.acctnum)
@@ -1543,10 +1539,8 @@ checkEpicOrder() {
 			{
 				fldval.order := en.selectSingleNode("order").text
 				fldval.accession := en.selectSingleNode("accession").text
-				fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
 				wqsetval(fldval.wqid,"order",fldval.order)
 				wqsetval(fldval.wqid,"accession",fldval.accession)
-				wqsetval(fldval.wqid,"acct",fldval.acct)
 				writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
 				eventlog("Used order.")
 				return
@@ -1648,10 +1642,8 @@ checkEpicClip() {
 		{
 			fldval.order := ordernum
 			fldval.accession := accession
-			fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
 			wqsetval(fldval.wqid,"order",fldval.order)
 			wqsetval(fldval.wqid,"accession",fldval.accession)
-			wqsetval(fldval.wqid,"acct",fldval.acct)
 			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
 
 			if (name!=fldval.name) {
@@ -1744,197 +1736,12 @@ parseORM() {
 		, encnum:fldval.PV1_VisitNum
 		, order:fldval.ORC_ReqNum
 		, accession:fldval.ORC_FillerNum
-		, acct:location strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
 		, UID:tobase(fldval.ORC_ReqNum RegExReplace(fldval.ORC_FillerNum,"[^0-9]"),36)
 		, ind:indication
 		, indication:indication
 		, indicationCode:strQ(fldval.OBR_ReasonCode,"###") strQ(indCode,"###")
 		, orderCtrl:fldval.ORC_OrderCtrl
 		, ctrlID:fldval.MSH_CtrlID}
-}
-
-FetchDem:
-{
-	mdCoord := Object()											; clear Mouse Demographics X,Y coordinate arrays
-	getDem := true
-	mdProv := false
-	mdAcct := false
-	
-	while (getDem) {									; Repeat until we get tired of this
-		clk := Object()
-		clipboard :=
-		ClipWait, 0
-		if !ErrorLevel {								; clipboard has data
-			MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2				; put mouse coords into mouseXpos and mouseYpos, and associated winID
-			clk := parseClip()
-			if !ErrorLevel {															; parseClip {field:value} matches valid data
-				WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY				; get window coords as well
-				mdXd := mdWinW/6														; determine delta X between columns
-				
-				if (clk.field = "Provider") {
-					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {					; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
-						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
-						eventlog("MouseGrab provider " tmpPrv ".")
-						
-						tmpPrvFuzz := fuzzySearch(format("{:U}"							; degrees of fuzz for ptDem.Provider with clicked value
-									, ptDem.Provider)
-									, format("{:U}",tmpPrv))
-						
-						if (ptDem.Provider="") {
-							ptDem.Provider := tmpPrv
-							eventlog("MouseGrab provider empty --> " tmpPrv ".")
-							
-						} else if (tmpPrvFuzz>0.15) {									; names differ by more than 15%
-							MsgBox, 4148
-								, Provider already exists
-								, % "Replace " ptDem.Provider "`n with `n" tmpPrv "?"
-							IfMsgBox, Yes												; Check before replacing
-							{
-								eventlog("Replacing provider """ ptDem.Provider """ with """ tmpPrv """.")
-								ptDem.Provider := tmpPrv
-							}
-						}																; otherwise ptDem.Provider exists and matches, so leave alone
-						
-					} else {															; no name clicked
-						tmpPrv :=
-						eventlog("MouseGrab provider empty.")
-					}																	; tmpPrv will contain either clicked Provider or null
-					
-					mdCoord.x4 := mouseXpos													; demographics grid[4,1]
-					mdCoord.y1 := mouseYpos
-					mdProv := true														; we have got Provider
-					gosub getDemName													; extract patient name, MRN from window title 
-				}																		; (this is why it must be sister or parent VM).
-				if (clk.field = "Account Number") {
-					ptDem["Account"] := clk.value
-					eventlog("MouseGrab Account Number " clk.value ".")
-					mdCoord.x1 := mouseXpos													; demographics grid[1,3]
-					mdCoord.y3 := mouseYpos
-					mdAcct := true														; we have got Acct Number
-					gosub getDemName													; extract patient name, MRN
-				}
-				if (mdProv and mdAcct) {												; we have both critical coordinates
-					mdX0 := 50
-					mdX1 := mdWinW*0.15
-					mdX2 := mdWinW*0.25
-					mdX3 := mdWinW*0.35
-					mdCoord.x1 := mdX0
-					mdCoord.x2 := mdX0 + mdWinW*0.15
-					mdCoord.x3 := mdX0 + mdWinW*0.25
-					mdCoord.x4 := mdX0 + mdWinW*0.35
-					mdCoord.x5 := mdX0 + mdWinW*0.45
-					mdCoord.x6 := mdX0 + mdWinW*0.65
-					mdCoord.x7 := mdX0 + mdWinW*0.85
-					mdCoord.y2 := mdCoord.y1+(mdCoord.y3-mdCoord.y1)/2									; determine remaning row coordinate
-					
-					Gui, fetch:hide														; grab remaining demographic values
-					BlockInput, On														; Prevent extraneous input
-					ptDem["MRN"] := mouseGrab(mdCoord.x1,mdCoord.y2).value
-					ptDem["DOB"] := mouseGrab(mdCoord.x2,mdCoord.y2).value
-					ptDem["Sex"] := mouseGrab(mdCoord.x4,mdCoord.y1).value
-					eventlog("MouseGrab other fields. MRN=" ptDem["MRN"] " DOB=" ptDem["DOB"] " Sex=" ptDem["Sex"] ".")
-					
-					tmp := mouseGrab(mdCoord.x6,mdCoord.y3)										; grab Encounter Type field
-					ptDem["Type"] := tmp.value
-					if (ptDem["Type"]="Outpatient") {
-						ptDem["Loc"] := mouseGrab(mdCoord.x7-mdX0-30,mdCoord.y2).value				; most outpatient locations are short strings, click the right half of cell to grab location name
-					} else {
-						ptDem["Loc"] := tmp.loc
-					}
-					if !(ptDem["EncDate"]) {											; EncDate will be empty if new upload or null in PDF
-						ptDem["EncDate"] := tmp.date
-					}
-					ptDem["Hookup time"] := tmp.time
-					
-					mdProv := false														; processed demographic fields,
-					mdAcct := false														; so reset check bits
-					mdCoord := Object()
-					
-					BlockInput, Off														; Permit input again
-					Gui, fetch:show
-					eventlog("MouseGrab other fields."
-						. " Type=" ptDem["Type"] " Loc=" ptDem["Loc"]
-						. " EncDate=" ptDem["EncDate"] " EncTime=" ptDem["Hookup time"] ".")
-				}
-				mouseXpos := ""
-				mouseYpos := ""
-			}
-			gosub fetchGUI							; Update GUI with new info
-		}
-	}
-	return
-}
-
-mouseGrab(x,y) {
-/*	Double click mouse coordinates x,y to grab cell contents
-	Process through parseClip to validate
-	Return the value portion of parseClip
-*/
-	MouseMove, %x%, %y%, 0																; Goto coordinates
-	Click 2																				; Double-click
-	ClipWait, 0																			; sometimes there is delay for clipboard to populate
-	clk := parseClip()																	; get available values out of clipboard
-	return clk																			; Redundant? since this is what parseClip() returns
-}
-
-parseClip() {
-/*	If clip matches "val1:val2" format, and val1 in demVals[], return field:val
-	If clip contains proper Encounter Type ("Outpatient", "Inpatient", "Observation", etc), return Type, Date, Time
-*/
-	global demVals
-	
-	;~ sleep 100
-	clip := clipboard
-	
-	StringSplit, val, clip, :															; break field into val1:val2
-	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
-		val1 := RegExReplace(val1,"Legal Sex|Birth Sex","Sex")
-		clipboard := ""
-		return {"field":val1
-				, "value":val2}
-	}
-	
-	dt := strX(clip," [",1,2, "]",1,1)													; get date
-	if (clip~="Outpatient\s\[") {														; Outpatient type
-		clipboard := ""
-		return {"field":"Type"
-				, "value":"Outpatient"
-				, "loc":"Outpatient"
-				, "date":parseDate(dt).date
-				, "time":parseDate(dt).time}
-	}
-	if (clip~="Inpatient|Observation\s\[") {											; Inpatient types
-		clipboard := ""
-		return {"field":"Type"
-				, "value":"Inpatient"
-				, "loc":"Inpatient"
-				, "date":""}															; can span many days, return blank
-	}
-	if (clip~="Day Surg.*\s\[") {														; Day Surg type
-		clipboard := ""
-		return {"field":"Type"
-				, "value":"Day Surg"
-				, "loc":"SurgCntr"
-				, "date":parseDate(dt).date}
-	}
-	if (clip~="Emergency") {															; Emergency type
-		clipboard := ""
-		return {"field":"Type"
-				, "value":"Emergency"
-				, "loc":"Emergency"
-				, "date":parseDate(dt).date}
-	}
-	return Error																		; Anything else returns Error
-}
-
-getDemName:
-{
-	if (RegExMatch(mdTitle, "i)\s\-\s\d{6,7}\s(Opened by)")) {							; Match window title "LAST, FIRST - 12345678 Opened by Chun, Terrence U, MD"
-		mdTitle := RegExReplace(mdTitle,"\'","^")
-		ptDem["nameL"] := strX(mdTitle,,1,0, ",",1,1)									; and parse the name
-		ptDem["nameF"] := strX(mdTitle,",",1,2, " ",1,1)
-	}
-	return
 }
 
 fetchGUI:
@@ -1997,9 +1804,8 @@ fetchValid(field,rx,neg:=0) {
 fetchGuiClose:
 {
 	Gui, fetch:destroy
-	getDem := false																	; break out of fetchDem loop
 	fetchQuit := true
-	eventlog("Manual [x] out of fetchDem.")
+	eventlog("Manual [x] out of fetchGUI.")
 Return
 }
 
@@ -2055,15 +1861,11 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		gosub getMD
 	}
 	
-	if (ptDem.acct="") {
-		ptDem.acct := ptDem.loc strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
-	}
 	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
 	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
 	ptDem["Account"] := EncNum															; make sure array has submitted EncNum value
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy												; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
-	getDem := false																; done getting demographics
 	Loop
 	{
 		if (ptDem.Indication) {													; loop until we have filled indChoices
@@ -2113,8 +1915,6 @@ getDem:
 {
 	gosub fetchGUI																		; Grab it first
 	WinWaitClose, Patient Demographics
-	/*	Need to get demo validating code from fetchDem
-	*/
 	if (fetchQuit=true) {
 		return
 	}
@@ -2349,7 +2149,7 @@ MortaraUpload(tabnum="")
 		ptDem["loc"] := z1
 		ptDem["wqid"] := wqTR.getAttribute("id")
 		
-		if IsObject(wqTR.selectSingleNode("acct")) {									; node exists, and valid
+		if IsObject(wqTR.selectSingleNode("accession")) {								; node exists, and valid
 			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
 			MsgBox, 262193
 				, Match!
@@ -2581,7 +2381,6 @@ muWqSave(sernum) {
 	}
 	wq.addElement("prov",ptDem.newID,ptDem.Provider)
 	wq.addElement("site",ptDem.newID,ptDem.loc)										; need to transform site abbrevs
-	wq.addElement("acct",ptDem.newID,ptDem.acct)
 	wq.addElement("order",ptDem.newID,ptDem.order)
 	wq.addElement("accession",ptDem.newID,ptDem.accession)
 	wq.addElement("accountnum",ptDem.newID,ptDem.accountnum)
@@ -3243,7 +3042,6 @@ bgWqSave(sernum) {
 	}
 	wq.addElement("prov",ptDem.newID,ptDem.Provider)
 	wq.addElement("site",ptDem.newID,ptDem.loc)										; need to transform site abbrevs
-	wq.addElement("acct",ptDem.newID,ptDem.acct)
 	wq.addElement("order",ptDem.newID,ptDem.order)
 	wq.addElement("accession",ptDem.newID,ptDem.accession)
 	wq.addElement("accountnum",ptDem.newID,ptDem.accountnum)
@@ -3273,7 +3071,7 @@ moveHL7dem() {
 	fldVal["dem-Sex"] := strQ(obxVal["PID_Sex"],(obxVal["PID_Sex"]~="F") ? "Female" : "Male",fldval.Sex)
 	fldVal["dem-Indication"] := strQ(obxVal.Indications,"###",fldval.ind)
 	fldVal["dem-Site"] := fldVal.site
-	fldVal["dem-Billing"] := strQ(fldVal.encnum,"###",RegExReplace(fldVal.acct,"[[:alpha:]]"))
+	fldVal["dem-Billing"] := strQ(fldVal.encnum,"###",fldVal.accession)
 	fldVal["dem-Ordering"] := strQ(fldval.fellow,"###",fldval.prov)
 	fldVal["dem-Ordering"] := strQ(fldval["dem-Ordering"],"###",filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name)
 	fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
@@ -3644,7 +3442,7 @@ Holter_Pr_Hl7:
 		eventlog("<<< Missing DDE, parsed from extracted PDF >>>")
 	}
 	
-	if !(fldval.acct) {																	; fldval.acct exists if Holter has been processed
+	if !(fldval.accession) {															; fldval.accession exists if Holter has been processed
 		gosub checkProc																	; get valid demographics
 		if (fetchQuit=true) {
 			return
@@ -4226,12 +4024,12 @@ CheckProc:
 	ptDem["Indication"] := fldVal["dem-Indication"]
 	eventlog("PDF demog: " ptDem.nameL ", " ptDem.nameF " " ptDem.mrn " " ptDem.EncDate)
 	
-	if (fldval.acct) {																	; <acct> exists, has been registered or uploaded through TRRIQ
+	if (fldval.accession) {																; <accession> exists, has been registered or uploaded through TRRIQ
 		eventlog("Pulled valid data for " fldval.name " " fldval.mrn " " fldval.date)
 		MsgBox, 4160, Found valid registration, % "" 
 		  . fldval.name "`n" 
 		  . "MRN " fldval.mrn "`n" 
-		  . "Acct " fldval.acct "`n" 
+		  . "Accession: " fldval.accession "`n" 
 		  . "Ordering: " fldval.prov "`n" 
 		  . "Study date: " fldval.date "`n`n" 
 	} 
@@ -4248,12 +4046,11 @@ CheckProc:
 			. "Paste clipboard into Epic search to select patient and encounter"
 		
 		gosub fetchGUI
-		gosub fetchDem
-		checkFetchDem(fldVal["dem-Name_L"],fldVal["dem-Name_F"],fldVal["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldVal)
+		WinWaitClose, Patient Demographics
 		if (fetchQuit=true) {
 			return
 		}
-		/*	When fetchDem successfully completes,
+		/*	When fetchGUI successfully completes,
 		 *	replace fldVal with newly acquired values
 		 */
 		fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
@@ -4291,7 +4088,6 @@ CheckProc:
 				. fldVal["dem-Device_SN"])
 			wqSetVal(id,"prov",ptDem["Provider"])
 			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
-			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
 			wqSetVal(id,"ind",ptDem["Indication"])
 		filedelete, .lock
 		writeOut("/root/pending","enroll[@id='" id "']")
@@ -5195,52 +4991,6 @@ checkCrd(x) {
 		}
 	}
 	return {"fuzz":fuzz,"best":best,"group":group}
-}
-
-checkFetchDem(nameL,nameF,mrn) {
-/*	Check if fetchDem NAME and MRN match that parsed from PDF
-	nameL, nameF, mrn all required params
-	If bad match, returns fetchQuit=true
-	If acceptable, returns fetchQuit=false
-*/
-	global ptDem, fetchQuit
-	fullName := nameL ", " nameF
-	fullNameDem := RegExReplace(ptDem["nameL"] ", " ptDem["nameF"],"\^","'")			; fetched ptDem.nameL has [^], passed nameL has [']
-	fuzz := fuzzysearch(format("{:U}",fullName), format("{:U}",fullNameDem))
-	thresh := 0.15													
-	
-	if (fuzz > thresh) {
-		eventlog("Name fuzz error. "
-			. "Parsed """ mrn """, """ fullName """ "
-			. "Grabbed """ ptDem["mrn"] """, """ fullNameDem """.")
-			
-		if (mrn=ptDem["mrn"]) {															; correct MRN but bad name match
-			MsgBox, 262193, % "Name error (" round((1-tmp)*100,2) "%)"
-				, % "Name does not match!`n`n"
-				.	"	Parsed:	" fullName "`n"
-				.	"	Grabbed:	" fullNameDem "`n`n"
-				.	"OK = use " fullNameDem "`n`n"										; "OK" will accept this fetchDem data
-				.	"Cancel = skip this file"
-			IfMsgBox, Cancel
-			{
-				eventlog("Cancel this file.")
-				fetchQuit:=true															; cancel out of processing file
-				return
-			}
-		} else {																		; just plain doesn't match
-			MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
-				, % "Name does not match!`n`n"
-				.	"	Parsed:	" fullName "`n"
-				.	"	Grabbed:	" fullNameDem "`n`n"
-				.	"Skipping this file."
-				
-			eventlog("Demographics mismatch.")
-			fetchQuit:=true
-			return
-		}
-	}
-	
-	return
 }
 
 filterProv(x) {
