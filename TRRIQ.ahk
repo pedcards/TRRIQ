@@ -885,6 +885,10 @@ WQlist() {
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
 			pv1_dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
 			
+			if (obr_site="") {															; no "-site" in OBR.17 name
+				obr_site:="MAIN"
+				eventlog("No site associated with provider, substituting MAIN. Check ORM and Preventice users.")
+			}
 			if instr(sites0,obr_site) {
 				eventlog("Unregistered Sites0 report (" fileIn " - " obr_site ")")
 				FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
