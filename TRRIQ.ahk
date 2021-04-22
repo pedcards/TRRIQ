@@ -3183,13 +3183,16 @@ outputfiles:
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile														; copy ORU hl7 to tempfiles
 	FileCopy, % tmpFile, % path.EpicHL7out													; create copy in RawHL7
+	if (isDevt) {
+		FileCopy, % tmpFile, % path.AccessHL7out											; copy fake ORU to OutboundHL7
+	}
 	
 	/*	Save CSV in tempfiles, and copy to Import folder
 	*/
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	
-	impSub := (monType~="BGH") ? "EventCSV\" : "HolterCSV\"										; Import subfolder Event or Holter
+	impSub := (monType~="BGH") ? "EventCSV\" : "HolterCSV\"									; Import subfolder Event or Holter
 	FileCopy, .\tempfiles\%fileNameOut%.csv, % path.import impSub "*.*", 1					; copy CSV from tempfiles to importFld\impSub
 	
 	/*	Copy PDF to OnBase
@@ -3561,9 +3564,9 @@ fieldsToCSV() {
 return	
 }
 
+;Generate an outbound ORU message for Epic
 makeORU(wqid) {
-/*	Generate a outbound ORU message for Epic
-	Real world incoming Preventice ORU MSH.8 is a Preventice number.
+/*	Real world incoming Preventice ORU MSH.8 is a Preventice number.
 	If MSH.8 contains "EPIC", was generated from MakeTestORU(),	so test ORU will set to OBR.32 and OBX.5 as "###" for filling in by Access DB
 */
 	global fldval, hl7out, montype, isDevt, epList
