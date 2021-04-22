@@ -3823,8 +3823,17 @@ findFullPdf(wqid:="") {
 			
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
 			FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1						; rename the unprocessed PDF
-			eventlog("Holter PDF: " fName " renamed to " newFnam)
-			fName := newFnam ".pdf"
+			If ErrorLevel
+			{
+				MsgBox, 262160, File error, % ""										; Failed to move file
+					. "Could not rename PDF file.`n`n"
+					. "Make sure file is not open in Acrobat Reader!"
+				eventlog("Holter PDF: " fname " file open error.")
+				Continue
+			} else {
+				fName := newFnam ".pdf"													; successful move
+				eventlog("Holter PDF: " fName " renamed to " newFnam)
+			}
 		} 
 		if !objhasvalue(pdfList,fName) {
 			pdfList.push(fName)
