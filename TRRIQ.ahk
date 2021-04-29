@@ -1228,8 +1228,9 @@ parsePrevEnroll(txt) {
 				wqSetVal(id,"accession",en.accession)
 				wqSetVal(id,"accountnum",en.acctnum)
 				wqSetVal(id,"encnum",en.encnum)
+				wqSetVal(id,"ind",en.ind)
 				removeNode("/root/orders/enroll[@id='" id "']")
-				eventlog("Moved Order ID " id " for " en.name " to Pending.")
+				eventlog("addPrevEnroll moved Order ID " id " for " en.name " to Pending.")
 			}
 			parsePrevElement(id,en,res,"dev")
 			return
@@ -1270,7 +1271,7 @@ parsePrevEnroll(txt) {
 				wqSetVal(id,"date",res.date)
 				wqSetVal(id,"ind",en.ind)
 				removeNode("/root/orders/enroll[@id='" id "']")
-				eventlog("Order ID " id " for " en.name " " en.mrn " matched MRN only, moved to Pending.")
+				eventlog("addPrevEnroll order ID " id " for " en.name " " en.mrn " matched MRN only, moved to Pending.")
 				return
 			}
 		}																				; anything else is probably a new registration
@@ -1280,6 +1281,7 @@ parsePrevEnroll(txt) {
 	 */
 		id := makeUID()
 		addPrevEnroll(id,res)
+		eventlog("Found novel web registration " res.mrn " " res.name " " res.date ". addPrevEnroll id=" id)
 	
 	return
 }
@@ -1297,7 +1299,6 @@ addPrevEnroll(id,res) {
 	wq.addElement("site",newID,res.site)
 	wq.addElement("webgrab",newID,A_now)
 	
-	eventlog("Found new web registration " res.mrn " " res.name " " res.date ".")
 	return
 }
 
