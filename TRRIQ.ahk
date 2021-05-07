@@ -729,10 +729,14 @@ WQlist() {
 			id := k.getAttribute("id")
 			e0.match_UID := true
 			
+			if (e0.name != k.selectSingleNode("name").text) {
+				wqSetVal(id,"name",e0.name)
+				eventlog("enroll name " k.selectSingleNode("name").text " changed to " e0.name)
+			}
 			wqSetVal(id,"order",e0.order)
 			wqSetVal(id,"accession",e0.accession)
 			wqSetVal(id,"acctnum",e0.accountnum)
-			wqSetVal(id,"encnum",e0.encnum)
+			wqSetVal(id,"encnum",e0.encnum)	
 			k.setAttribute("id",e0.UID)
 			eventlog("Found pending/enroll=" id " that matches new Epic order " e0.order ". " e0.match_NM)
 			eventlog("enroll id " id " changed to " e0.UID)
