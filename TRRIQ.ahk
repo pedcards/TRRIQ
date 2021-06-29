@@ -1291,6 +1291,8 @@ parsePrevEnroll(txt) {
 }
 
 addPrevEnroll(id,res) {
+/*	Create <enroll id> based on res object
+*/
 	global wq
 	
 	newID := "/root/pending/enroll[@id='" id "']"
@@ -1307,6 +1309,13 @@ addPrevEnroll(id,res) {
 }
 
 parsePrevElement(id,en,res,el) {
+/*	Update <enroll/el> node with value from result of Preventice txt parse
+
+	id	= UID
+	en	= enrollment node
+	res	= result obj from Preventice txt
+	el	= element to check
+*/
 	global wq
 	
 	if (res[el]=en[el]) {																; Attr[el] is same in EN (wq) as RES (txt)
