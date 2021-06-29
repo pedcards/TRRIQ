@@ -1231,6 +1231,7 @@ parsePrevEnroll(txt) {
 			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DATE.")
 			if (en.node="orders") {														; falls through if not in <pending> or <done>
 				addPrevEnroll(id,res)													; create a <pending> record
+				wqSetVal(id,"name",en.name)												; copy remaining values from order (en)
 				wqSetVal(id,"order",en.order)
 				wqSetVal(id,"accession",en.accession)
 				wqSetVal(id,"accountnum",en.acctnum)
@@ -1238,6 +1239,7 @@ parsePrevEnroll(txt) {
 				wqSetVal(id,"ind",en.ind)
 				removeNode("/root/orders/enroll[@id='" id "']")
 				eventlog("addPrevEnroll moved Order ID " id " for " en.name " to Pending.")
+				return
 			}
 			parsePrevElement(id,en,res,"dev")
 			return
