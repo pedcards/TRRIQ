@@ -1174,6 +1174,11 @@ return
 }
 
 parsePrevEnroll(txt) {
+/*	Parse line from prev.txt
+	"enroll"|date|name|mrn|dev - s/n|prov|site
+	Match to existing/likely enroll nodes
+	Update enroll node with new info if missing
+*/
 	global wq
 	el := StrSplit(txt,"|")
 	res := {  date:parseDate(el.2).YMD
