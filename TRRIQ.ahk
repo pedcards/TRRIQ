@@ -1205,6 +1205,7 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " changed matched NAME+MRN+DATE+DEV.")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
 			return
@@ -1216,6 +1217,7 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DEV+DATE.")
 			parsePrevElement(id,en,res,"name")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
@@ -1226,6 +1228,7 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DATE.")
 			if (en.node="orders") {														; falls through if not in <pending> or <done>
 				addPrevEnroll(id,res)													; create a <pending> record
 				wqSetVal(id,"order",en.order)
@@ -1244,6 +1247,7 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " changed matched DATE+DEV.")
 			parsePrevElement(id,en,res,"mrn")
 			return
 		} 
@@ -1252,6 +1256,7 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DEV.")
 			dt0:=res.date
 			dt0 -= en.date, days
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
