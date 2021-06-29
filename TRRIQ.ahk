@@ -1318,7 +1318,7 @@ parsePrevElement(id,en,res,el) {
 */
 	global wq
 	
-	if (res[el]=en[el]) {																; Attr[el] is same in EN (wq) as RES (txt)
+	if (res[el]==en[el]) {																; Attr[el] is same in EN (wq) as RES (txt)
 		return																			; don't do anything
 	}
 	
