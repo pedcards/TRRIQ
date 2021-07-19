@@ -2754,7 +2754,7 @@ BGregister(type) {
 	} 
 	else {																				; either Office or [X]
 		ptDem["hookup"] := "Office"
-		ptDem.ser := selectDev()														; need to grab a ser num from inventory
+		ptDem.ser := selectDev(typeLong)												; need to grab a ser num from inventory
 		if (ptDem.ser="") {
 			eventlog("Cancelled selectDev.")
 			return
@@ -2823,7 +2823,7 @@ BGregister(type) {
 	return
 }
 
-selectDev() {
+selectDev(model="") {
 /*	User starts typing any number from label
 	and ComboBox offers available devices
 */
@@ -2831,7 +2831,7 @@ selectDev() {
 	static typed, devs, ser
 	typed := devs := ser :=
 	
-	loop, % (k:=wq.selectNodes("/root/inventory/dev")).length							; Add all ser nums to devs string
+	loop, % (k:=wq.selectNodes("/root/inventory/dev[@model='" model "']")).length		; Add all ser nums to devs string
 	{
 		i := k.item(A_Index-1).getAttribute("ser")
 		if !(i) {
