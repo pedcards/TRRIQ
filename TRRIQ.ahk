@@ -2186,39 +2186,12 @@ MortaraUpload(tabnum="")
 		
 		if IsObject(wqTR.selectSingleNode("accession")) {								; node exists, and valid
 			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
-			MsgBox, 262193
-				, Match!
-				, % "Found valid registration for:`n   " pt.name "`n   " pt.mrn "`n   " pt.date "`n`nContinue?"
-			IfMsgBox, Cancel
-			{
-				eventlog("Cancelled GUI.")
-				muPushButton(muWinID,"Back")
-				return
-			}
-		} 
+		}
 		else if (wqTR.getAttribute("id")) {												; node exists, but not validated
 			eventlog("Found unvalidated registration for " pt.name " " pt.mrn " " pt.date)
-			MsgBox, 262193
-				, Match?
-				, % "Found unvalidated registration for:`n   " pt.name "`n   " pt.mrn "`n   " parseDate(pt.date).mdy "`n`nContinue?"
-			IfMsgBox, Cancel
-			{
-				eventlog("Cancelled GUI.")
-				muPushButton(muWinID,"Back")
-				return
-			}
 		}
 		else {																			; no matching node found
 			eventlog("No registration found for " pt.name " " pt.mrn " " pt.date)
-			MsgBox, 262193
-				, No match
-				, % "No registration found for:`n   " pt.name "`n   " pt.mrn "`n   " pt.date "`n`nContinue?"
-			IfMsgBox, Cancel
-			{
-				eventlog("Cancelled GUI.")
-				muPushButton(muWinID,"Back")
-				return
-			}
 		}
 			
 		MorUIfill(mu_UI.TRct,muWinID)
