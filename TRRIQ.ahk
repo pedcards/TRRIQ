@@ -3646,10 +3646,6 @@ makeORU(wqid) {
 			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT MONITOR^IMGEAP"
 			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR 3-15 DAY^IMGEAP"
 			: ""
-	if (fldval.oldUID) {
-		obr4 := RegExReplace(obr4,"^(.*?)\^","CVCAR104^")
-		obr4 := RegExReplace(obr4,"\^IMGEAP$"," (cutover)^IMGEAP")
-	}
 	fldval.obr4 := obr4
 	buildHL7("OBR"
 		,{2:fldval.order
