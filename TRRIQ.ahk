@@ -3795,7 +3795,7 @@ findFullPdf(wqid:="") {
 			RegExMatch(fname,"Oi)^\d+\s(.*?)\s([\d-]+)-short.pdf$",x)
 			fnam := path.AccessHL7out "..\ArchiveHL7\*" x.value(1) "_" ParseDate(x.value(2)).YMD "*"
 			if FileExist(fnam) {
-				FileDelete, fileIn
+				FileDelete, % fileIn
 				eventlog("Report signed. Removed leftover " fName )
 			}
 			continue
