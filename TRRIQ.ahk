@@ -3800,10 +3800,10 @@ findFullPdf(wqid:="") {
 		}
 		if (fname~="i)-sh\.pdf")
 			continue
-		if FileExist(fname "-sh.pdf") 
-			continue
-		if FileExist(fnam "-short.pdf") 
-			continue
+		; if FileExist(fname "-sh.pdf") 
+		; 	continue
+		; if FileExist(fnam "-short.pdf") 
+		; 	continue
 		
 		RegExMatch(fname,"O)_WQ([A-Z0-9]+)(_\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
 		
