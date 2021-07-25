@@ -3791,7 +3791,14 @@ findFullPdf(wqid:="") {
 		progress, % 100*A_index/fileCount, % fname, Scanning PDFs folder
 		
 		;---Skip any PDFs that have already been processed or are in the middle of being processed
-		if (fname~="i)(-sh|-short)\.pdf") 
+		if (fname~="i)-short\.pdf") {
+			RegExMatch(fname,"Oi)^\d+\s(.*?)\s([\d-]+)-short.pdf$",x)
+			if FileExist(path.AccessHL7out "..\ArchiveHL7\*" x.value(1) "_" ParseDate(x.value(2)).YMD "*") {
+				eventlog("Completed report for " fNam " found in ArchiveHL7.")
+			}
+			continue
+		}
+		if (fname~="i)-sh\.pdf")
 			continue
 		if FileExist(fname "-sh.pdf") 
 			continue
