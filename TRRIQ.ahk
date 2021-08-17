@@ -2146,6 +2146,8 @@ MortaraUpload(tabnum="")
 			wuDir.Ser := substr(wuDevice,-4)
 			eventlog("wuDirSer " wuDir.Ser " from DEVICE.LOG")
 		} else {
+			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
+			FileAppend, % wuDevice, .\tempfiles\%A_now@-DEVICELOG.txt
 			eventlog("No S/N found.")
 		}
 		if (t2) {
@@ -2155,6 +2157,8 @@ MortaraUpload(tabnum="")
 			wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
 			eventlog("wuDirMRN " wuDir.MRN " from RECORD.LOG")
 		} else {
+			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
+			FileAppend, % wuRecord, .\tempfiles\%A_now@-RECORDLOG.txt
 			eventlog("No MRN found.")
 		}
 		if !(serNum=wuDir.Ser) {
@@ -2191,6 +2195,9 @@ MortaraUpload(tabnum="")
 			eventlog("Found unvalidated registration for " pt.name " " pt.mrn " " pt.date)
 		}
 		else {																			; no matching node found
+			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
+			FileAppend, % wuDevice, .\tempfiles\%A_now@-DEVICELOG.txt
+			FileAppend, % wuRecord, .\tempfiles\%A_now@-RECORDLOG.txt
 			eventlog("No registration found for " pt.name " " pt.mrn " " pt.date)
 		}
 			
