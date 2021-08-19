@@ -2190,19 +2190,20 @@ MortaraUpload(tabnum="")
 		
 		if IsObject(wqTR.selectSingleNode("accession")) {								; node exists, and valid
 			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
+			MorUIfill(mu_UI.TRct,muWinID)
 		}
 		else if (wqTR.getAttribute("id")) {												; node exists, but not validated
 			eventlog("Found unvalidated registration for " pt.name " " pt.mrn " " pt.date)
+			MorUIfill(mu_UI.TRct,muWinID)
 		}
 		else {																			; no matching node found
 			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
 			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
 			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
+			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			eventlog("No registration found for " pt.name " " pt.mrn " " pt.date)
 		}
 			
-		MorUIfill(mu_UI.TRct,muWinID)
-		
 		Gui, muTm:Add, Progress, w150 h6 -smooth hwndMtCt 0x8
 		Gui, muTm:+ToolWindow
 		Gui, muTm:Show, AutoSize, Close to cancel upload...
