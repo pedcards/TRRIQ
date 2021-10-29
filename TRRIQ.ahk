@@ -2928,7 +2928,7 @@ getPatInfo() {
 			ptDem.livesaddr := rel[i].addr
 			continue																	; keep if "Lives here" is true
 		}
-		if (rel[i].guardian = true) {
+		if (rel[i].legal = true) {
 			continue																	; keep if is guardian
 		}
 		if ((rel[i].addr="") && (rel[i].phone="")) {
