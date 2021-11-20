@@ -186,8 +186,11 @@ PhaseGUI:
 	Gui, phase:Default
 	Gui, +AlwaysOnTop
 
-	Gui, Add, Text, x670 y15 w200 vPhaseNumbers, "`n`n"
-	Gui, Add, GroupBox, x660 y0 w220 h65
+	lvW := 720
+	lvH := 450
+
+	Gui, Add, Text, % "x" lvW+40 " y15 w200 vPhaseNumbers", "`n`n"
+	Gui, Add, GroupBox, % "x" lvW+20 " y0 w220 h65"
 	
 	Gui, Font, Bold
 	Gui, Add, Button
@@ -224,7 +227,7 @@ PhaseGUI:
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
 	Gui, Add, Tab3																		; add Tab bar with tracked sites
-		, -Wrap x10 y10 w720 h450 vWQtab +HwndWQtab
+		, -Wrap x10 y10 w%lvW% h%lvH% vWQtab +HwndWQtab
 		, % "ORDERS|" 
 		. (wksloc="Main Campus" ? "INBOX||" : "") 
 		. "Unread|ALL|" tmpsite
