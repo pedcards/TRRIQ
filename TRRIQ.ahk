@@ -224,7 +224,7 @@ PhaseGUI:
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
 	Gui, Add, Tab3																		; add Tab bar with tracked sites
-		, -Wrap x10 y10 w640 h400 vWQtab +HwndWQtab
+		, -Wrap x10 y10 w720 h450 vWQtab +HwndWQtab
 		, % "ORDERS|" 
 		. (wksloc="Main Campus" ? "INBOX||" : "") 
 		. "Unread|ALL|" tmpsite
