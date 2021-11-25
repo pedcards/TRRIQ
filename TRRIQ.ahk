@@ -2746,14 +2746,11 @@ BGregister(type) {
 		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
 		
 		if !(ptDem.model) {																; Types in an ad hoc number
-			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart|BodyGuardian Mini EL")
-			if (i="xClose") {
-				eventlog("Cancelled ad hoc S/N.")
-				return
-			} else {
-				ptDem.model := i
-				eventlog("User typed ad hoc S/N " ptDem.ser ", type " i ".")
+			ptDem.model := typeLong
+			if (type="BGM") {
+				ptDem.ser := RegExReplace(ptDem.ser,"[a-zA-Z]")							; BGM s/n has no BG prefix
 			}
+				eventlog("User typed ad hoc S/N " ptDem.ser ", type " i ".")
 		}
 		
 		if (ptDem.model != typeLong) {													; Selects mismatched device
