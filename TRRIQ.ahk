@@ -2853,7 +2853,7 @@ selectDev(model="") {
 		loop, % tmp.count()
 		{
 			i := tmp[A_index]
-			if instr(i,typed) {															; item contains typed string
+			if instr(i,RegExReplace(typed,"[a-zA-Z]")) {								; item contains typed string (only include digits)
 				tmpDev .= "|" i 														; add to tmpdev menu
 				ct ++																	; increment counter
 			}
