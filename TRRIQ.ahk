@@ -656,7 +656,7 @@ WQlist() {
 	global
 	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim
 		, late_BGH := 45
-		, late_BGM := 21
+		, late_BGM := 30
 		, late_Mortara := 14
 	wqfiles := []
 	fldval := {}
