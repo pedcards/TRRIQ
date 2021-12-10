@@ -2142,10 +2142,10 @@ MortaraUpload(tabnum="")
 		FileRead, wuConfig, % wuDir.Full "\CONFIG.SYS"
 			wuConfig := substr(wuConfig,1,512)
 			RegExMatch(wuConfig,"\D(\d{5,})\D+(\d{6,})?\D",t)
-		if (t1) {
+		if (t1) {																		; SN found in CONFIG.SYS
 			wuDir.Ser := substr(t1,1-strlen(sernum))
 			eventlog("wuDirSer " wuDir.Ser " from CONFIG.SYS")
-		} else if (wuDevice) {
+		} else if (wuDevice) {															; SN from DEVICE.LOG
 			wuDir.Ser := substr(wuDevice,-4)
 			eventlog("wuDirSer " wuDir.Ser " from DEVICE.LOG")
 		} else {
@@ -2153,10 +2153,10 @@ MortaraUpload(tabnum="")
 			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
 			eventlog("No S/N found.")
 		}
-		if (t2) {
+		if (t2) {																		; MRN found in CONFIG.SYS
 			wuDir.MRN := t2
 			eventlog("wuDirMRN " wuDir.MRN " from CONFIG.SYS")
-		} else if (wuRecord) {
+		} else if (wuRecord) {															; MRN from CONFIG.SYS
 			wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
 			eventlog("wuDirMRN " wuDir.MRN " from RECORD.LOG")
 		} else {
@@ -2164,7 +2164,7 @@ MortaraUpload(tabnum="")
 			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
 			eventlog("No MRN found.")
 		}
-		if !(serNum=wuDir.Ser) {
+		if !(serNum=wuDir.Ser) {														; Attached device does not match device data
 			eventlog("Serial number mismatch.")
 			eventlog(wuDir.fullDir)
 			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
