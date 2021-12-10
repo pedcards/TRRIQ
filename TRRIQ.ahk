@@ -322,6 +322,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuSys, Add, Update call schedules, updateCall
+	Menu, menuSys, Add, Send notification email, sendEmail
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -362,6 +363,24 @@ menuInstr:
 	MsgBox How to...
 	gui, phase:show
 	return
+}
+
+sendEmail:
+{
+	tmp := cmsgbox("Notification","Send email"
+			, "Terry Chun|"
+			. "Roby Gallotti|"
+			. "Jack Salerno|"
+			. "Steve Seslar"
+			, "E")
+	if (tmp="xClose") {
+		eventlog("Quit sendEmail.")
+		Return
+	}
+	enc_MD := parseName(tmp).init
+	tmp := httpComm("read&to=" enc_MD)
+	eventlog("Notification email " tmp " to " enc_MD)
+	Return
 }
 
 changeLoc:
