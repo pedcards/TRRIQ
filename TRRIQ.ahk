@@ -513,7 +513,7 @@ checkPCwks() {
 			. "`n`n"
 			. "Switch to another computer if you will need to register/upload Mortara 24-hour Holter."
 	}
-	if (A_ComputerName~="EWC") {														; running on a local machine
+	if (A_ComputerName~="EWC|ELC") {													; running on a local machine
 		return																			; return successfully
 	}
 	else if (is_VM=true) {
