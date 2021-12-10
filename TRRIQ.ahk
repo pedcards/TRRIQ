@@ -2151,6 +2151,7 @@ MortaraUpload(tabnum="")
 		} else {
 			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
 			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
+			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt
 			eventlog("No S/N found.")
 		}
 		if (t2) {																		; MRN found in CONFIG.SYS
@@ -2166,7 +2167,7 @@ MortaraUpload(tabnum="")
 		}
 		if !(serNum=wuDir.Ser) {														; Attached device does not match device data
 			eventlog("Serial number mismatch.")
-			eventlog(wuDir.fullDir)
+			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt
 			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			muPushButton(muWinID,"Back")
@@ -2203,6 +2204,7 @@ MortaraUpload(tabnum="")
 			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
 			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
 			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
+			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt
 			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			eventlog("No registration found for " pt.name " " pt.mrn " " pt.date)
 		}
