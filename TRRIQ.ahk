@@ -2127,7 +2127,7 @@ MortaraUpload(tabnum="")
 				wuDir.Date := loopDate
 				wuDir.Full := loopName
 			}
-			wuDir.fullDir := loopDate ", " loopname "`n"
+			wuDir.fullDir .= loopDate ", " loopname "`n"
 		}
 		if (wuDir.Full="") {															; no transfer files found
 			eventlog("No transfer files found.")
