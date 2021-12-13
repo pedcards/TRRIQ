@@ -2193,6 +2193,8 @@ MortaraUpload(tabnum="")
 			return
 		}
 		
+			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt				; for now, writeout fulldir for each upload
+
 		wq := new XML("worklist.xml")													; refresh WQ
 		wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" wuDir.MRN "']"
 		wqTR:=wq.selectSingleNode(wqStr)
