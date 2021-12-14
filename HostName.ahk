@@ -239,6 +239,19 @@ check_H3(root,match) {
 		return path "\"
 	}
 	
+	Loop, files, % root "\*", D 														; scan root for dirstring
+	{
+		if !instr(A_LoopFileName,match) {
+			Continue
+		}
+		hit := A_LoopFileFullPath
+		while (find := checkH3Dir(hit,match))											; scan hit for deepest dirstring match
+		{
+			hit := find
+		}
+		FileGetTime, hit_m, % hit
+		root_hit .= hit_m "|" hit "`n"
+	}
 	hit := root																			; start at C: or .
 	while (find := checkH3Dir(hit,match))
 	{
