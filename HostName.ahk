@@ -257,6 +257,12 @@ check_H3(root,match) {
 		has_H3 := false
 		return error
 	}
+	Sort, root_hit, R
+	Loop, Parse, root_hit, "`n"
+	{
+		hit := StrSplit(A_LoopField, "|")
+		m.addElement("h3path",node,hit[2])
+	}
 	hit := root																			; start at C: or .
 	while (find := checkH3Dir(hit,match))
 	{
