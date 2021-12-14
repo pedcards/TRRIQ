@@ -263,6 +263,14 @@ check_H3(root,match) {
 		hit := StrSplit(A_LoopField, "|")
 		m.addElement("h3path",node,hit[2])
 	}
+	m.transformXML()
+	m.saveXML()
+	eventlog("Found new H3 data path(s) for " wks ".")
+	has_H3 := true
+	return hit "\"
+
+	Return
+
 	hit := root																			; start at C: or .
 	while (find := checkH3Dir(hit,match))
 	{
