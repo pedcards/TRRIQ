@@ -249,8 +249,8 @@ check_H3(root,match) {
 		{
 			hit := find
 		}
-		FileGetTime, hit_m, % hit
-		root_hit .= hit_m "|" hit "`n"
+		FileGetTime, hit_m, % hit "\Data"												; active Data folder most recently touched
+		root_hit .= hit_m "|" hit "`n"													; build list of "modified date|path"
 	}
 	if !(root_hit) {
 		eventlog("ERROR: Can't find H3 data files.")
@@ -258,18 +258,19 @@ check_H3(root,match) {
 		return error
 	}
 	Sort, root_hit, R
+	hit := []
 	Loop, Parse, root_hit, "`n"
 	{
-		hit := StrSplit(A_LoopField, "|")
-		m.addElement("h3path",node,hit[2])
+		res := StrSplit(A_LoopField, "|")
+		m.addElement("h3path",node,res[2])												; add to wkslocation
+		hit.Push(res[2])																; add to result array
 	}
 	m.transformXML()
 	m.saveXML()
 	eventlog("Found new H3 data path(s) for " wks ".")
 	has_H3 := true
-	return hit "\"
 
-	Return
+	Return hit
 }
 
 checkH3Dir(base,match) {
