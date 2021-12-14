@@ -252,6 +252,11 @@ check_H3(root,match) {
 		FileGetTime, hit_m, % hit
 		root_hit .= hit_m "|" hit "`n"
 	}
+	if !(root_hit) {
+		eventlog("ERROR: Can't find H3 data files.")
+		has_H3 := false
+		return error
+	}
 	hit := root																			; start at C: or .
 	while (find := checkH3Dir(hit,match))
 	{
