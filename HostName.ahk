@@ -270,25 +270,6 @@ check_H3(root,match) {
 	return hit "\"
 
 	Return
-
-	hit := root																			; start at C: or .
-	while (find := checkH3Dir(hit,match))
-	{
-		hit := find
-	}
-	if (hit=root) {
-		eventlog("ERROR: Can't find H3 data files.")
-		has_H3 := false
-		return error
-	}
-	else {
-		m.addElement("h3path",node,hit)
-		m.transformXML()
-		m.saveXML()
-		eventlog("Found new H3 data path for " wks ".")
-		has_H3 := true
-		return hit "\"
-	}
 }
 
 checkH3Dir(base,match) {
