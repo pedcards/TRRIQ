@@ -234,9 +234,16 @@ check_H3(root,match) {
 	
 	m := new XML(m_strXmlFilename)
 	node := "//workstations/workstation[wsname='" wks "']"
-	if (path := m.selectSingleNode(node "/h3path").text) {
+
+	if (paths := m.SelectNodes(node "/h3path")).length() {
+		hit := []
+		loop, % paths.length()
+		{
+			hit.Push(paths.Item(A_index-1).text)
+		}
+		x := paths.Length()
 		has_H3 := true
-		return path "\"
+		return hit
 	}
 	
 	Loop, files, % root "\*", D 														; scan root for dirstring
