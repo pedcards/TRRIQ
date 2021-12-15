@@ -249,7 +249,7 @@ check_H3(root,match) {
 		{
 			hit := find
 		}
-		FileGetTime, hit_m, % hit "\Data"												; active Data folder most recently touched
+		FileGetTime, hit_m, % hit 														; active Data folder most recently touched
 		root_hit .= hit_m "|" hit "`n"													; build list of "modified date|path"
 	}
 	if !(root_hit) {
@@ -257,6 +257,7 @@ check_H3(root,match) {
 		has_H3 := false
 		return error
 	}
+	root_hit := Trim(root_hit, "`n")
 	Sort, root_hit, R
 	hit := []
 	Loop, Parse, root_hit, "`n"
