@@ -30,7 +30,7 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	path:=readIni("paths")
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(runningVer,1,12) " " A_Args[1])
 }
-IfInString, fileDir, TEST
+IfInString, fileDir, TEST000
 {
 	isDevt := True
 	eventlog("***** launched from TEST folder.")
