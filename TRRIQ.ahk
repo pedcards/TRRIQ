@@ -30,8 +30,17 @@ IfInString, fileDir, AhkProjects					; Change enviroment if run from development
 	path:=readIni("paths")
 	eventlog(">>>>> Started in PROD mode. " A_ScriptName " ver " substr(runningVer,1,12) " " A_Args[1])
 }
+IfInString, fileDir, TEST
+{
+	isDevt := True
+	eventlog("***** launched from TEST folder.")
+}
 if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
+	FileAppend, % A_now ", " user "|" userinstance "|" A_ComputerName "`n", .\files\legacy.txt
+	MsgBox 0x30, Shortcut error
+		, % "Obsolete TRRIQ shortcut!`n`n"
+		. "Please notify Igor Gurvits or Jim Gray to update the shortcut on this machine: " A_ComputerName
 }
 
 readini("setup")
@@ -181,8 +190,11 @@ PhaseGUI:
 	Gui, phase:Default
 	Gui, +AlwaysOnTop
 
-	Gui, Add, Text, x670 y15 w200 vPhaseNumbers, "`n`n"
-	Gui, Add, GroupBox, x660 y0 w220 h65
+	lvW := 720
+	lvH := 450
+
+	Gui, Add, Text, % "x" lvW+40 " y15 w200 vPhaseNumbers", "`n`n"
+	Gui, Add, GroupBox, % "x" lvW+20 " y0 w220 h65"
 	
 	Gui, Font, Bold
 	Gui, Add, Button
@@ -219,7 +231,7 @@ PhaseGUI:
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
 	Gui, Add, Tab3																		; add Tab bar with tracked sites
-		, -Wrap x10 y10 w640 h400 vWQtab +HwndWQtab
+		, -Wrap x10 y10 w%lvW% h%lvH% vWQtab +HwndWQtab
 		, % "ORDERS|" 
 		. (wksloc="Main Campus" ? "INBOX||" : "") 
 		. "Unread|ALL|" tmpsite
@@ -314,6 +326,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuSys, Add, Update call schedules, updateCall
+	Menu, menuSys, Add, Send notification email, sendEmail
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -354,6 +367,24 @@ menuInstr:
 	MsgBox How to...
 	gui, phase:show
 	return
+}
+
+sendEmail:
+{
+	tmp := cmsgbox("Notification","Send email"
+			, "Terry Chun|"
+			. "Roby Gallotti|"
+			. "Jack Salerno|"
+			. "Steve Seslar"
+			, "E")
+	if (tmp="xClose") {
+		eventlog("Quit sendEmail.")
+		Return
+	}
+	enc_MD := parseName(tmp).init
+	tmp := httpComm("read&to=" enc_MD)
+	eventlog("Notification email " tmp " to " enc_MD)
+	Return
 }
 
 changeLoc:
@@ -505,7 +536,7 @@ checkPCwks() {
 			. "`n`n"
 			. "Switch to another computer if you will need to register/upload Mortara 24-hour Holter."
 	}
-	if (A_ComputerName~="EWC") {														; running on a local machine
+	if (A_ComputerName~="EWC|ELC") {													; running on a local machine
 		return																			; return successfully
 	}
 	else if (is_VM=true) {
@@ -648,7 +679,7 @@ WQlist() {
 	global
 	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim
 		, late_BGH := 45
-		, late_BGM := 21
+		, late_BGM := 30
 		, late_Mortara := 14
 	wqfiles := []
 	fldval := {}
@@ -724,11 +755,14 @@ WQlist() {
 			id := k.getAttribute("id")
 			e0.match_UID := true
 			
+			if (e0.name != k.selectSingleNode("name").text) {
+				wqSetVal(id,"name",e0.name)
+				eventlog("enroll name " k.selectSingleNode("name").text " changed to " e0.name)
+			}
 			wqSetVal(id,"order",e0.order)
 			wqSetVal(id,"accession",e0.accession)
-			wqSetVal(id,"acct",e0.acct)
 			wqSetVal(id,"acctnum",e0.accountnum)
-			wqSetVal(id,"encnum",e0.encnum)
+			wqSetVal(id,"encnum",e0.encnum)	
 			k.setAttribute("id",e0.UID)
 			eventlog("Found pending/enroll=" id " that matches new Epic order " e0.order ". " e0.match_NM)
 			eventlog("enroll id " id " changed to " e0.UID)
@@ -782,7 +816,6 @@ WQlist() {
 			wq.addElement("prov",newID,e0.prov)
 			wq.addElement("provname",newID,e0.provname)
 			wq.addElement("site",newID,e0.loc)
-			wq.addElement("acct",newID,e0.acct)
 			wq.addElement("acctnum",newID,e0.accountnum)
 			wq.addElement("encnum",newID,e0.encnum)
 			wq.addElement("ind",newID,e0.ind)
@@ -882,6 +915,10 @@ WQlist() {
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
 			pv1_dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
 			
+			if (obr_site="") {															; no "-site" in OBR.17 name
+				obr_site:="MAIN"
+				eventlog("No site associated with provider, substituting MAIN. Check ORM and Preventice users.")
+			}
 			if instr(sites0,obr_site) {
 				eventlog("Unregistered Sites0 report (" fileIn " - " obr_site ")")
 				FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
@@ -1129,10 +1166,6 @@ readPrevTxt() {
 	StringReplace txt, txt, `n, `n, All UseErrorLevel
 	n := ErrorLevel
 	
-	k := wq.selectSingleNode("/root/inventory")											; create fresh inventory node
-	k.parentNode.removeChild(k)
-	wq.addElement("inventory","/root")
-	
 	loop, read, % ".\files\prev.txt"
 	{
 		Progress, % 100*A_Index/n
@@ -1142,6 +1175,12 @@ readPrevTxt() {
 			parsePrevEnroll(k)
 		}
 		else if (k~="^dev\|") {
+			if !(devct) {
+				k := wq.selectSingleNode("/root/inventory")								; create fresh inventory node
+				k.parentNode.removeChild(k)
+				wq.addElement("inventory","/root")
+				devct := true
+			}
 			parsePrevDev(k)
 		}
 	}
@@ -1163,6 +1202,11 @@ return
 }
 
 parsePrevEnroll(txt) {
+/*	Parse line from prev.txt
+	"enroll"|date|name|mrn|dev - s/n|prov|site
+	Match to existing/likely enroll nodes
+	Update enroll node with new info if missing
+*/
 	global wq
 	el := StrSplit(txt,"|")
 	res := {  date:parseDate(el.2).YMD
@@ -1194,6 +1238,7 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " changed matched NAME+MRN+DATE+DEV.")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
 			return
@@ -1205,6 +1250,7 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DEV+DATE.")
 			parsePrevElement(id,en,res,"name")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
@@ -1215,15 +1261,18 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DATE.")
 			if (en.node="orders") {														; falls through if not in <pending> or <done>
 				addPrevEnroll(id,res)													; create a <pending> record
-				wqSetVal(id,"acct",en.acct)
+				wqSetVal(id,"name",en.name)												; copy remaining values from order (en)
 				wqSetVal(id,"order",en.order)
 				wqSetVal(id,"accession",en.accession)
 				wqSetVal(id,"accountnum",en.acctnum)
 				wqSetVal(id,"encnum",en.encnum)
+				wqSetVal(id,"ind",en.ind)
 				removeNode("/root/orders/enroll[@id='" id "']")
-				eventlog("Moved Order ID " id " for " en.name " to Pending.")
+				eventlog("addPrevEnroll moved Order ID " id " for " en.name " to Pending.")
+				return
 			}
 			parsePrevElement(id,en,res,"dev")
 			return
@@ -1233,6 +1282,7 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " changed matched DATE+DEV.")
 			parsePrevElement(id,en,res,"mrn")
 			return
 		} 
@@ -1241,6 +1291,7 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DEV.")
 			dt0:=res.date
 			dt0 -= en.date, days
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
@@ -1255,7 +1306,6 @@ parsePrevEnroll(txt) {
 			
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
 				addPrevEnroll(id,res)													; create a <pending> record
-				wqSetVal(id,"acct",en.acct)
 				wqSetVal(id,"order",en.order)
 				wqSetVal(id,"accession",en.accession)
 				wqSetVal(id,"accountnum",en.acctnum)
@@ -1265,7 +1315,7 @@ parsePrevEnroll(txt) {
 				wqSetVal(id,"date",res.date)
 				wqSetVal(id,"ind",en.ind)
 				removeNode("/root/orders/enroll[@id='" id "']")
-				eventlog("Order ID " id " for " en.name " " en.mrn " matched MRN only, moved to Pending.")
+				eventlog("addPrevEnroll order ID " id " for " en.name " " en.mrn " matched MRN only, moved to Pending.")
 				return
 			}
 		}																				; anything else is probably a new registration
@@ -1275,11 +1325,14 @@ parsePrevEnroll(txt) {
 	 */
 		id := makeUID()
 		addPrevEnroll(id,res)
+		eventlog("Found novel web registration " res.mrn " " res.name " " res.date ". addPrevEnroll id=" id)
 	
 	return
 }
 
 addPrevEnroll(id,res) {
+/*	Create <enroll id> based on res object
+*/
 	global wq
 	
 	newID := "/root/pending/enroll[@id='" id "']"
@@ -1292,14 +1345,20 @@ addPrevEnroll(id,res) {
 	wq.addElement("site",newID,res.site)
 	wq.addElement("webgrab",newID,A_now)
 	
-	eventlog("Found new web registration " res.mrn " " res.name " " res.date ".")
 	return
 }
 
 parsePrevElement(id,en,res,el) {
+/*	Update <enroll/el> node with value from result of Preventice txt parse
+
+	id	= UID
+	en	= enrollment node
+	res	= result obj from Preventice txt
+	el	= element to check
+*/
 	global wq
 	
-	if (res[el]=en[el]) {																; Attr[el] is same in EN (wq) as RES (txt)
+	if (res[el]==en[el]) {																; Attr[el] is same in EN (wq) as RES (txt)
 		return																			; don't do anything
 	}
 	
@@ -1543,10 +1602,8 @@ checkEpicOrder() {
 			{
 				fldval.order := en.selectSingleNode("order").text
 				fldval.accession := en.selectSingleNode("accession").text
-				fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
 				wqsetval(fldval.wqid,"order",fldval.order)
 				wqsetval(fldval.wqid,"accession",fldval.accession)
-				wqsetval(fldval.wqid,"acct",fldval.acct)
 				writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
 				eventlog("Used order.")
 				return
@@ -1587,38 +1644,38 @@ checkEpicOrder() {
 		This is the last resort, as it creates a lot of confusion with results
 	*/
 	progress, hide
-	MsgBox, 262196, Missing EPIC order, Do you want to start CUTOVER process?
-	IfMsgBox, Yes
-	{
-		MsgBox, 262192
-			, Needs CUTOVER order
-			, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
-			. "1) Open ""Anc Orders"" from Epic top toolbar.`n"
-			. "2) Search for """ fldval["dem-name"] """.`n`n"
-			. "3) Click the ""New Order"" button and fill out:`n"
-			. "   - Referring Prov: """ fldval["dem-ordering"] """`n"
-			. "   - Department: ordering clinic`n"
-			. "   - Procedure: Cutover Holter/Event Monitor`n"
-			. "   - Diagnosis: patient's primary diagnosis`n"
-			. "   - Reason for exam: choose the indication`n"
-			. "   - click ""Accept""`n`n"
-			. "4) Fill in """ fldval["dem-ordering"] """ as the Authorizing Provider.`n"
-			. "5) Click the ""Add-on"" button to move to the Technician Work List.`n`n"
-			. "6) You may need to complete the ""Check-in"" for the patient.`n`n"
-			. "7) Click [OK] here when you have done this."
+	MsgBox, 262193, No EPIC order found.`nOrder & Accession number needed to process report.
+	; IfMsgBox, Yes
+	; {
+	; 	MsgBox, 262192
+	; 		, Needs CUTOVER order
+	; 		, % "Study registered before Epic Go-Live. Valid Epic order required.`n`n"
+	; 		. "1) Open ""Anc Orders"" from Epic top toolbar.`n"
+	; 		. "2) Search for """ fldval["dem-name"] """.`n`n"
+	; 		. "3) Click the ""New Order"" button and fill out:`n"
+	; 		. "   - Referring Prov: """ fldval["dem-ordering"] """`n"
+	; 		. "   - Department: ordering clinic`n"
+	; 		. "   - Procedure: Cutover Holter/Event Monitor`n"
+	; 		. "   - Diagnosis: patient's primary diagnosis`n"
+	; 		. "   - Reason for exam: choose the indication`n"
+	; 		. "   - click ""Accept""`n`n"
+	; 		. "4) Fill in """ fldval["dem-ordering"] """ as the Authorizing Provider.`n"
+	; 		. "5) Click the ""Add-on"" button to move to the Technician Work List.`n`n"
+	; 		. "6) You may need to complete the ""Check-in"" for the patient.`n`n"
+	; 		. "7) Click [OK] here when you have done this."
 		
-		wqid := fldval.wqid
-		wqsetval(wqid,"oldUID",wqid)
-		writeOut("/root/pending","enroll[@id='" wqid "']")
-		eventlog("Created CUTOVER order for " wqid)
-		progress, show
+	; 	wqid := fldval.wqid
+	; 	wqsetval(wqid,"oldUID",wqid)
+	; 	writeOut("/root/pending","enroll[@id='" wqid "']")
+	; 	eventlog("Created CUTOVER order for " wqid)
+	; 	progress, show
 		
-		gosub MainLoop
-		return
-	} else {
-		eventlog("Did not want CUTOVER order.")
-		return
-	}
+	; 	gosub MainLoop
+	; 	return
+	; } else {
+	; 	eventlog("Did not want CUTOVER order.")
+	; 	return
+	; }
 	return
 }
 
@@ -1648,10 +1705,8 @@ checkEpicClip() {
 		{
 			fldval.order := ordernum
 			fldval.accession := accession
-			fldval.acct := fldval.site "_" fldval.order "-" fldval.accession
 			wqsetval(fldval.wqid,"order",fldval.order)
 			wqsetval(fldval.wqid,"accession",fldval.accession)
-			wqsetval(fldval.wqid,"acct",fldval.acct)
 			eventlog("Grabbed order #" fldval.order ", accession #" fldval.accession)
 
 			if (name!=fldval.name) {
@@ -1744,197 +1799,12 @@ parseORM() {
 		, encnum:fldval.PV1_VisitNum
 		, order:fldval.ORC_ReqNum
 		, accession:fldval.ORC_FillerNum
-		, acct:location strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
 		, UID:tobase(fldval.ORC_ReqNum RegExReplace(fldval.ORC_FillerNum,"[^0-9]"),36)
 		, ind:indication
 		, indication:indication
 		, indicationCode:strQ(fldval.OBR_ReasonCode,"###") strQ(indCode,"###")
 		, orderCtrl:fldval.ORC_OrderCtrl
 		, ctrlID:fldval.MSH_CtrlID}
-}
-
-FetchDem:
-{
-	mdCoord := Object()											; clear Mouse Demographics X,Y coordinate arrays
-	getDem := true
-	mdProv := false
-	mdAcct := false
-	
-	while (getDem) {									; Repeat until we get tired of this
-		clk := Object()
-		clipboard :=
-		ClipWait, 0
-		if !ErrorLevel {								; clipboard has data
-			MouseGetPos, mouseXpos, mouseYpos, mouseWinID, mouseWinClass, 2				; put mouse coords into mouseXpos and mouseYpos, and associated winID
-			clk := parseClip()
-			if !ErrorLevel {															; parseClip {field:value} matches valid data
-				WinGetActiveStats, mdTitle, mdWinW, mdWinH, mdWinX, mdWinY				; get window coords as well
-				mdXd := mdWinW/6														; determine delta X between columns
-				
-				if (clk.field = "Provider") {
-					if (clk.value~="[[:alpha:]]+.*,.*[[:alpha:]]+") {					; extract provider.value to LAST,FIRST (strip MD, PHD, MI, etc)
-						tmpPrv := strX(clk.value,,1,0, ",",1,1) ", " strX(clk.value,",",1,2, " ",1,1)
-						eventlog("MouseGrab provider " tmpPrv ".")
-						
-						tmpPrvFuzz := fuzzySearch(format("{:U}"							; degrees of fuzz for ptDem.Provider with clicked value
-									, ptDem.Provider)
-									, format("{:U}",tmpPrv))
-						
-						if (ptDem.Provider="") {
-							ptDem.Provider := tmpPrv
-							eventlog("MouseGrab provider empty --> " tmpPrv ".")
-							
-						} else if (tmpPrvFuzz>0.15) {									; names differ by more than 15%
-							MsgBox, 4148
-								, Provider already exists
-								, % "Replace " ptDem.Provider "`n with `n" tmpPrv "?"
-							IfMsgBox, Yes												; Check before replacing
-							{
-								eventlog("Replacing provider """ ptDem.Provider """ with """ tmpPrv """.")
-								ptDem.Provider := tmpPrv
-							}
-						}																; otherwise ptDem.Provider exists and matches, so leave alone
-						
-					} else {															; no name clicked
-						tmpPrv :=
-						eventlog("MouseGrab provider empty.")
-					}																	; tmpPrv will contain either clicked Provider or null
-					
-					mdCoord.x4 := mouseXpos													; demographics grid[4,1]
-					mdCoord.y1 := mouseYpos
-					mdProv := true														; we have got Provider
-					gosub getDemName													; extract patient name, MRN from window title 
-				}																		; (this is why it must be sister or parent VM).
-				if (clk.field = "Account Number") {
-					ptDem["Account"] := clk.value
-					eventlog("MouseGrab Account Number " clk.value ".")
-					mdCoord.x1 := mouseXpos													; demographics grid[1,3]
-					mdCoord.y3 := mouseYpos
-					mdAcct := true														; we have got Acct Number
-					gosub getDemName													; extract patient name, MRN
-				}
-				if (mdProv and mdAcct) {												; we have both critical coordinates
-					mdX0 := 50
-					mdX1 := mdWinW*0.15
-					mdX2 := mdWinW*0.25
-					mdX3 := mdWinW*0.35
-					mdCoord.x1 := mdX0
-					mdCoord.x2 := mdX0 + mdWinW*0.15
-					mdCoord.x3 := mdX0 + mdWinW*0.25
-					mdCoord.x4 := mdX0 + mdWinW*0.35
-					mdCoord.x5 := mdX0 + mdWinW*0.45
-					mdCoord.x6 := mdX0 + mdWinW*0.65
-					mdCoord.x7 := mdX0 + mdWinW*0.85
-					mdCoord.y2 := mdCoord.y1+(mdCoord.y3-mdCoord.y1)/2									; determine remaning row coordinate
-					
-					Gui, fetch:hide														; grab remaining demographic values
-					BlockInput, On														; Prevent extraneous input
-					ptDem["MRN"] := mouseGrab(mdCoord.x1,mdCoord.y2).value
-					ptDem["DOB"] := mouseGrab(mdCoord.x2,mdCoord.y2).value
-					ptDem["Sex"] := mouseGrab(mdCoord.x4,mdCoord.y1).value
-					eventlog("MouseGrab other fields. MRN=" ptDem["MRN"] " DOB=" ptDem["DOB"] " Sex=" ptDem["Sex"] ".")
-					
-					tmp := mouseGrab(mdCoord.x6,mdCoord.y3)										; grab Encounter Type field
-					ptDem["Type"] := tmp.value
-					if (ptDem["Type"]="Outpatient") {
-						ptDem["Loc"] := mouseGrab(mdCoord.x7-mdX0-30,mdCoord.y2).value				; most outpatient locations are short strings, click the right half of cell to grab location name
-					} else {
-						ptDem["Loc"] := tmp.loc
-					}
-					if !(ptDem["EncDate"]) {											; EncDate will be empty if new upload or null in PDF
-						ptDem["EncDate"] := tmp.date
-					}
-					ptDem["Hookup time"] := tmp.time
-					
-					mdProv := false														; processed demographic fields,
-					mdAcct := false														; so reset check bits
-					mdCoord := Object()
-					
-					BlockInput, Off														; Permit input again
-					Gui, fetch:show
-					eventlog("MouseGrab other fields."
-						. " Type=" ptDem["Type"] " Loc=" ptDem["Loc"]
-						. " EncDate=" ptDem["EncDate"] " EncTime=" ptDem["Hookup time"] ".")
-				}
-				mouseXpos := ""
-				mouseYpos := ""
-			}
-			gosub fetchGUI							; Update GUI with new info
-		}
-	}
-	return
-}
-
-mouseGrab(x,y) {
-/*	Double click mouse coordinates x,y to grab cell contents
-	Process through parseClip to validate
-	Return the value portion of parseClip
-*/
-	MouseMove, %x%, %y%, 0																; Goto coordinates
-	Click 2																				; Double-click
-	ClipWait, 0																			; sometimes there is delay for clipboard to populate
-	clk := parseClip()																	; get available values out of clipboard
-	return clk																			; Redundant? since this is what parseClip() returns
-}
-
-parseClip() {
-/*	If clip matches "val1:val2" format, and val1 in demVals[], return field:val
-	If clip contains proper Encounter Type ("Outpatient", "Inpatient", "Observation", etc), return Type, Date, Time
-*/
-	global demVals
-	
-	;~ sleep 100
-	clip := clipboard
-	
-	StringSplit, val, clip, :															; break field into val1:val2
-	if (ObjHasValue(demVals, val1)) {													; field name in demVals, e.g. "MRN","Account Number","DOB","Sex","Loc","Provider"
-		val1 := RegExReplace(val1,"Legal Sex|Birth Sex","Sex")
-		clipboard := ""
-		return {"field":val1
-				, "value":val2}
-	}
-	
-	dt := strX(clip," [",1,2, "]",1,1)													; get date
-	if (clip~="Outpatient\s\[") {														; Outpatient type
-		clipboard := ""
-		return {"field":"Type"
-				, "value":"Outpatient"
-				, "loc":"Outpatient"
-				, "date":parseDate(dt).date
-				, "time":parseDate(dt).time}
-	}
-	if (clip~="Inpatient|Observation\s\[") {											; Inpatient types
-		clipboard := ""
-		return {"field":"Type"
-				, "value":"Inpatient"
-				, "loc":"Inpatient"
-				, "date":""}															; can span many days, return blank
-	}
-	if (clip~="Day Surg.*\s\[") {														; Day Surg type
-		clipboard := ""
-		return {"field":"Type"
-				, "value":"Day Surg"
-				, "loc":"SurgCntr"
-				, "date":parseDate(dt).date}
-	}
-	if (clip~="Emergency") {															; Emergency type
-		clipboard := ""
-		return {"field":"Type"
-				, "value":"Emergency"
-				, "loc":"Emergency"
-				, "date":parseDate(dt).date}
-	}
-	return Error																		; Anything else returns Error
-}
-
-getDemName:
-{
-	if (RegExMatch(mdTitle, "i)\s\-\s\d{6,7}\s(Opened by)")) {							; Match window title "LAST, FIRST - 12345678 Opened by Chun, Terrence U, MD"
-		mdTitle := RegExReplace(mdTitle,"\'","^")
-		ptDem["nameL"] := strX(mdTitle,,1,0, ",",1,1)									; and parse the name
-		ptDem["nameF"] := strX(mdTitle,",",1,2, " ",1,1)
-	}
-	return
 }
 
 fetchGUI:
@@ -1997,9 +1867,8 @@ fetchValid(field,rx,neg:=0) {
 fetchGuiClose:
 {
 	Gui, fetch:destroy
-	getDem := false																	; break out of fetchDem loop
 	fetchQuit := true
-	eventlog("Manual [x] out of fetchDem.")
+	eventlog("Manual [x] out of fetchGUI.")
 Return
 }
 
@@ -2055,15 +1924,11 @@ demVals := ["MRN","Account Number","DOB","Sex","Loc","Provider"]
 		gosub getMD
 	}
 	
-	if (ptDem.acct="") {
-		ptDem.acct := ptDem.loc strQ(fldval.ORC_ReqNum,"_###") strQ(fldval.ORC_FillerNum,"-###")
-	}
 	tmpCrd := checkCrd(ptDem.provider)													; Make sure we have most current provider
 	ptDem.NPI := Docs[tmpCrd.Group ".npi",ObjHasValue(Docs[tmpCrd.Group],tmpCrd.best)]
 	ptDem["Account"] := EncNum															; make sure array has submitted EncNum value
 	FormatTime, EncDt, %EncDt%, MM/dd/yyyy												; and the properly formatted date 06/15/2016
 	ptDem.EncDate := EncDt
-	getDem := false																; done getting demographics
 	Loop
 	{
 		if (ptDem.Indication) {													; loop until we have filled indChoices
@@ -2113,8 +1978,6 @@ getDem:
 {
 	gosub fetchGUI																		; Grab it first
 	WinWaitClose, Patient Demographics
-	/*	Need to get demo validating code from fetchDem
-	*/
 	if (fetchQuit=true) {
 		return
 	}
@@ -2280,8 +2143,20 @@ MortaraUpload(tabnum="")
 		
 		ptDem := Object()
 		
+		dirDate :=
+		loop, % webUploadDir.Length()													; scan webUploadDir's for most recent Data
+		{
+			hit := webUploadDir[A_index]
+			FileGetTime, hit_m, % hit "\Data"
+			if (hit_m>=dirDate) {
+				dirDate := hit_m
+				dirNewest := hit
+			}
+		}
+		eventlog("[" dirDate "] " dirNewest)
+
 		wuDir := {}
-		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
+		Loop, files, % dirNewest "\Data\*", D											; Get the most recently created Data\xxx folder
 		{
 			loopDate := A_LoopFileTimeModified
 			loopName := A_LoopFileLongPath
@@ -2289,7 +2164,7 @@ MortaraUpload(tabnum="")
 				wuDir.Date := loopDate
 				wuDir.Full := loopName
 			}
-			wuDir.fullDir := loopDate ", " loopname "`n"
+			wuDir.fullDir .= loopDate ", " loopname "`n"
 		}
 		if (wuDir.Full="") {															; no transfer files found
 			eventlog("No transfer files found.")
@@ -2304,33 +2179,40 @@ MortaraUpload(tabnum="")
 		FileRead, wuConfig, % wuDir.Full "\CONFIG.SYS"
 			wuConfig := substr(wuConfig,1,512)
 			RegExMatch(wuConfig,"\D(\d{5,})\D+(\d{6,})?\D",t)
-		if (t1) {
+		if (t1) {																		; SN found in CONFIG.SYS
 			wuDir.Ser := substr(t1,1-strlen(sernum))
 			eventlog("wuDirSer " wuDir.Ser " from CONFIG.SYS")
-		} else if (wuDevice) {
+		} else if (wuDevice) {															; SN from DEVICE.LOG
 			wuDir.Ser := substr(wuDevice,-4)
 			eventlog("wuDirSer " wuDir.Ser " from DEVICE.LOG")
 		} else {
+			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
+			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
+			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt
 			eventlog("No S/N found.")
 		}
-		if (t2) {
+		if (t2) {																		; MRN found in CONFIG.SYS
 			wuDir.MRN := t2
 			eventlog("wuDirMRN " wuDir.MRN " from CONFIG.SYS")
-		} else if (wuRecord) {
+		} else if (wuRecord) {															; MRN from CONFIG.SYS
 			wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
 			eventlog("wuDirMRN " wuDir.MRN " from RECORD.LOG")
 		} else {
+			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
+			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
 			eventlog("No MRN found.")
 		}
-		if !(serNum=wuDir.Ser) {
+		if !(serNum=wuDir.Ser) {														; Attached device does not match device data
 			eventlog("Serial number mismatch.")
-			eventlog(wuDir.fullDir)
+			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt
 			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			muPushButton(muWinID,"Back")
 			return
 		}
 		
+			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt				; for now, writeout fulldir for each upload
+
 		wq := new XML("worklist.xml")													; refresh WQ
 		wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" wuDir.MRN "']"
 		wqTR:=wq.selectSingleNode(wqStr)
@@ -2349,45 +2231,23 @@ MortaraUpload(tabnum="")
 		ptDem["loc"] := z1
 		ptDem["wqid"] := wqTR.getAttribute("id")
 		
-		if IsObject(wqTR.selectSingleNode("acct")) {									; node exists, and valid
+		if IsObject(wqTR.selectSingleNode("accession")) {								; node exists, and valid
 			eventlog("Found valid registration for " pt.name " " pt.mrn " " pt.date)
-			MsgBox, 262193
-				, Match!
-				, % "Found valid registration for:`n   " pt.name "`n   " pt.mrn "`n   " pt.date "`n`nContinue?"
-			IfMsgBox, Cancel
-			{
-				eventlog("Cancelled GUI.")
-				muPushButton(muWinID,"Back")
-				return
-			}
-		} 
+			MorUIfill(mu_UI.TRct,muWinID)
+		}
 		else if (wqTR.getAttribute("id")) {												; node exists, but not validated
 			eventlog("Found unvalidated registration for " pt.name " " pt.mrn " " pt.date)
-			MsgBox, 262193
-				, Match?
-				, % "Found unvalidated registration for:`n   " pt.name "`n   " pt.mrn "`n   " parseDate(pt.date).mdy "`n`nContinue?"
-			IfMsgBox, Cancel
-			{
-				eventlog("Cancelled GUI.")
-				muPushButton(muWinID,"Back")
-				return
-			}
+			MorUIfill(mu_UI.TRct,muWinID)
 		}
 		else {																			; no matching node found
+			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
+			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
+			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
+			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt
+			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			eventlog("No registration found for " pt.name " " pt.mrn " " pt.date)
-			MsgBox, 262193
-				, No match
-				, % "No registration found for:`n   " pt.name "`n   " pt.mrn "`n   " pt.date "`n`nContinue?"
-			IfMsgBox, Cancel
-			{
-				eventlog("Cancelled GUI.")
-				muPushButton(muWinID,"Back")
-				return
-			}
 		}
 			
-		MorUIfill(mu_UI.TRct,muWinID)
-		
 		Gui, muTm:Add, Progress, w150 h6 -smooth hwndMtCt 0x8
 		Gui, muTm:+ToolWindow
 		Gui, muTm:Show, AutoSize, Close to cancel upload...
@@ -2581,7 +2441,6 @@ muWqSave(sernum) {
 	}
 	wq.addElement("prov",ptDem.newID,ptDem.Provider)
 	wq.addElement("site",ptDem.newID,ptDem.loc)										; need to transform site abbrevs
-	wq.addElement("acct",ptDem.newID,ptDem.acct)
 	wq.addElement("order",ptDem.newID,ptDem.order)
 	wq.addElement("accession",ptDem.newID,ptDem.accession)
 	wq.addElement("accountnum",ptDem.newID,ptDem.accountnum)
@@ -2920,7 +2779,7 @@ BGregister(type) {
 	} 
 	else {																				; either Office or [X]
 		ptDem["hookup"] := "Office"
-		ptDem.ser := selectDev()														; need to grab a ser num from inventory
+		ptDem.ser := selectDev(typeLong)												; need to grab a ser num from inventory
 		if (ptDem.ser="") {
 			eventlog("Cancelled selectDev.")
 			return
@@ -2928,14 +2787,11 @@ BGregister(type) {
 		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
 		
 		if !(ptDem.model) {																; Types in an ad hoc number
-			i := cMsgBox("Recorder type","Which recorder?","BodyGuardian Heart|BodyGuardian Mini EL")
-			if (i="xClose") {
-				eventlog("Cancelled ad hoc S/N.")
-				return
-			} else {
-				ptDem.model := i
-				eventlog("User typed ad hoc S/N " ptDem.ser ", type " i ".")
+			ptDem.model := typeLong
+			if (type="BGM") {
+				ptDem.ser := RegExReplace(ptDem.ser,"[a-zA-Z]")							; BGM s/n has no BG prefix
 			}
+				eventlog("User typed ad hoc S/N " ptDem.ser ", type " i ".")
 		}
 		
 		if (ptDem.model != typeLong) {													; Selects mismatched device
@@ -2989,7 +2845,7 @@ BGregister(type) {
 	return
 }
 
-selectDev() {
+selectDev(model="") {
 /*	User starts typing any number from label
 	and ComboBox offers available devices
 */
@@ -2997,7 +2853,7 @@ selectDev() {
 	static typed, devs, ser
 	typed := devs := ser :=
 	
-	loop, % (k:=wq.selectNodes("/root/inventory/dev")).length							; Add all ser nums to devs string
+	loop, % (k:=wq.selectNodes("/root/inventory/dev[@model='" model "']")).length		; Add all ser nums to devs string
 	{
 		i := k.item(A_Index-1).getAttribute("ser")
 		if !(i) {
@@ -3035,7 +2891,7 @@ selectDev() {
 		loop, % tmp.count()
 		{
 			i := tmp[A_index]
-			if instr(i,typed) {															; item contains typed string
+			if instr(i,RegExReplace(typed,"[a-zA-Z]")) {								; item contains typed string (only include digits)
 				tmpDev .= "|" i 														; add to tmpdev menu
 				ct ++																	; increment counter
 			}
@@ -3113,7 +2969,7 @@ getPatInfo() {
 			ptDem.livesaddr := rel[i].addr
 			continue																	; keep if "Lives here" is true
 		}
-		if (rel[i].guardian = true) {
+		if (rel[i].legal = true) {
 			continue																	; keep if is guardian
 		}
 		if ((rel[i].addr="") && (rel[i].phone="")) {
@@ -3243,7 +3099,6 @@ bgWqSave(sernum) {
 	}
 	wq.addElement("prov",ptDem.newID,ptDem.Provider)
 	wq.addElement("site",ptDem.newID,ptDem.loc)										; need to transform site abbrevs
-	wq.addElement("acct",ptDem.newID,ptDem.acct)
 	wq.addElement("order",ptDem.newID,ptDem.order)
 	wq.addElement("accession",ptDem.newID,ptDem.accession)
 	wq.addElement("accountnum",ptDem.newID,ptDem.accountnum)
@@ -3273,7 +3128,7 @@ moveHL7dem() {
 	fldVal["dem-Sex"] := strQ(obxVal["PID_Sex"],(obxVal["PID_Sex"]~="F") ? "Female" : "Male",fldval.Sex)
 	fldVal["dem-Indication"] := strQ(obxVal.Indications,"###",fldval.ind)
 	fldVal["dem-Site"] := fldVal.site
-	fldVal["dem-Billing"] := strQ(fldVal.encnum,"###",RegExReplace(fldVal.acct,"[[:alpha:]]"))
+	fldVal["dem-Billing"] := strQ(fldVal.encnum,"###",fldVal.accession)
 	fldVal["dem-Ordering"] := strQ(fldval.fellow,"###",fldval.prov)
 	fldVal["dem-Ordering"] := strQ(fldval["dem-Ordering"],"###",filterProv(obxVal["PV1_AttgNameF"] " " obxVal["PV1_AttgNameL"]).name)
 	fldval["dem-Device_SN"] := strX(fldval.dev," ",0,1,"",0,0)
@@ -3376,13 +3231,16 @@ outputfiles:
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile														; copy ORU hl7 to tempfiles
 	FileCopy, % tmpFile, % path.EpicHL7out													; create copy in RawHL7
+	if (isDevt) {
+		FileCopy, % tmpFile, % path.AccessHL7out											; copy fake ORU to OutboundHL7
+	}
 	
 	/*	Save CSV in tempfiles, and copy to Import folder
 	*/
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	
-	impSub := (monType~="BGH") ? "EventCSV\" : "HolterCSV\"										; Import subfolder Event or Holter
+	impSub := (monType~="BGH") ? "EventCSV\" : "HolterCSV\"									; Import subfolder Event or Holter
 	FileCopy, .\tempfiles\%fileNameOut%.csv, % path.import impSub "*.*", 1					; copy CSV from tempfiles to importFld\impSub
 	
 	/*	Copy PDF to OnBase
@@ -3644,7 +3502,7 @@ Holter_Pr_Hl7:
 		eventlog("<<< Missing DDE, parsed from extracted PDF >>>")
 	}
 	
-	if !(fldval.acct) {																	; fldval.acct exists if Holter has been processed
+	if !(fldval.accession) {															; fldval.accession exists if Holter has been processed
 		gosub checkProc																	; get valid demographics
 		if (fetchQuit=true) {
 			return
@@ -3754,9 +3612,9 @@ fieldsToCSV() {
 return	
 }
 
+;Generate an outbound ORU message for Epic
 makeORU(wqid) {
-/*	Generate a outbound ORU message for Epic
-	Real world incoming Preventice ORU MSH.8 is a Preventice number.
+/*	Real world incoming Preventice ORU MSH.8 is a Preventice number.
 	If MSH.8 contains "EPIC", was generated from MakeTestORU(),	so test ORU will set to OBR.32 and OBX.5 as "###" for filling in by Access DB
 */
 	global fldval, hl7out, montype, isDevt, epList
@@ -3810,10 +3668,6 @@ makeORU(wqid) {
 			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT MONITOR^IMGEAP"
 			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR 3-15 DAY^IMGEAP"
 			: ""
-	if (fldval.oldUID) {
-		obr4 := RegExReplace(obr4,"^(.*?)\^","CVCAR104^")
-		obr4 := RegExReplace(obr4,"\^IMGEAP$"," (cutover)^IMGEAP")
-	}
 	fldval.obr4 := obr4
 	buildHL7("OBR"
 		,{2:fldval.order
@@ -3986,12 +3840,21 @@ findFullPdf(wqid:="") {
 		progress, % 100*A_index/fileCount, % fname, Scanning PDFs folder
 		
 		;---Skip any PDFs that have already been processed or are in the middle of being processed
-		if (fname~="i)(-sh|-short)\.pdf") 
+		if (fname~="i)-short\.pdf") {
+			RegExMatch(fname,"Oi)^\d+\s(.*?)\s([\d-]+)-short.pdf$",x)
+			fnam := path.AccessHL7out "..\ArchiveHL7\*" x.value(1) "_" ParseDate(x.value(2)).YMD "*"
+			if FileExist(fnam) {
+				FileDelete, % fileIn
+				eventlog("Report signed. Removed leftover " fName )
+			}
 			continue
-		if FileExist(fname "-sh.pdf") 
+		}
+		if (fname~="i)-sh\.pdf")
 			continue
-		if FileExist(fnam "-short.pdf") 
-			continue
+		; if FileExist(fname "-sh.pdf") 
+		; 	continue
+		; if FileExist(fnam "-short.pdf") 
+		; 	continue
 		
 		RegExMatch(fname,"O)_WQ([A-Z0-9]+)(_\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
 		
@@ -4025,8 +3888,17 @@ findFullPdf(wqid:="") {
 			
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
 			FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1						; rename the unprocessed PDF
-			eventlog("Holter PDF: " fName " renamed to " newFnam)
-			fName := newFnam ".pdf"
+			If ErrorLevel
+			{
+				MsgBox, 262160, File error, % ""										; Failed to move file
+					. "Could not rename PDF file.`n`n"
+					. "Make sure file is not open in Acrobat Reader!"
+				eventlog("Holter PDF: " fname " file open error.")
+				Continue
+			} else {
+				fName := newFnam ".pdf"													; successful move
+				eventlog("Holter PDF: " fName " renamed to " newFnam)
+			}
 		} 
 		if !objhasvalue(pdfList,fName) {
 			pdfList.push(fName)
@@ -4226,12 +4098,12 @@ CheckProc:
 	ptDem["Indication"] := fldVal["dem-Indication"]
 	eventlog("PDF demog: " ptDem.nameL ", " ptDem.nameF " " ptDem.mrn " " ptDem.EncDate)
 	
-	if (fldval.acct) {																	; <acct> exists, has been registered or uploaded through TRRIQ
+	if (fldval.accession) {																; <accession> exists, has been registered or uploaded through TRRIQ
 		eventlog("Pulled valid data for " fldval.name " " fldval.mrn " " fldval.date)
 		MsgBox, 4160, Found valid registration, % "" 
 		  . fldval.name "`n" 
 		  . "MRN " fldval.mrn "`n" 
-		  . "Acct " fldval.acct "`n" 
+		  . "Accession: " fldval.accession "`n" 
 		  . "Ordering: " fldval.prov "`n" 
 		  . "Study date: " fldval.date "`n`n" 
 	} 
@@ -4248,12 +4120,11 @@ CheckProc:
 			. "Paste clipboard into Epic search to select patient and encounter"
 		
 		gosub fetchGUI
-		gosub fetchDem
-		checkFetchDem(fldVal["dem-Name_L"],fldVal["dem-Name_F"],fldVal["dem-MRN"])			; make sure grabbed name (ptDem) matches PDF (fldVal)
+		WinWaitClose, Patient Demographics
 		if (fetchQuit=true) {
 			return
 		}
-		/*	When fetchDem successfully completes,
+		/*	When fetchGUI successfully completes,
 		 *	replace fldVal with newly acquired values
 		 */
 		fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
@@ -4291,7 +4162,6 @@ CheckProc:
 				. fldVal["dem-Device_SN"])
 			wqSetVal(id,"prov",ptDem["Provider"])
 			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
-			wqSetVal(id,"acct",ptDem["loc"] ptDem["Account"])
 			wqSetVal(id,"ind",ptDem["Indication"])
 		filedelete, .lock
 		writeOut("/root/pending","enroll[@id='" id "']")
@@ -5197,52 +5067,6 @@ checkCrd(x) {
 	return {"fuzz":fuzz,"best":best,"group":group}
 }
 
-checkFetchDem(nameL,nameF,mrn) {
-/*	Check if fetchDem NAME and MRN match that parsed from PDF
-	nameL, nameF, mrn all required params
-	If bad match, returns fetchQuit=true
-	If acceptable, returns fetchQuit=false
-*/
-	global ptDem, fetchQuit
-	fullName := nameL ", " nameF
-	fullNameDem := RegExReplace(ptDem["nameL"] ", " ptDem["nameF"],"\^","'")			; fetched ptDem.nameL has [^], passed nameL has [']
-	fuzz := fuzzysearch(format("{:U}",fullName), format("{:U}",fullNameDem))
-	thresh := 0.15													
-	
-	if (fuzz > thresh) {
-		eventlog("Name fuzz error. "
-			. "Parsed """ mrn """, """ fullName """ "
-			. "Grabbed """ ptDem["mrn"] """, """ fullNameDem """.")
-			
-		if (mrn=ptDem["mrn"]) {															; correct MRN but bad name match
-			MsgBox, 262193, % "Name error (" round((1-tmp)*100,2) "%)"
-				, % "Name does not match!`n`n"
-				.	"	Parsed:	" fullName "`n"
-				.	"	Grabbed:	" fullNameDem "`n`n"
-				.	"OK = use " fullNameDem "`n`n"										; "OK" will accept this fetchDem data
-				.	"Cancel = skip this file"
-			IfMsgBox, Cancel
-			{
-				eventlog("Cancel this file.")
-				fetchQuit:=true															; cancel out of processing file
-				return
-			}
-		} else {																		; just plain doesn't match
-			MsgBox, 262160, % "Name error (" round((1-tmp)*100,2) "%)"
-				, % "Name does not match!`n`n"
-				.	"	Parsed:	" fullName "`n"
-				.	"	Grabbed:	" fullNameDem "`n`n"
-				.	"Skipping this file."
-				
-			eventlog("Demographics mismatch.")
-			fetchQuit:=true
-			return
-		}
-	}
-	
-	return
-}
-
 filterProv(x) {
 /*	Filters out all irregularities and common typos in Provider name from manual entry
 	Returns as {name:"Albers, Erin", site:"CRB"}
@@ -5316,7 +5140,7 @@ IEclose() {
 }
 
 httpComm(verb) {
-	url := "https://depts.washington.edu/pedcards/change/direct.php?" 
+	url := "http://depts.washington.edu/pedcards/change/direct.php?" 
 			. "do=" . verb
 	
 	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr

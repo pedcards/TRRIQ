@@ -234,29 +234,51 @@ check_H3(root,match) {
 	
 	m := new XML(m_strXmlFilename)
 	node := "//workstations/workstation[wsname='" wks "']"
-	if (path := m.selectSingleNode(node "/h3path").text) {
+
+	if (paths := m.SelectNodes(node "/h3path")).length() {
+		hit := []
+		loop, % paths.length()
+		{
+			hit.Push(paths.Item(A_index-1).text)
+		}
+		x := paths.Length()
 		has_H3 := true
-		return path "\"
+		return hit
 	}
 	
-	hit := root																			; start at C: or .
-	while (find := checkH3Dir(hit,match))
+	Loop, files, % root "\*", D 														; scan root for dirstring
 	{
-		hit := find
+		if !instr(A_LoopFileName,match) {
+			Continue
+		}
+		hit := A_LoopFileFullPath
+		while (find := checkH3Dir(hit,match))											; scan hit for deepest dirstring match
+		{
+			hit := find
+		}
+		FileGetTime, hit_m, % hit 														; active Data folder most recently touched
+		root_hit .= hit_m "|" hit "`n"													; build list of "modified date|path"
 	}
-	if (hit=root) {
+	if !(root_hit) {
 		eventlog("ERROR: Can't find H3 data files.")
 		has_H3 := false
 		return error
 	}
-	else {
-		m.addElement("h3path",node,hit)
-		m.transformXML()
-		m.saveXML()
-		eventlog("Found new H3 data path for " wks ".")
-		has_H3 := true
-		return hit "\"
+	root_hit := Trim(root_hit, "`n")
+	Sort, root_hit, R
+	hit := []
+	Loop, Parse, root_hit, "`n"
+	{
+		res := StrSplit(A_LoopField, "|")
+		m.addElement("h3path",node,res[2])												; add to wkslocation
+		hit.Push(res[2])																; add to result array
 	}
+	m.transformXML()
+	m.saveXML()
+	eventlog("Found new H3 data path(s) for " wks ".")
+	has_H3 := true
+
+	Return hit
 }
 
 checkH3Dir(base,match) {
