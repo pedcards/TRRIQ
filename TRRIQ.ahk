@@ -2143,8 +2143,20 @@ MortaraUpload(tabnum="")
 		
 		ptDem := Object()
 		
+		dirDate :=
+		loop, % webUploadDir.Length()													; scan webUploadDir's for most recent Data
+		{
+			hit := webUploadDir[A_index]
+			FileGetTime, hit_m, % hit "\Data"
+			if (hit_m>=dirDate) {
+				dirDate := hit_m
+				dirNewest := hit
+			}
+		}
+		eventlog("[" dirDate "] " dirNewest)
+
 		wuDir := {}
-		Loop, files, % WebUploadDir "Data\*", D											; Get the most recently created Data\xxx folder
+		Loop, files, % dirNewest "\Data\*", D											; Get the most recently created Data\xxx folder
 		{
 			loopDate := A_LoopFileTimeModified
 			loopName := A_LoopFileLongPath
