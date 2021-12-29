@@ -2397,28 +2397,6 @@ muWqSave(sernum) {
 	
 	filecheck()
 	FileOpen(".lock", "W")																; Create lock file.
-	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " sernum "']"
-	loop, % (ens:=wq.selectNodes(wqStr)).length											; Clear all prior instances of this sernum
-	{
-		i := ens.item(A_index-1)
-		enID := i.getAttribute("id")
-		enName := i.selectSingleNode("name").text
-		enMRN := i.selectSingleNode("mrn").text
-		enDate := i.selectSingleNode("date").text
-		enSent := i.selectSingleNode("sent").text
-		if (enSent) {																	; pending/enroll/sent = uploaded, waiting for PDF
-			continue																	; so don't remove
-		}
-		enStr := "/root/pending/enroll[@id='" enId "']"
-			wq.addElement("removed",enStr,{user:A_UserName},A_Now)						; set as done
-			x := wq.selectSingleNode(enStr)												; reload x node
-			clone := x.cloneNode(true)
-			wq.selectSingleNode("/root/done").appendChild(clone)						; copy x.clone to z.DONE
-			x.parentNode.removeChild(x)													; remove enStr node
-			
-			WriteSave(wq)
-		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
-	}
 	wq := new XML("worklist.xml")
 	
 	id := ptDem.UID
