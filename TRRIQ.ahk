@@ -456,9 +456,9 @@ cleanPending()
 	global wq, path
 
 	eventlog("Menu cleanPending")
-	archiveHL7 := path.EpicHL7out "..\ArchiveHL7\*@*.hl7"
+	archiveHL7 := path.EpicHL7out "..\ArchiveHL7\"
 	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(archiveHL7).Files.Count
-	Loop, files, % archiveHL7
+	Loop, files, % archiveHL7 "*@*.hl7"
 	{
 		progress, % (A_Index/fileCount)*100
 		regexmatch(A_LoopFileName,"@(.*)\.hl7",id)
