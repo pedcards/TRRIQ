@@ -327,6 +327,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuSys, Add, Update call schedules, updateCall
 	Menu, menuSys, Add, Send notification email, sendEmail
+	Menu, menuSys, Add, Find pending leftovers, cleanPending
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -448,6 +449,30 @@ regReport:
 	eventlog("Generated registrations report.")
 	MsgBox, 262208, Registrations report, Report saved to:`n%tmp%
 	return
+}
+
+cleanPending()
+{
+	global wq, path
+
+	eventlog("Menu cleanPending")
+	archiveHL7 := path.EpicHL7out "..\ArchiveHL7\*@*.hl7"
+	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(archiveHL7).Files.Count
+	Loop, files, % archiveHL7
+	{
+		progress, % (A_Index/fileCount)*100
+		regexmatch(A_LoopFileName,"@(.*)\.hl7",id)
+		if !(id1) {
+			Continue
+		}
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[@id='" id1 "']")) {
+			eventlog("Found leftover id " id1)
+			moveWQ(id1)
+		}
+	}
+	progress, off
+
+	Return
 }
 
 PhaseTask:
