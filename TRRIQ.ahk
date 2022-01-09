@@ -467,7 +467,7 @@ cleanPending()
 		}
 		if IsObject(wq.selectSingleNode("/root/pending/enroll[@id='" id1 "']")) {
 			eventlog("Found leftover id " id1)
-			moveWQ(id1)
+			; moveWQ(id1)
 		}
 	}
 	progress, off
