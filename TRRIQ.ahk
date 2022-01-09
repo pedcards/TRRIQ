@@ -327,6 +327,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuSys, Add, Update call schedules, updateCall
 	Menu, menuSys, Add, Send notification email, sendEmail
+	Menu, menuSys, Add, Find pending leftovers, cleanPending
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -448,6 +449,30 @@ regReport:
 	eventlog("Generated registrations report.")
 	MsgBox, 262208, Registrations report, Report saved to:`n%tmp%
 	return
+}
+
+cleanPending()
+{
+	global wq, path
+
+	eventlog("Menu cleanPending")
+	archiveHL7 := path.EpicHL7out "..\ArchiveHL7\"
+	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(archiveHL7).Files.Count
+	Loop, files, % archiveHL7 "*@*.hl7"
+	{
+		progress, % (A_Index/fileCount)*100
+		regexmatch(A_LoopFileName,"@(.*)\.hl7",id)
+		if !(id1) {
+			Continue
+		}
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[@id='" id1 "']")) {
+			eventlog("Found leftover id " id1)
+			moveWQ(id1)
+		}
+	}
+	progress, off
+
+	Return
 }
 
 PhaseTask:
@@ -2397,28 +2422,6 @@ muWqSave(sernum) {
 	
 	filecheck()
 	FileOpen(".lock", "W")																; Create lock file.
-	wqStr := "/root/pending/enroll[dev='Mortara H3+ - " sernum "']"
-	loop, % (ens:=wq.selectNodes(wqStr)).length											; Clear all prior instances of this sernum
-	{
-		i := ens.item(A_index-1)
-		enID := i.getAttribute("id")
-		enName := i.selectSingleNode("name").text
-		enMRN := i.selectSingleNode("mrn").text
-		enDate := i.selectSingleNode("date").text
-		enSent := i.selectSingleNode("sent").text
-		if (enSent) {																	; pending/enroll/sent = uploaded, waiting for PDF
-			continue																	; so don't remove
-		}
-		enStr := "/root/pending/enroll[@id='" enId "']"
-			wq.addElement("removed",enStr,{user:A_UserName},A_Now)						; set as done
-			x := wq.selectSingleNode(enStr)												; reload x node
-			clone := x.cloneNode(true)
-			wq.selectSingleNode("/root/done").appendChild(clone)						; copy x.clone to z.DONE
-			x.parentNode.removeChild(x)													; remove enStr node
-			
-			WriteSave(wq)
-		eventlog("Device " sernum " reg to " enName " - " enMRN " on " enDate ", moved to DONE list.")
-	}
 	wq := new XML("worklist.xml")
 	
 	id := ptDem.UID
