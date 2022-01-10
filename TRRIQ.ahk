@@ -1526,6 +1526,11 @@ readWQlv:
 		WQlist()																		; refresh list and return
 		return
 	}
+	if (fldval.webgrab="") {
+		MsgBox No registration!
+		WQlist()
+		return
+	}
 	
 	if (fExt="hl7") {																	; hl7 file (could still be Holter or CEM)
 		eventlog("===> " fnam )
