@@ -2057,6 +2057,19 @@ findWQid(DT:="",MRN:="",ser:="") {
 	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; returns {id,node}; or null (error) if no match
 }
 
+checkweb(id) {
+	global wq
+
+	en := "//enroll[@id='" id "']"
+	if (wq.selectSingleNode(en "/webgrab").text) {											; webgrab already exists
+		Return
+	} else {
+		wq.addElement("webgrab",en,A_now)
+		eventlog("Added webgrab for id " id)
+		Return
+	}
+}
+
 cleanTempFiles() {
 	thresh:=180
 	
