@@ -1532,7 +1532,14 @@ readWQlv:
 		return
 	}
 	if (fldval.webgrab="") {
-		MsgBox No registration!
+		MsgBox 0x40030
+			, Registration issue
+			, % "No registration found on Preventice site.`n"
+			. "Contact Preventice to correct.`n`n"
+			. "Name: " fldVal.Name "`n"
+			. "MRN: " fldVal.MRN "`n"
+			. "Device: " fldVal.dev "`n"
+			. "Study date: " niceDate(fldVal.date) "`n"
 		WQlist()
 		return
 	}
