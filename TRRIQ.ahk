@@ -1032,6 +1032,11 @@ WQlist() {
 		wb := en.selectSingleNode("webgrab").text
 		if !(wb) {
 			res := readwq(id)
+			dt := A_now
+			dt -= res.date, Days
+			if (dt < 5) {																; ignore for 5 days to allow reg/sendout to process
+				Continue
+			}
 			LV_Add(""
 				, path.holterPDF val													; filename and path to HolterDir
 				, strQ(res.Name,"###",strX(val,"",1,0,"_",1))							; name from wqid or filename
