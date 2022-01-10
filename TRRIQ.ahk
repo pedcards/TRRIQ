@@ -253,6 +253,8 @@ PhaseGUI:
 		LV_ModifyCol(7,"2")																; wqid
 		LV_ModifyCol(8,"40")															; ftype
 		LV_ModifyCol(9,"70 Center")														; ftp
+		CLV_in := new LV_Colors(HLV_in,true,false)
+		CLV_in.Critical := 100
 	}
 	
 	Gui, Tab, ORDERS
@@ -300,7 +302,7 @@ PhaseGUI:
 	
 	Loop, parse, sites, |
 	{
-		i := A_index
+		i := A_Index
 		site := A_LoopField
 		Gui, Tab, % site
 		Gui, Add, Listview
@@ -412,7 +414,7 @@ lateReport:
 	num := ens.length
 	Loop, % num
 	{
-		Progress,,,% A_index "/" num 
+		Progress,,,% A_Index "/" num 
 		k := ens.item(A_Index-1)
 		id	:= k.getAttribute("id")
 		e := readWQ(id)
@@ -437,7 +439,7 @@ regReport:
 	num := ens.length
 	loop, % num
 	{
-		Progress,,,% A_index "/" num 
+		Progress,,,% A_Index "/" num 
 		k := ens.item(A_Index-1)
 		id	:= k.getAttribute("id")
 		e := readWQ(id)
@@ -606,7 +608,7 @@ WQtask() {
 	list :=
 	Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
 	{
-		k := notes.item(A_index-1)
+		k := notes.item(A_Index-1)
 		dt := parsedate(k.getAttribute("date"))
 		list .= dt.mm "/" dt.dd ":" k.getAttribute("user") ": " k.text "`n"
 	}
@@ -1017,7 +1019,38 @@ WQlist() {
 			wqfiles.push(id)															; add non-null wqid to wqfiles
 		}
 	}
+
 	LV_ModifyCol(6,"Sort")																; date
+
+/*	Scan <pending> for missing webgrab
+	no webgrab means no registration received at Preventice for some reason
+*/	
+	loop, % (ens:=wq.selectNodes("/root/pending/enroll")).Length
+	{
+		en := ens.item(A_Index-1)
+		id := en.getAttribute("id")
+		wb := en.selectSingleNode("webgrab").text
+		if !(wb) {
+			res := readwq(id)
+			dt := A_now
+			dt -= res.date, Days
+			if (dt < 5) {																; ignore for 5 days to allow reg/sendout to process
+				Continue
+			}
+			LV_Add(""
+				, path.holterPDF val													; filename and path to HolterDir
+				, strQ(res.Name,"###",strX(val,"",1,0,"_",1))							; name from wqid or filename
+				, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))							; mrn
+				, strQ(res.dob,"###")													; dob
+				, strQ(res.site,"###","???")											; site
+				, strQ(nicedate(res.date),"###")										; study date
+				, id																	; wqid
+				, ftype																	; study type
+				, "No Reg"																; fulldisc present, make blank
+				, "X")
+			CLV_in.Row(LV_GetCount(),,"red")
+		}
+	}
 
 	}	; <-- finish Main Campus Inbox
 	
@@ -1028,7 +1061,7 @@ WQlist() {
 	
 	Loop, parse, sites, |
 	{
-		i := A_index
+		i := A_Index
 		site := A_LoopField
 		Gui, ListView, WQlv%i%
 		LV_Delete()																		; refresh each respective LV
@@ -1040,7 +1073,7 @@ WQlist() {
 			dt := A_now
 			dt -= e0.date, Days
 			e0.dev := RegExReplace(e0.dev,"BodyGuardian","BG")
-			;~ if (instr(e0.dev,"BG") && (dt < 30)) {										; skip BGH less than 30 days
+			;~ if (instr(e0.dev,"BG") && (dt < 30)) {									; skip BGH less than 30 days
 				;~ continue
 			;~ }
 			CLV_col := ""
@@ -1050,7 +1083,7 @@ WQlist() {
 				CLV_col := "red"
 			}
 			
-			Gui, ListView, WQlv%i%
+			Gui, ListView, WQlv%i%														; add to clinic loc listview
 			LV_Add(""
 				,id
 				,e0.date
@@ -1065,7 +1098,7 @@ WQlist() {
 			if (CLV_col) {
 				CLV_%i%.Row(LV_GetCount(),,CLV_col)
 			}
-			Gui, ListView, WQlv_all														
+			Gui, ListView, WQlv_all														; add to ALL listview
 			LV_Add(""
 				,id
 				,e0.date
@@ -1188,7 +1221,7 @@ readPrevTxt() {
 	
 	Progress,,% " ",Updating Preventice data...
 	FileRead, txt, % filenm
-	StringReplace txt, txt, `n, `n, All UseErrorLevel
+	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
 	n := ErrorLevel
 	
 	loop, read, % ".\files\prev.txt"
@@ -1247,12 +1280,13 @@ parsePrevEnroll(txt) {
 	
 	/*	Check whether any params match this device
 	*/
-		if enrollcheck("[name='" res.name "']"											; 6/6 perfect match
+		if (id:=enrollcheck("[name='" res.name "']"										; 6/6 perfect match
 			. "[mrn='" res.mrn "']"
 			. "[date='" res.date "']"
 			. "[dev='" res.dev "']"
 			. "[prov='" res.prov "']"
-			. "[site='" res.site "']" ) {
+			. "[site='" res.site "']" )) {
+			checkweb(id)
 			return
 		}
 		if (id:=enrollcheck("[name='" res.name "']"										; 4/6 perfect match
@@ -1263,9 +1297,10 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed matched NAME+MRN+DATE+DEV.")
+			eventlog("parsePrevEnroll " id "." en.node " changed PROV+SITE - matched NAME+MRN+DATE+DEV.")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
+			checkweb(id)
 			return
 		}
 		if (id:=enrollcheck("[mrn='" res.mrn "']"										; Probably perfect MRN+S/N+DATE
@@ -1275,10 +1310,11 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DEV+DATE.")
+			eventlog("parsePrevEnroll " id "." en.node " changed NAME+PROV+SITE - matched MRN+DEV+DATE.")
 			parsePrevElement(id,en,res,"name")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
+			checkweb(id)
 			return
 		}
 		if (id:=enrollcheck("[mrn='" res.mrn "'][date='" res.date "']")) {				; MRN+DATE, no S/N
@@ -1286,7 +1322,6 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DATE.")
 			if (en.node="orders") {														; falls through if not in <pending> or <done>
 				addPrevEnroll(id,res)													; create a <pending> record
 				wqSetVal(id,"name",en.name)												; copy remaining values from order (en)
@@ -1299,7 +1334,9 @@ parsePrevEnroll(txt) {
 				eventlog("addPrevEnroll moved Order ID " id " for " en.name " to Pending.")
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " added DEV - only matched MRN+DATE.")
 			parsePrevElement(id,en,res,"dev")
+			checkweb(id)
 			return
 		}
 		if (id:=enrollcheck("[date='" res.date "'][dev='" res.dev "']")) {				; DATE+S/N, no MRN
@@ -1307,8 +1344,9 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed matched DATE+DEV.")
+			eventlog("parsePrevEnroll " id "." en.node " added MRN - only matched DATE+DEV.")
 			parsePrevElement(id,en,res,"mrn")
+			checkweb(id)
 			return
 		} 
 		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
@@ -1316,13 +1354,14 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DEV.")
 			dt0:=res.date
 			dt0 -= en.date, days
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
 				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
-				return
+				eventlog("parsePrevEnroll " id "." en.node " adjusted date - only matched MRN+DEV.")
 			}
+			checkweb(id)
+			return
 		}
 		if (id:=wq.selectSingleNode("/root/orders/enroll[mrn='" res.mrn "']").getAttribute("id")) {
 			en:=readWQ(id)																; MRN found in Orders
@@ -1438,7 +1477,7 @@ readWQ(idx) {
 	k := wq.selectSingleNode("//enroll[@id='" idx "']")
 	Loop, % (ch:=k.selectNodes("*")).Length
 	{
-		i := ch.item(A_index-1)
+		i := ch.item(A_Index-1)
 		node := i.nodeName
 		val := i.text
 		res[node]:=val
@@ -1490,6 +1529,18 @@ readWQlv:
 	if (fldval.node = "done") {															; task has been done already by another user
 		MsgBox, 262208, Completed, File has already been processed!
 		WQlist()																		; refresh list and return
+		return
+	}
+	if (fldval.webgrab="") {
+		MsgBox 0x40030
+			, Registration issue
+			, % "No registration found on Preventice site.`n"
+			. "Contact Preventice to correct.`n`n"
+			. "Name: " fldVal.Name "`n"
+			. "MRN: " fldVal.MRN "`n"
+			. "Device: " fldVal.dev "`n"
+			. "Study date: " niceDate(fldVal.date) "`n"
+		WQlist()
 		return
 	}
 	
@@ -2057,6 +2108,19 @@ findWQid(DT:="",MRN:="",ser:="") {
 	return {id:x.getAttribute("id"),node:x.parentNode.nodeName}								; returns {id,node}; or null (error) if no match
 }
 
+checkweb(id) {
+	global wq
+
+	en := "//enroll[@id='" id "']"
+	if (wq.selectSingleNode(en "/webgrab").text) {											; webgrab already exists
+		Return
+	} else {
+		wq.addElement("webgrab",en,A_now)
+		eventlog("Added webgrab for id " id)
+		Return
+	}
+}
+
 cleanTempFiles() {
 	thresh:=180
 	
@@ -2114,7 +2178,7 @@ checkMWUapp()
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
 		{
-			progress, % A_index
+			progress, % A_Index
 			if WinExist("Mortara Web Upload") {
 				break
 			}
@@ -2171,7 +2235,7 @@ MortaraUpload(tabnum="")
 		dirDate :=
 		loop, % webUploadDir.Length()													; scan webUploadDir's for most recent Data
 		{
-			hit := webUploadDir[A_index]
+			hit := webUploadDir[A_Index]
 			FileGetTime, hit_m, % hit "\Data"
 			if (hit_m>=dirDate) {
 				dirDate := hit_m
@@ -2484,13 +2548,13 @@ MorUIgrab() {
 		ControlGetText, val, %str%, ahk_id %id%
 		ControlGetPos, mx, my, mw, mh, %str%, ahk_id %id%
 		if (val=" Transfer Recording ") {
-			TRct := A_index
+			TRct := A_Index
 		}
 		if (val=" Prepare Recorder Media ") {
 			PRct := A_Index
 		}
 		el := {x:mx,y:my,w:mw,h:mh,str:str,val:val}
-		q[A_index] := el
+		q[A_Index] := el
 	}
 	q.tab := Wintab
 	q.vis := vistxt
@@ -2510,7 +2574,7 @@ MorUIfind(val,start) {
 	
 	loop, % mu_UI.maxIndex()
 	{
-		if (A_index<start) {
+		if (A_Index<start) {
 			continue
 		}
 		el := mu_UI[A_Index]
@@ -2539,7 +2603,7 @@ MorUIfield(val,start) {
 	
 	loop, % mu_UI.MaxIndex()
 	{
-		if (A_index<start) {
+		if (A_Index<start) {
 			continue
 		}
 		i := mu_UI[A_Index]
@@ -2550,7 +2614,7 @@ MorUIfield(val,start) {
 			continue
 		}
 		if ((i.y>el.y-var) and (i.y<el.y+var)) {
-			q .= substr("000" i.x,-3) "- " A_index "`n"
+			q .= substr("000" i.x,-3) "- " A_Index "`n"
 		}
 	}
 	sort, q
@@ -2585,7 +2649,7 @@ MorUIfill(start,win) {
 			dt := parseDate(val)
 			loop, % el.MaxIndex() 
 			{
-				x := el[A_index]
+				x := el[A_Index]
 				if instr(x,"edit") {
 					dobEdit.push(x)
 				}
@@ -2610,7 +2674,7 @@ UiFieldFill(fld,val,win) {
 		ControlGet, cbox, List,, % fld, ahk_id %win%
 		loop, parse, cbox, `n, `r
 		{
-			cb[A_index] := A_LoopField
+			cb[A_Index] := A_LoopField
 		}
 		Control, Choose, % ObjHasValue(cb,val), % fld, ahk_id %win%
 	}
@@ -2893,7 +2957,7 @@ selectDev(model="") {
 		tmp := StrSplit(devs,"|")														; split all devs into array
 		loop, % tmp.count()
 		{
-			i := tmp[A_index]
+			i := tmp[A_Index]
 			if instr(i,RegExReplace(typed,"[a-zA-Z]")) {								; item contains typed string (only include digits)
 				tmpDev .= "|" i 														; add to tmpdev menu
 				ct ++																	; increment counter
@@ -2967,7 +3031,7 @@ getPatInfo() {
 ;	Filter out contacts who are not likely guarantors or parents
 	loop, % rel.MaxIndex()
 	{
-		i := A_index
+		i := A_Index
 		if (rel[i].lives = true) {
 			ptDem.livesaddr := rel[i].addr
 			continue																	; keep if "Lives here" is true
@@ -2986,7 +3050,7 @@ getPatInfo() {
 	if (rel.MaxIndex() > 1) {
 		loop, % rel.MaxIndex()
 		{
-			nm .= A_index ") " rel[A_index].name "|"
+			nm .= A_Index ") " rel[A_Index].name "|"
 		}
 		eventlog("Multiple potential parent matches (" rel.MaxIndex() ").")
 		q := cmsgbox("Parent","Who is the guarantor?",trim(nm,"|"))
@@ -3840,7 +3904,7 @@ findFullPdf(wqid:="") {
 		fileIn := A_LoopFileFullPath													; full path and filename
 		fname := A_LoopFileName															; full filename
 		fnam := RegExReplace(fname,"i)\.pdf")											; filename without ext
-		progress, % 100*A_index/fileCount, % fname, Scanning PDFs folder
+		progress, % 100*A_Index/fileCount, % fname, Scanning PDFs folder
 		
 		;---Skip any PDFs that have already been processed or are in the middle of being processed
 		if (fname~="i)-short\.pdf") {
@@ -4582,7 +4646,7 @@ oneCol(txt) {
 		{
 			i := A_LoopField
 			
-			if (A_index=1) {
+			if (A_Index=1) {
 				pos := RegExMatch(i	"  "										; Add "  " to end of scan string
 								,"O)(?<=(\s{2}))[^\s]"							; Search "  text" as each column 
 								,col
@@ -4694,7 +4758,7 @@ fieldvals(x,bl,bl2) {
 		m := (j) 
 			?	strVal(x,i,j,n,n)														; ...is not null ==> returns value between
 			:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")								; ...is null ==> returns from field[k] to end
-		lbl := labels[bl][A_index]
+		lbl := labels[bl][A_Index]
 		if (lbl~="^\w{3}:") {															; has prefix e.g. "dem:name2"
 			pre := substr(lbl,1,3)														; change pre for this loop, e.g. "dem"
 			lbl := substr(lbl,5)														; change lbl for this loop, e.g. "name2"
@@ -5134,7 +5198,7 @@ IEclose() {
 	DetectHiddenWindows, On
 	while WinExist("ahk_class IEFrame")
 	{
-		i := A_index
+		i := A_Index
 		Process, Close, iexplore.exe
 		sleep 500
 	}
@@ -5491,7 +5555,7 @@ WriteSave(z) {
 			break
 		}
 		
-		eventlog("WriteSave failed " A_index)
+		eventlog("WriteSave failed " A_Index)
 		sleep 2000
 	}
 	
