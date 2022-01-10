@@ -300,7 +300,7 @@ PhaseGUI:
 	
 	Loop, parse, sites, |
 	{
-		i := A_index
+		i := A_Index
 		site := A_LoopField
 		Gui, Tab, % site
 		Gui, Add, Listview
@@ -412,7 +412,7 @@ lateReport:
 	num := ens.length
 	Loop, % num
 	{
-		Progress,,,% A_index "/" num 
+		Progress,,,% A_Index "/" num 
 		k := ens.item(A_Index-1)
 		id	:= k.getAttribute("id")
 		e := readWQ(id)
@@ -437,7 +437,7 @@ regReport:
 	num := ens.length
 	loop, % num
 	{
-		Progress,,,% A_index "/" num 
+		Progress,,,% A_Index "/" num 
 		k := ens.item(A_Index-1)
 		id	:= k.getAttribute("id")
 		e := readWQ(id)
@@ -606,7 +606,7 @@ WQtask() {
 	list :=
 	Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
 	{
-		k := notes.item(A_index-1)
+		k := notes.item(A_Index-1)
 		dt := parsedate(k.getAttribute("date"))
 		list .= dt.mm "/" dt.dd ":" k.getAttribute("user") ": " k.text "`n"
 	}
@@ -1028,7 +1028,7 @@ WQlist() {
 	
 	Loop, parse, sites, |
 	{
-		i := A_index
+		i := A_Index
 		site := A_LoopField
 		Gui, ListView, WQlv%i%
 		LV_Delete()																		; refresh each respective LV
@@ -1444,7 +1444,7 @@ readWQ(idx) {
 	k := wq.selectSingleNode("//enroll[@id='" idx "']")
 	Loop, % (ch:=k.selectNodes("*")).Length
 	{
-		i := ch.item(A_index-1)
+		i := ch.item(A_Index-1)
 		node := i.nodeName
 		val := i.text
 		res[node]:=val
@@ -2133,7 +2133,7 @@ checkMWUapp()
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
 		{
-			progress, % A_index
+			progress, % A_Index
 			if WinExist("Mortara Web Upload") {
 				break
 			}
@@ -2190,7 +2190,7 @@ MortaraUpload(tabnum="")
 		dirDate :=
 		loop, % webUploadDir.Length()													; scan webUploadDir's for most recent Data
 		{
-			hit := webUploadDir[A_index]
+			hit := webUploadDir[A_Index]
 			FileGetTime, hit_m, % hit "\Data"
 			if (hit_m>=dirDate) {
 				dirDate := hit_m
@@ -2503,13 +2503,13 @@ MorUIgrab() {
 		ControlGetText, val, %str%, ahk_id %id%
 		ControlGetPos, mx, my, mw, mh, %str%, ahk_id %id%
 		if (val=" Transfer Recording ") {
-			TRct := A_index
+			TRct := A_Index
 		}
 		if (val=" Prepare Recorder Media ") {
 			PRct := A_Index
 		}
 		el := {x:mx,y:my,w:mw,h:mh,str:str,val:val}
-		q[A_index] := el
+		q[A_Index] := el
 	}
 	q.tab := Wintab
 	q.vis := vistxt
@@ -2529,7 +2529,7 @@ MorUIfind(val,start) {
 	
 	loop, % mu_UI.maxIndex()
 	{
-		if (A_index<start) {
+		if (A_Index<start) {
 			continue
 		}
 		el := mu_UI[A_Index]
@@ -2558,7 +2558,7 @@ MorUIfield(val,start) {
 	
 	loop, % mu_UI.MaxIndex()
 	{
-		if (A_index<start) {
+		if (A_Index<start) {
 			continue
 		}
 		i := mu_UI[A_Index]
@@ -2569,7 +2569,7 @@ MorUIfield(val,start) {
 			continue
 		}
 		if ((i.y>el.y-var) and (i.y<el.y+var)) {
-			q .= substr("000" i.x,-3) "- " A_index "`n"
+			q .= substr("000" i.x,-3) "- " A_Index "`n"
 		}
 	}
 	sort, q
@@ -2604,7 +2604,7 @@ MorUIfill(start,win) {
 			dt := parseDate(val)
 			loop, % el.MaxIndex() 
 			{
-				x := el[A_index]
+				x := el[A_Index]
 				if instr(x,"edit") {
 					dobEdit.push(x)
 				}
@@ -2629,7 +2629,7 @@ UiFieldFill(fld,val,win) {
 		ControlGet, cbox, List,, % fld, ahk_id %win%
 		loop, parse, cbox, `n, `r
 		{
-			cb[A_index] := A_LoopField
+			cb[A_Index] := A_LoopField
 		}
 		Control, Choose, % ObjHasValue(cb,val), % fld, ahk_id %win%
 	}
@@ -2912,7 +2912,7 @@ selectDev(model="") {
 		tmp := StrSplit(devs,"|")														; split all devs into array
 		loop, % tmp.count()
 		{
-			i := tmp[A_index]
+			i := tmp[A_Index]
 			if instr(i,RegExReplace(typed,"[a-zA-Z]")) {								; item contains typed string (only include digits)
 				tmpDev .= "|" i 														; add to tmpdev menu
 				ct ++																	; increment counter
@@ -2986,7 +2986,7 @@ getPatInfo() {
 ;	Filter out contacts who are not likely guarantors or parents
 	loop, % rel.MaxIndex()
 	{
-		i := A_index
+		i := A_Index
 		if (rel[i].lives = true) {
 			ptDem.livesaddr := rel[i].addr
 			continue																	; keep if "Lives here" is true
@@ -3005,7 +3005,7 @@ getPatInfo() {
 	if (rel.MaxIndex() > 1) {
 		loop, % rel.MaxIndex()
 		{
-			nm .= A_index ") " rel[A_index].name "|"
+			nm .= A_Index ") " rel[A_Index].name "|"
 		}
 		eventlog("Multiple potential parent matches (" rel.MaxIndex() ").")
 		q := cmsgbox("Parent","Who is the guarantor?",trim(nm,"|"))
@@ -3859,7 +3859,7 @@ findFullPdf(wqid:="") {
 		fileIn := A_LoopFileFullPath													; full path and filename
 		fname := A_LoopFileName															; full filename
 		fnam := RegExReplace(fname,"i)\.pdf")											; filename without ext
-		progress, % 100*A_index/fileCount, % fname, Scanning PDFs folder
+		progress, % 100*A_Index/fileCount, % fname, Scanning PDFs folder
 		
 		;---Skip any PDFs that have already been processed or are in the middle of being processed
 		if (fname~="i)-short\.pdf") {
@@ -4601,7 +4601,7 @@ oneCol(txt) {
 		{
 			i := A_LoopField
 			
-			if (A_index=1) {
+			if (A_Index=1) {
 				pos := RegExMatch(i	"  "										; Add "  " to end of scan string
 								,"O)(?<=(\s{2}))[^\s]"							; Search "  text" as each column 
 								,col
@@ -4713,7 +4713,7 @@ fieldvals(x,bl,bl2) {
 		m := (j) 
 			?	strVal(x,i,j,n,n)														; ...is not null ==> returns value between
 			:	trim(strX(SubStr(x,n),":",1,1,"",0)," `n")								; ...is null ==> returns from field[k] to end
-		lbl := labels[bl][A_index]
+		lbl := labels[bl][A_Index]
 		if (lbl~="^\w{3}:") {															; has prefix e.g. "dem:name2"
 			pre := substr(lbl,1,3)														; change pre for this loop, e.g. "dem"
 			lbl := substr(lbl,5)														; change lbl for this loop, e.g. "name2"
@@ -5153,7 +5153,7 @@ IEclose() {
 	DetectHiddenWindows, On
 	while WinExist("ahk_class IEFrame")
 	{
-		i := A_index
+		i := A_Index
 		Process, Close, iexplore.exe
 		sleep 500
 	}
@@ -5510,7 +5510,7 @@ WriteSave(z) {
 			break
 		}
 		
-		eventlog("WriteSave failed " A_index)
+		eventlog("WriteSave failed " A_Index)
 		sleep 2000
 	}
 	
