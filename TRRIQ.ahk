@@ -253,6 +253,8 @@ PhaseGUI:
 		LV_ModifyCol(7,"2")																; wqid
 		LV_ModifyCol(8,"40")															; ftype
 		LV_ModifyCol(9,"70 Center")														; ftp
+		CLV_in := new LV_Colors(HLV_in,true,false)
+		CLV_in.Critical := 100
 	}
 	
 	Gui, Tab, ORDERS
@@ -1017,7 +1019,33 @@ WQlist() {
 			wqfiles.push(id)															; add non-null wqid to wqfiles
 		}
 	}
+
 	LV_ModifyCol(6,"Sort")																; date
+
+/*	Scan <pending> for missing webgrab
+	no webgrab means no registration received at Preventice for some reason
+*/	
+	loop, % (ens:=wq.selectNodes("/root/pending/enroll")).Length
+	{
+		en := ens.item(A_Index-1)
+		id := en.getAttribute("id")
+		wb := en.selectSingleNode("webgrab").text
+		if !(wb) {
+			res := readwq(id)
+			LV_Add(""
+				, path.holterPDF val													; filename and path to HolterDir
+				, strQ(res.Name,"###",strX(val,"",1,0,"_",1))							; name from wqid or filename
+				, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))							; mrn
+				, strQ(res.dob,"###")													; dob
+				, strQ(res.site,"###","???")											; site
+				, strQ(nicedate(res.date),"###")										; study date
+				, id																	; wqid
+				, ftype																	; study type
+				, "No Reg"																; fulldisc present, make blank
+				, "X")
+			CLV_in.Row(LV_GetCount(),,"red")
+		}
+	}
 
 	}	; <-- finish Main Campus Inbox
 	
