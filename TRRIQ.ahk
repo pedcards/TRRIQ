@@ -1188,7 +1188,7 @@ readPrevTxt() {
 	
 	Progress,,% " ",Updating Preventice data...
 	FileRead, txt, % filenm
-	StringReplace txt, txt, `n, `n, All UseErrorLevel
+	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
 	n := ErrorLevel
 	
 	loop, read, % ".\files\prev.txt"
@@ -1247,12 +1247,13 @@ parsePrevEnroll(txt) {
 	
 	/*	Check whether any params match this device
 	*/
-		if enrollcheck("[name='" res.name "']"											; 6/6 perfect match
+		if (id:=enrollcheck("[name='" res.name "']"										; 6/6 perfect match
 			. "[mrn='" res.mrn "']"
 			. "[date='" res.date "']"
 			. "[dev='" res.dev "']"
 			. "[prov='" res.prov "']"
-			. "[site='" res.site "']" ) {
+			. "[site='" res.site "']" )) {
+			checkweb(id)
 			return
 		}
 		if (id:=enrollcheck("[name='" res.name "']"										; 4/6 perfect match
@@ -1263,9 +1264,10 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed matched NAME+MRN+DATE+DEV.")
+			eventlog("parsePrevEnroll " id "." en.node " changed PROV+SITE - matched NAME+MRN+DATE+DEV.")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
+			checkweb(id)
 			return
 		}
 		if (id:=enrollcheck("[mrn='" res.mrn "']"										; Probably perfect MRN+S/N+DATE
@@ -1275,10 +1277,11 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DEV+DATE.")
+			eventlog("parsePrevEnroll " id "." en.node " changed NAME+PROV+SITE - matched MRN+DEV+DATE.")
 			parsePrevElement(id,en,res,"name")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
+			checkweb(id)
 			return
 		}
 		if (id:=enrollcheck("[mrn='" res.mrn "'][date='" res.date "']")) {				; MRN+DATE, no S/N
@@ -1286,7 +1289,6 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DATE.")
 			if (en.node="orders") {														; falls through if not in <pending> or <done>
 				addPrevEnroll(id,res)													; create a <pending> record
 				wqSetVal(id,"name",en.name)												; copy remaining values from order (en)
@@ -1299,7 +1301,9 @@ parsePrevEnroll(txt) {
 				eventlog("addPrevEnroll moved Order ID " id " for " en.name " to Pending.")
 				return
 			}
+			eventlog("parsePrevEnroll " id "." en.node " added DEV - only matched MRN+DATE.")
 			parsePrevElement(id,en,res,"dev")
+			checkweb(id)
 			return
 		}
 		if (id:=enrollcheck("[date='" res.date "'][dev='" res.dev "']")) {				; DATE+S/N, no MRN
@@ -1307,8 +1311,9 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed matched DATE+DEV.")
+			eventlog("parsePrevEnroll " id "." en.node " added MRN - only matched DATE+DEV.")
 			parsePrevElement(id,en,res,"mrn")
+			checkweb(id)
 			return
 		} 
 		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
@@ -1316,13 +1321,14 @@ parsePrevEnroll(txt) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed matched MRN+DEV.")
 			dt0:=res.date
 			dt0 -= en.date, days
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
 				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
-				return
+				eventlog("parsePrevEnroll " id "." en.node " adjusted date - only matched MRN+DEV.")
 			}
+			checkweb(id)
+			return
 		}
 		if (id:=wq.selectSingleNode("/root/orders/enroll[mrn='" res.mrn "']").getAttribute("id")) {
 			en:=readWQ(id)																; MRN found in Orders
