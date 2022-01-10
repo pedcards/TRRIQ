@@ -1040,7 +1040,7 @@ WQlist() {
 			dt := A_now
 			dt -= e0.date, Days
 			e0.dev := RegExReplace(e0.dev,"BodyGuardian","BG")
-			;~ if (instr(e0.dev,"BG") && (dt < 30)) {										; skip BGH less than 30 days
+			;~ if (instr(e0.dev,"BG") && (dt < 30)) {									; skip BGH less than 30 days
 				;~ continue
 			;~ }
 			CLV_col := ""
@@ -1050,7 +1050,7 @@ WQlist() {
 				CLV_col := "red"
 			}
 			
-			Gui, ListView, WQlv%i%
+			Gui, ListView, WQlv%i%														; add to clinic loc listview
 			LV_Add(""
 				,id
 				,e0.date
@@ -1065,7 +1065,7 @@ WQlist() {
 			if (CLV_col) {
 				CLV_%i%.Row(LV_GetCount(),,CLV_col)
 			}
-			Gui, ListView, WQlv_all														
+			Gui, ListView, WQlv_all														; add to ALL listview
 			LV_Add(""
 				,id
 				,e0.date
