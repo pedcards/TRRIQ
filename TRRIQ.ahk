@@ -1855,7 +1855,7 @@ parseORM() {
 		indication := strQ(indCode,"###") strQ(indText,"^###")
 	}
 	
-	return {date:parseDate(fldval.PV1_DateTime).YMD
+	return {date:parseDate(fldval.OBR_StartDateTime).YMD
 		, encDate:parseDate(fldval.PV1_DateTime).YMD
 		, nameL:fldval.PID_NameL
 		, nameF:fldval.PID_NameF
