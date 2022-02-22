@@ -41,6 +41,7 @@ updateCall() {
 		eventlog("Uploaded call list.")
 	}
 	FileDelete, .lock
+	FileCopy, .\files\call.xml, % path.chip "call.xml" , 1
 	
 	return
 }
