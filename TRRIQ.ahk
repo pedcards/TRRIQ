@@ -5442,6 +5442,8 @@ ParseDate(x) {
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
 			, YMD:date.yyyy date.mm date.dd
 			, MDY:date.mm "/" date.dd "/" date.yyyy
+			, MMDD:date.mm "/" date.dd
+			, hrmin:zdigit(time.hr) ":" zdigit(time.min)
 			, days:zdigit(time.days)
 			, hr:zdigit(time.hr), min:zdigit(time.min), sec:zdigit(time.sec)
 			, ampm:time.ampm, time:time.time
