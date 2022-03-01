@@ -1382,6 +1382,28 @@ parsePrevEnroll(txt) {
 				eventlog("addPrevEnroll order ID " id " for " en.name " " en.mrn " matched MRN only, moved to Pending.")
 				return
 			}
+		}
+		loop, % (allpend:=wq.selectNodes("/root/pending/enroll[mrn='" res.mrn "']")).Length
+		{
+			k := allpend.item(A_index-1)
+			kser := k.selectSingleNode("dev").text
+			kdev := strX(kser,"",0,1," - ",0,3) 
+			rdev := strX(res.dev,"",0,1," - ",0,3)
+			if !(kdev~=rdev) {															; rdev (from prev.txt) doesn't match kdev (from enroll)
+				Continue
+			}
+
+			id := k.getAttribute("id")
+			dt := kdate := k.selectSingleNode("date").text
+			dt -= res.date, Days
+			if abs(dt) between 1 and 5													; if Preventice registration (res.date) off from 1-5 days
+			{
+				wqSetVal(id,"date",res.date)
+				wqSetVal(id,"dev",res.dev)
+				checkweb(id)
+				eventlog("parsePrevEnroll " id "." en.node " changed DATE from " kdate " to " res.date ".")
+				return
+			}
 		}																				; anything else is probably a new registration
 		
 	/*	No match (i.e. unique record)
