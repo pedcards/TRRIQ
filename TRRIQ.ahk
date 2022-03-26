@@ -2285,6 +2285,13 @@ MortaraUpload(tabnum="")
 		}
 		wuDir.Short := strX(wuDir.Full,"\",0,1,"",0)									; transfer files found
 		eventlog("Found WebUploadDir " wuDir.Short )
+		wuDir.endDir := wuDir.Short "`n"
+		Loop, files, % wuDir.Full "\*"
+		{
+			wuDir.endDir .= A_LoopFileTimeModified "`t[" A_LoopFileSize "]`t" A_LoopFileName "`n"
+		}
+		FileAppend, % wuDir.endDir, .\tempfiles\%A_now%-DIR.txt							; for now, writeout target dir for each upload
+
 		FileReadLine, wuRecord, % wuDir.Full "\RECORD.LOG", 1
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
 		FileRead, wuConfig, % wuDir.Full "\CONFIG.SYS"
@@ -2322,8 +2329,6 @@ MortaraUpload(tabnum="")
 			return
 		}
 		
-			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt				; for now, writeout fulldir for each upload
-
 		wq := new XML("worklist.xml")													; refresh WQ
 		wqStr := "/root/pending/enroll[dev='Mortara H3+ - " SerNum "'][mrn='" wuDir.MRN "']"
 		wqTR:=wq.selectSingleNode(wqStr)
