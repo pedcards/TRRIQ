@@ -1212,6 +1212,17 @@ cleanDone() {
 readPrevTxt() {
 	global wq
 	
+	Progress,,% " ",Updating Preventice data...
+
+	y := new XML(".\files\Patient Status Report_v2.xml")
+	ydt := parseDate(y.selectSingleNode("Report").getAttribute("ReportTitle"))
+	dc := y.selectSingleNode("//Details_Collection")
+	loop, % (cols:=dc.selectNodes("Details")).length()
+	{
+		k := cols.item(A_Index-1)
+		parsePrevEnroll(k)
+	}
+
 	filenm := ".\files\prev.txt"
 	prevtxtdt := wq.selectSingleNode("/root/pending").getAttribute("update")
 	FileGetTime, filedt, % filenm
@@ -1219,7 +1230,6 @@ readPrevTxt() {
 		return
 	}
 	
-	Progress,,% " ",Updating Preventice data...
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
 	n := ErrorLevel
