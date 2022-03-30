@@ -1269,27 +1269,37 @@ readPrevTxt() {
 return	
 }
 
-parsePrevEnroll(txt) {
+parsePrevEnroll(col) {
 /*	Parse line from prev.txt
 	"enroll"|date|name|mrn|dev - s/n|prov|site
 	Match to existing/likely enroll nodes
 	Update enroll node with new info if missing
 */
 	global wq
-	el := StrSplit(txt,"|")
+
+/* 	el := StrSplit(txt,"|")
 	res := {  date:parseDate(el.2).YMD
 			, name:parsename(el.3).lastfirst
 			, mrn:el.4
 			, dev:el.5
 			, prov:filterProv(el.6).name
 			, site:filterProv(el.6).site }
+ */
+	res := {  date:parseDate(col.getAttribute("Date_Enrolled")).YMD
+			, name:col.getAttribute("PatientLastName") ", " col.getAttribute("PatientFirstName")
+			, mrn:col.getAttribute("MRN1")
+			, dev:col.getAttribute("Device_Type") " - " col.getAttribute("Device_Serial")
+			, prov:filterProv(col.getAttribute("Ordering_Physician")).name
+			, site:filterProv(col.getAttribute("Ordering_Physician")).site
+			, id:col.getAttribute("CSN_SecondaryID1") }
 	
-	if (res.dev~="-$") {																; e.g. "Body Guardian Mini -"
+	if (res.dev~=" - $") {																; e.g. "Body Guardian Mini -"
 		res.dev .= res.name																; append string so will not match in enrollcheck
 	}
 	
 	/*	Check whether any params match this device
 	*/
+
 		if (id:=enrollcheck("[name='" res.name "']"										; 6/6 perfect match
 			. "[mrn='" res.mrn "']"
 			. "[date='" res.date "']"
