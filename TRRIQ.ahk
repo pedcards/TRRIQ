@@ -1220,7 +1220,7 @@ readPrevTxt() {
 	numcols := cols.length()
 	loop, % numcols
 	{
-		k := cols.item(A_Index-1)
+		k := cols.item(numcols-A_Index)													; read nodes from oldest to newest
 		parsePrevEnroll(k)
 	}
 
