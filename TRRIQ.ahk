@@ -1220,7 +1220,7 @@ readPrevTxt() {
 	numdets := dets.length()
 	loop, % numdets
 	{
-		k := dets.item(numcols-A_Index)													; read nodes from oldest to newest
+		k := dets.item(numdets-A_Index)													; read nodes from oldest to newest
 		parsePrevEnroll(k)
 	}
 
