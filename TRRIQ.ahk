@@ -1216,8 +1216,9 @@ readPrevTxt() {
 
 	y := new XML(".\files\Patient Status Report_v2.xml")
 	ydt := parseDate(y.selectSingleNode("Report").getAttribute("ReportTitle"))
-	dc := y.selectSingleNode("//Details_Collection")
-	loop, % (cols:=dc.selectNodes("Details")).length()
+	cols := y.selectNodes("//Details_Collection/Details")
+	numcols := cols.length()
+	loop, % numcols
 	{
 		k := cols.item(A_Index-1)
 		parsePrevEnroll(k)
