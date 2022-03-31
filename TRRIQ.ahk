@@ -1216,11 +1216,11 @@ readPrevTxt() {
 
 	y := new XML(".\files\Patient Status Report_v2.xml")
 	ydt := parseDate(y.selectSingleNode("Report").getAttribute("ReportTitle"))
-	cols := y.selectNodes("//Details_Collection/Details")
-	numcols := cols.length()
-	loop, % numcols
+	dets := y.selectNodes("//Details_Collection/Details")
+	numdets := dets.length()
+	loop, % numdets
 	{
-		k := cols.item(numcols-A_Index)													; read nodes from oldest to newest
+		k := dets.item(numcols-A_Index)													; read nodes from oldest to newest
 		parsePrevEnroll(k)
 	}
 
@@ -1270,7 +1270,7 @@ readPrevTxt() {
 return	
 }
 
-parsePrevEnroll(col) {
+parsePrevEnroll(det) {
 /*	Parse line from prev.txt
 	"enroll"|date|name|mrn|dev - s/n|prov|site
 	Match to existing/likely enroll nodes
@@ -1278,13 +1278,13 @@ parsePrevEnroll(col) {
 */
 	global wq
 
-	res := {  date:parseDate(col.getAttribute("Date_Enrolled")).YMD
-			, name:col.getAttribute("PatientLastName") ", " col.getAttribute("PatientFirstName")
-			, mrn:col.getAttribute("MRN1")
-			, dev:col.getAttribute("Device_Type") " - " col.getAttribute("Device_Serial")
-			, prov:filterProv(col.getAttribute("Ordering_Physician")).name
-			, site:filterProv(col.getAttribute("Ordering_Physician")).site
-			, id:col.getAttribute("CSN_SecondaryID1") }
+	res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
+			, name:det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName")
+			, mrn:det.getAttribute("MRN1")
+			, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
+			, prov:filterProv(det.getAttribute("Ordering_Physician")).name
+			, site:filterProv(det.getAttribute("Ordering_Physician")).site
+			, id:det.getAttribute("CSN_SecondaryID1") }
 	
 	if (res.dev~=" - $") {																; e.g. "Body Guardian Mini -"
 		res.dev .= res.name																; append string so will not match in enrollcheck
