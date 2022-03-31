@@ -1292,7 +1292,10 @@ parsePrevEnroll(col) {
 	
 	/*	Check whether any params match this device
 	*/
-
+		if (id:=enrollcheck("[@id='" res.id "']")) {									; id returned in Preventice ORU
+			checkweb(id)
+			return
+		}
 		if (id:=enrollcheck("[name='" res.name "']"										; 6/6 perfect match
 			. "[mrn='" res.mrn "']"
 			. "[date='" res.date "']"
@@ -5184,6 +5187,7 @@ filterProv(x) {
 	allsites := sites "|" sites0
 	RegExMatch(x,"i)-(" allsites ")\s*,",site)
 	x := trim(x)																		; trim leading and trailing spaces
+	x := RegExReplace(x,"i)\s{2,}"," ")													; replace extra spaces
 	x := RegExReplace(x,"i)\s*-\s*(" allsites ")$")										; remove trailing "LOUAY TONI(-tri)"
 	x := RegExReplace(x,"i)( [a-z](\.)? )"," ")											; remove middle initial "STEPHEN P SESLAR" to "Stephen Seslar"
 	x := RegExReplace(x,"i)^Dr(\.)?(\s)?")												; remove preceding "(Dr. )Veronica..."
