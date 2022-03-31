@@ -1212,16 +1212,23 @@ cleanDone() {
 readPrevTxt() {
 	global wq
 	
-	Progress,,% " ",Updating Preventice data...
+	Progress,,% " ",Updating Preventice data
 
-	y := new XML(".\files\Patient Status Report_v2.xml")
-	ydt := parseDate(y.selectSingleNode("Report").getAttribute("ReportTitle"))
-	dets := y.selectNodes("//Details_Collection/Details")
-	numdets := dets.length()
-	loop, % numdets
-	{
-		k := dets.item(numdets-A_Index)													; read nodes from oldest to newest
-		parsePrevEnroll(k)
+	psr := new XML(".\files\Patient Status Report_v2.xml")
+		psrdate := parseDate(psr.selectSingleNode("Report").getAttribute("ReportTitle"))
+		psrDT := psrdate.YMD psrdate.hr psrdate.min psrdate.sec
+	psrlastDT := wq.selectSingleNode("/root/pending").getAttribute("update")
+	if (psrDT>psrlastDT) {																; check if psrDT more recent
+		Progress,, Reading registration updates...
+		dets := psr.selectNodes("//Details_Collection/Details")
+		numdets := dets.length()
+		loop, % numdets
+		{
+			Progress, % A_Index
+			k := dets.item(numdets-A_Index)												; read nodes from oldest to newest
+			parsePrevEnroll(k)
+		}
+		wq.selectSingleNode("/root/pending").setAttribute("update",psrDT)				; set pending[@update] attr
 	}
 
 	filenm := ".\files\prev.txt"
