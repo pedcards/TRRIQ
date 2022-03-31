@@ -1278,14 +1278,6 @@ parsePrevEnroll(col) {
 */
 	global wq
 
-/* 	el := StrSplit(txt,"|")
-	res := {  date:parseDate(el.2).YMD
-			, name:parsename(el.3).lastfirst
-			, mrn:el.4
-			, dev:el.5
-			, prov:filterProv(el.6).name
-			, site:filterProv(el.6).site }
- */
 	res := {  date:parseDate(col.getAttribute("Date_Enrolled")).YMD
 			, name:col.getAttribute("PatientLastName") ", " col.getAttribute("PatientFirstName")
 			, mrn:col.getAttribute("MRN1")
