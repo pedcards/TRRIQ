@@ -1282,7 +1282,7 @@ parsePrevEnroll(det) {
 	global wq
 
 	res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
-			, name:det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName")
+			, name:format("{:U}",det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
 			, mrn:det.getAttribute("MRN1")
 			, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
 			, prov:filterProv(det.getAttribute("Ordering_Physician")).name
