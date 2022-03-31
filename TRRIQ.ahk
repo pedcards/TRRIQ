@@ -1232,12 +1232,12 @@ readPrevTxt() {
 	}
 
 	filenm := ".\files\prev.txt"
-	prevtxtdt := wq.selectSingleNode("/root/pending").getAttribute("update")
 	FileGetTime, filedt, % filenm
-	if (filedt=prevtxtdt) {																; update matches filedt means no change
-		return
+	lastInvDT := wq.selectSingleNode("/root/inventory").getAttribute("update")
+	if (filedt=lastInvDT) {
+		Return
 	}
-	
+	Progress,, Reading inventory updates...
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
 	n := ErrorLevel
@@ -1247,10 +1247,7 @@ readPrevTxt() {
 		Progress, % 100*A_Index/n
 		
 		k := A_LoopReadLine
-		if (k~="^enroll\|") {
-			parsePrevEnroll(k)
-		}
-		else if (k~="^dev\|") {
+		if (k~="^dev\|") {
 			if !(devct) {
 				k := wq.selectSingleNode("/root/inventory")								; create fresh inventory node
 				k.parentNode.removeChild(k)
@@ -1271,7 +1268,6 @@ readPrevTxt() {
 			eventlog("Removed inventory ser " ser)
 		}
 	}
-	wq.selectSingleNode("/root/pending").setAttribute("update",filedt)					; set pending[@update] attr
 	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set pending[@update] attr
 	
 return	
