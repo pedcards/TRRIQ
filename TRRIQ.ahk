@@ -1141,10 +1141,12 @@ WQlist() {
 			, e0.reading )
 	}
 	
-	tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update"))
 	GuiControl, Text, PhaseNumbers
 		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	"Preventice update: " tmp.mm "/" tmp.dd " @ " tmp.time "`n"
+		.	(tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update")))
+		.	"Preventice update: " tmp.MMDD " @ " tmp.hrmin "`n"
+		.	(tmp := parsedate(wq.selectSingleNode("/root/inventory").getAttribute("update")))
+		.	"Inventory update: " tmp.MMDD " @ " tmp.hrmin
 	
 	fileIn :=
 	progress, off
