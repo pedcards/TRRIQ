@@ -1249,8 +1249,8 @@ readPrevTxt() {
 		k := A_LoopReadLine
 		if (k~="^dev\|") {
 			if !(devct) {
-				k := wq.selectSingleNode("/root/inventory")								; create fresh inventory node
-				k.parentNode.removeChild(k)
+				inv := wq.selectSingleNode("/root/inventory")							; create fresh inventory node
+				inv.parentNode.removeChild(inv)
 				wq.addElement("inventory","/root")
 				devct := true
 			}
@@ -1288,7 +1288,7 @@ parsePrevEnroll(det) {
 			, prov:filterProv(det.getAttribute("Ordering_Physician")).name
 			, site:filterProv(det.getAttribute("Ordering_Physician")).site
 			, id:det.getAttribute("CSN_SecondaryID1") }
-	
+
 	if (res.dev~=" - $") {																; e.g. "Body Guardian Mini -"
 		res.dev .= res.name																; append string so will not match in enrollcheck
 	}
