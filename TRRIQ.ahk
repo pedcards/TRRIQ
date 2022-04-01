@@ -202,7 +202,7 @@ PhaseGUI:
 		, Refresh lists
 	Gui, Add, Button
 		, Y+10 wp h40 gPrevGrab Disabled
-		, Grab Preventice enrollments
+		, Grab Preventice updates
 	Gui, Add, Text, wp h40																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
@@ -226,8 +226,8 @@ PhaseGUI:
 	
 	GuiControl 
 	, % (wksloc="Main Campus" ? "Enable" : "Disable")  
-	, Grab Preventice enrollments 
-	
+	, Grab Preventice updates 
+
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
 	Gui, Add, Tab3																		; add Tab bar with tracked sites
