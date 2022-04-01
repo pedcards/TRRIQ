@@ -55,7 +55,7 @@ MainLoop:
 	}
 	wb.visible := gl.settings.isVisible
 	
-	PreventiceWebGrab("Enrollment")
+	; PreventiceWebGrab("Enrollment")
 	
 	PreventiceWebGrab("Inventory")
 	
