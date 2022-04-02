@@ -5433,9 +5433,9 @@ ParseDate(x) {
 	}
 	else if RegExMatch(x,"\b(\d{4})[\-\.](\d{2})[\-\.](\d{2})\b",d) {					; 2015-01-03
 		date.yyyy := d1
-		date.mm := d2
+		date.mm := zdigit(d2)
 		date.mmm := mo[d2]
-		date.dd := d3
+		date.dd := zdigit(d3)
 		date.date := trim(d)
 	}
 	else if RegExMatch(x,"i)(" moStr "|\d{1,2})" dSep "(\d{1,2})" dSep "(\d{4}|\d{2})",d) {	; Jan-03-2015, 01-03-2015
@@ -5490,6 +5490,7 @@ ParseDate(x) {
 
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
 			, YMD:date.yyyy date.mm date.dd
+			, YMDHMS:date.yyyy date.mm date.dd zDigit(time.hr) zDigit(time.min) zDigit(time.sec)
 			, MDY:date.mm "/" date.dd "/" date.yyyy
 			, MMDD:date.mm "/" date.dd
 			, hrmin:zdigit(time.hr) ":" zdigit(time.min)
