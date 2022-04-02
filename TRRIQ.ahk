@@ -5519,7 +5519,7 @@ year4dig(x) {
 
 zDigit(x) {
 ; Add leading zero to a number
-	return SubStr("0" . x, -1)
+	return SubStr("00" . x, -1)
 }
 
 ; Convert duration secs to DDHHMMSS
