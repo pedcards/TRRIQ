@@ -202,7 +202,7 @@ PhaseGUI:
 		, Refresh lists
 	Gui, Add, Button
 		, Y+10 wp h40 gPrevGrab Disabled
-		, Grab Preventice enrollments
+		, Grab Preventice updates
 	Gui, Add, Text, wp h40																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
@@ -226,8 +226,8 @@ PhaseGUI:
 	
 	GuiControl 
 	, % (wksloc="Main Campus" ? "Enable" : "Disable")  
-	, Grab Preventice enrollments 
-	
+	, Grab Preventice updates 
+
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
 	Gui, Add, Tab3																		; add Tab bar with tracked sites
@@ -1141,10 +1141,12 @@ WQlist() {
 			, e0.reading )
 	}
 	
-	tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update"))
 	GuiControl, Text, PhaseNumbers
 		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	"Preventice update: " tmp.mm "/" tmp.dd " @ " tmp.time "`n"
+		.	(tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update")))
+		.	"Preventice update: " tmp.MMDD " @ " tmp.hrmin "`n"
+		.	(tmp := parsedate(wq.selectSingleNode("/root/inventory").getAttribute("update")))
+		.	"Inventory update: " tmp.MMDD " @ " tmp.hrmin
 	
 	fileIn :=
 	progress, off
@@ -1212,14 +1214,32 @@ cleanDone() {
 readPrevTxt() {
 	global wq
 	
-	filenm := ".\files\prev.txt"
-	prevtxtdt := wq.selectSingleNode("/root/pending").getAttribute("update")
-	FileGetTime, filedt, % filenm
-	if (filedt=prevtxtdt) {																; update matches filedt means no change
-		return
+	Progress,,% " ",Updating Preventice data
+
+	psr := new XML(".\files\Patient Status Report_v2.xml")
+		psrdate := parseDate(psr.selectSingleNode("Report").getAttribute("ReportTitle"))	; report date is in Central Time
+		psrDT := psrdate.YMDHMS
+	psrlastDT := wq.selectSingleNode("/root/pending").getAttribute("update")
+	if (psrDT>psrlastDT) {																; check if psrDT more recent
+		Progress,, Reading registration updates...
+		dets := psr.selectNodes("//Details_Collection/Details")
+		numdets := dets.length()
+		loop, % numdets
+		{
+			Progress, % A_Index
+			k := dets.item(numdets-A_Index)												; read nodes from oldest to newest
+			parsePrevEnroll(k)
+		}
+		wq.selectSingleNode("/root/pending").setAttribute("update",psrDT)				; set pending[@update] attr
 	}
-	
-	Progress,,% " ",Updating Preventice data...
+
+	filenm := ".\files\prev.txt"
+	FileGetTime, filedt, % filenm
+	lastInvDT := wq.selectSingleNode("/root/inventory").getAttribute("update")
+	if (filedt=lastInvDT) {
+		Return
+	}
+	Progress,, Reading inventory updates...
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
 	n := ErrorLevel
@@ -1229,13 +1249,10 @@ readPrevTxt() {
 		Progress, % 100*A_Index/n
 		
 		k := A_LoopReadLine
-		if (k~="^enroll\|") {
-			parsePrevEnroll(k)
-		}
-		else if (k~="^dev\|") {
+		if (k~="^dev\|") {
 			if !(devct) {
-				k := wq.selectSingleNode("/root/inventory")								; create fresh inventory node
-				k.parentNode.removeChild(k)
+				inv := wq.selectSingleNode("/root/inventory")							; create fresh inventory node
+				inv.parentNode.removeChild(inv)
 				wq.addElement("inventory","/root")
 				devct := true
 			}
@@ -1253,33 +1270,37 @@ readPrevTxt() {
 			eventlog("Removed inventory ser " ser)
 		}
 	}
-	wq.selectSingleNode("/root/pending").setAttribute("update",filedt)					; set pending[@update] attr
 	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set pending[@update] attr
 	
 return	
 }
 
-parsePrevEnroll(txt) {
+parsePrevEnroll(det) {
 /*	Parse line from prev.txt
 	"enroll"|date|name|mrn|dev - s/n|prov|site
 	Match to existing/likely enroll nodes
 	Update enroll node with new info if missing
 */
 	global wq
-	el := StrSplit(txt,"|")
-	res := {  date:parseDate(el.2).YMD
-			, name:parsename(el.3).lastfirst
-			, mrn:el.4
-			, dev:el.5
-			, prov:filterProv(el.6).name
-			, site:filterProv(el.6).site }
-	
-	if (res.dev~="-$") {																; e.g. "Body Guardian Mini -"
+
+	res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
+			, name:format("{:U}",det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
+			, mrn:det.getAttribute("MRN1")
+			, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
+			, prov:filterProv(det.getAttribute("Ordering_Physician")).name
+			, site:filterProv(det.getAttribute("Ordering_Physician")).site
+			, id:det.getAttribute("CSN_SecondaryID1") }
+
+	if (res.dev~=" - $") {																; e.g. "Body Guardian Mini -"
 		res.dev .= res.name																; append string so will not match in enrollcheck
 	}
 	
 	/*	Check whether any params match this device
 	*/
+		if (id:=enrollcheck("[@id='" res.id "']")) {									; id returned in Preventice ORU
+			checkweb(id)
+			return
+		}
 		if (id:=enrollcheck("[name='" res.name "']"										; 6/6 perfect match
 			. "[mrn='" res.mrn "']"
 			. "[date='" res.date "']"
@@ -5171,6 +5192,7 @@ filterProv(x) {
 	allsites := sites "|" sites0
 	RegExMatch(x,"i)-(" allsites ")\s*,",site)
 	x := trim(x)																		; trim leading and trailing spaces
+	x := RegExReplace(x,"i)\s{2,}"," ")													; replace extra spaces
 	x := RegExReplace(x,"i)\s*-\s*(" allsites ")$")										; remove trailing "LOUAY TONI(-tri)"
 	x := RegExReplace(x,"i)( [a-z](\.)? )"," ")											; remove middle initial "STEPHEN P SESLAR" to "Stephen Seslar"
 	x := RegExReplace(x,"i)^Dr(\.)?(\s)?")												; remove preceding "(Dr. )Veronica..."
@@ -5411,9 +5433,9 @@ ParseDate(x) {
 	}
 	else if RegExMatch(x,"\b(\d{4})[\-\.](\d{2})[\-\.](\d{2})\b",d) {					; 2015-01-03
 		date.yyyy := d1
-		date.mm := d2
+		date.mm := zdigit(d2)
 		date.mmm := mo[d2]
-		date.dd := d3
+		date.dd := zdigit(d3)
 		date.date := trim(d)
 	}
 	else if RegExMatch(x,"i)(" moStr "|\d{1,2})" dSep "(\d{1,2})" dSep "(\d{4}|\d{2})",d) {	; Jan-03-2015, 01-03-2015
@@ -5468,6 +5490,7 @@ ParseDate(x) {
 
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
 			, YMD:date.yyyy date.mm date.dd
+			, YMDHMS:date.yyyy date.mm date.dd zDigit(time.hr) zDigit(time.min) zDigit(time.sec)
 			, MDY:date.mm "/" date.dd "/" date.yyyy
 			, MMDD:date.mm "/" date.dd
 			, hrmin:zdigit(time.hr) ":" zdigit(time.min)
@@ -5497,7 +5520,7 @@ year4dig(x) {
 
 zDigit(x) {
 ; Add leading zero to a number
-	return SubStr("0" . x, -1)
+	return SubStr("00" . x, -1)
 }
 
 ; Convert duration secs to DDHHMMSS
