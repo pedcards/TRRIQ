@@ -1217,8 +1217,8 @@ readPrevTxt() {
 	Progress,,% " ",Updating Preventice data
 
 	psr := new XML(".\files\Patient Status Report_v2.xml")
-		psrdate := parseDate(psr.selectSingleNode("Report").getAttribute("ReportTitle"))
-		psrDT := psrdate.YMD psrdate.hr psrdate.min psrdate.sec
+		psrdate := parseDate(psr.selectSingleNode("Report").getAttribute("ReportTitle"))	; report date is in Central Time
+		psrDT := psrdate.YMDHMS
 	psrlastDT := wq.selectSingleNode("/root/pending").getAttribute("update")
 	if (psrDT>psrlastDT) {																; check if psrDT more recent
 		Progress,, Reading registration updates...
