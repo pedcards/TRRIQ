@@ -2402,6 +2402,7 @@ MortaraUpload(tabnum="")
 			if FileExist(wuDir.Full "\Uploaded.txt") {
 				Gui, muTm:Destroy
 				settimer, muTimer, off
+				FileCopy, % wuDir.Full "\Uploaded.txt", .\tempfiles\%A_now%-UPLOADED.txt
 				break
 			}
 			if (ptDem.timer) {
