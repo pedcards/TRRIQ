@@ -1231,6 +1231,7 @@ readPrevTxt() {
 			parsePrevEnroll(k)
 		}
 		wq.selectSingleNode("/root/pending").setAttribute("update",psrDT)				; set pending[@update] attr
+		eventlog("Patient Status Report " pstDT " updated.")
 	}
 
 	filenm := ".\files\prev.txt"
@@ -1239,6 +1240,7 @@ readPrevTxt() {
 	if (filedt=lastInvDT) {
 		Return
 	}
+	eventlog("Preventice Inventory " fileDT " updated.")
 	Progress,, Reading inventory updates...
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
