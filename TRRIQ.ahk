@@ -2329,6 +2329,8 @@ MortaraUpload(tabnum="")
 		} else {
 			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
 			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
+			FileCopy, % wuDir.Full "\CONFIG.SYS", .\tempfiles\%A_Now%-CONFIG.SYS.txt
+			FileCopy, % wuDir.Full "\DEVICE.LOG", .\tempfiles\%A_Now%-DEVICE.LOG.txt
 			eventlog("No S/N found.")
 		}
 		if (t2) {																		; MRN found in CONFIG.SYS
