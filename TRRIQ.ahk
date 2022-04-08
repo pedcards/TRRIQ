@@ -2342,6 +2342,8 @@ MortaraUpload(tabnum="")
 		} else {
 			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
 			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
+			FileCopy, % wuDir.Full "\CONFIG.SYS", .\tempfiles\%A_Now%-CONFIG.SYS.txt
+			FileCopy, % wuDir.Full "\RECORD.LOG", .\tempfiles\%A_Now%-RECORD.LOG.txt
 			eventlog("No MRN found.")
 		}
 
