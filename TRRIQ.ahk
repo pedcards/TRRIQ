@@ -1300,6 +1300,12 @@ parsePrevEnroll(det) {
 	/*	Check whether any params match this device
 	*/
 		if (id:=enrollcheck("[@id='" res.id "']")) {									; id returned in Preventice ORU
+			parsePrevElement(id,en,res,"name")											; update elements if necessary
+			parsePrevElement(id,en,res,"mrn")
+			parsePrevElement(id,en,res,"date")
+			parsePrevElement(id,en,res,"dev")
+			parsePrevElement(id,en,res,"prov")
+			parsePrevElement(id,en,res,"site")
 			checkweb(id)
 			return
 		}
