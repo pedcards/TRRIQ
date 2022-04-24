@@ -2339,6 +2339,8 @@ MortaraUpload(tabnum="")
 			wuConfig .= (vNum>47 && vNum<58) ? chr(vNum) : " "
 		}
 		oFile.Close()
+		RegExMatch(vStr,"^.*?(\d{5}) ",t)
+		RegExMatch(vStr," (\d{6,})\s*$",s)
 		if (t1) {																		; SN found in CONFIG.SYS
 			wuDir.Ser := substr(t1,1-strlen(sernum))
 			eventlog("wuDirSer " wuDir.Ser " from CONFIG.SYS")
@@ -2352,8 +2354,8 @@ MortaraUpload(tabnum="")
 			FileCopy, % wuDir.Full "\DEVICE.LOG", .\tempfiles\%A_Now%-DEVICE.LOG.txt
 			eventlog("No S/N found.")
 		}
-		if (t2) {																		; MRN found in CONFIG.SYS
-			wuDir.MRN := t2
+		if (s1) {																		; MRN found in CONFIG.SYS
+			wuDir.MRN := s1
 			eventlog("wuDirMRN " wuDir.MRN " from CONFIG.SYS")
 		} else if RegExMatch(trim(wuRecord),"\d{6,}$") {								; MRN from RECORD.LOG
 			wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
