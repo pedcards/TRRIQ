@@ -2330,9 +2330,15 @@ MortaraUpload(tabnum="")
 
 		FileReadLine, wuRecord, % wuDir.Full "\RECORD.LOG", 1
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
-		FileRead, wuConfig, % wuDir.Full "\CONFIG.SYS"
-			wuConfig := substr(wuConfig,1,512)
-			RegExMatch(wuConfig,"\D(\d{5,})\D+(\d{6,})?\D",t)
+		wuConfig := ""
+		oFile := FileOpen(wuDir.Full "\CONFIG.SYS", "r")
+		oFile.Pos := 0 ;necessary if file is UTF-8/UTF-16 LE
+		Loop, 512
+		{
+			vNum := oFile.ReadUChar() ;reads data, advances pointer
+			wuConfig .= (vNum>47 && vNum<58) ? chr(vNum) : " "
+		}
+		oFile.Close()
 		if (t1) {																		; SN found in CONFIG.SYS
 			wuDir.Ser := substr(t1,1-strlen(sernum))
 			eventlog("wuDirSer " wuDir.Ser " from CONFIG.SYS")
