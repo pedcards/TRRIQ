@@ -3554,10 +3554,19 @@ epRead() {
 	
 	y := new XML(".\files\call.xml")
 	dlDate := A_Now
+	dlAdd := 0
+	dlHour := SubStr(dlDate, 9, 2)
 	FormatTime, dlDay, %dlDate%, dddd
 	if (dlDay="Friday") {
-		dlDate += 3, Days
+		dlAdd := 3
 	}
+	if (dlDay="Wednesday") {
+		dlAdd := 1
+	}
+	if (dlHour > 12) {
+		dlDate += dlAdd, Days
+	}
+
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
 
 	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)" epStr, ymatch)
