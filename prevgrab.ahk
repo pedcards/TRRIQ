@@ -129,6 +129,10 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	
 	pg0 := wb.document.getElementById(chgStr).innerText
 	
+	if (tot0 := stRegX(pg0,"i)items.*? of ",1,1,"\d+",0)) {
+		gl.inv_tot := tot0
+	}
+
 	if (phase="Enrollment") {
 		pgNum := gl.enroll_ct
 		wb.document.getElementById(btnStr).click() 										; click when id=btnStr
