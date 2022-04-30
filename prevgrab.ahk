@@ -258,6 +258,7 @@ parsePreventiceInventory(tbl) {
 			c_idx := A_Index-1
 			res[lbl[A_index]] := trim(tcols[c_idx].innertext)
 		}
+		gl.inv_ct ++
 		
 		if IsObject(wq.selectSingleNode("/root/pending/enroll"
 					. "[dev='" res.model " - " res.ser "']")) {							; exists in Pending
@@ -266,7 +267,6 @@ parsePreventiceInventory(tbl) {
 		}
 		
 		prevtxt .= "dev|" res.model "|" res.ser "`n"
-		gl.inv_ct ++
 	}
 
 	return true
