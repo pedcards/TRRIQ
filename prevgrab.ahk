@@ -59,6 +59,9 @@ MainLoop:
 	; PreventiceWebGrab("Enrollment")
 	
 	PreventiceWebGrab("Inventory")
+	if (gl.inv_ct < gl.inv_tot) {
+		gl.FAIL := true
+	}
 	
 	filedelete, % gl.files_dir "\prev.txt"												; writeout each one regardless
 	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
