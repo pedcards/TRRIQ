@@ -1278,7 +1278,7 @@ return
 }
 
 parsePrevEnroll(det) {
-/*	Parse line from prev.txt
+/*	Parse line from Patient Status Report_v2
 	"enroll"|date|name|mrn|dev - s/n|prov|site
 	Match to existing/likely enroll nodes
 	Update enroll node with new info if missing
@@ -1286,7 +1286,9 @@ parsePrevEnroll(det) {
 	global wq
 
 	res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
-			, name:format("{:U}",det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
+			, name:RegExReplace(format("{:U}"
+					,det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
+					,"\'","^")
 			, mrn:det.getAttribute("MRN1")
 			, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
 			, prov:filterProv(det.getAttribute("Ordering_Physician")).name
