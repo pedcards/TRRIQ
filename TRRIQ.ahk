@@ -1885,7 +1885,10 @@ parseORM() {
 			location := sitesLong[fldval.PV1_Location]
 		case "I":
 			encType := "Inpatient"
-			location := fldval.PV1_Location
+			location := "MAIN"
+		case "OBS":
+			encType := "Inpatient"
+			location := "MAIN"
 		case "DS":
 			encType := "Outpatient"
 			location := "MAIN"
