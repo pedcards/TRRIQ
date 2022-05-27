@@ -710,3 +710,4 @@ readIni(section) {
 }
 
 #Include xml.ahk
+#Include Rufaydium.ahk
