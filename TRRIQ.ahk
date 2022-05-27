@@ -2233,7 +2233,7 @@ checkMWUapp()
 	}
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
-		wb := IEopen()
+		wb := MSEopen()
 		sleep 500
 		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
 		wb := {}																		; disconnect the webbrowser object
@@ -5265,7 +5265,7 @@ IEGet(name="") {
 			return wb
 }
 
-IEopen() {
+MSEopen() {
 /*	Use ComObj to open IE
 	If not open, create a new instance
 	If IE open, choose that windows object
@@ -5765,3 +5765,4 @@ readIni(section) {
 #Include sift3.ahk
 #Include hl7.ahk
 #Include callSched.ahk
+#Include Rufaydium.ahk
