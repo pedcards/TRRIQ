@@ -44,7 +44,7 @@ MainLoop:
 	
 	loop, 3
 	{
-		eventlog("PREVGRAB: IEopen attempt " A_index)
+		eventlog("PREVGRAB: MSEopen attempt " A_index)
 		wb := MSEopen()																	; start/activate an Edge instance
 		if IsObject(wb) {
 			break
@@ -68,10 +68,6 @@ MainLoop:
 	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
 	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
-	if (gl.IEnew=true) {
-		MSEclose()
-	}
-	
 	if (gl.FAIL) {																		; Note when a table had failed to load
 		MsgBox,262160,, Downloads failed.
 		eventlog("PREVGRAB: Critical hit.")
@@ -79,6 +75,8 @@ MainLoop:
 		MsgBox,262160,, Successful Preventice update!
 	}
 	
+	MSEclose()
+
 	ExitApp
 }
 
@@ -123,8 +121,7 @@ PreventiceWebGrab(phase) {
 		PreventiceWebPager(phase,web.changed,web.btn)
 	}
 	
-	wb.navigate(web.url)																; refresh first page
-	ComObjConnect(wb)																	; release wb object
+	gl.Page.Close()																		; release wb object
 	return
 }
 
@@ -277,8 +274,6 @@ MSEopen() {
 /*	Use Rufaydium class https://github.com/Xeo786/Rufaydium-Webdriver
 	to use Microsoft Edge webdriver to retrieve webpage
 */
-	global gl
-
 	wb := new Rufaydium()
 
 	return wb
@@ -305,7 +300,7 @@ MSEurl(url) {
 		{
 			eventlog("PREVGRAB: MSEurl failed with msg: " stregX(e.message "`n","",1,0,"[\r\n]+",1))
 			if instr(e.message,"The RPC server is unavailable") {
-				eventlog("PREVGRAB: Reloading IE DOM...")
+				eventlog("PREVGRAB: Reloading Edge DOM...")
 				wb := MSEopen()
 			}
 			continue
@@ -332,7 +327,7 @@ MSEurl(url) {
 MSEclose() {
 	gl.Page.exit()
 	
-	eventlog("PREVGRAB: Attempted to close IE.",0)
+	eventlog("PREVGRAB: Attempted to close Edge.",0)
 	
 	return
 }
