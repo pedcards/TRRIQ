@@ -107,7 +107,7 @@ PreventiceWebGrab(phase) {
 			return
 		}
 		
-		body := tbl.getElementsByTagName("tbody")[0]
+		body := tbl.getElementsByName("tbody")[0]
 		clip := body.innertext
 		if (clip=clip0) {																; no change since last clip
 			break
@@ -249,11 +249,11 @@ parsePreventiceInventory(tbl) {
 	
 	lbl := ["button","model","ser"]
 	
-	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
+	trows := tbl.getElementsByName("tr")
 	{
 		r_idx := A_index-1
 		trow := trows[r_idx]
-		tcols := trow.getElementsByTagName("td")
+		tcols := trow.getElementsByName("td")
 		res := []
 		loop % lbl.length()																; loop through cols
 		{
