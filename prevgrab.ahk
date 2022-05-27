@@ -55,7 +55,7 @@ MainLoop:
 		ExitApp
 	}
 	wb.capabilities.HeadlessMode := !(gl.settings.isVisible)
-	gl.Page := wb.NewSession()
+	gl.Page := wb.NewSession()															; Session in gl.Page
 
 	; PreventiceWebGrab("Enrollment")
 	PreventiceWebGrab("Inventory")
@@ -80,13 +80,12 @@ MainLoop:
 }
 
 PreventiceWebGrab(phase) {
-	global webStr, wb, gl
 	web := webStr[phase]
 	
 	if (gl.settings.isVisible) {
 		progress,,% " ",% phase
 	}
-	MSEurl(web.url)																		; load URL, return DOM in wb
+	MSEurl(web.url)																		; load URL, return DOM in gl.Page
 	if (gl.MSEfail) {
 		return
 	}
@@ -120,7 +119,7 @@ PreventiceWebGrab(phase) {
 		PreventiceWebPager(phase,web.changed,web.btn)
 	}
 	
-	gl.Page.Close()																		; release wb object
+	gl.Page.Close()																		; release Session object
 	return
 }
 
