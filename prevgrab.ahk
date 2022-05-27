@@ -54,7 +54,8 @@ MainLoop:
 		MsgBox, 262160, , Failed to open Edge
 		ExitApp
 	}
-	wb.capabilities.HeadlessMode := !(gl.settings.isVisible)
+	wb.visible := gl.settings.isVisible													; for progress bars
+	wb.capabilities.HeadlessMode := gl.settings.isHeadless								; for Edge window
 	gl.Page := wb.NewSession()															; Session in gl.Page
 
 	; PreventiceWebGrab("Enrollment")
