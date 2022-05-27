@@ -273,30 +273,6 @@ parsePreventiceInventory(tbl) {
 	return true
 }
 
-IEopen() {
-/*	Use ComObj to open IE
-	If not open, create a new instance
-	If IE open, choose that windows object
-	Return the IE window object
-*/
-	global gl
-	
-	if !winExist("ahk_exe iexplore.exe") {
-		ComObjCreate("InternetExplorer.application")
-		gl.IEnew := true
-		sleep 2000
-		eventlog("PREVGRAB: Creating new IE instance.")
-	} 
-	for wb in ComObjCreate("Shell.Application").Windows() {
-		if InStr(wb.FullName, "iexplore.exe") {
-			eventlog("PREVGRAB: Found existing " wb.FullName " (HWND " format("{:#x}",wb.HWND) ")")
-			return wb
-		}
-	}
-	eventlog("PREVGRAB: Failed to open IE.")
-	return
-}
-
 MSEopen() {
 /*	Use Rufaydium class https://github.com/Xeo786/Rufaydium-Webdriver
 	to use Microsoft Edge webdriver to retrieve webpage
