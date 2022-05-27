@@ -45,19 +45,18 @@ MainLoop:
 	loop, 3
 	{
 		eventlog("PREVGRAB: IEopen attempt " A_index)
-		wb := IEopen()																	; start/activate an IE instance
+		wb := MSEopen()																	; start/activate an Edge instance
 		if IsObject(wb) {
 			break
 		}
 	}
-	if !instr(wb.FullName,"iexplore.exe") {
-		MsgBox, 262160, , Failed to open IE
+	if !IsObject(wb) {
+		MsgBox, 262160, , Failed to open Edge
 		ExitApp
 	}
 	wb.visible := gl.settings.isVisible
 	
 	; PreventiceWebGrab("Enrollment")
-	
 	PreventiceWebGrab("Inventory")
 	if (gl.inv_ct < gl.inv_tot) {
 		gl.FAIL := true
@@ -297,6 +296,17 @@ IEopen() {
 	return
 }
 
+MSEopen() {
+/*	Use Rufaydium class https://github.com/Xeo786/Rufaydium-Webdriver
+	to use Microsoft Edge webdriver to retrieve webpage
+*/
+	global gl
+
+	wb := new Rufaydium()
+
+	return wb
+}
+
 IEurl(url) {
 /*	Open a URL
 */
@@ -321,7 +331,7 @@ IEurl(url) {
 			eventlog("PREVGRAB: IEurl failed with msg: " stregX(e.message "`n","",1,0,"[\r\n]+",1))
 			if instr(e.message,"The RPC server is unavailable") {
 				eventlog("PREVGRAB: Reloading IE DOM...")
-				wb := IEopen()
+				wb := MSEopen()
 			}
 			continue
 		}
