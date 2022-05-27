@@ -67,7 +67,7 @@ MainLoop:
 	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
 	if (gl.IEnew=true) {
-		IEclose()
+		MSEclose()
 	}
 	
 	if (gl.FAIL) {																		; Note when a table had failed to load
@@ -87,8 +87,8 @@ PreventiceWebGrab(phase) {
 	if (gl.settings.isVisible) {
 		progress,,% " ",% phase
 	}
-	IEurl(web.url)																		; load URL, return DOM in wb
-	if (gl.IEfail) {
+	MSEurl(web.url)																		; load URL, return DOM in wb
+	if (gl.MSEfail) {
 		return
 	}
 	prvFunc := web.fx
@@ -307,12 +307,10 @@ MSEopen() {
 	return wb
 }
 
-IEurl(url) {
+MSEurl(url) {
 /*	Open a URL
 */
-	global wb,gl
-	
-	gl.IEfail := false
+	gl.MSEfail := false
 	loop, 3																				; Number of attempts to permit redirects
 	{
 		try 
@@ -322,13 +320,13 @@ IEurl(url) {
 			if !(wb.LocationURL = url) {
 				eventlog("PREVGRAB: Redirected.",0)
 			}
-			if !(IEwaitBusy(gl.settings.webwait)) {										; msec before fails
+			if !(MSEwaitBusy(gl.settings.webwait)) {										; msec before fails
 				eventlog("PREVGRAB: Failed to load.")
 			}
 		}
 		catch e
 		{
-			eventlog("PREVGRAB: IEurl failed with msg: " stregX(e.message "`n","",1,0,"[\r\n]+",1))
+			eventlog("PREVGRAB: MSEurl failed with msg: " stregX(e.message "`n","",1,0,"[\r\n]+",1))
 			if instr(e.message,"The RPC server is unavailable") {
 				eventlog("PREVGRAB: Reloading IE DOM...")
 				wb := MSEopen()
@@ -349,23 +347,20 @@ IEurl(url) {
 			sleep 500
 		}
 	}
-	gl.IEfail := true
+	gl.MSEfail := true
 	eventlog("PREVGRAB: Failed all attempts " url)
 	return
 }
 
-IEclose() {
-	DetectHiddenWindows, On
-	
-	Process, Close, iexplore.exe
+MSEclose() {
+	gl.Page.exit()
 	
 	eventlog("PREVGRAB: Attempted to close IE.",0)
 	
 	return
 }
 
-IEwaitBusy(maxTick) {
-	global wb
+MSEwaitBusy(maxTick) {
 	startTick:=A_TickCount
 	
 	while wb.busy {																		; wait until done loading
@@ -405,7 +400,7 @@ preventiceLogin() {
 		.getElementByID(gl.login.attr_btn)
 		.click()
 	
-	if !(IEwaitBusy(gl.login.webwait)) {															; wait until done loading
+	if !(MSEwaitBusy(gl.login.webwait)) {															; wait until done loading
 		return false
 	}
 	else {
