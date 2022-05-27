@@ -286,6 +286,9 @@ MSEurl(url) {
 	{
 		try 
 		{
+			if (gl.settings.isVisible) {
+				progress,,% "Launching URL attempt " A_Index
+			}
 			eventlog("PREVGRAB: Navigating to " url " (attempt " A_index ").")
 			gl.Page.Navigate(url) 														; load URL
 			if !(gl.Page.URL = url) {
@@ -306,6 +309,9 @@ MSEurl(url) {
 		}
 		
 		if instr(gl.Page.URL,gl.login.string) {
+			if (gl.settings.isVisible) {
+				progress,,% "Sending login"
+			}
 			loginErr := preventiceLogin()
 			eventlog("PREVGRAB: Login " ((loginErr) ? "submitted." : "attempted."))
 		}
