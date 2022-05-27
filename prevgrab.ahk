@@ -248,6 +248,7 @@ parsePreventiceInventory(tbl) {
 	lbl := ["button","model","ser"]
 	
 	trows := tbl.getElementsByName("tr")
+	loop % trows.length()+1																; loop through rows
 	{
 		r_idx := A_index-1
 		trow := trows[r_idx]
