@@ -100,7 +100,7 @@ PreventiceWebGrab(phase) {
 		if (gl.settings.isVisible) {
 			progress,,% "Page " A_index,
 		}
-		tbl := wb.document.getElementById(web.tbl)										; get the Main Table
+		tbl := gl.Page.getElementById(web.tbl)											; get the Main Table
 		if !IsObject(tbl) {
 			eventlog("PREVGRAB: *** " phase " *** No matching table.")
 			gl.FAIL := true
@@ -129,9 +129,7 @@ PreventiceWebGrab(phase) {
 }
 
 PreventiceWebPager(phase,chgStr,btnStr) {
-	global wb
-	
-	pg0 := wb.document.getElementById(chgStr).innerText
+	pg0 := gl.Page.getElementById(chgStr).innerText
 	
 	if (tot0 := stRegX(pg0,"i)items.*? of ",1,1,"\d+",0)) {
 		gl.inv_tot := tot0
@@ -139,15 +137,15 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 
 	if (phase="Enrollment") {
 		pgNum := gl.enroll_ct
-		wb.document.getElementById(btnStr).click() 										; click when id=btnStr
+		gl.Page.getElementById(btnStr).click() 											; click when id=btnStr
 	}
 	if (phase="Inventory") {
 		pgNum := gl.inv_ct
 		progCt := gl.inv_tot
-		if (wb.document.getElementsByClassName(btnStr)[0].getAttribute("onClick") ~= "return") {
+		if (gl.Page.getElementsByClassName(btnStr)[0].getAttribute("onClick") ~= "return") {
 			return
 		}
-		wb.document.getElementsByClassName(btnStr)[0].click() 							; click when class=btnstr
+		gl.Page.getElementsByClassName(btnStr)[0].click() 								; click when class=btnstr
 	}
 	
 	t0 := A_TickCount
@@ -156,7 +154,7 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 		if (gl.settings.isVisible) {
 			progress,% 100*pgNum/progCt
 		}
-		pg := wb.document.getElementById(chgStr).innerText
+		pg := gl.Page.getElementById(chgStr).innerText
 		if (pg != pg0) {
 			t1:=A_TickCount-t0
 			eventlog("PREVGRAB: " phase " " pgNum " pager (" round(t1/1000,2) " s)"
@@ -318,8 +316,8 @@ MSEurl(url) {
 		try 
 		{
 			eventlog("PREVGRAB: Navigating to " url " (attempt " A_index ").")
-			wb.Navigate(url)															; load URL
-			if !(wb.LocationURL = url) {
+			gl.Page.Navigate(url) 														; load URL
+			if !(gl.Page.URL = url) {
 				eventlog("PREVGRAB: Redirected.",0)
 			}
 			if !(MSEwaitBusy(gl.settings.webwait)) {										; msec before fails
@@ -336,16 +334,16 @@ MSEurl(url) {
 			continue
 		}
 		
-		if instr(wb.LocationURL,gl.login.string) {
+		if instr(gl.Page.URL,gl.login.string) {
 			loginErr := preventiceLogin()
 			eventlog("PREVGRAB: Login " ((loginErr) ? "submitted." : "attempted."))
 		}
-		if (wb.LocationURL=url) {
+		if (gl.Page.URL=url) {
 			eventlog("PREVGRAB: Succeeded.",0)
 			return
 		}
 		else {
-			eventlog("PREVGRAB: Landed on " wb.LocationURL)
+			eventlog("PREVGRAB: Landed on " gl.Page.URL)
 			sleep 500
 		}
 	}
@@ -365,9 +363,9 @@ MSEclose() {
 MSEwaitBusy(maxTick) {
 	startTick:=A_TickCount
 	
-	while wb.busy {																		; wait until done loading
+	while gl.Page.IsLoading() {																		; wait until done loading
 		if (A_TickCount-startTick > maxTick) {
-			eventlog("PREVGRAB: " wb.LocationURL " timed out.")
+			eventlog("PREVGRAB: " gl.Page.url " timed out.")
 			return false																; break loop if time exceeds maxTick
 		}
 		checkBtn("Message from webpage","OK")											; check if err window present and click OK button
@@ -388,17 +386,15 @@ checkBtn(txt,btn) {
 preventiceLogin() {
 /*	Need to populate and submit user login form
 */
-	global wb, gl
-	
-	wb.document
+	gl.Page
 		.getElementById(gl.login.attr_user)
 		.value := gl.login.user_name
 	
-	wb.document
+	gl.Page
 		.getElementById(gl.login.attr_pass)
 		.value := gl.login.user_pass
 	
-	wb.document
+	gl.Page
 		.getElementByID(gl.login.attr_btn)
 		.click()
 	
