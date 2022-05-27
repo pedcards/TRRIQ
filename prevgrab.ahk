@@ -55,7 +55,9 @@ MainLoop:
 		ExitApp
 	}
 	wb.visible := gl.settings.isVisible
-	
+	; wb.capabilities.HeadlessMode := true
+	gl.Page := wb.NewSession()
+
 	; PreventiceWebGrab("Enrollment")
 	PreventiceWebGrab("Inventory")
 	if (gl.inv_ct < gl.inv_tot) {
