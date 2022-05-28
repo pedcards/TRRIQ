@@ -276,12 +276,17 @@ MSEopen() {
 	to use Microsoft Edge webdriver to retrieve webpage
 */
 	FileGetVersion, mseVer, C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
-	mseVer :=  strX(mseVer,"",0,1,".",1,1)
-	if !(mseVer) {
+	mseNum :=  strX(mseVer,"",0,1,".",1,1)
+	if !(mseNum) {
 		eventlog("Could not find installed MS Edge.")
 		Return
 	}
-	wb := new Rufaydium(".\files\msedgedriver\" mseVer "\msedgedriver.exe")
+	exe := ".\files\msedgedriver\" mseNum "\msedgedriver.exe"
+	if !FileExist(exe) {
+		eventlog("MS Edge installed version " mseVer ". Could not find matching msedgedriver.")
+		Return
+	}
+	wb := new Rufaydium(exe)
 
 	return wb
 }
