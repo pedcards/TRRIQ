@@ -2236,7 +2236,7 @@ checkMWUapp()
 		wb := MSEopen()
 		sleep 500
 		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
-		wb := {}																		; disconnect the webbrowser object
+		wb.exit()																		; disconnect the webbrowser object
 		
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
@@ -5254,47 +5254,13 @@ filterProv(x) {
 	return {name:x, site:site1}
 }
 
-IEGet(name="") {
-/*	from the very helpful post by jethrow
-	https://autohotkey.com/board/topic/47052-basic-webpage-controls-with-javascript-com-tutorial/
-*/
-	IfEqual, Name,, WinGetTitle, Name, ahk_class IEFrame     ;// Get active window if no parameter
-	Name := (Name="New Tab - Windows Internet Explorer")? "about:Tabs":RegExReplace(Name, " - (Windows|Microsoft)? ?Internet Explorer$")
-	for wb in ComObjCreate("Shell.Application").Windows()
-		if wb.LocationName=Name and InStr(wb.FullName, "iexplore.exe")
-			return wb
-}
-
 MSEopen() {
-/*	Use ComObj to open IE
-	If not open, create a new instance
-	If IE open, choose that windows object
-	Return the IE window object
+/*	Use Rufaydium class https://github.com/Xeo786/Rufaydium-Webdriver
+	to use Microsoft Edge webdriver to retrieve webpage
 */
-	if !winExist("ahk_exe iexplore.exe") {
-		wb := ComObjCreate("InternetExplorer.application")
-		wb.visible := false
-		return wb
-	} 
-	else {
-		for wb in ComObjCreate("Shell.Application").Windows() {
-			if InStr(wb.FullName, "iexplore.exe") {
-				return wb
-			}
-		}
-	}
-}
+	wb := new Rufaydium()
 
-IEclose() {
-	DetectHiddenWindows, On
-	while WinExist("ahk_class IEFrame")
-	{
-		i := A_Index
-		Process, Close, iexplore.exe
-		sleep 500
-	}
-	
-	return
+	return wb
 }
 
 httpComm(verb) {
