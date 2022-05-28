@@ -51,6 +51,7 @@ MainLoop:
 		}
 	}
 	if !IsObject(wb) {
+		eventlog("Failed to open Edge.")
 		MsgBox, 262160, , Failed to open Edge
 		ExitApp
 	}
@@ -276,6 +277,10 @@ MSEopen() {
 */
 	FileGetVersion, mseVer, C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
 	mseVer :=  strX(mseVer,"",0,1,".",1,1)
+	if !(mseVer) {
+		eventlog("Could not find installed MS Edge.")
+		Return
+	}
 	wb := new Rufaydium(".\files\msedgedriver\" mseVer "\msedgedriver.exe")
 
 	return wb
