@@ -76,6 +76,7 @@ MainLoop:
 	}
 	
 	MSEclose()
+	wb.Driver.Exit()
 
 	ExitApp
 }
