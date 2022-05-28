@@ -274,7 +274,9 @@ MSEopen() {
 /*	Use Rufaydium class https://github.com/Xeo786/Rufaydium-Webdriver
 	to use Microsoft Edge webdriver to retrieve webpage
 */
-	wb := new Rufaydium()
+	FileGetVersion, mseVer, C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
+	mseVer :=  strX(mseVer,"",0,1,".",1,1)
+	wb := new Rufaydium(".\files\msedgedriver\" mseVer "\msedgedriver.exe")
 
 	return wb
 }
