@@ -116,17 +116,12 @@ PreventiceWebGrab(phase) {
 		}
 		
 		body := tbl.getElementsByClassName(web.tblBody)[0]
-		clip := body.innertext
-		if (clip=clip0) {																; no change since last clip
-			break
-		}
 		
 		done := %prvFunc%(body)		; parsePreventiceEnrollment() or parsePreventiceInventory()
 		
 		if (done=0) {																	; no new records returned
 			break
 		}
-		clip0 := clip																	; set the check for repeat copy
 		
 		PreventiceWebPager(phase,web.changed,web.btn)
 	}
@@ -252,6 +247,11 @@ parsePreventiceInventory(tbl) {
 */
 	global prevtxt, gl, wq
 	
+	gl.clip := tbl.innertext
+	if (gl.clip=gl.clip0) {																	; no change since last clip
+		Return false
+	}
+
 	lbl := ["button","model","ser"]
 	
 	trows := tbl.getElementsByName("tr")
@@ -276,6 +276,7 @@ parsePreventiceInventory(tbl) {
 		
 		prevtxt .= "dev|" res.model "|" res.ser "`n"
 	}
+	gl.clip0 := gl.clip																	; set the check for repeat copy
 
 	return true
 }
