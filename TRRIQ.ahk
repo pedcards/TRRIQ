@@ -2188,7 +2188,8 @@ checkweb(id) {
 }
 
 ftpGrab() {
-	
+	Run, PrevGrab.exe "ftp"
+	return
 }
 
 cleanTempFiles() {
