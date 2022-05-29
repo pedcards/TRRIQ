@@ -379,7 +379,14 @@ wbClose() {
 wbWaitBusy(maxTick) {
 	startTick:=A_TickCount
 	
-	while gl.Page.IsLoading() {																		; wait until done loading
+	while InStr(gl.Page.html,"{{progress}}") {
+		if (A_TickCount-startTick > maxTick) {
+			eventlog("PREVGRAB: " gl.Page.url " timed out.")
+			return false																; break loop if time exceeds maxTick
+		}
+		sleep 500
+	} 
+	while gl.Page.IsLoading() {															; wait until done loading
 		if (A_TickCount-startTick > maxTick) {
 			eventlog("PREVGRAB: " gl.Page.url " timed out.")
 			return false																; break loop if time exceeds maxTick
