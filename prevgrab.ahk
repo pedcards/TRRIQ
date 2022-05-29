@@ -62,15 +62,19 @@ MainLoop:
 	wb.capabilities.HeadlessMode := gl.settings.isHeadless								; for Chrome/Edge window
 	gl.Page := wb.NewSession()															; Session in gl.Page
 
-	; PreventiceWebGrab("Enrollment")
-	PreventiceWebGrab("Inventory")
-	if (gl.inv_ct < gl.inv_tot) {
-		gl.FAIL := true
+	if (A_Args[1]="ftp") {
+		PreventiceWebGrab("ftp")
+	} else {
+		; PreventiceWebGrab("Enrollment")
+		PreventiceWebGrab("Inventory")
+		if (gl.inv_ct < gl.inv_tot) {
+			gl.FAIL := true
+		}
+		filedelete, % gl.files_dir "\prev.txt"											; writeout each one regardless
+		FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
+		eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
+		
 	}
-	
-	filedelete, % gl.files_dir "\prev.txt"												; writeout each one regardless
-	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
-	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
 	if (gl.FAIL) {																		; Note when a table had failed to load
 		MsgBox,262160,, Downloads failed.
