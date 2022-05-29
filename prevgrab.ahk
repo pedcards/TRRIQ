@@ -330,11 +330,11 @@ wbUrl(url) {
 			}
 			eventlog("PREVGRAB: Navigating to " url " (attempt " A_index ").")
 			gl.Page.Navigate(url) 														; load URL
-			if !(gl.Page.URL = url) {
-				eventlog("PREVGRAB: Redirected.",0)
-			}
 			if !(wbWaitBusy(gl.settings.webwait)) {										; msec before fails
 				eventlog("PREVGRAB: Failed to load.")
+			}
+			if !(gl.Page.URL = url) {
+				eventlog("PREVGRAB: Redirected.",0)
 			}
 		}
 		catch e
