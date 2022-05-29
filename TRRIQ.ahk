@@ -203,7 +203,10 @@ PhaseGUI:
 	Gui, Add, Button
 		, Y+10 wp h40 gPrevGrab Disabled
 		, Grab Preventice updates
-	Gui, Add, Text, wp h40																; space between top buttons and lower buttons
+	Gui, Add, Button
+		, Y+10 wp h40 gFtpGrab Disabled
+		, Grab FTP
+	Gui, Add, Text, wp h20																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
 		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
@@ -2182,6 +2185,10 @@ checkweb(id) {
 		eventlog("Added webgrab for id " id)
 		Return
 	}
+}
+
+ftpGrab() {
+	
 }
 
 cleanTempFiles() {
