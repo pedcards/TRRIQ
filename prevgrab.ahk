@@ -23,6 +23,9 @@ Config:
 	} else {
 		gl.isDevt := false
 	}
+
+	A_Args[1] := "ftp"				;***
+
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
 	wq := new XML(gl.TRRIQ_path "\worklist.xml")
