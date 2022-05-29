@@ -30,10 +30,6 @@ Config:
 	gl.files_dir := gl.TRRIQ_path "\files"
 	wq := new XML(gl.TRRIQ_path "\worklist.xml")
 	
-	webStr.Enrollment := readIni("str_Enrollment")
-	webStr.Inventory := readIni("str_Inventory")
-	
-	gl.login := readIni("str_Login")
 	gl.settings := readIni("settings")
 	
 	gl.enroll_ct := 0
@@ -63,8 +59,15 @@ MainLoop:
 	gl.Page := wb.NewSession()															; Session in gl.Page
 
 	if (A_Args[1]="ftp") {
+		webStr.FTP := readIni("str_ftp")
+		gl.login := readIni("str_ftpLogin")
+
 		PreventiceWebGrab("ftp")
 	} else {
+		; webStr.Enrollment := readIni("str_Enrollment")
+		webStr.Inventory := readIni("str_Inventory")
+		gl.login := readIni("str_Login")
+
 		; PreventiceWebGrab("Enrollment")
 		PreventiceWebGrab("Inventory")
 		if (gl.inv_ct < gl.inv_tot) {
