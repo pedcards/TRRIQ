@@ -115,7 +115,7 @@ PreventiceWebGrab(phase) {
 			return
 		}
 		
-		body := tbl.getElementsByName("tbody")[0]
+		body := tbl.getElementsByClassName(web.tblBody)[0]
 		clip := body.innertext
 		if (clip=clip0) {																; no change since last clip
 			break
