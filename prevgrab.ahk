@@ -44,19 +44,19 @@ MainLoop:
 	
 	loop, 3
 	{
-		eventlog("PREVGRAB: MSEopen attempt " A_index)
-		wb := MSEopen()																	; start/activate an Edge instance
+		eventlog("PREVGRAB: Browser open attempt " A_index)
+		wb := wbOpen()																	; start/activate an Chrome/Edge instance
 		if IsObject(wb) {
 			break
 		}
 	}
 	if !IsObject(wb) {
-		eventlog("Failed to open Edge.")
-		MsgBox, 262160, , Failed to open Edge
+		eventlog("Failed to open browser.")
+		MsgBox, 262160, , Failed to open browser
 		ExitApp
 	}
 	wb.visible := gl.settings.isVisible													; for progress bars
-	wb.capabilities.HeadlessMode := gl.settings.isHeadless								; for Edge window
+	wb.capabilities.HeadlessMode := gl.settings.isHeadless								; for Chrome/Edge window
 	gl.Page := wb.NewSession()															; Session in gl.Page
 
 	; PreventiceWebGrab("Enrollment")
@@ -76,7 +76,7 @@ MainLoop:
 		MsgBox,262160,, Successful Preventice update!
 	}
 	
-	MSEclose()
+	wbClose()
 	wb.Driver.Exit()
 
 	ExitApp
@@ -88,8 +88,8 @@ PreventiceWebGrab(phase) {
 	if (gl.settings.isVisible) {
 		progress,,% " ",% phase
 	}
-	MSEurl(web.url)																		; load URL, return DOM in gl.Page
-	if (gl.MSEfail) {
+	wbUrl(web.url)																		; load URL, return DOM in gl.Page
+	if (gl.wbFail) {
 		return
 	}
 	prvFunc := web.fx
@@ -308,10 +308,10 @@ wbOpen() {
 	return wb
 }
 
-MSEurl(url) {
+wbUrl(url) {
 /*	Open a URL
 */
-	gl.MSEfail := false
+	gl.wbFail := false
 	loop, 3																				; Number of attempts to permit redirects
 	{
 		try 
@@ -324,16 +324,16 @@ MSEurl(url) {
 			if !(gl.Page.URL = url) {
 				eventlog("PREVGRAB: Redirected.",0)
 			}
-			if !(MSEwaitBusy(gl.settings.webwait)) {										; msec before fails
+			if !(wbWaitBusy(gl.settings.webwait)) {										; msec before fails
 				eventlog("PREVGRAB: Failed to load.")
 			}
 		}
 		catch e
 		{
-			eventlog("PREVGRAB: MSEurl failed with msg: " stregX(e.message "`n","",1,0,"[\r\n]+",1))
+			eventlog("PREVGRAB: wbUrl failed with msg: " stregX(e.message "`n","",1,0,"[\r\n]+",1))
 			if instr(e.message,"The RPC server is unavailable") {
-				eventlog("PREVGRAB: Reloading Edge DOM...")
-				wb := MSEopen()
+				eventlog("PREVGRAB: Reloading DOM...")
+				wb := wbOpen()
 			}
 			continue
 		}
@@ -354,20 +354,20 @@ MSEurl(url) {
 			sleep 500
 		}
 	}
-	gl.MSEfail := true
+	gl.wbFail := true
 	eventlog("PREVGRAB: Failed all attempts " url)
 	return
 }
 
-MSEclose() {
+wbClose() {
 	gl.Page.exit()
 	
-	eventlog("PREVGRAB: Attempted to close Edge.",0)
+	eventlog("PREVGRAB: Closing webdriver.",0)
 	
 	return
 }
 
-MSEwaitBusy(maxTick) {
+wbWaitBusy(maxTick) {
 	startTick:=A_TickCount
 	
 	while gl.Page.IsLoading() {																		; wait until done loading
@@ -405,7 +405,7 @@ preventiceLogin() {
 		.getElementByID(gl.login.attr_btn)
 		.click()
 	
-	if !(MSEwaitBusy(gl.login.webwait)) {															; wait until done loading
+	if !(wbWaitBusy(gl.login.webwait)) {															; wait until done loading
 		return false
 	}
 	else {

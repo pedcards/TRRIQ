@@ -2233,7 +2233,7 @@ checkMWUapp()
 	}
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
-		wb := MSEopen()
+		wb := wbOpen()
 		sleep 500
 		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
 		wb.exit()																		; disconnect the webbrowser object
@@ -5254,7 +5254,7 @@ filterProv(x) {
 	return {name:x, site:site1}
 }
 
-MSEopen() {
+wbOpen() {
 /*	Use Rufaydium class https://github.com/Xeo786/Rufaydium-Webdriver
 	to use Microsoft Edge webdriver to retrieve webpage
 */
