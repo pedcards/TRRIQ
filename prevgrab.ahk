@@ -101,8 +101,8 @@ PreventiceWebGrab(phase) {
 	if (gl.wbFail) {
 		return
 	}
+	wbWaitBusy(gl.settings.webwait)
 	prvFunc := web.fx
-	
 	loop
 	{
 		if (gl.settings.isVisible) {
@@ -379,10 +379,17 @@ wbClose() {
 wbWaitBusy(maxTick) {
 	startTick:=A_TickCount
 	
-	while InStr(gl.Page.html,"{{progress}}") {
+	while InStr(gl.Page.html,"table-body ng-hide") {									; class="table-body ng-hide" present while rendering FTP list
 		if (A_TickCount-startTick > maxTick) {
 			eventlog("PREVGRAB: " gl.Page.url " timed out.")
-			return false																; break loop if time exceeds maxTick
+			return false
+		}
+		sleep 500
+	} 
+	while InStr(gl.Page.html,"{{progress}}") {											; present when rendering FTP login page
+		if (A_TickCount-startTick > maxTick) {
+			eventlog("PREVGRAB: " gl.Page.url " timed out.")
+			return false
 		}
 		sleep 500
 	} 
