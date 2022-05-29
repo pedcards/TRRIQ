@@ -108,7 +108,7 @@ PreventiceWebGrab(phase) {
 		if (gl.settings.isVisible) {
 			progress,,% "Page " A_index,
 		}
-		tbl := gl.Page.getElementById(web.tbl)											; get the Main Table
+		tbl := gl.Page.getElementsByClassName(web.tbl)[0]								; get the Main Table
 		if !IsObject(tbl) {
 			eventlog("PREVGRAB: *** " phase " *** No matching table.")
 			gl.FAIL := true
