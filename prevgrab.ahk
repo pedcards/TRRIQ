@@ -187,6 +187,36 @@ parsePreventiceFTP(tbl) {
 			break
 		}
 	}
+	Progress,,% "",FTP checking sort order
+	loop, 2
+	{
+		if (ftpDateDiff(0)<7)&&(ftpDateDiff(1)<7) {										; check dates of first 2 rows
+			break																		; skip out of they are both within 7 days
+		}
+		btnDate.click()																	; click to sort list by btnDate
+		wbWaitBusy(gl.settings.webwait)
+	}
+
+	gl.Page.Exit()
+	Return
+}
+
+checkFtpRow(num=0) {
+	tbl := gl.Page.querySelector(".table-body")											; find div with class "table-body"
+	row := tbl.querySelectorAll(".row-wrap")											; all rows with class "row-wrap"
+	col := row[num].querySelectorAll(".ng-binding")										; all div with class "ng-binding"
+	dt := col[2].innertext
+	nm := col[0].innertext
+
+	return {name:nm,date:dt}
+}
+
+ftpDateDiff(row) {
+	dt := checkFtpRow(row).date															; get date value from this table row number
+	diff := ParseDate(A_now).YMD - ParseDate(dt).YMD
+	return diff
+}
+
 parsePreventiceEnrollment(tbl) {
 	global prevtxt, gl, wq
 	
