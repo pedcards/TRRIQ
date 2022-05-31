@@ -189,6 +189,9 @@ parsePreventiceFTP(tbl) {
 	Progress,,% "",FTP checking sort order
 	loop, 2
 	{
+		gl.Page.tbl := gl.Page.querySelector(".table-body")								; find div with class "table-body"
+		gl.Page.tblRows := tbl.querySelectorAll(".row-wrap")							; all rows with class "row-wrap"
+
 		if (ftpDateDiff(0)<7)&&(ftpDateDiff(1)<7) {										; check dates of first 2 rows
 			break																		; skip out of they are both within 7 days
 		}
