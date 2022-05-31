@@ -204,9 +204,7 @@ parsePreventiceFTP(tbl) {
 }
 
 checkFtpRow(num=0) {
-	tbl := gl.Page.querySelector(".table-body")											; find div with class "table-body"
-	row := tbl.querySelectorAll(".row-wrap")											; all rows with class "row-wrap"
-	col := row[num].querySelectorAll(".ng-binding")										; all div with class "ng-binding"
+	col := gl.Page.tblRows[num].querySelectorAll(".ng-binding")							; all div with class "ng-binding"
 	dt := col[2].innertext
 	nm := col[0].innertext
 
