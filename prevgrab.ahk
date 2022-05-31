@@ -176,8 +176,7 @@ parsePreventiceFTP(tbl) {
 */
 	Progress,,% "",FTP page loaded
 
-	Page := gl.Page
-	hdr := Page.querySelector("div.table-header-wrapper")
+	hdr := gl.Page.querySelector("div.table-header-wrapper")
 	btn := hdr.querySelectorAll("div[ng-click]")
 	loop, % btn.Count()
 	{
