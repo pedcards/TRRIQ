@@ -450,7 +450,7 @@ wbWaitBusy(maxTick) {
 		checkBtn("Message from webpage","OK")											; check if err window present and click OK button
 		sleep 200
 	}
-	return true
+	return A_TickCount-startTick
 }
 
 checkBtn(txt,btn) {
