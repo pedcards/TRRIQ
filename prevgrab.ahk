@@ -117,7 +117,7 @@ PreventiceWebGrab(phase) {
 		
 		body := tbl.getElementsByClassName(web.tblBody)[0]
 		
-		done := %prvFunc%(body)		; parsePreventiceEnrollment() or parsePreventiceInventory()
+		done := %prvFunc%(body)		; parsePreventiceEnrollment() or parsePreventiceInventory() or parsePreventiceFTP()
 		
 		if (done=0) {																	; no new records returned
 			break
@@ -169,6 +169,12 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	return
 }
 
+parsePreventiceFTP(tbl) {
+/*	Read FTP table
+	Sort by date
+	Retrieve the last 1-2 weeks of records
+*/
+}
 parsePreventiceEnrollment(tbl) {
 	global prevtxt, gl, wq
 	
