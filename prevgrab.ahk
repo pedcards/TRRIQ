@@ -199,6 +199,12 @@ parsePreventiceFTP(tbl) {
 		wbWaitBusy(gl.settings.webwait)
 	}
 
+	loop, 1 {																			; number of records to get
+		num := A_Index-1
+		cols := gl.Page.tblRows[num].querySelectorAll(".ng-binding")
+		btnName := cols[0]
+		btnName.click() 
+	}
 	gl.Page.Exit()
 	Return
 }
