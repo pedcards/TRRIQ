@@ -174,7 +174,19 @@ parsePreventiceFTP(tbl) {
 	Sort by date
 	Retrieve the last 1-2 weeks of records
 */
-}
+	Progress,,% "",FTP page loaded
+
+	Page := gl.Page
+	hdr := Page.querySelector("div.table-header-wrapper")
+	btn := hdr.querySelectorAll("div[ng-click]")
+	loop, % btn.Count()
+	{
+		k := btn[A_index-1]
+		if (k.InnerText ~= "i)Date") {
+			btnDate := k
+			break
+		}
+	}
 parsePreventiceEnrollment(tbl) {
 	global prevtxt, gl, wq
 	
