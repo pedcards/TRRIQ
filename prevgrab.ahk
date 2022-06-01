@@ -57,6 +57,7 @@ MainLoop:
 	wb.visible := gl.settings.isVisible													; for progress bars
 	wb.capabilities.HeadlessMode := gl.settings.isHeadless								; for Chrome/Edge window
 	gl.Page := wb.NewSession()															; Session in gl.Page
+	gl.Page.CDP.Call("Browser.setDownloadBehavior", { "behavior" : "allow", "downloadPath" : "C:\Users\tchun1\Downloads\FTP"}) 
 
 	if (A_Args[1]="ftp") {
 		webStr.FTP := readIni("str_ftp")
