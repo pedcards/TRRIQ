@@ -198,7 +198,8 @@ parsePreventiceFTP(tbl) {
 			break																		; skip out of they are both within 7 days
 		}
 		btnDate.click()																	; click to sort list by btnDate
-		wbWaitBusy(gl.settings.webwait)
+		; wbWaitBusy(gl.settings.webwait)
+		gl.Page.await()
 	}
 
 	loop, 1 {																			; number of records to get
