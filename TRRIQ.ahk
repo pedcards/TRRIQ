@@ -330,6 +330,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Update call schedules, updateCall
 	Menu, menuSys, Add, Send notification email, sendEmail
 	Menu, menuSys, Add, Find pending leftovers, cleanPending
+	Menu, menuSys, Add, CheckMWU, checkMWUapp											; position for test menu
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
