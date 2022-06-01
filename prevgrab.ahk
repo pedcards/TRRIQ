@@ -207,8 +207,8 @@ parsePreventiceFTP(tbl) {
 		btnName := cols[0]
 		btnName.click() 
 	}
-	gl.Page.Exit()
-	Return
+
+	Return 0
 }
 
 checkFtpRow(num=0) {
