@@ -202,7 +202,7 @@ parsePreventiceFTP(tbl) {
 		gl.Page.await()
 	}
 
-	loop, 1 {																			; number of records to get
+	loop, 3 {																			; number of records to get
 		num := A_Index-1
 		cols := gl.Page.tblRows[num].querySelectorAll(".ng-binding")
 		btnName := cols[0]
