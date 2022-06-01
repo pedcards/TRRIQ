@@ -2273,6 +2273,11 @@ MortaraUpload(tabnum="")
 	checkMWUapp()
 	
 	muWinID := WinExist("Mortara Web Upload")
+	if !(muWinID) {
+		eventlog("Could not launch MWU.")
+		MsgBox Could not launch Mortara Web Upload
+		return
+	}
 
 	fetchQuit := false
 	MtCt := ""
