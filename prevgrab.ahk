@@ -87,6 +87,8 @@ MainLoop:
 	}
 	
 	wbClose()
+	gl.Page.Exit()
+	wb.driver.Exit()
 
 	ExitApp
 }
