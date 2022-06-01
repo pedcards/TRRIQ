@@ -344,15 +344,15 @@ wbOpen() {
 	FileGetVersion, cr32Ver, C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
 	FileGetVersion, cr64Ver, C:\Program Files\Google\Chrome\Application\chrome.exe
 	FileGetVersion, mseVer, C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
-	if (cr32Ver) {
-		verNum := cr32Ver
-		driver := "chromedriver"
-		eventlog("Found Chrome (x86) version " verNum)
-	} Else
 	if (cr64Ver) {
 		verNum := cr64Ver
 		driver := "chromedriver"
 		eventlog("Found Chrome (x64) version " verNum)
+	} Else
+	if (cr32Ver) {
+		verNum := cr32Ver
+		driver := "chromedriver"
+		eventlog("Found Chrome (x86) version " verNum)
 	} Else
 	if (mseVer) {
 		verNum := mseVer
