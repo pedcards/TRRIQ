@@ -2234,11 +2234,18 @@ checkMWUapp()
 	}
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
-		wb := wbOpen()
-		sleep 500
-		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
-		wb.exit()																		; disconnect the webbrowser object
-		
+		loop, files, %A_AppData%\Microsoft\Windows\Start Menu\Programs\*, R
+		{
+			if (A_LoopFileName ~= "Preventice.*?Upload") {								; scan Start Menu for Preventice Upload shortcut
+				exe := A_LoopFileFullPath
+				run % exe																; and launch it
+				break
+			}
+		}
+		if (exe="") {																	; no exe found
+			return
+		}
+
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
 		{
