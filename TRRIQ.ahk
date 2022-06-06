@@ -2234,17 +2234,7 @@ checkMWUapp()
 	}
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
-		loop, files, %A_AppData%\Microsoft\Windows\Start Menu\Programs\*, R
-		{
-			if (A_LoopFileName ~= "Preventice.*?Upload") {								; scan Start Menu for Preventice Upload shortcut
-				exe := A_LoopFileFullPath
-				run % exe																; and launch it
-				break
-			}
-		}
-		if (exe="") {																	; no exe found
-			return
-		}
+		run .\files\MWU3110.application
 
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
