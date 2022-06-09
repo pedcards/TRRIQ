@@ -201,9 +201,9 @@ parsePreventiceFTP(tbl) {
 			break																		; skip out of they are both within 7 days
 		}
 		btnDate.click()																	; click to sort list by btnDate
-		; wbWaitBusy(gl.settings.webwait)
 		gl.Page.await()
 	}
+	sleep 100
 
 	Progress,100,% " ",Fetching PDF files
 	loops := 1
@@ -211,7 +211,8 @@ parsePreventiceFTP(tbl) {
 		num := A_Index-1
 		cols := gl.Page.tblRows[num].querySelectorAll(".ng-binding")
 		btnName := cols[0]
-		btnName.click() 
+		btnName.click()
+		sleep 100
 	}
 
 	Return 0
