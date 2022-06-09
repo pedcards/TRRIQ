@@ -57,7 +57,6 @@ MainLoop:
 	wb.visible := gl.settings.isVisible													; for progress bars
 	wb.capabilities.HeadlessMode := gl.settings.isHeadless								; for Chrome/Edge window
 	gl.Page := wb.NewSession()															; Session in gl.Page
-	gl.Page.CDP.Call("Browser.setDownloadBehavior", { "behavior" : "allow", "downloadPath" : "C:\Users\tchun1\Downloads\FTP"}) 
 
 	if (A_Args[1]="ftp") {
 		webStr.FTP := readIni("str_ftp")
@@ -178,6 +177,8 @@ parsePreventiceFTP(tbl) {
 	Retrieve the last 1-2 weeks of records
 */
 	Progress,,% "",FTP page loaded
+	dlPath := "C:\Users\tchun1\Downloads\FTP"
+	gl.Page.CDP.Call("Browser.setDownloadBehavior", { "behavior" : "allow", "downloadPath" : dlPath}) 
 
 	hdr := gl.Page.querySelector("div.table-header-wrapper")
 	btn := hdr.querySelectorAll("div[ng-click]")
