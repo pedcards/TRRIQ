@@ -177,7 +177,7 @@ parsePreventiceFTP(tbl) {
 	Retrieve the last 1-2 weeks of records
 */
 	maxTick := 120000
-	dlPath := "C:\Users\tchun1\Downloads\FTP"
+	dlPath := A_WorkingDir "\pdfTemp"
 	gl.Page.CDP.Call("Browser.setDownloadBehavior", { "behavior" : "allow", "downloadPath" : dlPath}) 
 	Progress,,% " ",FTP page loaded
 
