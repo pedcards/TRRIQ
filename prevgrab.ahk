@@ -381,7 +381,7 @@ wbOpen() {
 	} Else
 	if (mseVer) {
 		verNum := mseVer
-		driver := "edgedriver"
+		driver := "msedgedriver"
 		eventlog("Found Edge (x86) version " verNum)
 	} Else {
 		eventlog("Could not find installed Chrome or Edge.")
