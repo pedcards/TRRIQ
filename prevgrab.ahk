@@ -176,9 +176,10 @@ parsePreventiceFTP(tbl) {
 	Sort by date
 	Retrieve the last 1-2 weeks of records
 */
-	Progress,,% "",FTP page loaded
+	maxTick := 120000
 	dlPath := "C:\Users\tchun1\Downloads\FTP"
 	gl.Page.CDP.Call("Browser.setDownloadBehavior", { "behavior" : "allow", "downloadPath" : dlPath}) 
+	Progress,,% " ",FTP page loaded
 
 	hdr := gl.Page.querySelector("div.table-header-wrapper")
 	btn := hdr.querySelectorAll("div[ng-click]")
@@ -190,7 +191,7 @@ parsePreventiceFTP(tbl) {
 			break
 		}
 	}
-	Progress,,% "",FTP checking sort order
+	Progress, 50,% " ",FTP checking sort order
 	loop, 2
 	{
 		gl.Page.tbl := gl.Page.querySelector(".table-body")								; find div with class "table-body"
@@ -204,7 +205,7 @@ parsePreventiceFTP(tbl) {
 		gl.Page.await()
 	}
 
-	loop, 3 {																			; number of records to get
+	Progress,100,% " ",Fetching PDF files
 	loops := 1
 	loop, % loops {																			; number of records to get
 		num := A_Index-1
