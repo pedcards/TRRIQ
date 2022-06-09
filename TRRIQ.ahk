@@ -333,6 +333,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Update call schedules, updateCall
 	Menu, menuSys, Add, Send notification email, sendEmail
 	Menu, menuSys, Add, Find pending leftovers, cleanPending
+	Menu, menuSys, Add, CheckMWU, checkMWUapp											; position for test menu
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -2241,11 +2242,8 @@ checkMWUapp()
 	}
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
-		wb := wbOpen()
-		sleep 500
-		wb.Navigate("https://h3.preventice.com/WebUploadApplication.application")		; open direct link to WebUploadApplication.application
-		wb.exit()																		; disconnect the webbrowser object
-		
+		run .\files\MWU3110.application
+
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
 		{
@@ -2273,6 +2271,11 @@ MortaraUpload(tabnum="")
 	checkMWUapp()
 	
 	muWinID := WinExist("Mortara Web Upload")
+	if !(muWinID) {
+		eventlog("Could not launch MWU.")
+		MsgBox Could not launch Mortara Web Upload
+		return
+	}
 
 	fetchQuit := false
 	MtCt := ""
@@ -2352,8 +2355,8 @@ MortaraUpload(tabnum="")
 			wuConfig .= (vNum>47 && vNum<58) ? chr(vNum) : " "
 		}
 		oFile.Close()
-		RegExMatch(wuConfig,"^.*?(\d{5}) ",t)
-		RegExMatch(wuConfig," (\d{6,})\s*$",s)
+		RegExMatch(wuConfig,"^.*?(\d{5})\s",t)
+		RegExMatch(wuConfig,"\s(\d{6,7})\s",s)
 		if (t1) {																		; SN found in CONFIG.SYS
 			wuDir.Ser := substr(t1,1-strlen(sernum))
 			eventlog("wuDirSer " wuDir.Ser " from CONFIG.SYS")
@@ -5262,43 +5265,6 @@ filterProv(x) {
 	return {name:x, site:site1}
 }
 
-wbOpen() {
-/*	Use Rufaydium class https://github.com/Xeo786/Rufaydium-Webdriver
-	to use Google Chrome or Microsoft Edge webdriver to retrieve webpage
-*/
-	FileGetVersion, cr32Ver, C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
-	FileGetVersion, cr64Ver, C:\Program Files\Google\Chrome\Application\chrome.exe
-	FileGetVersion, mseVer, C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
-	if (cr32Ver) {
-		verNum := cr32Ver
-		driver := "chromedriver"
-		eventlog("Found Chrome (x86) version " verNum)
-	} Else
-	if (cr64Ver) {
-		verNum := cr64Ver
-		driver := "chromedriver"
-		eventlog("Found Chrome (x64) version " verNum)
-	} Else
-	if (mseVer) {
-		verNum := mseVer
-		driver := "edgedriver"
-		eventlog("Found Edge (x86) version " verNum)
-	} Else {
-		eventlog("Could not find installed Chrome or Edge.")
-		Return
-	}
-	Num :=  strX(verNum,"",0,1,".",1,1)
-
-	exe := ".\files\" driver "\" Num "\" driver ".exe"
-	if !FileExist(exe) {
-		eventlog("Installed version " verNum ". Could not find matching " driver ".")
-		Return
-	}
-	wb := new Rufaydium(exe)
-
-	return wb
-}
-
 httpComm(verb) {
 	url := "http://depts.washington.edu/pedcards/change/direct.php?" 
 			. "do=" . verb
@@ -5767,4 +5733,3 @@ readIni(section) {
 #Include sift3.ahk
 #Include hl7.ahk
 #Include callSched.ahk
-#Include Rufaydium.ahk
