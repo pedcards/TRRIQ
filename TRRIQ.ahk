@@ -708,7 +708,7 @@ return
 
 WQlist() {
 	global
-	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim
+	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim, tmpHolters
 		, late_BGH := 45
 		, late_BGM := 30
 		, late_Mortara := 14
@@ -933,6 +933,7 @@ WQlist() {
 	
 /*	Process each incoming .hl7 RESULT from PREVENTICE
 */
+	tmpHolters := ""
 	loop, Files, % path.PrevHL7in "*.hl7"
 	{
 		fileIn := A_LoopFileName
@@ -974,6 +975,9 @@ WQlist() {
 			continue
 		}
 
+		if (res.dev~="Mortara") {														; capture names for all incoming Mortara reports
+			tmpHolters .= x.1 "," x.2 "`n"
+		}
 		
 		LV_Add(""
 			, path.PrevHL7in fileIn														; path and filename
@@ -987,9 +991,11 @@ WQlist() {
 			: (res.dev~="Mortara") ? "HOL"
 			: (res.dev~="Mini") ? "MINI"
 			: "HL7"
-			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara but filesize <3 Meg
+			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
 		wqfiles.push(id)
 	}
+	FileDelete, .\files\mortaras.txt
+	FileAppend, % tmpHolters, .\files\mortaras.txt
 	
 /*	Scan Holter PDFs folder for additional files
 */
