@@ -2347,8 +2347,8 @@ MortaraUpload(tabnum="")
 			wuConfig .= (vNum>47 && vNum<58) ? chr(vNum) : " "
 		}
 		oFile.Close()
-		RegExMatch(wuConfig,"^.*?(\d{5}) ",t)
-		RegExMatch(wuConfig," (\d{6,})\s*$",s)
+		RegExMatch(wuConfig,"^.*?(\d{5})\s",t)
+		RegExMatch(wuConfig,"\s(\d{6,7})\s",s)
 		if (t1) {																		; SN found in CONFIG.SYS
 			wuDir.Ser := substr(t1,1-strlen(sernum))
 			eventlog("wuDirSer " wuDir.Ser " from CONFIG.SYS")
