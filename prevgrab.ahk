@@ -191,7 +191,7 @@ parsePreventiceFTP(tbl) {
 			break
 		}
 	}
-	Progress, 50,% " ",FTP checking sort order
+	Progress, 100,% " ",FTP checking sort order
 	loop, 2
 	{
 		gl.Page.tbl := gl.Page.querySelector(".table-body")								; find div with class "table-body"
@@ -205,7 +205,7 @@ parsePreventiceFTP(tbl) {
 	}
 	sleep 100
 
-	Progress,100,% " ",Fetching PDF files
+	Progress,0,% " ",Fetching PDF files
 	loops := 1
 	loop, % loops {																			; number of records to get
 		num := A_Index-1
