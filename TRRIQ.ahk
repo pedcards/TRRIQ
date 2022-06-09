@@ -973,7 +973,7 @@ WQlist() {
 			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			continue
 		}
-		FileGetSize,full,% path.PrevHL7in fileIn,M
+
 		
 		LV_Add(""
 			, path.PrevHL7in fileIn														; path and filename
@@ -987,7 +987,7 @@ WQlist() {
 			: (res.dev~="Mortara") ? "HOL"
 			: (res.dev~="Mini") ? "MINI"
 			: "HL7"
-			, (res.dev~="Mortara")&&(full<3) ? "X":"")									; flag FTP if Mortara but filesize <3 Meg
+			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara but filesize <3 Meg
 		wqfiles.push(id)
 	}
 	
