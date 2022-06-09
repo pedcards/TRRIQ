@@ -223,6 +223,16 @@ parsePreventiceFTP(tbl) {
 	}
 	eventlog(A_TickCount-t0 " ms to start download.")
 
+	t0 := A_TickCount
+	while FileExist(dlPath "\*crdownload") {											; wait for .crdownload to finish
+		t1 := A_TickCount-t0
+		if (t1 > maxTick) {
+			Break
+		}
+		progress, % 100*t1/maxTick
+	}
+	eventlog(A_TickCount-t0 " msec to download [" loops "] file(s).")
+
 	Return 0
 }
 
