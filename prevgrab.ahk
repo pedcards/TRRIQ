@@ -215,6 +215,14 @@ parsePreventiceFTP(tbl) {
 		sleep 100
 	}
 
+	t0 := A_TickCount
+	while (A_TickCount-t0 < 5000) {														; wait for .crdownload to begin
+		if FileExist(dlPath "\*crdownload") {
+			Break
+		}
+	}
+	eventlog(A_TickCount-t0 " ms to start download.")
+
 	Return 0
 }
 
