@@ -975,10 +975,6 @@ WQlist() {
 			continue
 		}
 
-		if (res.dev~="Mortara") {														; capture names for all incoming Mortara reports
-			tmpHolters .= x.1 "," x.2 "`n"
-		}
-		
 		LV_Add(""
 			, path.PrevHL7in fileIn														; path and filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
@@ -994,8 +990,6 @@ WQlist() {
 			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
 		wqfiles.push(id)
 	}
-	FileDelete, .\files\mortaras.txt
-	FileAppend, % tmpHolters, .\files\mortaras.txt
 	
 /*	Scan Holter PDFs folder for additional files
 */
@@ -1031,6 +1025,21 @@ WQlist() {
 	}
 
 	LV_ModifyCol(6,"Sort")																; date
+
+/*	Generate mortaras.txt list for those that still require PDF download
+*/
+	GuiControl, Disabled, Grab FTP
+	loop % LV_GetCount() {
+		LV_GetText(x,A_Index,9)															; FTP
+		LV_GetText(y,A_Index,2)															; Name
+
+		if (x) {
+			tmpHolters .= RegExReplace(y,",\s+",",") "`n"
+			GuiControl, Enable, Grab FTP
+		}
+	}
+	FileDelete, .\files\mortaras.txt
+	FileAppend, % tmpHolters, .\files\mortaras.txt
 
 /*	Scan <pending> for missing webgrab
 	no webgrab means no registration received at Preventice for some reason
