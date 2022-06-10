@@ -225,9 +225,35 @@ parsePreventiceFTP(tbl) {
 		}
 	}
 
+	Progress,0,Please be patient...,Fetching PDF files
+	loop, read, .\files\mortaras.txt
+	{
+		k := A_LoopReadLine
+		if (k="") {
+			Break
+		}
+		nm:=StrSplit(k,",")
+		nm.bestScore := 2
+		loop, % ftpList.length()
+		{
+			rowName := ftpList[A_Index-1]
+			rowL := FuzzySearch(nm.1,rowName)
+			rowF := FuzzySearch(nm.2,rowName)
+			
+			nm.score := rowL+rowF
+			if (nm.score < nm.bestScore) {
+				nm.bestScore := nm.score
+				nm.bestNum := A_Index-1
+				nm.bestName := rowName
+			}
+		}
+		cols := gl.Page.tblRows[nm.bestNum].querySelectorAll(".ng-binding")
 		btnName := cols[0]
 		btnName.click()
 		sleep 100
+		eventlog("List name: " k ". "
+			. "FTP file: " ftpList[nm.bestNum] " "
+			. "(score " round(100*(2-nm.bestScore)/2,2) ")")
 	}
 
 	t0 := A_TickCount
