@@ -2205,9 +2205,12 @@ checkweb(id) {
 
 ftpGrab() {
 	global path
+	Gui, phase:Hide
 	RunWait, PrevGrab.exe "ftp" 
 	FileMove, .\pdfTemp\*.pdf, % path.holterPDF "*.*"
+	Gui, phase:Show
 	WQlist()
+
 	return
 }
 
