@@ -191,6 +191,7 @@ parsePreventiceFTP(tbl) {
 			break
 		}
 	}
+
 	Progress, 100,% " ",FTP checking sort order
 	loop, 2
 	{
@@ -205,11 +206,25 @@ parsePreventiceFTP(tbl) {
 	}
 	sleep 100
 
-	Progress,0,% " ",Fetching PDF files
-	loops := 1
-	loop, % loops {																			; number of records to get
+	Progress,0,% " ",Parsing FTP list
+	ftpList := {}
+	loop
+	{
 		num := A_Index-1
 		cols := gl.Page.tblRows[num].querySelectorAll(".ng-binding")
+		btnName := cols[0].innertext
+		btnDate := cols[2].innertext
+		Progress, % 100*A_Index/24, % btnName
+
+		ftpList[num] := btnName
+		if (parseDate(A_Now).YMD - parseDate(btnDate).YMD) > 14 {
+			break
+		}
+		if (A_index > 100) {
+			break
+		}
+	}
+
 		btnName := cols[0]
 		btnName.click()
 		sleep 100
