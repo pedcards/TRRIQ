@@ -227,10 +227,6 @@ PhaseGUI:
 		. " +0x1000 vUpload gPhaseTask"
 		, .\files\H3.png
 	
-	GuiControl 
-	, % (wksloc="Main Campus" ? "Enable" : "Disable")  
-	, Grab Preventice updates 
-
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
 	Gui, Add, Tab3																		; add Tab bar with tracked sites
@@ -242,6 +238,10 @@ PhaseGUI:
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
 	if (wksloc="Main Campus") {
+		GuiControl 
+			, Enable
+			, Grab Preventice updates
+
 		Gui, Tab, INBOX
 		Gui, Add, Listview
 			, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
