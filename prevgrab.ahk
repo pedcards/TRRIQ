@@ -272,8 +272,9 @@ parsePreventiceFTP(tbl) {
 		}
 		progress, % 100*t1/maxTick
 	}
-	eventlog(A_TickCount-t0 " msec to download [" loops "] file(s).")
+	eventlog(A_TickCount-t0 " msec to download file(s).")
 
+	Progress, Hide
 	Return 0
 }
 
@@ -370,7 +371,7 @@ parsePreventiceInventory(tbl) {
 	global prevtxt, gl, wq
 	
 	gl.clip := tbl.innertext
-	if (gl.clip=gl.clip0) {																	; no change since last clip
+	if (gl.clip=gl.clip0) {																; no change since last clip
 		Return false
 	}
 
@@ -551,7 +552,7 @@ preventiceLogin() {
 		.getElementByID(gl.login.attr_btn)
 		.click()
 	
-	if !(wbWaitBusy(gl.login.webwait)) {															; wait until done loading
+	if !(wbWaitBusy(gl.login.webwait)) {												; wait until done loading
 		return false
 	}
 	else {
@@ -893,4 +894,5 @@ readIni(section) {
 }
 
 #Include xml.ahk
+#Include sift3.ahk
 #Include Rufaydium.ahk
