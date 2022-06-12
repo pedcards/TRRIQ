@@ -2385,10 +2385,6 @@ MortaraUpload(tabnum="")
 			wuDir.Ser := substr(wuDevice,-4)
 			eventlog("wuDirSer " wuDir.Ser " from DEVICE.LOG")
 		} else {
-			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
-			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
-			FileCopy, % wuDir.Full "\CONFIG.SYS", .\tempfiles\%A_Now%-CONFIG.SYS.txt
-			FileCopy, % wuDir.Full "\DEVICE.LOG", .\tempfiles\%A_Now%-DEVICE.LOG.txt
 			eventlog("No S/N found.")
 		}
 		if (s1) {																		; MRN found in CONFIG.SYS
@@ -2411,22 +2407,26 @@ MortaraUpload(tabnum="")
 			str := "/root/pending/enroll[dev='Mortara H3+ - " wuDir.Ser "'][date='" parseDate(k1).YMD "']"
 			wqTR := wq.selectSingleNode(str)
 			nm := wqTR.selectSingleNode("name").text
-			if (nm) {
+			if (nm) {																	; MRN based on SN+DATE in RECORD.LOG
+				wuDir.MRN := wqTR.selectSingleNode("mrn").text
 				MsgBox 0x24, Found record, % "Is this device for patient:`n`n`" nm
 				IfMsgBox Yes, {
-					wuDir.MRN := wqTR.selectSingleNode("mrn").text						; MRN based on SN+DATE in RECORD.LOG
 					eventlog("wuDirMRN " wuDir.MRN " not written, but found based on SN+DATE in RECORD.LOG")
 				} else {
 					eventlog("wuDirMRN " wuDir.MRN " did not match SN+DATE in RECORD.LOG")
+					wuDir.MRN := ""
 				}
+			} else {
+				eventlog("No MRN found.")
 			}
 		}
-		if !(wuDir.MRN) {
+		if (wuDir.MRN="")||(wuDir.Ser="") {												; no SN or MRN match, write out dir files
 			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
+			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
 			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
 			FileCopy, % wuDir.Full "\CONFIG.SYS", .\tempfiles\%A_Now%-CONFIG.SYS.txt
+			FileCopy, % wuDir.Full "\DEVICE.LOG", .\tempfiles\%A_Now%-DEVICE.LOG.txt
 			FileCopy, % wuDir.Full "\RECORD.LOG", .\tempfiles\%A_Now%-RECORD.LOG.txt
-			eventlog("No MRN found.")
 		}
 
 		if !(serNum=wuDir.Ser) {														; Attached device does not match device data
@@ -2465,10 +2465,6 @@ MortaraUpload(tabnum="")
 			MorUIfill(mu_UI.TRct,muWinID)
 		}
 		else {																			; no matching node found
-			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
-			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
-			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
-			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt
 			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			eventlog("No registration found for " pt.name " " pt.mrn " " pt.date)
 		}
