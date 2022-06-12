@@ -2379,6 +2379,19 @@ MortaraUpload(tabnum="")
 					Break
 				}
 			}
+			str := "/root/pending/enroll[dev='Mortara H3+ - " wuDir.Ser "'][date='" parseDate(k1).YMD "']"
+			wqTR := wq.selectSingleNode(str)
+			nm := wqTR.selectSingleNode("name").text
+			if (nm) {
+				MsgBox 0x24, Found record, % "Is this device for patient:`n`n`" nm
+				IfMsgBox Yes, {
+					wuDir.MRN := wqTR.selectSingleNode("mrn").text						; MRN based on SN+DATE in RECORD.LOG
+					eventlog("wuDirMRN " wuDir.MRN " not written, but found based on SN+DATE in RECORD.LOG")
+				} else {
+					eventlog("wuDirMRN " wuDir.MRN " did not match SN+DATE in RECORD.LOG")
+				}
+			}
+		}
 			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
 			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
 			FileCopy, % wuDir.Full "\CONFIG.SYS", .\tempfiles\%A_Now%-CONFIG.SYS.txt
