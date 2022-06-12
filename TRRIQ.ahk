@@ -2336,7 +2336,7 @@ MortaraUpload(tabnum="")
 		}
 		FileAppend, % wuDir.endDir, .\tempfiles\%A_now%-DIR.txt							; for now, writeout target dir for each upload
 
-		FileReadLine, wuRecord, % wuDir.Full "\RECORD.LOG", 1
+		FileRead, wuRecord, % wuDir.Full "\RECORD.LOG"
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
 		wuConfig := ""
 		oFile := FileOpen(wuDir.Full "\CONFIG.SYS", "r")
