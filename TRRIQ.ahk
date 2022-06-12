@@ -2369,6 +2369,16 @@ MortaraUpload(tabnum="")
 			wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
 			eventlog("wuDirMRN " wuDir.MRN " from RECORD.LOG")
 		} else {
+			loop, parse, wuRecord, `n, `r
+			{
+				RegExMatch(A_LoopField,"^(\d{2}\/\d{2}\/\d{4}) \d{2}:\d{2}:\d{2}",k)
+				if (k1) {																; get date activated
+					Break
+				}
+				if (A_Index>12) {
+					Break
+				}
+			}
 			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
 			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
 			FileCopy, % wuDir.Full "\CONFIG.SYS", .\tempfiles\%A_Now%-CONFIG.SYS.txt
