@@ -2392,6 +2392,7 @@ MortaraUpload(tabnum="")
 				}
 			}
 		}
+		if !(wuDir.MRN) {
 			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
 			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
 			FileCopy, % wuDir.Full "\CONFIG.SYS", .\tempfiles\%A_Now%-CONFIG.SYS.txt
