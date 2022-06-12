@@ -2365,7 +2365,7 @@ MortaraUpload(tabnum="")
 		}
 		FileAppend, % wuDir.endDir, .\tempfiles\%A_now%-DIR.txt							; for now, writeout target dir for each upload
 
-		FileReadLine, wuRecord, % wuDir.Full "\RECORD.LOG", 1
+		FileRead, wuRecord, % wuDir.Full "\RECORD.LOG"
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
 		wuConfig := ""
 		oFile := FileOpen(wuDir.Full "\CONFIG.SYS", "r")
@@ -2398,6 +2398,30 @@ MortaraUpload(tabnum="")
 			wuDir.MRN := trim(RegExReplace(wuRecord,"i)Patient ID:"))
 			eventlog("wuDirMRN " wuDir.MRN " from RECORD.LOG")
 		} else {
+			loop, parse, wuRecord, `n, `r
+			{
+				RegExMatch(A_LoopField,"^(\d{2}\/\d{2}\/\d{4}) \d{2}:\d{2}:\d{2}",k)
+				if (k1) {																; get date activated
+					Break
+				}
+				if (A_Index>12) {
+					Break
+				}
+			}
+			str := "/root/pending/enroll[dev='Mortara H3+ - " wuDir.Ser "'][date='" parseDate(k1).YMD "']"
+			wqTR := wq.selectSingleNode(str)
+			nm := wqTR.selectSingleNode("name").text
+			if (nm) {
+				MsgBox 0x24, Found record, % "Is this device for patient:`n`n`" nm
+				IfMsgBox Yes, {
+					wuDir.MRN := wqTR.selectSingleNode("mrn").text						; MRN based on SN+DATE in RECORD.LOG
+					eventlog("wuDirMRN " wuDir.MRN " not written, but found based on SN+DATE in RECORD.LOG")
+				} else {
+					eventlog("wuDirMRN " wuDir.MRN " did not match SN+DATE in RECORD.LOG")
+				}
+			}
+		}
+		if !(wuDir.MRN) {
 			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
 			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
 			FileCopy, % wuDir.Full "\CONFIG.SYS", .\tempfiles\%A_Now%-CONFIG.SYS.txt
