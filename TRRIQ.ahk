@@ -3144,10 +3144,11 @@ getPatInfo() {
 			return
 		}
 		choice := strX(q,"",1,1,")",1,1)
+		eventlog("Parent selection " choice ": " rel[choice].Name "|" rel[choice].livesaddr)
 	} else {
 		choice := 1
+		eventlog("Parent: " rel[choice].Name "|" rel[choice].livesaddr)
 	}
-	eventlog("Parent selection " choice ": " rel[choice].Name "|" rel[choice].livesaddr)
 	
 	ptDem.parent := rel[choice].Name
 	ptDem.parentL := parseName(ptDem.parent).last
