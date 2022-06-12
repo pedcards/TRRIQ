@@ -477,6 +477,7 @@ wbUrl(url) {
 			}
 			loginErr := preventiceLogin()
 			eventlog("PREVGRAB: Login " ((loginErr) ? "submitted." : "attempted."))
+			sleep 1000
 		}
 		if (gl.Page.URL=url) {
 			eventlog("PREVGRAB: Succeeded.",0)
