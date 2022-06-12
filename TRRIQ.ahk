@@ -3181,22 +3181,11 @@ getPatInfo() {
 		}
 	}
 	if (ptDem.addr1="") {
-		InputBox(addr1, "Registration requires street address","`n`nEnter valid street address","")
-		InputBox(addr2, "Registration requires street address","`n`nEnter city", ptDem.city)
+		InputBox(addr1, "Registration requires mailing address","`n`nEnter mailing address","")
+		InputBox(addr2, "Registration requires mailing address","`n`nEnter city", ptDem.city)
 		if (addr1) {
 			ptDem.addr1 := addr1
 			eventlog("Entered street address.")
-		} else {
-			fetchQuit := true
-			return
-		}
-	}
-	if (ptDem.addr1~="i)^P[\. ]+?O[\. ]+?Box") {
-		InputBox(addr1, "Cannot use P.O. Box","`n`nEnter valid street address","")
-		InputBox(addr2, "Cannot use P.O. Box","`n`nEnter city", ptDem.city)
-		if (addr1) {
-			ptDem.addr1 := addr1
-			eventlog("Replaced PO box with street address.")
 		} else {
 			fetchQuit := true
 			return
