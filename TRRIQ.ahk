@@ -2391,6 +2391,8 @@ MortaraUpload(tabnum="")
 					eventlog("wuDirMRN " wuDir.MRN " did not match SN+DATE in RECORD.LOG")
 					wuDir.MRN := ""
 				}
+			} else {
+				eventlog("No MRN found.")
 			}
 		}
 		if !(wuDir.MRN) {
