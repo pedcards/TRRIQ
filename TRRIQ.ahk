@@ -203,7 +203,10 @@ PhaseGUI:
 	Gui, Add, Button
 		, Y+10 wp h40 gPrevGrab Disabled
 		, Grab Preventice updates
-	Gui, Add, Text, wp h40																; space between top buttons and lower buttons
+	Gui, Add, Button
+		, Y+10 wp h40 gFtpGrab Disabled
+		, Grab FTP
+	Gui, Add, Text, wp h20																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
 		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
@@ -224,10 +227,6 @@ PhaseGUI:
 		. " +0x1000 vUpload gPhaseTask"
 		, .\files\H3.png
 	
-	GuiControl 
-	, % (wksloc="Main Campus" ? "Enable" : "Disable")  
-	, Grab Preventice updates 
-
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
 	Gui, Add, Tab3																		; add Tab bar with tracked sites
@@ -239,6 +238,10 @@ PhaseGUI:
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
 	if (wksloc="Main Campus") {
+		GuiControl 
+			, Enable
+			, Grab Preventice updates
+
 		Gui, Tab, INBOX
 		Gui, Add, Listview
 			, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
@@ -705,7 +708,7 @@ return
 
 WQlist() {
 	global
-	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim
+	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim, tmpHolters
 		, late_BGH := 45
 		, late_BGM := 30
 		, late_Mortara := 14
@@ -930,6 +933,7 @@ WQlist() {
 	
 /*	Process each incoming .hl7 RESULT from PREVENTICE
 */
+	tmpHolters := ""
 	loop, Files, % path.PrevHL7in "*.hl7"
 	{
 		fileIn := A_LoopFileName
@@ -970,8 +974,7 @@ WQlist() {
 			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			continue
 		}
-		FileGetSize,full,% path.PrevHL7in fileIn,M
-		
+
 		LV_Add(""
 			, path.PrevHL7in fileIn														; path and filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
@@ -984,7 +987,7 @@ WQlist() {
 			: (res.dev~="Mortara") ? "HOL"
 			: (res.dev~="Mini") ? "MINI"
 			: "HL7"
-			, (res.dev~="Mortara")&&(full<3) ? "X":"")									; flag FTP if Mortara but filesize <3 Meg
+			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
 		wqfiles.push(id)
 	}
 	
@@ -1022,6 +1025,21 @@ WQlist() {
 	}
 
 	LV_ModifyCol(6,"Sort")																; date
+
+/*	Generate mortaras.txt list for those that still require PDF download
+*/
+	GuiControl, Disabled, Grab FTP
+	loop % LV_GetCount() {
+		LV_GetText(x,A_Index,9)															; FTP
+		LV_GetText(y,A_Index,2)															; Name
+
+		if (x) {
+			tmpHolters .= RegExReplace(y,",\s+",",") "`n"
+			GuiControl, Enable, Grab FTP
+		}
+	}
+	FileDelete, .\files\mortaras.txt
+	FileAppend, % tmpHolters, .\files\mortaras.txt
 
 /*	Scan <pending> for missing webgrab
 	no webgrab means no registration received at Preventice for some reason
@@ -2183,6 +2201,17 @@ checkweb(id) {
 		eventlog("Added webgrab for id " id)
 		Return
 	}
+}
+
+ftpGrab() {
+	global path
+	Gui, phase:Hide
+	RunWait, PrevGrab.exe "ftp" 
+	FileMove, .\pdfTemp\*.pdf, % path.holterPDF "*.*"
+	Gui, phase:Show
+	WQlist()
+
+	return
 }
 
 cleanTempFiles() {

@@ -12,6 +12,7 @@
 ; Git : https://github.com/Xeo786/Rufaydium-Webdriver
 ; By Xeo786
 
+#include %A_linefile%\..\
 #Include WDM.ahk
 #Include CDP.ahk
 #Include JSON.ahk
@@ -28,13 +29,13 @@ Class Rufaydium
 		Switch this.Driver.Name
 		{
 			case "chromedriver" :
-				this.capabilities := new capabilities(this.Driver.browser,this.Driver.Options)
+				this.capabilities := new ChromeCapabilities(this.Driver.browser,this.Driver.Options)
 			case "msedgedriver" : 
-				this.capabilities := new capabilities(this.Driver.browser,this.Driver.Options)
+				this.capabilities := new EdgeCapabilities(this.Driver.browser,this.Driver.Options)
 			case "geckodriver" : 
 				this.capabilities := new FireFoxCapabilities(this.Driver.browser,this.Driver.Options)
 			case "operadriver" :
-				this.capabilities := new capabilities(this.Driver.browser,this.Driver.Options)
+				this.capabilities := new OperaCapabilities(this.Driver.browser,this.Driver.Options)
 		}
 		if !isobject(cap := this.capabilities.cap)
 			this.capabilities := capabilities.Simple
@@ -43,9 +44,14 @@ Class Rufaydium
 	__Delete()
 	{
 		;this.QuitAllSessions()
-		;this.Driver.Exit()
+		;this.Exit()
 	}
 	
+	Exit()
+	{
+		this.Driver.Exit()
+	}
+
 	send(url,Method,Payload:= 0,WaitForResponse:=1)
 	{
 		if !instr(url,"HTTP")
@@ -73,21 +79,37 @@ Class Rufaydium
 		return Rufaydium.WebRequest.responseText
 	}
 	
-	NewSession()
+	NewSession(Binary:="")
 	{
 		if !this.capabilities.options
 		{
 			Msgbox,64,Rufaydium WebDriver Support, % "Unknown Driver Loaded`nplease read readme and manualy set capabilities for " this.Driver.Name ".exe"
 			return
 		}
+		if Binary
+			this.capabilities.Setbinary(Binary)
 		this.Driver.Options := this.capabilities.options ; in case someone use custom driver and want to change capabilities manually
 		k := this.Send( this.DriverUrl "/session","POST",this.capabilities.cap,1)
 		if k.error
 		{
-			
-			if(k.error = "session not created")
+			if(k.message = "binary is not a Firefox executable")  
 			{
-				
+				; its all in my mind not tested, 32/64ahk 64OS 32/64ff broken down in simple three step logic
+				ffbinary := A_ProgramFiles "\Mozilla Firefox\firefox.exe" ; check ff in default location, cover all 32AHKFFOS, 64AHKFFOS
+				if !FileExist(ffbinary)
+					ffbinary := RegExReplace(ffbinary, " (x86)") ; in case 64OS 32AHK 64FF checking 64ff loc
+				else if !FileExist(ffbinary)
+					ffbinary := A_ProgramFiles " (x86)\Mozilla Firefox\firefox.exe" ; in case 64OS has 64ahk checking 32ff loc
+				else
+				{
+					msgbox,48,Rufaydium WebDriver Support,% k.message "`n`nDriver is unable to locate firefox binary and, Rufaydium is also unabel to detect FF default location`n`n if you see this msg in loop please report bug" 
+					return
+				} 
+				this.capabilities.Setbinary(ffbinary)
+				return This.NewSession()
+			}
+			else if RegExMatch(k.message,"version ([\d.]+).*\n.*version is (\d+.\d+.\d+)")
+			{
 				MsgBox, 52,Rufaydium WebDriver Support,% k.message "`n`nPlease Press Yes to download latest driver"
 				IfMsgBox Yes
 				{
@@ -98,12 +120,15 @@ Class Rufaydium
 						Msgbox,64,Rufaydium WebDriver Support,Unable to download driver`nRufaydium exitting
 						Exitapp
 					}
+					This.Driver := new RunDriver(i,This.Driver.Param)
+					return This.NewSession()
 				}
-				This.Driver := new RunDriver(i,This.Driver.Param)
-				return This.NewSession()
 			}
-			msgbox, 48,Rufaydium WebDriver Support Error,% k.error "`n`n" k.message
-			return k
+			else
+			{
+				msgbox, 48,Rufaydium WebDriver Support Error,% k.error "`n`n" k.message
+				return k
+			} 
 		}
 		window := []
 		window.Name := This.driver.Name
@@ -111,7 +136,7 @@ Class Rufaydium
 		window.address := this.DriverUrl "/session/" k.SessionId
 		if This.driver.Name = "geckodriver"
 		{
-			IniWrite, % k.SessionId, % A_ScriptDir "/ActiveSessions.ini", % This.driver.Name, % k.SessionId
+			IniWrite, % k.SessionId, % this.driver.dir "/ActiveSessions.ini", % This.driver.Name, % k.SessionId
 		}
 		
 		return new Session(window)
@@ -128,14 +153,14 @@ Class Rufaydium
 
 		if This.driver.Name = "geckodriver"
 		{
-			IniRead, SessionList, % A_ScriptDir "/ActiveSessions.ini", % This.driver.Name
+			IniRead, SessionList, % this.driver.dir "/ActiveSessions.ini", % This.driver.Name
 			Windows := []
 			for k, se in StrSplit(SessionList,"`n")
 			{
 				se := RegExReplace(se, "(.*)=(.*)", "$1")
 				r :=  this.Send(this.DriverUrl "/session/" se "/url","GET")
 				if r.error
-					IniDelete, % A_ScriptDir "/ActiveSessions.ini", % This.driver.Name, % se
+					IniDelete, % this.driver.dir "/ActiveSessions.ini", % This.driver.Name, % se
 				else
 				{
 					s := []
@@ -213,7 +238,7 @@ Class Session extends Rufaydium
 		this.Address := i.address
 		this.debuggerAddress := i.debuggerAddress
 		this.currentTab := this.Send("window","GET")
-		switch this.name
+		switch i.name
 		{
 			case "chromedriver" :
 				this.CDP := new CDP(this.Address)
@@ -222,7 +247,7 @@ Class Session extends Rufaydium
 			case "geckodriver" : 
 				
 			case "operadriver" :
-
+				this.CDP := new CDP(this.Address)
 		}	
 	}
 	

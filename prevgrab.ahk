@@ -23,14 +23,13 @@ Config:
 	} else {
 		gl.isDevt := false
 	}
+
+	; A_Args[1] := "ftp"				;*******************************
+
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
 	wq := new XML(gl.TRRIQ_path "\worklist.xml")
 	
-	webStr.Enrollment := readIni("str_Enrollment")
-	webStr.Inventory := readIni("str_Inventory")
-	
-	gl.login := readIni("str_Login")
 	gl.settings := readIni("settings")
 	
 	gl.enroll_ct := 0
@@ -59,15 +58,26 @@ MainLoop:
 	wb.capabilities.HeadlessMode := gl.settings.isHeadless								; for Chrome/Edge window
 	gl.Page := wb.NewSession()															; Session in gl.Page
 
-	; PreventiceWebGrab("Enrollment")
-	PreventiceWebGrab("Inventory")
-	if (gl.inv_ct < gl.inv_tot) {
-		gl.FAIL := true
+	if (A_Args[1]="ftp") {
+		webStr.FTP := readIni("str_ftp")
+		gl.login := readIni("str_ftpLogin")
+
+		PreventiceWebGrab("ftp")
+	} else {
+		; webStr.Enrollment := readIni("str_Enrollment")
+		webStr.Inventory := readIni("str_Inventory")
+		gl.login := readIni("str_Login")
+
+		; PreventiceWebGrab("Enrollment")
+		PreventiceWebGrab("Inventory")
+		if (gl.inv_ct < gl.inv_tot) {
+			gl.FAIL := true
+		}
+		filedelete, % gl.files_dir "\prev.txt"											; writeout each one regardless
+		FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
+		eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
+		
 	}
-	
-	filedelete, % gl.files_dir "\prev.txt"												; writeout each one regardless
-	FileAppend, % prevtxt, % gl.files_dir "\prev.txt"
-	eventlog("PREVGRAB: Enroll " gl.enroll_ct ", Inventory " gl.inv_ct ". (" round((A_TickCount-gl.t0)/1000,2) " sec)")
 	
 	if (gl.FAIL) {																		; Note when a table had failed to load
 		MsgBox,262160,, Downloads failed.
@@ -77,6 +87,8 @@ MainLoop:
 	}
 	
 	wbClose()
+	gl.Page.Exit()
+	wb.driver.Exit()
 
 	ExitApp
 }
@@ -91,32 +103,27 @@ PreventiceWebGrab(phase) {
 	if (gl.wbFail) {
 		return
 	}
+	wbWaitBusy(gl.settings.webwait)
 	prvFunc := web.fx
-	
 	loop
 	{
 		if (gl.settings.isVisible) {
 			progress,,% "Page " A_index,
 		}
-		tbl := gl.Page.getElementById(web.tbl)											; get the Main Table
+		tbl := gl.Page.getElementsByClassName(web.tbl)[0]								; get the Main Table
 		if !IsObject(tbl) {
 			eventlog("PREVGRAB: *** " phase " *** No matching table.")
 			gl.FAIL := true
 			return
 		}
 		
-		body := tbl.getElementsByName("tbody")[0]
-		clip := body.innertext
-		if (clip=clip0) {																; no change since last clip
-			break
-		}
+		body := tbl.getElementsByClassName(web.tblBody)[0]
 		
-		done := %prvFunc%(body)		; parsePreventiceEnrollment() or parsePreventiceInventory()
+		done := %prvFunc%(body)		; parsePreventiceEnrollment() or parsePreventiceInventory() or parsePreventiceFTP()
 		
 		if (done=0) {																	; no new records returned
 			break
 		}
-		clip0 := clip																	; set the check for repeat copy
 		
 		PreventiceWebPager(phase,web.changed,web.btn)
 	}
@@ -162,6 +169,127 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	}
 	eventlog("PREVGRAB: " phase " " pgNum " timed out! (" round((A_TickCount-t0)/1000,2) " s)")
 	return
+}
+
+parsePreventiceFTP(tbl) {
+/*	Read FTP table
+	Sort by date
+	Retrieve the last 1-2 weeks of records
+*/
+	maxTick := 120000
+	dlPath := A_WorkingDir "\pdfTemp"
+	gl.Page.CDP.Call("Browser.setDownloadBehavior", { "behavior" : "allow", "downloadPath" : dlPath}) 
+	Progress,,% " ",FTP page loaded
+
+	hdr := gl.Page.querySelector("div.table-header-wrapper")
+	btn := hdr.querySelectorAll("div[ng-click]")
+	loop, % btn.Count()
+	{
+		k := btn[A_index-1]
+		if (k.InnerText ~= "i)Date") {
+			btnDate := k
+			break
+		}
+	}
+
+	Progress, 100,% " ",FTP checking sort order
+	loop, 2
+	{
+		gl.Page.tbl := gl.Page.querySelector(".table-body")								; find div with class "table-body"
+		gl.Page.tblRows := tbl.querySelectorAll(".row-wrap")							; all rows with class "row-wrap"
+
+		if (ftpDateDiff(0)<7)&&(ftpDateDiff(1)<7) {										; check dates of first 2 rows
+			break																		; skip out of they are both within 7 days
+		}
+		btnDate.click()																	; click to sort list by btnDate
+		gl.Page.await()
+	}
+	sleep 100
+
+	Progress,0,% " ",Parsing FTP list
+	ftpList := {}
+	loop
+	{
+		num := A_Index-1
+		cols := gl.Page.tblRows[num].querySelectorAll(".ng-binding")
+		btnName := cols[0].innertext
+		btnDate := cols[2].innertext
+		Progress, % 100*A_Index/24, % btnName
+
+		ftpList[num] := btnName
+		if (parseDate(A_Now).YMD - parseDate(btnDate).YMD) > 14 {
+			break
+		}
+		if (A_index > 100) {
+			break
+		}
+	}
+
+	Progress,0,Please be patient...,Fetching PDF files
+	loop, read, .\files\mortaras.txt
+	{
+		k := A_LoopReadLine
+		if (k="") {
+			Break
+		}
+		nm:=StrSplit(k,",")
+		nm.bestScore := 2
+		loop, % ftpList.length()
+		{
+			rowName := ftpList[A_Index-1]
+			rowL := FuzzySearch(nm.1,rowName)
+			rowF := FuzzySearch(nm.2,rowName)
+			
+			nm.score := rowL+rowF
+			if (nm.score < nm.bestScore) {
+				nm.bestScore := nm.score
+				nm.bestNum := A_Index-1
+				nm.bestName := rowName
+			}
+		}
+		cols := gl.Page.tblRows[nm.bestNum].querySelectorAll(".ng-binding")
+		btnName := cols[0]
+		btnName.click()
+		sleep 100
+		eventlog("List name: " k ". "
+			. "FTP file: " ftpList[nm.bestNum] " "
+			. "(score " round(100*(2-nm.bestScore)/2,2) ")")
+	}
+
+	t0 := A_TickCount
+	while (A_TickCount-t0 < 5000) {														; wait for .crdownload to begin
+		if FileExist(dlPath "\*crdownload") {
+			Break
+		}
+	}
+	eventlog(A_TickCount-t0 " ms to start download.")
+
+	t0 := A_TickCount
+	while FileExist(dlPath "\*crdownload") {											; wait for .crdownload to finish
+		t1 := A_TickCount-t0
+		if (t1 > maxTick) {
+			Break
+		}
+		progress, % 100*t1/maxTick
+	}
+	eventlog(A_TickCount-t0 " msec to download file(s).")
+
+	Progress, Hide
+	Return 0
+}
+
+checkFtpRow(num=0) {
+	col := gl.Page.tblRows[num].querySelectorAll(".ng-binding")							; all div with class "ng-binding"
+	dt := col[2].innertext
+	nm := col[0].innertext
+
+	return {name:nm,date:dt}
+}
+
+ftpDateDiff(row) {
+	dt := checkFtpRow(row).date															; get date value from this table row number
+	diff := ParseDate(A_now).YMD - ParseDate(dt).YMD
+	return diff
 }
 
 parsePreventiceEnrollment(tbl) {
@@ -242,6 +370,11 @@ parsePreventiceInventory(tbl) {
 */
 	global prevtxt, gl, wq
 	
+	gl.clip := tbl.innertext
+	if (gl.clip=gl.clip0) {																; no change since last clip
+		Return false
+	}
+
 	lbl := ["button","model","ser"]
 	
 	trows := tbl.getElementsByName("tr")
@@ -266,6 +399,7 @@ parsePreventiceInventory(tbl) {
 		
 		prevtxt .= "dev|" res.model "|" res.ser "`n"
 	}
+	gl.clip0 := gl.clip																	; set the check for repeat copy
 
 	return true
 }
@@ -277,19 +411,19 @@ wbOpen() {
 	FileGetVersion, cr32Ver, C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
 	FileGetVersion, cr64Ver, C:\Program Files\Google\Chrome\Application\chrome.exe
 	FileGetVersion, mseVer, C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
-	if (cr32Ver) {
-		verNum := cr32Ver
-		driver := "chromedriver"
-		eventlog("Found Chrome (x86) version " verNum)
-	} Else
 	if (cr64Ver) {
 		verNum := cr64Ver
 		driver := "chromedriver"
 		eventlog("Found Chrome (x64) version " verNum)
 	} Else
+	if (cr32Ver) {
+		verNum := cr32Ver
+		driver := "chromedriver"
+		eventlog("Found Chrome (x86) version " verNum)
+	} Else
 	if (mseVer) {
 		verNum := mseVer
-		driver := "edgedriver"
+		driver := "msedgedriver"
 		eventlog("Found Edge (x86) version " verNum)
 	} Else {
 		eventlog("Could not find installed Chrome or Edge.")
@@ -320,11 +454,11 @@ wbUrl(url) {
 			}
 			eventlog("PREVGRAB: Navigating to " url " (attempt " A_index ").")
 			gl.Page.Navigate(url) 														; load URL
-			if !(gl.Page.URL = url) {
-				eventlog("PREVGRAB: Redirected.",0)
-			}
 			if !(wbWaitBusy(gl.settings.webwait)) {										; msec before fails
 				eventlog("PREVGRAB: Failed to load.")
+			}
+			if !(gl.Page.URL = url) {
+				eventlog("PREVGRAB: Redirected.",0)
 			}
 		}
 		catch e
@@ -343,6 +477,7 @@ wbUrl(url) {
 			}
 			loginErr := preventiceLogin()
 			eventlog("PREVGRAB: Login " ((loginErr) ? "submitted." : "attempted."))
+			sleep 1000
 		}
 		if (gl.Page.URL=url) {
 			eventlog("PREVGRAB: Succeeded.",0)
@@ -369,7 +504,21 @@ wbClose() {
 wbWaitBusy(maxTick) {
 	startTick:=A_TickCount
 	
-	while gl.Page.IsLoading() {																		; wait until done loading
+	while InStr(gl.Page.html,"table-body ng-hide") {									; class="table-body ng-hide" present while rendering FTP list
+		if (A_TickCount-startTick > maxTick) {
+			eventlog("PREVGRAB: " gl.Page.url " timed out.")
+			return false
+		}
+		sleep 500
+	} 
+	while InStr(gl.Page.html,"{{progress}}") {											; present when rendering FTP login page
+		if (A_TickCount-startTick > maxTick) {
+			eventlog("PREVGRAB: " gl.Page.url " timed out.")
+			return false
+		}
+		sleep 500
+	} 
+	while gl.Page.IsLoading() {															; wait until done loading
 		if (A_TickCount-startTick > maxTick) {
 			eventlog("PREVGRAB: " gl.Page.url " timed out.")
 			return false																; break loop if time exceeds maxTick
@@ -377,7 +526,7 @@ wbWaitBusy(maxTick) {
 		checkBtn("Message from webpage","OK")											; check if err window present and click OK button
 		sleep 200
 	}
-	return true
+	return A_TickCount-startTick
 }
 
 checkBtn(txt,btn) {
@@ -404,7 +553,7 @@ preventiceLogin() {
 		.getElementByID(gl.login.attr_btn)
 		.click()
 	
-	if !(wbWaitBusy(gl.login.webwait)) {															; wait until done loading
+	if !(wbWaitBusy(gl.login.webwait)) {												; wait until done loading
 		return false
 	}
 	else {
@@ -464,15 +613,30 @@ ParseName(x) {
 ParseDate(x) {
 	mo := ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 	moStr := "Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec"
-	dSep := "[ \-_/]"
+	dSep := "[ \-\._/]"
 	date := []
 	time := []
 	x := RegExReplace(x,"[,\(\)]")
+	
+	if (x~="\d{4}.\d{2}.\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z") {
+		x := RegExReplace(x,"[TZ]","|")
+	}
+	if (x~="\d{4}.\d{2}.\d{2}T\d{2,}") {
+		x := RegExReplace(x,"T","|")
+	}
+	
 	if RegExMatch(x,"i)(\d{1,2})" dSep "(" moStr ")" dSep "(\d{4}|\d{2})",d) {			; 03-Jan-2015
 		date.dd := zdigit(d1)
 		date.mmm := d2
 		date.mm := zdigit(objhasvalue(mo,d2))
 		date.yyyy := d3
+		date.date := trim(d)
+	}
+	else if RegExMatch(x,"\b(\d{4})[\-\.](\d{2})[\-\.](\d{2})\b",d) {					; 2015-01-03
+		date.yyyy := d1
+		date.mm := zdigit(d2)
+		date.mmm := mo[d2]
+		date.dd := zdigit(d3)
 		date.date := trim(d)
 	}
 	else if RegExMatch(x,"i)(" moStr "|\d{1,2})" dSep "(\d{1,2})" dSep "(\d{4}|\d{2})",d) {	; Jan-03-2015, 01-03-2015
@@ -490,14 +654,14 @@ ParseDate(x) {
 				: "20" d3
 		date.date := trim(d)
 	}
-	else if RegExMatch(x,"\b(\d{4})-?(\d{2})-?(\d{2})\b",d) {								; 20150103 or 2015-01-03
-		date.yyyy := d1
-		date.mm := d2
-		date.mmm := mo[d2]
-		date.dd := d3
+	else if RegExMatch(x,"i)(" moStr ")\s+(\d{1,2}),?\s+(\d{4})",d) {					; Dec 21, 2018
+		date.mmm := d1
+		date.mm := zdigit(objhasvalue(mo,d1))
+		date.dd := zdigit(d2)
+		date.yyyy := d3
 		date.date := trim(d)
 	}
-	else if RegExMatch(x,"\b(\d{4})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {			; 20150103174307
+	else if RegExMatch(x,"\b(19\d{2}|20\d{2})(\d{2})(\d{2})((\d{2})(\d{2})(\d{2})?)?\b",d)  {	; 20150103174307 or 20150103
 		date.yyyy := d1
 		date.mm := d2
 		date.mmm := mo[d2]
@@ -510,10 +674,15 @@ ParseDate(x) {
 		time.time := d5 ":" d6 . strQ(d7,":###")
 	}
 	
-	if RegExMatch(x,"iO)(\d{1,2}):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {				; 17:42 PM
-		hasDays := (t.value[4]) ? true : false 												; 4 nums has days
+	if RegExMatch(x,"iO)(\d+):(\d{2})(:\d{2})?(:\d{2})?(.*)?(AM|PM)?",t) {				; 17:42 PM
+		hasDays := (t.value[4]) ? true : false 											; 4 nums has days
 		time.days := (hasDays) ? t.value[1] : ""
-		time.hr := zdigit(t.value[1+hasDays])
+		time.hr := trim(t.value[1+hasDays])
+		if (time.hr>23) {
+			time.days := floor(time.hr/24)
+			time.hr := mod(time.hr,24)
+			DHM:=true
+		}
 		time.min := trim(t.value[2+hasDays]," :")
 		time.sec := trim(t.value[3+hasDays]," :")
 		time.ampm := trim(t.value[5])
@@ -522,8 +691,15 @@ ParseDate(x) {
 
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
 			, YMD:date.yyyy date.mm date.dd
+			, YMDHMS:date.yyyy date.mm date.dd zDigit(time.hr) zDigit(time.min) zDigit(time.sec)
 			, MDY:date.mm "/" date.dd "/" date.yyyy
-			, days:time.days, hr:time.hr, min:time.min, sec:time.sec, ampm:time.ampm, time:time.time}
+			, MMDD:date.mm "/" date.dd
+			, hrmin:zdigit(time.hr) ":" zdigit(time.min)
+			, days:zdigit(time.days)
+			, hr:zdigit(time.hr), min:zdigit(time.min), sec:zdigit(time.sec)
+			, ampm:time.ampm, time:time.time
+			, DHM:zdigit(time.days) ":" zdigit(time.hr) ":" zdigit(time.min) " (DD:HH:MM)" 
+ 			, DT:date.mm "/" date.dd "/" date.yyyy " at " zdigit(time.hr) ":" zdigit(time.min) ":" zdigit(time.sec) }
 }
 
 zDigit(x) {
@@ -719,4 +895,5 @@ readIni(section) {
 }
 
 #Include xml.ahk
+#Include sift3.ahk
 #Include Rufaydium.ahk
