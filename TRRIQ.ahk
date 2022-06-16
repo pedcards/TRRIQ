@@ -1943,7 +1943,7 @@ parseORM() {
 		, nameF:fldval.PID_NameF
 		, name:fldval.PID_NameL strQ(fldval.PID_NameF,", ###")
 		, mrn:fldval.PID_PatMRN
-		, sex:(fldval.PID_sex~="F") ? "Female" : "Male"
+		, sex:(fldval.PID_sex~="F") ? "Female" : (fldval.PID_sex~="F") ? "Male" : (fldval.PID_sex~="U") ? "U" : ""
 		, DOB:parseDate(fldval.PID_DOB).MDY
 		, monitor:monType
 		, mon:monType
@@ -3315,7 +3315,13 @@ moveHL7dem() {
 	fldVal["dem-Name"] := fldVal["dem-Name_L"] strQ(fldVal["dem-Name_F"],", ###")
 	fldVal["dem-MRN"] := strQ(obxVal["PID_PatMRN"],"###",fldval.MRN)
 	fldVal["dem-DOB"] := strQ(obxVal["PID_DOB"],niceDate(obxVal["PID_DOB"]),fldval.DOB)
-	fldVal["dem-Sex"] := strQ(obxVal["PID_Sex"],(obxVal["PID_Sex"]~="F") ? "Female" : "Male",fldval.Sex)
+	fldVal["dem-Sex"] := strQ(obxVal["PID_Sex"]
+						, (obxVal["PID_Sex"]~="F") ? "Female" 
+						: (obxVal["PID_Sex"]~="M") ? "Male"
+						: (obxVal["PID_Sex"]~="U") ? "Unknown"
+						: (obxVal["PID_Sex"]~="X")
+						,fldval.Sex)
+
 	fldVal["dem-Indication"] := strQ(obxVal.Indications,"###",fldval.ind)
 	fldVal["dem-Site"] := fldVal.site
 	fldVal["dem-Billing"] := strQ(fldVal.encnum,"###",fldVal.accession)
