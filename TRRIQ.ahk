@@ -2272,7 +2272,7 @@ checkMWUapp()
 			if WinExist("Mortara Web Upload") {
 				break
 			}
-			sleep 100
+			sleep 200
 		}
 		progress, off
 	}
