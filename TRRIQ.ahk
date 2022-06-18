@@ -1943,7 +1943,7 @@ parseORM() {
 		, nameF:fldval.PID_NameF
 		, name:fldval.PID_NameL strQ(fldval.PID_NameF,", ###")
 		, mrn:fldval.PID_PatMRN
-		, sex:(fldval.PID_sex~="F") ? "Female" : (fldval.PID_sex~="F") ? "Male" : (fldval.PID_sex~="U") ? "U" : ""
+		, sex:(fldval.PID_sex~="F") ? "Female" : (fldval.PID_sex~="F") ? "Male" : (fldval.PID_sex~="U") ? "Unknown" : ""
 		, DOB:parseDate(fldval.PID_DOB).MDY
 		, monitor:monType
 		, mon:monType
