@@ -247,13 +247,16 @@ parsePreventiceFTP(tbl) {
 				nm.bestName := rowName
 			}
 		}
-		cols := gl.Page.tblRows[nm.bestNum].querySelectorAll(".ng-binding")
-		btnName := cols[0]
-		btnName.click()
-		sleep 100
 		eventlog("List name: " k ". "
 			. "FTP file: " ftpList[nm.bestNum] " "
 			. "(score " round(100*(2-nm.bestScore)/2,2) ")")
+		if (nm.bestScore>0.3) {															; skip if match less than 85%
+			continue
+		}
+		cols := gl.Page.tblRows[nm.bestNum].querySelectorAll(".ng-binding")
+		btnName := cols[0]
+		btnName.click()
+		sleep 200
 	}
 
 	t0 := A_TickCount
