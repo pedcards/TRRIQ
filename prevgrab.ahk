@@ -217,7 +217,7 @@ parsePreventiceFTP(tbl) {
 		Progress, % 100*A_Index/24, % btnName
 
 		ftpList[num] := btnName
-		if (parseDate(A_Now).YMD - parseDate(btnDate).YMD) > 14 {
+		if (parseDate(A_Now).YMD - parseDate(btnDate).YMD) > 21 {
 			break
 		}
 		if (A_index > 100) {
