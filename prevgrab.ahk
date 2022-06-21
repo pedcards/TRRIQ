@@ -67,6 +67,7 @@ MainLoop:
 		gl.login := readIni("str_ftpLogin")
 
 		PreventiceWebGrab("ftp")
+		gl.FAIL := gl.wbFail
 	} else {
 		; webStr.Enrollment := readIni("str_Enrollment")
 		webStr.Inventory := readIni("str_Inventory")
