@@ -88,7 +88,7 @@ MainLoop:
 		MsgBox,262160,, Downloads failed.
 		eventlog("PREVGRAB: Critical hit.")
 	} else {
-		MsgBox,262160,, Successful Preventice update!
+		MsgBox,262160,, Preventice update complete!
 	}
 	
 	wbClose()
@@ -254,6 +254,7 @@ parsePreventiceFTP(tbl) {
 			. "FTP file: " ftpList[nm.bestNum] " "
 			. "(score " round(100*(2-nm.bestScore)/2,2) ")")
 		if (nm.bestScore>0.3) {															; skip if match less than 85%
+			badFtp .= k "`n"
 			continue
 		}
 		ftpGot := true
@@ -261,6 +262,13 @@ parsePreventiceFTP(tbl) {
 		btnName := cols[0]
 		btnName.click()
 		sleep 200
+	}
+	if (badFtp) {
+		MsgBox 0x10, Missing FTP files
+			, % "Could not find PDF files for these patients:`n`n"
+			. k "`n`n"
+			. "Please check the https://ftp.preventice.com site`n"
+			. "and contact Preventice support as needed."
 	}
 	if !(ftpGot) {
 		progress, hide
