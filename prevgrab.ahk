@@ -256,10 +256,15 @@ parsePreventiceFTP(tbl) {
 		if (nm.bestScore>0.3) {															; skip if match less than 85%
 			continue
 		}
+		ftpGot := true
 		cols := gl.Page.tblRows[nm.bestNum].querySelectorAll(".ng-binding")
 		btnName := cols[0]
 		btnName.click()
 		sleep 200
+	}
+	if !(ftpGot) {
+		progress, hide
+		return 0
 	}
 
 	t0 := A_TickCount
