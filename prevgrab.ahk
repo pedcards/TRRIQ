@@ -448,7 +448,7 @@ wbOpen() {
 wbUrl(url) {
 /*	Open a URL
 */
-	gl.wbFail := false
+	gl.wbFail := true
 	loop, 3																				; Number of attempts to permit redirects
 	{
 		try 
