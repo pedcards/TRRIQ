@@ -461,6 +461,7 @@ wbUrl(url) {
 			}
 			if !(gl.Page.URL = url) {
 				eventlog("PREVGRAB: Redirected.",0)
+				sleep 1000
 			}
 		}
 		catch e
