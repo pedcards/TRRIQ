@@ -216,7 +216,7 @@ parsePreventiceFTP(tbl) {
 		cols := gl.Page.tblRows[num].querySelectorAll(".ng-binding")
 		btnName := cols[0].innertext
 		btnDate := cols[2].innertext
-		Progress, % 100*A_Index/24, % btnName
+		Progress, % 100*A_Index/40, % btnName
 
 		ftpList[num] := btnName
 		if (parseDate(A_Now).YMD - parseDate(btnDate).YMD) > 21 {
@@ -226,6 +226,7 @@ parsePreventiceFTP(tbl) {
 			break
 		}
 	}
+	eventlog("Found " ftpList.length() " PDF files.")
 
 	Progress,0,Please be patient...,Fetching PDF files
 	loop, read, .\files\mortaras.txt
@@ -275,7 +276,8 @@ parsePreventiceFTP(tbl) {
 		if (t1 > maxTick) {
 			Break
 		}
-		progress, % 100*t1/maxTick
+		tbar := SubStr(round(t1/100),-2)
+		progress, % tbar
 	}
 	eventlog(A_TickCount-t0 " msec to download file(s).")
 
