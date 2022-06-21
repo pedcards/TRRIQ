@@ -17,6 +17,8 @@ Config:
 	global webstr:={}
 		,  gl:={}
 	
+	progress,,% " ", Preventice Web
+
 	IfInString, A_ScriptDir, AhkProjects 
 	{
 		gl.isDevt := true
@@ -40,6 +42,7 @@ Config:
 MainLoop:
 {
 	eventlog("PREVGRAB: Initializing.")
+	progress,,Initializing webdriver...
 	
 	loop, 3
 	{
@@ -51,6 +54,7 @@ MainLoop:
 	}
 	if !IsObject(wb) {
 		eventlog("Failed to open browser.")
+		progress, hide
 		MsgBox, 262160, , Failed to open browser
 		ExitApp
 	}
