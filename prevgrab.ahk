@@ -100,9 +100,8 @@ MainLoop:
 PreventiceWebGrab(phase) {
 	web := webStr[phase]
 	
-	if (gl.settings.isVisible) {
-		progress,,% " ",% phase
-	}
+	progress,,% " ",% phase
+
 	wbUrl(web.url)																		; load URL, return DOM in gl.Page
 	if (gl.wbFail) {
 		return
@@ -111,9 +110,8 @@ PreventiceWebGrab(phase) {
 	prvFunc := web.fx
 	loop
 	{
-		if (gl.settings.isVisible) {
-			progress,,% "Page " A_index,
-		}
+		progress,,% "Page " A_index,
+
 		tbl := gl.Page.getElementsByClassName(web.tbl)[0]								; get the Main Table
 		if !IsObject(tbl) {
 			eventlog("PREVGRAB: *** " phase " *** No matching table.")
@@ -159,9 +157,8 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 	t0 := A_TickCount
 	While (A_TickCount-t0 < gl.settings.webwait)
 	{
-		if (gl.settings.isVisible) {
-			progress,% 100*pgNum/progCt
-		}
+		progress,% 100*pgNum/progCt
+		
 		pg := gl.Page.getElementById(chgStr).innerText
 		if (pg != pg0) {
 			t1:=A_TickCount-t0
@@ -456,9 +453,7 @@ wbUrl(url) {
 	{
 		try 
 		{
-			if (gl.settings.isVisible) {
-				progress,,% "Launching URL attempt " A_Index
-			}
+			progress,,% "Launching URL attempt " A_Index
 			eventlog("PREVGRAB: Navigating to " url " (attempt " A_index ").")
 			gl.Page.Navigate(url) 														; load URL
 			if !(wbWaitBusy(gl.settings.webwait)) {										; msec before fails
@@ -479,9 +474,7 @@ wbUrl(url) {
 		}
 		
 		if instr(gl.Page.URL,gl.login.string) {
-			if (gl.settings.isVisible) {
-				progress,,% "Sending login"
-			}
+			progress,,% "Sending login"
 			loginErr := preventiceLogin()
 			eventlog("PREVGRAB: Login " ((loginErr) ? "submitted." : "attempted."))
 			sleep 1000
