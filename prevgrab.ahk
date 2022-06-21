@@ -482,6 +482,7 @@ wbUrl(url) {
 		}
 		if (gl.Page.URL=url) {
 			eventlog("PREVGRAB: Succeeded.",0)
+			gl.wbFail := false
 			return
 		}
 		else {
