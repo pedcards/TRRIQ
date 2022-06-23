@@ -4102,7 +4102,7 @@ findFullPdf(wqid:="") {
 				Continue
 			} else {
 				fName := newFnam ".pdf"													; successful move
-				eventlog("Holter PDF: " fName " renamed to " newFnam)
+				eventlog("Holter PDF: " fNam " renamed to " fName)
 			}
 		} 
 		if !objhasvalue(pdfList,fName) {
