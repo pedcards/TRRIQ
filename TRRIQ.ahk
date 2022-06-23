@@ -3874,16 +3874,19 @@ makeORU(wqid) {
 			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR 3-15 DAY^IMGEAP"
 			: ""
 	fldval.obr4 := obr4
+	obrProv := fldval.OBR_ProviderCode "^"
+			. fldval.OBR_ProviderNameL "^"
+			. fldval.OBR_ProviderNameF
+			. "^^^^^^MSOW_ORG_ID"
+
 	buildHL7("OBR"
 		,{2:fldval.order
 		, 3:fldval.accession
 		, 4:fldval.obr4
 		, 7:fldval.date
-		, 16:fldval.OBR_ProviderCode "^"
-			. fldval.OBR_ProviderNameL "^"
-			. fldval.OBR_ProviderNameF
-			. "^^^^^^MSOW_ORG_ID"
+		, 16:obrProv
 		, 25:"F"
+		, 28:obrProv
 		, 32:EPdoc })																	; Epic test: Substitute reading EP string "NPI^LAST^FIRST"
 	
 	buildHL7("OBX"
