@@ -53,7 +53,7 @@ MainLoop:
 		}
 	}
 	if !IsObject(wb) {
-		eventlog("Failed to open browser.")
+		eventlog("PREVGRAB: Failed to open browser.")
 		progress, hide
 		MsgBox, 262160, , Failed to open browser
 		ExitApp
@@ -226,7 +226,7 @@ parsePreventiceFTP(tbl) {
 			break
 		}
 	}
-	eventlog("Found " ftpList.length() " PDF files.")
+	eventlog("PREVGRAB: Found " ftpList.length() " PDF files.")
 
 	Progress,0,Please be patient...,Fetching PDF files
 	loop, read, .\files\mortaras.txt
@@ -250,7 +250,7 @@ parsePreventiceFTP(tbl) {
 				nm.bestName := rowName
 			}
 		}
-		eventlog("List name: " k ". "
+		eventlog("PREVGRAB: List name: " k ". "
 			. "FTP file: " ftpList[nm.bestNum] " "
 			. "(score " round(100*(2-nm.bestScore)/2,2) ")")
 		if (nm.bestScore>0.3) {															; skip if match less than 85%
@@ -434,19 +434,19 @@ wbOpen() {
 	if (cr64Ver) {
 		verNum := cr64Ver
 		driver := "chromedriver"
-		eventlog("Found Chrome (x64) version " verNum)
+		eventlog("PREVGRAB: Found Chrome (x64) version " verNum)
 	} Else
 	if (cr32Ver) {
 		verNum := cr32Ver
 		driver := "chromedriver"
-		eventlog("Found Chrome (x86) version " verNum)
+		eventlog("PREVGRAB: Found Chrome (x86) version " verNum)
 	} Else
 	if (mseVer) {
 		verNum := mseVer
 		driver := "msedgedriver"
-		eventlog("Found Edge (x86) version " verNum)
+		eventlog("PREVGRAB: Found Edge (x86) version " verNum)
 	} Else {
-		eventlog("Could not find installed Chrome or Edge.")
+		eventlog("PREVGRAB: Could not find installed Chrome or Edge.")
 		Return
 	}
 	Num :=  strX(verNum,"",0,1,".",1,1)
