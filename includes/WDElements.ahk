@@ -3,16 +3,18 @@
 
 Class WDElement extends Session
 {
-	__new(Address)
+	__new(Address,Element)
 	{
-		;RegExMatch(Address,"element\/(.*)$",i)
-		;this.id := i1
 		This.Address := Address
+		This.Element := Element
 	}
 	
-	Name()
+	TagName
 	{
-		return this.Send("name","GET")
+		get
+		{
+			return this.Send("name","GET")
+		}
 	}
 	
 	Rect()
@@ -70,13 +72,67 @@ Class WDElement extends Session
 		return this.Send("moveto","POST",{"element_id":this.id})
 	}
 	
+	Title
+	{
+		get
+		{
+			return this.GetAttribute("title")
+		}
+
+		set
+		{
+			this.Execute("arguments[0].title = '" Value "'")
+		}
+	}
+
+	Class
+	{
+		get
+		{
+			return this.GetAttribute("class")
+		}
+
+		set
+		{
+			this.Execute("arguments[0].className = '" Value "'")
+		}
+	}
+
+	Name
+	{
+		get
+		{
+			return this.GetAttribute("name")
+		}
+
+		set
+		{
+			this.Execute("arguments[0].name = '" Value "'")
+		}
+	}
+
+	id
+	{
+		get
+		{
+			return this.GetAttribute("id")
+		}
+
+		set
+		{
+			this.Execute("arguments[0].id = '" Value "'")
+		}
+	}
+
 	value
 	{
 		get
 		{
 			v := this.Send("value","GET")
 			if v.error
-				return this.GetAttribute("value")
+				return this.GetProperty("value")
+			else
+				return v	
 		}
 		
 		Set
@@ -90,10 +146,44 @@ Class WDElement extends Session
 	{
 		get
 		{
-			return  this.Send("text","GET")
+			e := this.Send("text","GET")
+			if !e
+				e := this.Execute("return arguments[0].InnerText")
+			return e
+		}
+
+		set
+		{
+			this.Execute("arguments[0].innerText = '" Value "'")
 		}
 	}
 	
+	innerHTML
+	{
+		get
+		{
+			return  this.GetProperty("innerHTML")
+		}
+
+		set
+		{
+			this.Execute("arguments[0].innerHTML = '" Value "'")
+		}
+	}
+
+	outerHTML
+	{
+		get
+		{
+			return  this.GetProperty("outerHTML")
+		}
+
+		set
+		{
+			this.Execute("arguments[0].outerHTML = '" Value "'")
+		}
+	}
+
 	Clear()
 	{
 		;this.Send("ClearValue","POST"); not working for me
@@ -105,7 +195,7 @@ Class WDElement extends Session
 	{
 		return this.Send("attribute/" Name,"GET")
 	}
-	
+
 	GetProperty(Name)
 	{
 		return this.Send("property/" Name,"GET")
@@ -131,6 +221,17 @@ Class WDElement extends Session
 		return this.Send("file","POST",{})
 	}
 	
+	Execute(script)
+	{
+		Origin := this.Address
+		RegExMatch(Origin,"(.*)\/element\/(.*)$",i)
+		args := [{This.Element:i2}]
+		this.address := i1
+		r := this.Send("execute/sync","POST", { "script":Script,"args":Args},1)
+		this.address := Origin
+		return r
+	}
+
 }
 
 Class ShadowElement extends Session

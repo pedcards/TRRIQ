@@ -1,18 +1,19 @@
-; Rufaydium V1.5 
-; Rufaydium is Webdriver Library can support any chromium based browser 
-; It only requires Latest WebDriver, 
-; i.e. for Chrome 100 you need to download ChromeDriver 100.0.4896.60
-; from https://chromedriver.chromium.org/downloads
+; Rufaydium v1.5
 ;
-; It utilizes Rest API of W3C from https://www.w3.org/TR/webdriver2/
-; Rufaydium also supports Chrome Devtools Protocols same as chrome.ahk
-; 
-; Note: no need to install /setup selenium, Rufaydium is AHK's Selenium
-; Link : https://www.autohotkey.com/boards/viewtopic.php?f=6&t=102616&p=456008#p456008
-; Git : https://github.com/Xeo786/Rufaydium-Webdriver
-; By Xeo786
+; Rufaydium          : AutoHotkey WebDriver Library to interact with browsers.
+; Requirement        : WebDriver version needs to be compatible with the Browser version.
+;                      Rufaydium will automatically try to download the correct version.
+; Supported browsers : Chrome, MS Edge, Firefox, Opera
+;
+; Rufaydium utilizes Rest API of W3C from https://www.w3.org/TR/webdriver2/
+; and also supports Chrome Devtools Protocols same as chrome.ahk
+;
+; Note : no need to install / setup Selenium, Rufaydium is AHK's Selenium
+; Link : https://www.autohotkey.com/boards/viewtopic.php?f=6&t=102616
+; Git  : https://github.com/Xeo786/Rufaydium-Webdriver
+; By Xeo786 - GPL-3.0 license, see LICENSE
 
-#include %A_linefile%\..\
+#include %A_LineFile%\..\
 #Include WDM.ahk
 #Include CDP.ahk
 #Include JSON.ahk
@@ -30,9 +31,9 @@ Class Rufaydium
 		{
 			case "chromedriver" :
 				this.capabilities := new ChromeCapabilities(this.Driver.browser,this.Driver.Options)
-			case "msedgedriver" : 
+			case "msedgedriver" :
 				this.capabilities := new EdgeCapabilities(this.Driver.browser,this.Driver.Options)
-			case "geckodriver" : 
+			case "geckodriver" :
 				this.capabilities := new FireFoxCapabilities(this.Driver.browser,this.Driver.Options)
 			case "operadriver" :
 				this.capabilities := new OperaCapabilities(this.Driver.browser,this.Driver.Options)
@@ -40,13 +41,13 @@ Class Rufaydium
 		if !isobject(cap := this.capabilities.cap)
 			this.capabilities := capabilities.Simple
 	}
-	
+
 	__Delete()
 	{
 		;this.QuitAllSessions()
 		;this.Exit()
 	}
-	
+
 	Exit()
 	{
 		this.Driver.Exit()
@@ -57,42 +58,44 @@ Class Rufaydium
 		if !instr(url,"HTTP")
 			url := this.address "/" url
 		try r := Json.load(this.Request(url,Method,Payload,WaitForResponse)).value ; Thanks to GeekDude for his awesome cJson.ahk
+		if(r.error = "chrome not reachable") ; incase someone close browser manually but session is not closed for driver
+			this.quit() ; so we close session for driver at cost of one time response wait lag
 		if r
 			return r
 	}
-	
-	Request(url,Method,p:=0,w:=0) 
+
+	Request(url,Method,p:=0,w:=0)
 	{
 		Rufaydium.WebRequest.Open(Method, url, false)
 		Rufaydium.WebRequest.SetRequestHeader("Content-Type","application/json")
-		
+
 		if p
 		{
 			p := StrReplace(json.dump(p),"[[]]","[{}]") ; why using StrReplace() >> https://www.autohotkey.com/boards/viewtopic.php?f=6&p=450824#p450824
 			p := RegExReplace(p,"\\\\uE(\d+)","\uE$1")  ; fixing Keys turn '\\uE000' into '\uE000'
 			Rufaydium.WebRequest.Send(p)
-		}	
+		}
 		else
 			Rufaydium.WebRequest.Send()
 		if w
 			Rufaydium.WebRequest.WaitForResponse()
 		return Rufaydium.WebRequest.responseText
 	}
-	
+
 	NewSession(Binary:="")
 	{
 		if !this.capabilities.options
 		{
-			Msgbox,64,Rufaydium WebDriver Support, % "Unknown Driver Loaded`nplease read readme and manualy set capabilities for " this.Driver.Name ".exe"
+			Msgbox,64,Rufaydium WebDriver Support, % "Unknown Driver Loaded`n.Please read readme and manually set capabilities for " this.Driver.Name ".exe"
 			return
 		}
 		if Binary
 			this.capabilities.Setbinary(Binary)
-		this.Driver.Options := this.capabilities.options ; in case someone use custom driver and want to change capabilities manually
+		this.Driver.Options := this.capabilities.options ; in case someone uses a custom driver and want to change capabilities manually
 		k := this.Send( this.DriverUrl "/session","POST",this.capabilities.cap,1)
 		if k.error
 		{
-			if(k.message = "binary is not a Firefox executable")  
+			if(k.message = "binary is not a Firefox executable")
 			{
 				; its all in my mind not tested, 32/64ahk 64OS 32/64ff broken down in simple three step logic
 				ffbinary := A_ProgramFiles "\Mozilla Firefox\firefox.exe" ; check ff in default location, cover all 32AHKFFOS, 64AHKFFOS
@@ -102,23 +105,23 @@ Class Rufaydium
 					ffbinary := A_ProgramFiles " (x86)\Mozilla Firefox\firefox.exe" ; in case 64OS has 64ahk checking 32ff loc
 				else
 				{
-					msgbox,48,Rufaydium WebDriver Support,% k.message "`n`nDriver is unable to locate firefox binary and, Rufaydium is also unabel to detect FF default location`n`n if you see this msg in loop please report bug" 
+					msgbox,48,Rufaydium WebDriver Support,% k.message "`n`nDriver is unable to locate Firefox binary and, Rufaydium is also unable to detect Firefox default location.`n`nIf you see this message repeatedly please file a bug report."
 					return
-				} 
+				}
 				this.capabilities.Setbinary(ffbinary)
 				return This.NewSession()
 			}
 			else if RegExMatch(k.message,"version ([\d.]+).*\n.*version is (\d+.\d+.\d+)")
 			{
-				MsgBox, 52,Rufaydium WebDriver Support,% k.message "`n`nPlease Press Yes to download latest driver"
+				MsgBox, 52,Rufaydium WebDriver Support,% k.message "`n`nPlease press Yes to download latest driver"
 				IfMsgBox Yes
 				{
 					this.driver.exit()
 					i := this.driver.GetDriver(k.message)
 					if !FileExist(i)
 					{
-						Msgbox,64,Rufaydium WebDriver Support,Unable to download driver`nRufaydium exitting
-						Exitapp
+						Msgbox,64,Rufaydium WebDriver Support,Unable to download driver`nRufaydium exiting.
+						ExitApp
 					}
 					This.Driver := new RunDriver(i,This.Driver.Param)
 					return This.NewSession()
@@ -128,7 +131,7 @@ Class Rufaydium
 			{
 				msgbox, 48,Rufaydium WebDriver Support Error,% k.error "`n`n" k.message
 				return k
-			} 
+			}
 		}
 		window := []
 		window.Name := This.driver.Name
@@ -138,15 +141,20 @@ Class Rufaydium
 		{
 			IniWrite, % k.SessionId, % this.driver.dir "/ActiveSessions.ini", % This.driver.Name, % k.SessionId
 		}
-		
+
 		return new Session(window)
 	}
-	
-	getSessions() ; get all windows
+
+	Sessions() ; get all Sessions Details
+	{
+		return this.send(this.DriverUrl "/sessions","GET")
+	}
+
+	getSessions() ; get all Sessions for Rufaydium
 	{
 		if !this.capabilities.options
 		{
-			Msgbox,64,Rufaydium WebDriver Support, % "Unknown Driver Loaded`nplease read readme and manualy set capabilities for " this.Driver.Name ".exe"
+			Msgbox,64,Rufaydium WebDriver Support, % "Unknown Driver Loaded.`nPlease read readme and manually set capabilities for " this.Driver.Name ".exe"
 			return
 		}
 		this.Driver.Options := this.capabilities.options
@@ -173,9 +181,8 @@ Class Rufaydium
 			return windows
 		}
 
-		Sessions := this.send(this.DriverUrl "/sessions","GET")
 		windows := []
-		for k, se in Sessions
+		for k, se in this.Sessions()
 		{
 			chromeOptions := Se["capabilities",This.driver.options]
 			s := []
@@ -187,7 +194,7 @@ Class Rufaydium
 		}
 		return windows
 	}
-	
+
 	getSession(i:=0,t:=0)
 	{
 		if i
@@ -200,38 +207,43 @@ Class Rufaydium
 			return S
 		}
 	}
-	
+
 	getSessionByUrl(URL)
 	{
 		for k, w in this.getSessions()
 		{
 			w.SwitchbyURL(URL)
-			if instr(w.URL(),URL)
+			if instr(w.URL,URL)
 				return w
 		}
 	}
-	
+
 	getSessionByTitle(Title)
 	{
 		for k, s in this.getSessions()
 		{
 			s.SwitchbyTitle(Title)
-			if instr(s.title(),Title)
+			if instr(s.title,Title)
 				return s
 		}
 	}
-	
+
 	QuitAllSessions()
 	{
 		for k, s in this.getSessions()
 			s.Quit()
 	}
+
+	Status()
+	{
+		return Rufaydium.Request( this.DriverUrl "/status","GET")
+	}
 }
 
 
-Class Session extends Rufaydium
+Class Session
 {
-	
+
 	__new(i)
 	{
 		this.id := i.id
@@ -242,37 +254,48 @@ Class Session extends Rufaydium
 		{
 			case "chromedriver" :
 				this.CDP := new CDP(this.Address)
-			case "msedgedriver" : 
+			case "msedgedriver" :
 				this.CDP := new CDP(this.Address)
-			case "geckodriver" : 
-				
+			case "geckodriver" :
+
 			case "operadriver" :
 				this.CDP := new CDP(this.Address)
-		}	
+		}
 	}
-	
+
 	__Delete()
 	{
 		;this.Quit()
 	}
-	
+
 	Quit()
 	{
 		this.Send(this.address ,"DELETE")
 	}
-	
+
 	close()
 	{
 		This.currentTab := this.Send("window","DELETE")
 	}
-	
+
+	send(url,Method,Payload:= 0,WaitForResponse:=1)
+	{
+		if !instr(url,"HTTP")
+			url := this.address "/" url
+		try r := Json.load(Rufaydium.Request(url,Method,Payload,WaitForResponse)).value ; Thanks to GeekDude for his awesome cJson.ahk
+		if(r.error = "chrome not reachable") ; incase someone close browser manually but session is not closed for driver
+			this.quit() ; so we close session for driver at cost of one time response wait lag
+		if r
+			return r
+	}
+
 	NewTab()
 	{
 		This.currentTab := this.Send("window/new","POST",{"type":"tab"}).handle
 		This.Switch(This.currentTab)
 	}
-	
-	NewWindow() ; by https://github.com/hotcheesesoup 
+
+	NewWindow() ; by https://github.com/hotcheesesoup
 	{
 		This.currentTab := this.Send("window/new","POST",{"type":"window"}).handle
 		This.Switch(This.currentTab)
@@ -280,20 +303,20 @@ Class Session extends Rufaydium
 
 	Detail()
 	{
-		return Json.load(this.Request(this.debuggerAddress "/json","GET"))
+		return Json.load(Rufaydium.Request(this.debuggerAddress "/json","GET"))
 	}
-	
+
 	GetTabs()
 	{
 		return this.Send("window/handles","GET")
 	}
-	
+
 	Switch(Tabid)
 	{
 		this.currentTab := Tabid
 		this.Send("window","POST",{"handle":Tabid})
 	}
-	
+
 	Title
 	{
 		get
@@ -301,15 +324,15 @@ Class Session extends Rufaydium
 			return this.Send("title","GET")
 		}
 	}
-	
-	SwitchTab(i:=0)	
+
+	SwitchTab(i:=0)
 	{
 		if i
 		{
 			return this.Switch(This.currentTab := this.GetTabs()[i])
 		}
 	}
-	
+
 	SwitchbyTitle(Title:="")
 	{
 		handles := this.GetTabs()
@@ -324,7 +347,7 @@ Class Session extends Rufaydium
 		}
 		this.Switch(This.currentTab )
 	}
-	
+
 	SwitchbyURL(url:="")
 	{
 		handles := this.GetTabs()
@@ -339,25 +362,25 @@ Class Session extends Rufaydium
 		}
 		this.Switch(This.currentTab )
 	}
-	
+
 	url
 	{
 		get
 		{
 			return this.Send("url","GET")
 		}
-		
+
 		set
 		{
 			return this.Send("url","POST",{"url":RegExReplace(Value,"^(?!\w+[:\/])(.*)","https://$1",,1)})
 		}
 	}
-	
+
 	Refresh()
 	{
 		return this.Send("refresh","POST")
 	}
-	
+
 	IsLoading
 	{
 		get
@@ -365,32 +388,32 @@ Class Session extends Rufaydium
 			return this.Send("is_loading","GET")
 		}
 	}
-	
+
 	timeouts()
 	{
 		return this.Send("timeouts","GET")
 	}
-	
+
 	Navigate(url)
 	{
 		this.url := url
 	}
-	
+
 	Forward()
 	{
 		return this.Send("forward","POST") ; not tested
 	}
-	
+
 	Back()
 	{
 		return this.Send("back","POST") ; not tested
 	}
-	
+
 	GetRect()
 	{
 		return this.Send("window/rect","GET")
 	}
-	
+
 	SetRect(x:=1,y:=1,w:=0,h:=0)
 	{
 		if !w
@@ -399,7 +422,7 @@ Class Session extends Rufaydium
 			h := A_ScreenHeight - (A_ScreenHeight * 5 / 100)
 		return this.Send("window/rect","POST",{"x":x,"y":y,"width":w,"height":h})
 	}
-	
+
 	X
 	{
 		get
@@ -407,14 +430,14 @@ Class Session extends Rufaydium
 			rect := this.GetRect()
 			return rect.x
 		}
-		
+
 		Set
 		{
 			msgbox, % value
 			return this.Send("window/rect","POST",{"x":value})
 		}
 	}
-	
+
 	Y
 	{
 		get
@@ -422,13 +445,13 @@ Class Session extends Rufaydium
 			rect := this.GetRect()
 			return rect.y
 		}
-		
+
 		Set
 		{
 			return this.Send("window/rect","POST",{"y":value})
 		}
 	}
-	
+
 	width
 	{
 		get
@@ -436,13 +459,13 @@ Class Session extends Rufaydium
 			rect := this.GetRect()
 			return rect.width
 		}
-		
+
 		Set
 		{
 			return this.Send("window/rect","POST",{"width":value})
 		}
 	}
-	
+
 	height
 	{
 		get
@@ -450,43 +473,43 @@ Class Session extends Rufaydium
 			rect := this.GetRect()
 			return rect.height
 		}
-		
+
 		Set
 		{
 			return this.Send("window/rect","POST",{"height":value})
 		}
 	}
-	
+
 	Maximize()
 	{
 		return this.Send("window/maximize","POST",json.null)
 	}
-	
+
 	Minimize()
 	{
 		return this.Send("window/minimize","POST",json.null)
 	}
-	
+
 	FullScreen()
 	{
 		return this.Send("window/fullscreen","POST",json.null)
 	}
-	
+
 	FramesLength()
 	{
 		return this.ExecuteSync("return window.length")
 	}
-	
+
 	Frame(i)
 	{
 		return this.Send("frame","POST",{"id":i})
 	}
-	
+
 	ParentFrame()
 	{
 		return this.Send("frame/parent","POST",json.null)
 	}
-	
+
 	HTML
 	{
 		get
@@ -494,27 +517,27 @@ Class Session extends Rufaydium
 			return this.Send("source","GET",0,1)
 		}
 	}
-	
+
 	ActiveElement()
 	{
 		return New WDElement(this.Send("element/active","GET"))
 	}
-	
-	findelement(u,v) 
+
+	findelement(u,v)
 	{
-		for element, elementid in this.Send("element","POST",{"using":u,"value":v},1)
+		for i, elementid in this.Send("element","POST",{"using":u,"value":v},1)
 		{
 			if instr(elementid,"no such")
 				return 0
 			address := RegExReplace(this.address "/element/" elementid,"(\/shadow\/.*)\/element","/element")
 			address := RegExReplace(address "/element/" elementid,"(\/element\/.*)\/element","/element")
-			return New WDElement(address)
+			return New WDElement(address,i)
 		}
 	}
-	
+
 	findelements(u,v)
 	{
-		
+
 		e := []
 		for k, element in this.Send("elements","POST",{"using":u,"value":v},1)
 		{
@@ -524,12 +547,12 @@ Class Session extends Rufaydium
 					return 0
 				address := RegExReplace(this.address "/element/" elementid,"(\/shadow\/.*)\/element","/element")
 				address := RegExReplace(address "/element/" elementid,"(\/element\/.*)\/element","/element")
-				e[k-1] := New WDElement(address)
+				e[k-1] := New WDElement(address,i)
 			}
 		}
 		return e
 	}
-	
+
 	shadow()
 	{
 		for i,  elementid in this.Send("shadow","GET")
@@ -538,79 +561,79 @@ Class Session extends Rufaydium
 			return new ShadowElement(address)
 		}
 	}
-	
+
 	getElementByID(id)
 	{
 		return this.findelement(by.selector,"#" id)
 	}
-	
+
 	QuerySelector(Path)
 	{
 		return this.findelement(by.selector,Path)
 	}
-	
+
 	QuerySelectorAll(Path)
 	{
 		return this.findelements(by.selector,Path)
 	}
-	
+
 	getElementsbyClassName(Class)
 	{
 		Class = [class='%Class%']
 		return this.findelements(by.selector,Class)
 	}
-	
+
 	getElementsbyName(Name)
 	{
 		return this.findelements(by.TagName,Name)
 	}
-	
+
 	getElementsbyXpath(xPath)
 	{
 		return this.findelements(by.xPath,xPath)
 	}
-	
+
 	ExecuteSync(Script,Args*)
 	{
 		return this.Send("execute/sync","POST", { "script":Script,"args":[Args*]},1)
 	}
-	
+
 	ExecuteAsync(Script,Args*)
 	{
 		return this.Send("execute/async","POST", { "script":Script,"args":Args*},1)
 	}
-	
+
 	GetCookies()
 	{
 		return this.Send("cookie","GET")
 	}
-	
+
 	GetCookieName(Name)
 	{
 		return this.Send("cookie/" Name,"GET")
 	}
-	
+
 	AddCookie(CookieObj)
 	{
 		return this.Send("cookie","POST",CookieObj)
 	}
-	
+
 	Alert(Action,Text:=0)
 	{
 		switch Action
 		{
-			case "accept":		i := "/alert/accept",	m := "POST"
-			case "dismiss":	i := "/alert/dismiss",	m := "POST"
-			case "GET":    	i := "/alert/text",		m := "GET" 
-			case "Send":    	i := "/alert/text",		m := "POST" 
+			case "accept": i := "/alert/accept", m := "POST"
+			case "dismiss": i := "/alert/dismiss", m := "POST"
+			case "GET": i := "/alert/text", m := "GET"
+			case "Send": i := "/alert/text", m := "POST"
 		}
-		
+
 		if Text
 			return this.Send(this.address i,m,{"text":Text})
 		else
 			return this.Send(this.address i,m)
 	}
-	
+
 	Screenshot(location:=0)
 	{
 		Base64Canvas :=  this.Send("screenshot","GET")
@@ -622,21 +645,47 @@ Class Session extends Rufaydium
 			File.Close()
 		}
 	}
-	
-	Print(PDFLocation,Options)
+
+	Print(PDFLocation,Options:=0)
 	{
-		Base64pdfData := this.Send("print","POST",Options) ; does not works
-		if !Base64pdfData.error
+		if !instr(PDFLocation,".pdf")
 		{
-			nBytes := Base64Dec( Base64pdfData, Bin ) ; thank you Skan :)
-			File := FileOpen(PDFLocation, "w")
-			File.RawWrite(Bin, nBytes)
-			File.Close()
+			msgbox, ,Rufaydium, error: File location be ".pdf"
+			return
+		}
+
+		if this.Capabilities.HeadlessMode
+		{
+			Base64pdfData := this.Send("print","POST",Options) ; does not work
+			if !Base64pdfData.error
+			{
+				nBytes := Base64Dec( Base64pdfData, Bin ) ; thank you Skan :)
+				File := FileOpen(PDFLocation, "w")
+				File.RawWrite(Bin, nBytes)
+				File.Close()
+			}
+			else
+				msgbox, ,Rufaydium, % "Fail to save PDF`nError : " json.Dump(Base64pdfData) "`nPlease define Print Options or use print profiles from PrintOptions.class`nSince Chrome Printing is not available in Headful mode you can try 'wkhtmltopdf' printing"
 		}
 		else
-			msgbox, ,Rufaydium, % "Fail to save PDF`nError : " json.Dump(Base64pdfData) "`n`nMake sure chrome is running headless mode`nPlease define Print Options or use print profiles from PrintOptions.class"
+		{
+			if isProgInstalled("wkhtmltox")
+			{
+				wkhtmltopdf(this.HtML,PDFLocation,options)
+			}
+			else
+			{
+				MsgBox,36,Rufaydium, User is required to install "wkhtmltopdf" In order to enable pdf printing without Headless mode`n`nPress Yes to navigate to download page of "wkhtmltox" tool
+				IfMsgBox Yes
+				{
+					this.NewTab()
+					this.url := "https://wkhtmltopdf.org/downloads.html"
+					MsgBox,64,Rufaydium,Please Download and install "wkhtmltox" now, according to Windows Version then Restart Rufaydium.
+				}
+			}
+		}
 	}
-	
+
 	click(i:=0) ; [button: 0(left) | 1(middle) | 2(right)]
 	{
 		PointerClick =
@@ -658,7 +707,7 @@ Class Session extends Rufaydium
 		)
 		return this.Actions(json.load(PointerClick))
 	}
-	
+
 	DoubleClick(i:=0) ; [button: 0(left) | 1(middle) | 2(right)]
 	{
 		PointerClicks =
@@ -684,7 +733,7 @@ Class Session extends Rufaydium
 		)
 		return this.Actions(json.load(PointerClicks))
 	}
-	
+
 	MBDown(i:=0) ; [button: 0(left) | 1(middle) | 2(right)]
 	{
 		;return this.Send("buttondown","POST",{"button":i})		PointerClick =
@@ -705,7 +754,7 @@ Class Session extends Rufaydium
 		)
 		return this.Actions(json.load(PointerDown))
 	}
-	
+
 	MBup(i:=0) ; [button: 0(left) | 1(middle) | 2(right)]
 	{
 		;return this.Send("buttonup","POST",{"button":i})
@@ -726,7 +775,7 @@ Class Session extends Rufaydium
 		)
 		return this.Actions(json.load(PointerUP))
 	}
-	
+
 	Move(x,y)
 	{
 		PointerMove =
@@ -748,15 +797,15 @@ Class Session extends Rufaydium
 		)
 		return this.Actions(json.load(PointerMove))
 	}
-	
+
 	Actions(ActionObj)
 	{
 		return this.Send("actions","POST",ActionObj)
 	}
-	
+
 	execute_sql()
 	{
-		return this.Send("execute_sql","POST",{"":""}) ; idk about sql 
+		return this.Send("execute_sql","POST",{"":""}) ; idk about sql
 	}
 }
 
@@ -811,8 +860,74 @@ Base64Enc( ByRef Bin, nBytes, LineLength := 64, LeadingSpaces := 0 ) { ; By SKAN
 	DllCall( "Crypt32.dll\CryptBinaryToString", "Ptr",&Bin, "UInt",nBytes, "UInt",0x1, "Str",B64, "UIntP",Rqd )
 	If ( LineLength = 64 and ! LeadingSpaces )
 		Return B64
-	B64 := StrReplace( B64, "`r`n" )        
+	B64 := StrReplace( B64, "`r`n" )
 	Loop % Ceil( StrLen(B64) / LineLength )
-		B .= Format("{1:" LeadingSpaces "s}","" ) . SubStr( B64, N += LineLength, LineLength ) . "`n" 
-	Return RTrim( B,"`n" )    
+		B .= Format("{1:" LeadingSpaces "s}","" ) . SubStr( B64, N += LineLength, LineLength ) . "`n"
+	Return RTrim( B,"`n" )
+}
+
+isProgInstalled(Prog)
+{
+	shell := ComObjCreate("Shell.Application")
+	programsFolder := shell.NameSpace("::{26EE0668-A00A-44D7-9371-BEB064C98683}\8\::{7B81BE6A-CE2B-4676-A29E-EB907A5126C5}")
+	items := programsFolder.Items()
+	for k in items
+		if instr(k.name,prog)
+			return true
+	return false
+}
+
+
+wkhtmltopdf(HtML,pdf,options)
+{
+	htmlloc := StrReplace(pdf, ".pdf",".html")
+	
+	while FileExist(pdf)
+		FileDelete, % pdf
+
+	while FileExist(htmlloc)
+		FileDelete, % htmlloc
+
+	FileAppend, % HtML, % htmlloc
+
+	while !FileExist(htmlloc)
+		sleep, 200
+
+	if !A_Is64bitOS
+		wkhtmltopdf := "C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+	else 
+		wkhtmltopdf := "C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe"
+
+	if IsObject(options)
+	{
+		cmd := wkhtmltopdf " --zoom " options.scale
+
+		cmd .= " --margin-bottom "	options.margin.bottom
+		cmd .= " --margin-left "	options.margin.left
+		cmd .= " --margin-right "	options.margin.right
+		cmd .= " --margin-top "		options.margin.top
+
+		cmd .= " --page-height "	options.page.height
+		cmd .= " --page-width " 	options.page.height
+
+		cmd .= " --orientation " chr(34) options.orientation chr(34)
+
+		if options.background
+			cmd .= " --enable-smart-shrinking "
+		else
+			cmd .= " --disable-smart-shrinking "
+
+		if options.background
+			cmd .= " --background "
+		else
+			cmd .= " --no-background "	
+		
+		cmd .= " " chr(34) htmlloc chr(34) " " chr(34) pdf chr(34)
+		runwait, %  cmd,,Hide
+	}	
+	else if IsObject(options)
+		runwait, % wkhtmltopdf " " options " " chr(34) htmlloc chr(34) " " chr(34) pdf chr(34),,Hide
+	else
+		runwait, % wkhtmltopdf " --background " chr(34) htmlloc chr(34) " " chr(34) pdf chr(34),,Hide
+	FileDelete, % htmlloc
 }

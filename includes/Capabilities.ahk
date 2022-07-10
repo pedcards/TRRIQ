@@ -1,9 +1,7 @@
-
 class Capabilities
 {
-    static Simple := {"cap":{"capabilities":{"":""}}}
-    static _ucof := false
-    static _hmode := false
+    static Simple := {"cap":{"capabilities":{"":""}}}, olduser := {}
+    static _ucof := false, _hmode := false, _incog := false
     __new(browser,Options,platform:="windows",notify:=false)
     {
         this.options := Options
@@ -31,9 +29,7 @@ class Capabilities
             else
             {
                 capabilities._hmode := false
-                for i, arg in this.cap.capabilities.alwaysMatch[this.Options].args
-                    if (arg = "--headless")
-                        this.RemoveArg(arg)
+                this.RemoveArg("--headless")
 	        }	
         }
 
@@ -43,17 +39,46 @@ class Capabilities
         }
     }
     
-    setUserProfile(profileName:="Default", userDataDir:="") ; user data dir doesnt change often, use the default
+    IncognitoMode[]
+    {
+        set 
+        {
+            if value
+            {
+                Capabilities.olduser.push(this.RemoveArg("--user-data-dir=","in"))
+                Capabilities.olduser.push(this.RemoveArg("--profile-directory=","in"))
+                this.addArg("--incognito")
+                capabilities._incog := true
+            }
+            else
+            {
+                capabilities._incog := false
+                for i, arg in this.cap.capabilities.alwaysMatch[this.Options].args
+                    if (arg = "--incognito")
+                        this.RemoveArg(arg)
+                for i, arg in Capabilities.olduser
+                    this.addArg(arg)
+                Capabilities.olduser := {}
+	        }	
+        }
+
+        get
+        {
+            return capabilities._incog
+        }
+    }
+
+    setUserProfile(profileName:="Default", userDataDir:="") ; user data dir doesn't change often, use the default
 	{
+        if this.IncognitoMode
+            return
 		if !userDataDir
 			userDataDir := "C:/Users/" A_UserName "/AppData/Local/Google/Chrome/User Data"
         userDataDir := StrReplace(userDataDir, "\", "/")
-
-        for i, argtbr in this.cap.capabilities.alwaysMatch[this.Options].args
-        {
-            if instr(argtbr,"--user-data-dir=") or instr(argtbr,"--profile-directory=") ; remove if arg already has profile
-                this.cap.capabilities.alwaysMatch[this.Options].RemoveAt(i)
-        }
+        ; removing previous args if any
+        this.RemoveArg("--user-data-dir=","in")
+        this.RemoveArg("--profile-directory=","in")
+        ; adding new profile args
         this.addArg("--user-data-dir=" userDataDir)
         this.addArg("--profile-directory=" profileName)
 	}
@@ -123,12 +148,20 @@ class ChromeCapabilities extends Capabilities
         this.cap.capabilities.alwaysMatch[this.Options].extensions.push(crxlocation)
     }
 
-    RemoveArg(arg)
+    RemoveArg(arg,match="Exact")
     {
 	    for i, argtbr in this.cap.capabilities.alwaysMatch[this.Options].args
 	    {
-	        if (argtbr = arg)
-		    this.cap.capabilities.alwaysMatch[this.Options].args.RemoveAt(i)
+            if match = "Exact"
+	        {
+                if (argtbr = arg)
+		            return this.cap.capabilities.alwaysMatch[this.Options].args.RemoveAt(i)
+            } 
+            else
+            {
+                if instr(argtbr, arg)
+		            return this.cap.capabilities.alwaysMatch[this.Options].args.RemoveAt(i)
+            }
 	    }
     }
 
@@ -173,24 +206,34 @@ class FireFoxCapabilities extends Capabilities
 
     addArg(arg) ; idk args list
     {
-        arg := strreplace(arg,"--","-")
+        arg := StrReplace(arg,"--","-")
         if !IsObject(this.cap.capabilities.alwaysMatch[this.Options].args)
             this.cap.capabilities.alwaysMatch[this.Options].args := []
         this.cap.capabilities.alwaysMatch[this.Options].args.push(arg)
     }
 
-    RemoveArg(arg)
+    RemoveArg(arg,match:="Exact")
     {
-        arg := strreplace(arg,"--","-")
+        arg := StrReplace(arg,"--","-")
 	    for i, argtbr in this.cap.capabilities.alwaysMatch[this.Options].args
 	    {
-	        if (argtbr = arg)
-		    this.cap.capabilities.alwaysMatch[this.Options].RemoveAt(i)
+            if match = "Exact"
+	        {
+                if (argtbr = arg)
+		            return this.cap.capabilities.alwaysMatch[this.Options].args.RemoveAt(i)
+            } 
+            else
+            {
+                if instr(argtbr, arg)
+		            return this.cap.capabilities.alwaysMatch[this.Options].args.RemoveAt(i)
+            }
 	    }
     }
 
-    setUserProfile(profileName:="Profile1") ; user data dir doesnt change often, use the default
+    setUserProfile(profileName:="Profile1") ; user data dir doesn't change often, use the default
 	{
+        if this.IncognitoMode
+            return
         userDataDir := A_AppData "\Mozilla\Firefox\Profiles\"
         profileini := A_AppData "\Mozilla\Firefox\profiles.ini"
         IniRead, profilePath , % profileini, % profileName, Path

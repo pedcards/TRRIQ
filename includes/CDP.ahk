@@ -3,7 +3,7 @@
 ; by Xeo786
 
 
-class CDP extends Rufaydium
+class CDP ;extends Rufaydium
 {
 	__new(Address)
 	{
@@ -40,6 +40,17 @@ class CDP extends Rufaydium
 		this.Nodeid := this.ParentNodeID
 	}
 
+	send(url,Method,Payload:= 0,WaitForResponse:=1)
+	{
+		if !instr(url,"HTTP")
+			url := this.address "/" url
+		try r := Json.load(Rufaydium.Request(url,Method,Payload,WaitForResponse)).value ; Thanks to GeekDude for his awesome cJson.ahk
+		if(r.error = "chrome not reachable") ; incase someone close browser manually but session is not closed for driver
+			this.quit() ; so we close session for driver at cost of one time response wait lag
+		if r
+			return r
+	}
+	
 	Call(DomainAndMethod, Params:="") ;https://stackoverflow.com/questions/70654898/selenium-4-x-trying-to-post-cdp-unsupportedcommandexception
 	{
 		Payload := { "params": Params ? Params : {"":""}, "cmd": DomainAndMethod}
@@ -96,22 +107,28 @@ class CDP extends Rufaydium
 	
 	requestNode(Objectid)
 	{
-		return this.nodeId := this.call("DOM.requestNode",{"objectId":Objectid}).nodeId
+		obj := this.call("DOM.requestNode",{"objectId":Objectid})
+		if obj.nodeId
+			this.nodeId := obj.nodeId
+		return obj
 	}
 	
 	resolveNode()
 	{
-		return this.ObjectID := this.call("DOM.resolveNode",{"nodeId":this.nodeId}).object.objectId
+		Obj := this.call("DOM.resolveNode",{"nodeId":this.nodeId}).ObjectID
+		if Obj.objectId
+			this.ObjectID  := Obj.objectId
+		return obj	
 	}
 	
 	Navigate(url)
 	{
-		this.call("Page.navigate",{"url":url})
+		return this.call("Page.navigate",{"url":url})
 	}
 	
 	Reload() ; by https://github.com/hotcheesesoup
 	{
-		this.call("Page.reload")
+		return this.call("Page.reload")
 	}
 
 	WaitForLoad(DesiredState:="complete", Interval:=100)
