@@ -4,7 +4,7 @@
 
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force  ; only allow one running instance per user
-#Include %A_ScriptDir%
+#Include %A_ScriptDir%\includes
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 
 SetWorkingDir %A_ScriptDir%
