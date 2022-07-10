@@ -451,10 +451,9 @@ wbOpen() {
 	}
 	Num :=  strX(verNum,"",0,1,".",1,1)
 
-	exe := ".\files\" driver "\" Num "\" driver ".exe"
+	exe := A_ScriptDir "\files\" driver "\" Num "\" driver ".exe"
 	if !FileExist(exe) {
-		eventlog("Installed version " verNum ". Could not find matching " driver ".")
-		Return
+		eventlog("PREVGRAB: Could not find matching driver. Attempt download.")
 	}
 	wb := new Rufaydium(exe)
 
