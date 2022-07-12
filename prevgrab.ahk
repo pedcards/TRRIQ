@@ -281,7 +281,7 @@ parsePreventiceFTP(tbl) {
 			Break
 		}
 	}
-	eventlog(A_TickCount-t0 " ms to start download.")
+	eventlog("PREVGRAB: " A_TickCount-t0 " msec to start download.")
 
 	t0 := A_TickCount
 	while FileExist(dlPath "\*crdownload") {											; wait for .crdownload to finish
@@ -292,7 +292,7 @@ parsePreventiceFTP(tbl) {
 		tbar := SubStr(round(t1/100),-2)
 		progress, % tbar
 	}
-	eventlog(A_TickCount-t0 " msec to download file(s).")
+	eventlog("PREVGRAB: " A_TickCount-t0 " msec to download file(s).")
 
 	Progress, Hide
 	Return 0
