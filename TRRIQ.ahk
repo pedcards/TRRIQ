@@ -502,6 +502,10 @@ PhaseRefresh:
 }
 
 idleTimer() {
+/*	Perform automatic tasks on timer
+	1. CheckWQfile - checks if wqfile has been been updated, reload WQlist()
+	2. checkMUwin - if MUwin tab text changes, reload MortaraUpload with that function
+*/
 	checkWQfile()
 	x:=checkMUwin()
 	;~ progress,,,% x
