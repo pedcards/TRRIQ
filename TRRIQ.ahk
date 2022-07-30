@@ -5435,6 +5435,10 @@ ParseName(x) {
 		last := trim(strX(x,"",1,0,",",1,1))
 		first := trim(strX(x,",",1,1,"",0))
 	}
+	if RegExMatch(x "<","O)^\d+\^(\w+)\^(\w+)\W",q) {									; 12345678^Chun^Terrence
+		last := q.1
+		first := q.2
+	}
 	else if (ct=1)																		; First Last
 	{
 		first := strX(x,"",1,0," ",1)
