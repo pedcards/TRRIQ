@@ -1255,6 +1255,8 @@ readPrevTxt() {
 		}
 		wq.selectSingleNode("/root/pending").setAttribute("update",psrDT)				; set pending[@update] attr
 		eventlog("Patient Status Report " pstDT " updated.")
+
+		lateReportNotify()
 	}
 
 	filenm := ".\files\prev.txt"
@@ -1530,6 +1532,32 @@ parsePrevDev(txt) {
 	;~ eventlog("Added new Inventory dev " ser)
 	
 	return
+}
+
+lateReportNotify() {
+/*	Scan Epic\RawHL7 files
+	Get uid from filename
+	Get process date and reading EP from <done> 
+	Else can read process date from MSH_6 and EP from OBR_28
+	Beginning day 3 send reminder email
+*/
+	global path, wq, epList
+
+	Loop, files, % path.EpicHL7out "*.hl7"
+	{
+		uid := strX(A_LoopFileName,"@",0,1,".hl7",1,4)
+		e0 := wq.selectSingleNode("/root/done/enroll[@id='" uid "']/done")
+		date := e0.text
+		read := e0.getAttribute("read")
+		date -= A_now, Days
+		if (abs(date) > 2) {
+			epStr := epList[read]
+			name := ParseName(epStr).init
+			tmp := httpComm("late&to=" name)
+			eventlog("Notification email " tmp " to " name)
+		}
+	}
+	Return
 }
 
 makeUID() {
