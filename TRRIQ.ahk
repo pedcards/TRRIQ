@@ -3702,12 +3702,15 @@ Holter_Pr_Hl7:
 		labels[2] := ["Total","SingleVE","Couplets","Runs","Fastest","Slowest","Longest","R on T"]
 		fieldvals(rateStat,2,"ve")
 		
-		rateStat := stregX(newtxt,"(\R)SUPRAVENTRICULAR ECTOPY",1,0,"(\R)OTHER RHYTHM EPISODES|(\R)RR VARIABILITY",1) "<<<"
-		fields[3] := ["Supraventricular Beats","Aberrant Beats","Singlets","Pairs","Runs","Fastest Run","Slowest Run","Longest Run","SVE"
-			, "Pauses .* ms","Longest RR","<<<"]
-		labels[3] := ["Total","Aberrant","Single","Pairs","Runs","Fastest","Slowest","Longest","null"
-			, "Pauses","LongestRR","null"]
+		rateStat := stregX(newtxt,"(\R)SUPRAVENTRICULAR ECTOPY",1,0,"(\R)OTHER RHYTHM EPISODES|(\R)RR VARIABILITY",1)
+		fields[3] := ["Supraventricular Beats","Aberrant Beats","Singlets","Pairs","Runs","Fastest Run","Slowest Run","Longest Run","SVE"]
+		labels[3] := ["Total","Aberrant","Single","Pairs","Runs","Fastest","Slowest","Longest","null"]
 		fieldvals(rateStat,3,"sve")
+
+		rateStat := stregx(newtxt,"(\R)ALL BEATS",1,0,"(\R)RR VARIABILITY",1) "<<<"
+		fields[4] := ["Pauses .* ms","Longest RR","(\R)"]
+		labels[4] := ["Pauses","LongestRR","null"]
+		fieldvals(rateStat,4,"sve")
 		
 		eventlog("<<< Missing DDE, parsed from extracted PDF >>>")
 	}
