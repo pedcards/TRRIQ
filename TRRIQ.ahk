@@ -1933,6 +1933,7 @@ parseORM() {
 		
 	if !(indication:=strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")) {
 		indText := objhasvalue(fldval,"^Reason for exam","RX")
+		indText := (indText="hl7") ? "" : indText										; no "Reason for exam" returns "hl7", breaks fldval[indtext]
 		indText := RegExReplace(fldval[indText],"Reason for exam->")
 		
 		indCode := objhasvalue(indCodes,indText,"RX")
