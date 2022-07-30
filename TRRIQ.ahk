@@ -502,6 +502,10 @@ PhaseRefresh:
 }
 
 idleTimer() {
+/*	Perform automatic tasks on timer
+	1. CheckWQfile - checks if wqfile has been been updated, reload WQlist()
+	2. checkMUwin - if MUwin tab text changes, reload MortaraUpload with that function
+*/
 	checkWQfile()
 	x:=checkMUwin()
 	;~ progress,,,% x
@@ -554,7 +558,7 @@ checkPCwks() {
 /*	Check if current machine has H3 software installed
 	local machine names begin with EWCSS and Citrix machines start with PPWC,VMWIN10
 */
-	global has_H3, wksVoid
+	global has_H3, wksPC, wksVoid
 	is_VM := ObjHasValue(wksVoid,A_ComputerName,1)
 
 	if (A_UserName="tchun1") {
@@ -567,7 +571,7 @@ checkPCwks() {
 			. "`n`n"
 			. "Switch to another computer if you will need to register/upload Mortara 24-hour Holter."
 	}
-	if (A_ComputerName~="EWC|ELC") {													; running on a local machine
+	if (A_ComputerName~=wksPC) {														; running on a local machine
 		return																			; return successfully
 	}
 	else if (is_VM=true) {
@@ -1929,6 +1933,7 @@ parseORM() {
 		
 	if !(indication:=strQ(fldval.OBR_ReasonCode,"###") strQ(fldval.OBR_ReasonText,"^###")) {
 		indText := objhasvalue(fldval,"^Reason for exam","RX")
+		indText := (indText="hl7") ? "" : indText										; no "Reason for exam" returns "hl7", breaks fldval[indtext]
 		indText := RegExReplace(fldval[indText],"Reason for exam->")
 		
 		indCode := objhasvalue(indCodes,indText,"RX")
