@@ -953,7 +953,7 @@ WQlist() {
 			
 			if (obr_site="") {															; no "-site" in OBR.17 name
 				obr_site:="MAIN"
-				eventlog("No site associated with provider, substituting MAIN. Check ORM and Preventice users.")
+				eventlog(fileIn " - " obr_prov ". No site associated with provider, substituting MAIN. Check ORM and Preventice users.")
 			}
 			if instr(sites0,obr_site) {
 				eventlog("Unregistered Sites0 report (" fileIn " - " obr_site ")")
