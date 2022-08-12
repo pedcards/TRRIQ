@@ -67,6 +67,7 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 */
 webUploadDir := check_h3(path.webupload,webUploadStr)									; Find the location of H3 data files
 checkPCwks()
+checkH3registry()
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -581,6 +582,28 @@ checkPCwks() {
 		eventlog("Unique machine name.")
 		return
 	}
+}
+
+checkH3registry() {
+/*	Check registry location for H3 install
+	Get DirectoryPath value
+*/
+	rootkey := "HKLM\Software\Mortara Instruments Inc\WebUpload"						; starting key
+	target := "DirectoryPath"
+
+	SetRegView, 64
+	loop, reg, % rootkey, R																; recurse through subkeys
+	{
+		regname := A_LoopRegName
+		if (regname=target) {													
+			RegRead, var, % A_LoopRegKey, % A_LoopRegSubkey, % A_LoopRegName
+			eventlog("Reg DirPath: " var)
+		}
+	}
+	if !(var) {
+		eventlog("Reg DirPath not found.")
+	}
+	Return
 }
 
 checkVersion(ver) {
