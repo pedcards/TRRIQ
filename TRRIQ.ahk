@@ -588,16 +588,27 @@ checkH3registry() {
 /*	Check registry location for H3 install
 	Get DirectoryPath value
 */
-	rootkey := "HKLM\Software\Mortara Instruments Inc\WebUpload"						; starting key
+	keymatch := "i)Preventice|Mortara"
 	target := "DirectoryPath"
 
 	SetRegView, 64
-	loop, reg, % rootkey, R																; recurse through subkeys
+	loop, reg, HKLM\Software, K															; find .\Software\*
 	{
-		regname := A_LoopRegName
-		if (regname=target) {													
+		key := A_LoopRegKey
+		subkey := A_LoopRegSubkey
+		name := A_LoopRegName
+		if (name~=keymatch) {
+			keyname := key "\" subkey "\" name
+			eventlog("Reg key: " keyname)
+		}
+	}
+
+	loop, reg, % keyname, KVR															; recurse through subkeys
+	{
+		if (A_LoopRegName=target) {													
 			RegRead, var, % A_LoopRegKey, % A_LoopRegSubkey, % A_LoopRegName
-			eventlog("Reg DirPath: " var)
+			eventlog("Reg var: " var)
+			eventlog("Reg DirPath: " A_LoopRegKey "\" A_LoopRegSubkey "\" A_LoopRegName)
 		}
 	}
 	if !(var) {
