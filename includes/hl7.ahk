@@ -68,7 +68,7 @@ hl7line(seg) {
 			continue
 		}
 		str := fld[i]																	; each segment field
-		val := StrSplit(str,"^")													; array of subelements
+		val := StrSplit(str,"^")														; array of subelements
 		
 		strMap := segMap[i-1]															; get hl7 substring that maps to this 
 		if (strMap=="") {																; no mapped fields
@@ -82,26 +82,25 @@ hl7line(seg) {
 		loop, % map.length()
 		{
 			j := A_Index
-			if (map[j]=="") {														; skip if map value is null
+			if (map[j]=="") {															; skip if map value is null
 				continue
 			}
-			x := segPre	
-				. map[j]															; res.pre_map
+			x := segPre	"_" map[j]														; res.pre_map
 			
-			if (map.length()=1) {													; for seg with only 1 map, ensure val is at least popuated with str
+			if (map.length()=1) {														; for seg with only 1 map, ensure val is at least popuated with str
 				val[j] := str
 			}
-			res[x] := val[j]														; add each mapped result as subelement, res.mapped_name
+			res[x] := val[j]															; add each mapped result as subelement, res.mapped_name
 			
-			if !(isOBX)  {															; non-OBX results
-				fldVal[x] := val[j]													; populate all fldVal.mapped_name
+			if !(isOBX)  {																; non-OBX results
+				fldVal[x] := val[j]														; populate all fldVal.mapped_name
 				obxVal[x] := val[j]
 			}
 		}
 	}
 	if (isOBX) {																		; need to special process OBX[], test result strings
 		if (res.ObsType == "ED") {
-			fldVal.Filename := res.Filename											; file follows
+			fldVal.Filename := res.Filename												; file follows
 			nBytes := Base64Dec( res.resValue, Bin )
 			File := FileOpen( path.PrevHL7in . res.Filename, "w")
 			File.RawWrite(Bin, nBytes)
