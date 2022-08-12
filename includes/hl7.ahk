@@ -27,6 +27,7 @@ processHL7(fnam) {
 	FileRead, txt, % fnam
 	StringReplace, txt, txt, `r`n, `r														; convert `r`n to `r
 	StringReplace, txt, txt, `n, `r															; convert `n to `r
+	fldval.hl7 := {}
 	loop, parse, txt, `r, `n																; parse HL7 message, split on `r, ignore `n
 	{
 		seg := A_LoopField																	; read next Segment line
@@ -59,8 +60,8 @@ hl7line(seg) {
 	isOBX := (segName == "OBX")
 	segMap := hl7[segName]
 	segPre := (isOBX) ? "" 
-		: segName "_" . (instr(multiSeg,segName) ? segNum "_" : "")
-	
+		: segName . (instr(multiSeg,segName) ? "_" segNum : "")
+	fldval.hl7[segPre] := {}
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
 		i := A_Index
@@ -69,6 +70,7 @@ hl7line(seg) {
 		}
 		str := fld[i]																	; each segment field
 		val := StrSplit(str,"^")														; array of subelements
+		fldval.hl7[segPre][i-1] := str
 		
 		strMap := segMap[i-1]															; get hl7 substring that maps to this 
 		if (strMap=="") {																; no mapped fields
@@ -111,8 +113,8 @@ hl7line(seg) {
 			result := strQ(res.resValue, "###")
 			maplab := strQ(hl7.flds[label],"###",label)								; maps label if hl7->lw map exists
 					. strQ(res.Filename,"_###")        								; add suffix if multiple units in OBX_Filename
-			fldVal[segPre maplab] := result
-			obxval[segPre maplab] := result
+			fldVal[segPre "_" maplab] := result
+			obxval[segPre "_" maplab] := result
 		}
 	}
 	fldval.hl7 .= seg "`n"
