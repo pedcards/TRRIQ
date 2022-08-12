@@ -117,7 +117,7 @@ hl7line(seg) {
 			obxval[segPre "_" maplab] := result
 		}
 	}
-	fldval.hl7 .= seg "`n"
+	fldval.hl7string .= seg "`n"
 	
 	return res
 }
