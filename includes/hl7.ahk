@@ -59,9 +59,14 @@ hl7line(seg) {
 	
 	isOBX := (segName == "OBX")
 	segMap := hl7[segName]
-	segPre := (isOBX) ? "" 
-		: segName . (instr(multiSeg,segName) ? "_" segNum : "")
-	fldval.hl7[segPre] := {}
+	; segPre := (isOBX) ? "" 
+	; 	: segName . (instr(multiSeg,segName) ? "_" segNum : "")
+	if (isOBX) {
+		segPre := ""
+	} else {
+		segPre := segName . (instr(multiSeg,segName) ? "_" segNum : "")
+		fldval.hl7[segPre] := {}
+	}
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
 		i := A_Index
@@ -87,7 +92,7 @@ hl7line(seg) {
 			if (map[j]=="") {															; skip if map value is null
 				continue
 			}
-			x := segPre	"_" map[j]														; res.pre_map
+			x := trim(segPre "_" map[j],"_")											; res.pre_map
 			
 			if (map.length()=1) {														; for seg with only 1 map, ensure val is at least popuated with str
 				val[j] := str
@@ -113,8 +118,8 @@ hl7line(seg) {
 			result := strQ(res.resValue, "###")
 			maplab := strQ(hl7.flds[label],"###",label)								; maps label if hl7->lw map exists
 					. strQ(res.Filename,"_###")        								; add suffix if multiple units in OBX_Filename
-			fldVal[segPre "_" maplab] := result
-			obxval[segPre "_" maplab] := result
+			fldVal[segPre maplab] := result
+			obxval[segPre maplab] := result
 		}
 	}
 	fldval.hl7string .= seg "`n"
