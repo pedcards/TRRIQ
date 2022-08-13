@@ -2006,6 +2006,7 @@ parseORM() {
 	
 	return {date:parseDate(fldval.OBR_StartDateTime).YMD
 		, encDate:parseDate(fldval.PV1_DateTime).YMD
+		, namePID5:fldval.hl7.PID.5
 		, nameL:fldval.PID_NameL
 		, nameF:fldval.PID_NameF
 		, name:fldval.PID_NameL strQ(fldval.PID_NameF,", ###")
