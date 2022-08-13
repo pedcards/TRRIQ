@@ -59,8 +59,6 @@ hl7line(seg) {
 	
 	isOBX := (segName == "OBX")
 	segMap := hl7[segName]
-	; segPre := (isOBX) ? "" 
-	; 	: segName . (instr(multiSeg,segName) ? "_" segNum : "")
 	if (isOBX) {
 		segPre := ""
 	} else {
@@ -92,7 +90,7 @@ hl7line(seg) {
 			if (map[j]=="") {															; skip if map value is null
 				continue
 			}
-			x := trim(segPre "_" map[j],"_")											; res.pre_map
+			x := strQ(segPre,"###_") map[j]												; res.pre_map
 			
 			if (map.length()=1) {														; for seg with only 1 map, ensure val is at least popuated with str
 				val[j] := str
