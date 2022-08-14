@@ -2903,7 +2903,7 @@ makePreventiceORM() {
 	buildHL7("PID"
 		,{2:ptDem.MRN
 		, 3:ptDem.MRN
-		, 5:ptDem.nameL "^" ptDem.nameF . strQ(ptDem.nameMI,"^###")
+		, 5:ptDem.namePID5
 		, 7:parseDate(ptDem.dob).YMD
 		, 8:substr(ptDem.sex,1,1)
 		, 11:ptDem.Addr1 "^" ptDem.Addr2 "^" ptDem.city "^" ptDem.state "^" ptDem.zip
