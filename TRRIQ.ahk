@@ -1990,6 +1990,7 @@ parseORM() {
 	provname := strQ(fldval.ORC_ProvCode
 			, fldval.ORC_ProvNameL strQ(fldval.ORC_ProvNameF, ", ###")
 			, fldval.OBR_ProviderNameL strQ(fldval.OBR_ProviderNameF, ", ###"))
+	provHL7 := fldval.hl7.ORC.12
 	;~ location := (encType="Outpatient") ? sitesLong[fldval.PV1_Location]
 		;~ : encType
 		
@@ -2018,6 +2019,7 @@ parseORM() {
 		, provider:prov
 		, prov:prov
 		, provname:provname
+		, provORC12:provHL7
 		, type:encType
 		, loc:location
 		, Account:fldval.ORC_ReqNum
