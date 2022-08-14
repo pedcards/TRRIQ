@@ -5498,7 +5498,11 @@ ParseName(x) {
 		last := trim(strX(x,"",1,0,",",1,1))
 		first := trim(strX(x,",",1,1,"",0))
 	}
-	else if RegExMatch(x "<","O)^\d+\^(\w+)\^(\w+)\W",q) {								; 12345678^Chun^Terrence
+	else if RegExMatch(x "<","O)^\d{8,}\^([a-zA-Z\-\s\']+)\^([a-zA-Z\-\s\']+)\W",q) {	; 12345678^Chun^Terrence
+		last := q.1
+		first := q.2
+	}
+	else if RegExMatch(x "<","O)^([a-zA-Z\-\s\']+)\^([a-zA-Z\-\s\']+)\W",q) {			; Jingleheimer Schmidt^John Jacob
 		last := q.1
 		first := q.2
 	}
