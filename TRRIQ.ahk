@@ -2912,11 +2912,13 @@ makePreventiceORM() {
 		, 13:ptDem.phone
 		, 18:ptDem.account })
 	
+	tmpPrv := parseName(ptDem.provider) 
+	ptDem.ORMprov := ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first 
 	buildHL7("PV1"
 		,{2:ptDem.type
 		, 3:ptDem.loc
-		, 7:ptDem.provORC12
-		, 8:ptDem.provORC12
+		, 7:ptDem.ORMprov
+		, 8:ptDem.ORMprov
 		, 19:ptDem.wqid })
 	
 	buildHL7("IN1"
@@ -2935,7 +2937,7 @@ makePreventiceORM() {
 			. strQ((ptDem.model~="Mini") ? 1 : "","Holter^Holter")
 		, 7:hl7time
 		, 11:"ANCILLARY"
-		, 16:ptDem.provORC12
+		, 16:ptDem.ORMprov
 		, 17:"206-987-2015" })
 	
 	tmpInd := ptDem.indication
