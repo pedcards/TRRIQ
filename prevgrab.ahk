@@ -240,8 +240,8 @@ parsePreventiceFTP(tbl) {
 		loop, % ftpList.length()
 		{
 			rowName := ftpList[A_Index-1]
-			rowL := FuzzySearch(nm.1,rowName)
-			rowF := FuzzySearch(nm.2,rowName)
+			rowL := FuzzySearch(Format("{:U}",nm.1),Format("{:U}",rowName))
+			rowF := FuzzySearch(Format("{:U}",nm.2),Format("{:U}",rowName))
 			
 			nm.score := rowL+rowF
 			if (nm.score < nm.bestScore) {
