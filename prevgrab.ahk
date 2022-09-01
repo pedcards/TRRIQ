@@ -308,7 +308,7 @@ checkFtpRow(num=0) {
 
 ftpDateDiff(row) {
 	dt := checkFtpRow(row).date															; get date value from this table row number
-	diff := ParseDate(A_now).YMD - ParseDate(dt).YMD
+	diff := dateDiff(dt)
 	return diff
 }
 
