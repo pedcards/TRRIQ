@@ -219,7 +219,7 @@ parsePreventiceFTP(tbl) {
 		Progress, % 100*A_Index/40, % btnName
 
 		ftpList[num] := btnName
-		if (parseDate(A_Now).YMD - parseDate(btnDate).YMD) > 21 {
+		if (dateDiff(parseDate(btnDate).YMD)) > 21 {
 			break
 		}
 		if (A_index > 100) {
@@ -350,9 +350,7 @@ parsePreventiceEnrollment(tbl) {
 		res.name := format("{:U}",parsename(res.name).lastfirst)
 		date := parseDate(res.date).YMD
 		
-		dt := A_Now
-		dt -= date, Days
-		if (dt>checkdays) {																; if days > threshold, break loop
+		if (dateDiff(date)>checkdays) {													; if days > threshold, break loop
 			break
 		} else {																		; otherwise done+1 == keep paging
 			done ++
