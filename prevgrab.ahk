@@ -724,6 +724,15 @@ zDigit(x) {
 	return SubStr("0" . x, -1)
 }
 
+dateDiff(d1, d2:="") {
+/*	Return date difference in days
+	AHK v1L uses envadd (+=) and envsub (-=) to calculate date math
+*/
+	diff := ParseDate(d2).ymd															; set first date
+	diff -= ParseDate(d1).ymd, Days														; d2-d1
+	return diff
+}
+
 ObjHasValue(aObj, aValue, rx:="") {
 ; modified from http://www.autohotkey.com/board/topic/84006-ahk-l-containshasvalue-method/	
     for key, val in aObj
