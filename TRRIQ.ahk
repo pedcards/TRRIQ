@@ -156,8 +156,7 @@ epStr := Trim(epStr,"|")
 Progress, , % " ", Cleaning old .bak files
 Loop, files, bak\*.bak
 {
-	dt := A_now
-	dt -= RegExReplace(A_LoopFileName,"\.bak"), Days
+	dt := dateDiff(RegExReplace(A_LoopFileName,"\.bak"))
 	if (dt > 7) {
 		FileDelete, bak\%A_LoopFileName%
 	}
@@ -423,8 +422,7 @@ lateReport:
 		k := ens.item(A_Index-1)
 		id	:= k.getAttribute("id")
 		e := readWQ(id)
-		dt := A_now
-		dt -= e.date, Days
+		dt := dateDiff(e.date)
 		if (instr(e.dev,"BG") && (dt > 45)) || (instr(e.dev,"Mortara") && (dt > 14))  {
 			str .= e.site ",""" e.prov """," e.date ",""" e.name """," e.mrn "," e.dev "`n"
 		}
@@ -815,8 +813,7 @@ WQlist() {
 			if (e0.match_NM > 0.15) && (e0.match_MRN > 0.15) {							; Name and MRN each vary by more than 15%
 				continue
 			}
-			dt0 := k.selectSingleNode("date").text
-			dt0 -= e0.date, days
+			dt0 := dateDiff(e0.date,k.selectSingleNode("date").text)
 			if abs(dt0) > 5 {															; Date differs by more than 5d
 				Continue
 			}
@@ -1089,8 +1086,7 @@ WQlist() {
 		wb := en.selectSingleNode("webgrab").text
 		if !(wb) {
 			res := readwq(id)
-			dt := A_now
-			dt -= res.date, Days
+			dt := dateDiff(res.date)
 			if (dt < 5) {																; ignore for 5 days to allow reg/sendout to process
 				Continue
 			}
@@ -1127,8 +1123,7 @@ WQlist() {
 			k := ens.item(A_Index-1)
 			id	:= k.getAttribute("id")
 			e0 := readWQ(id)
-			dt := A_now
-			dt -= e0.date, Days
+			dt := dateDiff(e0.date)
 			e0.dev := RegExReplace(e0.dev,"BodyGuardian","BG")
 			;~ if (instr(e0.dev,"BG") && (dt < 30)) {									; skip BGH less than 30 days
 				;~ continue
@@ -1248,8 +1243,7 @@ cleanDone() {
 		en := ens.item(A_Index-1)
 		dt := en.selectSingleNode("date").text
 		name := en.selectSingleNode("name").text
-		dtDiff := A_now
-		dtDiff -= dt, Days
+		dtDiff := dateDiff(dt)
 		if (dtDiff<180) {																; skip dates less than 180 days
 			continue
 		}
@@ -1448,8 +1442,7 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			dt0:=res.date
-			dt0 -= en.date, days
+			dt0:= dateDiff(en.date,res.date)
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
 				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
 				eventlog("parsePrevEnroll " id "." en.node " adjusted date - only matched MRN+DEV.")
@@ -1459,8 +1452,7 @@ parsePrevEnroll(det) {
 		}
 		if (id:=wq.selectSingleNode("/root/orders/enroll[mrn='" res.mrn "']").getAttribute("id")) {
 			en:=readWQ(id)																; MRN found in Orders
-			dt0:=res.date
-			dt0 -= en.date, days
+			dt0:=dateDiff(en.date,res.date)
 			
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
 				addPrevEnroll(id,res)													; create a <pending> record
@@ -1488,8 +1480,8 @@ parsePrevEnroll(det) {
 			}
 
 			id := k.getAttribute("id")
-			dt := kdate := k.selectSingleNode("date").text
-			dt -= res.date, Days
+			kdate := k.selectSingleNode("date").text
+			dt := (res.date,kdate)
 			if abs(dt) between 1 and 5													; if Preventice registration (res.date) off from 1-5 days
 			{
 				wqSetVal(id,"date",res.date)
@@ -1581,10 +1573,8 @@ lateReportNotify() {
 	{
 		uid := strX(A_LoopFileName,"@",0,1,".hl7",1,4)
 		e0 := wq.selectSingleNode("/root/done/enroll[@id='" uid "']/done")
-		date := e0.text
-		read := e0.getAttribute("read")
-		date -= A_now, Days
-		if (abs(date) > 2) {
+		if (abs(dateDiff(e0.text)) > 2) {
+			read := e0.getAttribute("read")
 			epStr := epList[read]
 			name := ParseName(epStr).init
 			tmp := httpComm("late&to=" name)
@@ -2291,8 +2281,7 @@ cleanTempFiles() {
 	{
 		filenm := A_LoopFileName
 		FileGetTime, fileCDT, % "tempfiles\" filenm, C
-		dtDiff := A_now
-		dtDiff -= fileCDT, Days
+		dtDiff := dateDiff(fileCDT)
 		if (dtDiff<thresh) {															; skip younger files, default 180 days
 			ct_skip ++
 			continue
