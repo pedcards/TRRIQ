@@ -5378,7 +5378,7 @@ httpComm(verb) {
 		, true)
 	whr.Send()																	; SEND the command to the address
 	; whr.WaitForResponse()														; and wait for the http response
-	return whr.ResponseText
+	return ;whr.ResponseText
 }
 
 cleancolon(ByRef txt) {
