@@ -5654,6 +5654,15 @@ zDigit(x) {
 	return SubStr("00" . x, -1)
 }
 
+dateDiff(d1, d2:="") {
+/*	Return date difference in days
+	AHK v1L uses envadd (+=) and envsub (-=) to calculate date math
+*/
+	diff := ParseDate(d2).ymd															; set first date
+	diff -= ParseDate(d1).ymd, Days														; d2-d1
+	return diff
+}
+
 ; Convert duration secs to DDHHMMSS
 calcDuration(sec) {
 	DD := divTime(sec,"D")
