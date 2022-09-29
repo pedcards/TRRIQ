@@ -1903,6 +1903,7 @@ checkEpicClip() {
 		date := parsedate(stregX(i,"Ordered On ",1,1,"\s",1)).MDY
 		mrn := trim(stregX(i,"MRN:",1,1,"\R+",1))
 		name := stRegX(i,"^",1,0,"`r`nMRN:",1)
+		name := trim(RegExReplace(name, "^.*?Information might be incomplete."),"`r`n ")
 		clipboard :=
 		
 		MsgBox, 262180
