@@ -586,8 +586,13 @@ checkH3registry() {
 /*	Check registry location for H3 install
 	Get DirectoryPath value
 */
+	global hasHS6, webUploadDir
+
 	keymatch := "i)Preventice|Mortara"
 	target := "DirectoryPath"
+	if (webUploadDir="") {
+		webUploadDir := []
+	}
 
 	SetRegView, 64
 	loop, reg, HKLM\Software, K															; find .\Software\*
@@ -607,6 +612,10 @@ checkH3registry() {
 			RegRead, var, % A_LoopRegKey, % A_LoopRegSubkey, % A_LoopRegName
 			eventlog("Reg var: " var)
 			eventlog("Reg DirPath: " A_LoopRegKey "\" A_LoopRegSubkey "\" A_LoopRegName)
+			if (var="c:\Web Upload Files for hs6.preventice.com  WebUploadApplication.application\") {
+				hasHS6:=true
+				webUploadDir.Push(var)
+			}
 		}
 	}
 	if !(var) {
