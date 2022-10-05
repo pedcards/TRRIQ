@@ -2330,7 +2330,7 @@ checkMWUapp()
 		eventlog("isDevt=true, skip MWU load.")
 		return
 	}
-	app := (hasHS6=true) ? "MW3110.hs6.application" : "MW3110.application"
+	app := (hasHS6=true) ? "MWU3110.hs6.application" : "MWU3110.h3.application"
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
 		run .\files\%app%
