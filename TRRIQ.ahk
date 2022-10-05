@@ -2324,15 +2324,16 @@ cleanTempFiles() {
 
 checkMWUapp()
 {
-	global isDevt
+	global isDevt, hasHS6
 	
 	if (isDevt=true) {																	; In DEVT environment, skip loading MWU
 		eventlog("isDevt=true, skip MWU load.")
 		return
 	}
+	app := (hasHS6=true) ? "MW3110.hs6.application" : "MW3110.application"
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
-		run .\files\MWU3110.application
+		run .\files\%app%
 
 		progress, y150,,Loading Mortara program...
 		loop, 100																		; loop up to 30 seconds for window to appear
