@@ -582,7 +582,7 @@ checkH3registry() {
 
 	keymatch := "i)Preventice|Mortara"
 	target := "DirectoryPath"
-	hs6path := "c:\Web Upload Files for hs6.preventice.com"
+	hs6path := "c:.Web Upload Files for hs6.preventice.com"
 	hit := []
 
 	SetRegView, 64
@@ -2331,6 +2331,7 @@ checkMWUapp()
 	app := (has_HS6=true) ? "MWU3110.hs6.application" : "MWU3110.h3.application"
 	
 	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
+		eventlog("Starting " app)
 		run .\files\%app%
 
 		progress, y150,,Loading Mortara program...
