@@ -582,7 +582,7 @@ checkH3registry() {
 
 	keymatch := "i)Preventice|Mortara"
 	target := "DirectoryPath"
-	hs6path := "c:.Web Upload Files for hs6.preventice.com"
+	appname := "WebUploadApplication.application"
 	hit := []
 
 	SetRegView, 64
@@ -604,13 +604,15 @@ checkH3registry() {
 		}
 		key := A_LoopRegKey "\" A_LoopRegSubkey
 		RegExMatch(key, "\\\w+$", subkey)
-		RegRead, var, % key, % A_LoopRegName
 
-		if (var~="i)^" hs6path) {														; path starts with hs6path
+		RegRead, var, % key, % A_LoopRegName
+		RegExMatch(var, "[^\\]*" appname, last)											; last path before WebUploadApplication.application
+
+		if (last~="i)hs6") {															; contains "hs6"
 			has_HS6:=true
 			hit.InsertAt(1,var)															; insert at [1]
 		} else {
-			hit.Push(var)
+			hit.Push(var)																; insert at end
 		}
 		eventlog("Reg " subkey " = " var)
 	}
