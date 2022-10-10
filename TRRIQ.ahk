@@ -556,20 +556,21 @@ checkPCwks() {
 /*	Check if current machine has H3 software installed
 	local machine names begin with EWCSS and Citrix machines start with PPWC,VMWIN10
 */
-	global has_H3, wksPC, wksVoid
+	global webUploadDir, wksPC, wksVoid
 	is_VM := ObjHasValue(wksVoid,A_ComputerName,1)
+	is_PC := (A_ComputerName~=wksPC)
 
 	if (A_UserName="tchun1") {
 		; return
 	}
-	if (has_H3=false) {
+	if (is_VM)|(webUploadDir="") {
 		MsgBox 0x40030
 			, Environment Error, % ""
-			. (is_VM ? "Mortara H3 software not available on VDI/Citrix." : "Mortara H3 software not found!")
+			. (is_VM ? "Mortara Web Upload software not available on VDI/Citrix." : "Mortara Web Upload software not found!")
 			. "`n`n"
 			. "Switch to another computer if you will need to register/upload Mortara 24-hour Holter."
 	}
-	if (A_ComputerName~=wksPC) {														; running on a local machine
+	if (is_PC=true) {																	; running on a local machine
 		return																			; return successfully
 	}
 	else if (is_VM=true) {
@@ -2357,9 +2358,9 @@ checkMWUapp()
 
 MortaraUpload(tabnum="")
 {
-	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt, mwuPhase, has_H3
+	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt, mwuPhase
 	checkPCwks()
-	if (has_H3=False) {
+	if (webUploadDir="") {																; no Web Upload paths
 		return
 	}
 	SetTimer, idleTimer, Off
