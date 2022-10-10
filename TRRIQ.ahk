@@ -65,9 +65,8 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 /*	Get valid WebUploadDir
 */
-webUploadDir := check_h3(path.webupload,webUploadStr)									; Find the location of H3 data files
+webUploadDir := checkH3registry()														; Find the location of Holter data files
 checkPCwks()
-checkH3registry()
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -583,45 +582,51 @@ checkPCwks() {
 }
 
 checkH3registry() {
-/*	Check registry location for H3 install
+/*	Check registry location for H3/HS6 install
 	Get DirectoryPath value
 */
-	global hasHS6, webUploadDir
+	global has_HS6
 
 	keymatch := "i)Preventice|Mortara"
 	target := "DirectoryPath"
-	if (webUploadDir="") {
-		webUploadDir := []
-	}
+	hs6path := "c:\Web Upload Files for hs6.preventice.com"
+	hit := []
 
 	SetRegView, 64
-	loop, reg, HKLM\Software, K															; find .\Software\*
+	loop, reg, HKLM\Software, K															; find .\Software\Mortara*
 	{
 		key := A_LoopRegKey
 		subkey := A_LoopRegSubkey
 		name := A_LoopRegName
 		if (name~=keymatch) {
 			keyname := key "\" subkey "\" name
-			eventlog("Reg key: " keyname)
+			Break
 		}
 	}
 
 	loop, reg, % keyname, KVR															; recurse through subkeys
 	{
-		if (A_LoopRegName=target) {													
-			RegRead, var, % A_LoopRegKey, % A_LoopRegSubkey, % A_LoopRegName
-			eventlog("Reg var: " var)
-			eventlog("Reg DirPath: " A_LoopRegKey "\" A_LoopRegSubkey "\" A_LoopRegName)
-			if (var="c:\Web Upload Files for hs6.preventice.com  WebUploadApplication.application\") {
-				hasHS6:=true
-				webUploadDir.Push(var)
-			}
+		if !(A_LoopRegName=target) {													; skip if not "DirectoryPath"
+			Continue
 		}
+		key := A_LoopRegKey "\" A_LoopRegSubkey
+		RegExMatch(key, "\\\w+$", subkey)
+		RegRead, var, % key, % A_LoopRegName
+
+		if (var~="i)^" hs6path) {														; path starts with hs6path
+			has_HS6:=true
+			hit.InsertAt(1,var)															; insert at [1]
+		} else {
+			hit.Push(var)
+		}
+		eventlog("Reg " subkey " = " var)
 	}
-	if !(var) {
+	if (var) {																			; any var found returns hit
+		return hit
+	} else {
 		eventlog("Reg DirPath not found.")
+		return error
 	}
-	Return
 }
 
 checkVersion(ver) {
