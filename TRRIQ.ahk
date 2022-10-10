@@ -570,16 +570,8 @@ checkPCwks() {
 			. "`n`n"
 			. "Switch to another computer if you will need to register/upload Mortara 24-hour Holter."
 	}
-	if (is_PC=true) {																	; running on a local machine
-		return																			; return successfully
-	}
-	else if (is_VM=true) {
-		return
-	}
-	else {
-		eventlog("Unique machine name.")
-		return
-	}
+
+	Return
 }
 
 checkH3registry() {
