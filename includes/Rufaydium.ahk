@@ -1,4 +1,4 @@
-; Rufaydium v1.5
+; Rufaydium v1.7.0
 ;
 ; Rufaydium          : AutoHotkey WebDriver Library to interact with browsers.
 ; Requirement        : WebDriver version needs to be compatible with the Browser version.
@@ -12,13 +12,13 @@
 ; Link : https://www.autohotkey.com/boards/viewtopic.php?f=6&t=102616
 ; Git  : https://github.com/Xeo786/Rufaydium-Webdriver
 ; By Xeo786 - GPL-3.0 license, see LICENSE
-
 #include %A_LineFile%\..\
 #Include WDM.ahk
 #Include CDP.ahk
 #Include JSON.ahk
 #include WDElements.ahk
 #Include Capabilities.ahk
+#include actions.ahk 
 
 Class Rufaydium
 {
@@ -57,6 +57,8 @@ Class Rufaydium
 	{
 		if !instr(url,"HTTP")
 			url := this.address "/" url
+		if !Payload and (Method = "POST")
+			Payload := Json.null
 		try r := Json.load(this.Request(url,Method,Payload,WaitForResponse)).value ; Thanks to GeekDude for his awesome cJson.ahk
 		if(r.error = "chrome not reachable") ; incase someone close browser manually but session is not closed for driver
 			this.quit() ; so we close session for driver at cost of one time response wait lag
@@ -204,6 +206,8 @@ Class Rufaydium
 			{
 				S.SwitchTab(t)
 			}
+			else
+				S.ActiveTab()
 			return S
 		}
 	}
@@ -282,6 +286,8 @@ Class Session
 	{
 		if !instr(url,"HTTP")
 			url := this.address "/" url
+		if (Payload = 0) and (Method = "POST")
+			Payload := Json.null
 		try r := Json.load(Rufaydium.Request(url,Method,Payload,WaitForResponse)).value ; Thanks to GeekDude for his awesome cJson.ahk
 		if(r.error = "chrome not reachable") ; incase someone close browser manually but session is not closed for driver
 			this.quit() ; so we close session for driver at cost of one time response wait lag
@@ -289,16 +295,18 @@ Class Session
 			return r
 	}
 
-	NewTab()
+	NewTab(i:=1)
 	{
 		This.currentTab := this.Send("window/new","POST",{"type":"tab"}).handle
-		This.Switch(This.currentTab)
+		if i
+			This.Switch(This.currentTab)
 	}
 
-	NewWindow() ; by https://github.com/hotcheesesoup
+	NewWindow(i:=1) ; by https://github.com/hotcheesesoup
 	{
 		This.currentTab := this.Send("window/new","POST",{"type":"window"}).handle
-		This.Switch(This.currentTab)
+		if i 
+			This.Switch(This.currentTab)
 	}
 
 	Detail()
@@ -323,6 +331,13 @@ Class Session
 		{
 			return this.Send("title","GET")
 		}
+	}
+
+	ActiveTab()
+	{
+		if !this.debuggerAddress ; does not work for Firefox
+			return
+		this.Switch("CDwindow-" this.Detail()[1].id ) ; First id always Current Handle
 	}
 
 	SwitchTab(i:=0)
@@ -520,12 +535,18 @@ Class Session
 
 	ActiveElement()
 	{
-		return New WDElement(this.Send("element/active","GET"))
+		for i, elementid in this.Send("element/active","GET")
+		{
+			address := RegExReplace(this.address "/element/" elementid,"(\/shadow\/.*)\/element","/element")
+			address := RegExReplace(address "/element/" elementid,"(\/element\/.*)\/element","/element")
+			return New WDElement(address,i)
+		}
 	}
 
 	findelement(u,v)
 	{
-		for i, elementid in this.Send("element","POST",{"using":u,"value":v},1)
+		r := this.Send("element","POST",{"using":u,"value":v},1)
+		for i, elementid in r
 		{
 			if instr(elementid,"no such")
 				return 0
@@ -537,20 +558,20 @@ Class Session
 
 	findelements(u,v)
 	{
-
 		e := []
 		for k, element in this.Send("elements","POST",{"using":u,"value":v},1)
 		{
 			for i, elementid in element
 			{
-				if instr(elementid,"no such")
-					return 0
 				address := RegExReplace(this.address "/element/" elementid,"(\/shadow\/.*)\/element","/element")
 				address := RegExReplace(address "/element/" elementid,"(\/element\/.*)\/element","/element")
 				e[k-1] := New WDElement(address,i)
 			}
 		}
-		return e
+
+		if e.count() > 0
+			return e
+		return 0
 	}
 
 	shadow()
@@ -688,119 +709,97 @@ Class Session
 
 	click(i:=0) ; [button: 0(left) | 1(middle) | 2(right)]
 	{
-		PointerClick =
-		( LTrim Join
-		{
-			"actions": [
-				{
-				"type": "pointer",
-				"id": "mouse",
-				"parameters": {"pointerType": "mouse"},
-				"actions": [
-					{"type": "pointerDown", "button": %i%},
-					{"type": "pause", "duration": 100},
-					{"type": "pointerUp", "button": %i%}
-					]
-				}
-			]
-		}
-		)
-		return this.Actions(json.load(PointerClick))
+		MouseEvent := new mouse()
+		MouseEvent.Release(i)
+		MouseEvent.Pause(100)
+		MouseEvent.Release(i)
+		return this.Actions(MouseEvent)
 	}
 
 	DoubleClick(i:=0) ; [button: 0(left) | 1(middle) | 2(right)]
 	{
-		PointerClicks =
-		( LTrim Join
-		{
-			"actions": [
-				{
-				"type": "pointer",
-				"id": "mouse",
-				"parameters": {"pointerType": "mouse"},
-				"actions": [
-					{"type": "pointerDown", "button": %i%},
-					{"type": "pause", "duration": 100},
-					{"type": "pointerUp", "button": %i%},
-					{"type": "pause", "duration": 500},
-					{"type": "pointerDown", "button": %i%},
-					{"type": "pause", "duration": 100},
-					{"type": "pointerUp", "button": %i%}
-					]
-				}
-			]
-		}
-		)
-		return this.Actions(json.load(PointerClicks))
+		MouseEvent := new mouse()
+		; click 1
+		MouseEvent.Release(i)
+		MouseEvent.Pause(100)
+		MouseEvent.Release(i)
+		; delay
+		MouseEvent.Pause(500)
+		; click 2
+		MouseEvent.Release(i)
+		MouseEvent.Pause(100)
+		MouseEvent.Release(i)
+		return this.Actions(MouseEvent)
 	}
 
 	MBDown(i:=0) ; [button: 0(left) | 1(middle) | 2(right)]
 	{
-		;return this.Send("buttondown","POST",{"button":i})		PointerClick =
-		PointerDown =
-		( LTrim Join
-		{
-			"actions": [
-				{
-				"type": "pointer",
-				"id": "mouse",
-				"parameters": {"pointerType": "mouse"},
-				"actions": [
-					{"type": "pointerDown", "button": %i%}
-					]
-				}
-			]
-		}
-		)
-		return this.Actions(json.load(PointerDown))
+		MouseEvent := new mouse()
+		MouseEvent.Press(i)
+		return this.Actions(MouseEvent)
 	}
 
 	MBup(i:=0) ; [button: 0(left) | 1(middle) | 2(right)]
 	{
-		;return this.Send("buttonup","POST",{"button":i})
-		PointerUP =
-		( LTrim Join
-		{
-			"actions": [
-				{
-				"type": "pointer",
-				"id": "mouse",
-				"parameters": {"pointerType": "mouse"},
-				"actions": [
-					{"type": "pointerUp", "button": %i%}
-					]
-				}
-			]
-		}
-		)
-		return this.Actions(json.load(PointerUP))
+		MouseEvent := new mouse()
+		MouseEvent.Release(i)
+		return this.Actions(MouseEvent)
 	}
 
 	Move(x,y)
 	{
-		PointerMove =
-		( LTrim Join
-		{
-			"actions": [
-				{
-				"type": "pointer",
-				"id": "mouse",
-				"parameters": {"pointerType": "mouse"},
-				"actions": [{
-							"type": "pointerMove",
-							"duration": 0,
-							"x": %x%, "y": %y%
-							}]
-				}
-			]
-		}
-		)
-		return this.Actions(json.load(PointerMove))
+		MouseEvent := new mouse()
+		MouseEvent.move(x,y,0)
+		return this.Actions(MouseEvent)
 	}
 
-	Actions(ActionObj)
+	ScrollUP(s:=50)
 	{
-		return this.Send("actions","POST",ActionObj)
+		WheelEvent := new Scroll()
+		WheelEvent.ScrollUP(s)
+		r := this.Actions(WheelEvent)
+		WheelEvent := ""
+		return r
+	}
+
+	ScrollDown(s:=50)
+	{
+		WheelEvent := new Scroll()
+		WheelEvent.ScrollDown(s)
+		return this.Actions(WheelEvent)
+	}
+
+	ScrollLeft(s:=50)
+	{
+		WheelEvent := new Scroll()
+		WheelEvent.ScrollLeft(s)
+		return this.Actions(WheelEvent)
+	}
+
+	ScrollRight(s:=50)
+	{
+		WheelEvent := new Scroll()
+		WheelEvent.ScrollRight(s)
+		return this.Actions(WheelEvent)
+	}
+
+	SendKey(Chars)
+	{
+		KeyboardEvent := new Keyboard()
+		KeyboardEvent.SendKey(Chars) ; right now it does not support Key.Class()
+		return this.Actions(KeyboardEvent)
+	}
+
+	Actions(Interactions*)
+	{
+		ActionArray := []
+		for i, interaction in Interactions
+		{
+			ActionArray.push(interaction.perform())
+			Interactions.clear()
+			Interaction := ""
+		}
+		return this.Send("actions","POST",{"actions":ActionArray})
 	}
 
 	execute_sql()
