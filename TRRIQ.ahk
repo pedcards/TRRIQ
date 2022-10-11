@@ -5386,8 +5386,7 @@ httpComm(verb) {
 	
 	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr
 	whr.Open("GET"																; set the http verb to GET file "change"
-		, url
-		, true)
+		, url)
 	whr.Send()																	; SEND the command to the address
 	whr.WaitForResponse()														; and wait for the http response
 	response := whr.ResponseText
