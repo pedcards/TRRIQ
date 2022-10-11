@@ -5390,7 +5390,17 @@ httpComm(verb) {
 		, true)
 	whr.Send()																	; SEND the command to the address
 	whr.WaitForResponse()														; and wait for the http response
-	return whr.ResponseText
+	response := whr.ResponseText
+
+	if (response="")|(response~="i)504 Gateway|Permission Denied") {
+		whr.Open("GET","https://www.google.com/search?q=what+is+my+ip&num=1")
+		whr.Send()
+		RegexMatch(whr.ResponseText,"(?<=Client IP address: )([\d\.]+)",match)
+		response := "FAILED"
+		eventlog("*** ERROR htaccess " match)
+	}
+
+	return response
 }
 
 cleancolon(ByRef txt) {
