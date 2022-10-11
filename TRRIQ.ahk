@@ -5381,7 +5381,7 @@ filterProv(x) {
 }
 
 httpComm(verb) {
-	url := "http://depts.washington.edu/pedcards/change/direct.php?" 
+	url := "https://depts.washington.edu/pedcards/change/direct.php?" 
 			. "do=" . verb
 	
 	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr
@@ -5389,8 +5389,8 @@ httpComm(verb) {
 		, url
 		, true)
 	whr.Send()																	; SEND the command to the address
-	; whr.WaitForResponse()														; and wait for the http response
-	return ;whr.ResponseText
+	whr.WaitForResponse()														; and wait for the http response
+	return whr.ResponseText
 }
 
 cleancolon(ByRef txt) {
