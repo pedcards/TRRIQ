@@ -5381,7 +5381,7 @@ filterProv(x) {
 }
 
 httpComm(verb) {
-	url := "https://depts.washington.edu/pedcards/change/direct.php?" 
+	url := "http://depts.washington.edu/pedcards/change/direct.php?" 
 			. "do=" . verb
 	
 	whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")							; initialize http request in object whr
