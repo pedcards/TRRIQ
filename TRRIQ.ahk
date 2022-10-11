@@ -132,21 +132,21 @@ updateCall()
 Progress, , % " ", Initializing variables
 demVals := readIni("demVals")																		; valid field names for parseClip()
 
-indCodes := readIni("indCodes")
-for key,val in indCodes
+indCodes := readIni("indCodes")																		; valid indications
+for key,val in indCodes																				; in option string indOpts
 {
 	tmpVal := strX(val,"",1,0,":",1)
 	tmpStr := strX(val,":",1,1,"",0)
 	indOpts .= tmpStr "|"
 }
 
-monCodes := readIni("EpicMonitorType")
+monCodes := readIni("EpicMonitorType")																; Epic EAP codes for monitors
 
-initHL7()
+initHL7()																							; HL7 definitions
 hl7DirMap := {}
 
-epList := readIni("epRead")
-for key in epList
+epList := readIni("epRead")																			; reading EP
+for key in epList																					; option string epStr
 {
 	epStr .= key "|"
 }
