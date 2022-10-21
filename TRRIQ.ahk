@@ -66,6 +66,7 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 /*	Get valid WebUploadDir
 */
 webUploadDir := checkH3registry()														; Find the location of Holter data files
+check_h3(path.webupload,webUploadStr)													; Find the H3 data folders on C:
 checkPCwks()
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
