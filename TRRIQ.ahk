@@ -3950,19 +3950,16 @@ makeORU(wqid) {
 			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR 3-15 DAY^IMGEAP"
 			: ""
 	fldval.obr4 := obr4
-	obrProv := fldval.OBR_ProviderCode "^"
-			. fldval.OBR_ProviderNameL "^"
-			. fldval.OBR_ProviderNameF
-			. "^^^^^^MSOW_ORG_ID"
+	obrProv := fldvalProv()
 
 	buildHL7("OBR"
 		,{2:fldval.order
 		, 3:fldval.accession
 		, 4:fldval.obr4
 		, 7:fldval.date
-		, 16:obrProv
+		, 16:obrProv.attg
 		, 25:"F"
-		, 28:obrProv
+		, 28:obrProv.cc
 		, 32:EPdoc })																	; Epic test: Substitute reading EP string "NPI^LAST^FIRST"
 	
 	buildHL7("OBX"
@@ -4076,6 +4073,23 @@ makeTestORU() {
 		, % path.PrevHL7in ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_now ".hl7"
 	
 	return
+}
+
+fldvalProv() {
+	global fldval, Docs
+	attg := fldval.OBR_ProviderCode "^"
+			. fldval.OBR_ProviderNameL "^"
+			. fldval.OBR_ProviderNameF
+			. "^^^^^^MSOW_ORG_ID"
+	
+	if !!(fldval.fellow) {
+		list := Docs.Fellows
+
+	} else {
+		cc := attg
+	}
+
+	Return {attg:attg,cc:cc}
 }
 
 shortenPDF(find) {
