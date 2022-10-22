@@ -3959,7 +3959,7 @@ makeORU(wqid) {
 		, 7:fldval.date
 		, 16:obrProv.attg
 		, 25:"F"
-		, 28:obrProv.cc
+		, 28:obrProv.cc																	; for inpatient or fellow ordered
 		, 32:EPdoc })																	; Epic test: Substitute reading EP string "NPI^LAST^FIRST"
 	
 	buildHL7("OBX"
@@ -4083,8 +4083,13 @@ fldvalProv() {
 			. "^^^^^^MSOW_ORG_ID"
 	
 	if !!(fldval.fellow) {
-		list := Docs.Fellows
-
+		pos := ObjHasValue(Docs.FELLOWS,fldval.fellow)
+		npi := Docs["Fellows.NPI"][pos]
+		fName := ParseName(fldval.fellow)
+		cc := npi "^"
+			. fName.Last "^"
+			. fName.First
+			. "^^^^^^MSOW_ORG_ID"
 	} else {
 		cc := attg
 	}
