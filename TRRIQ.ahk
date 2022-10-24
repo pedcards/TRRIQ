@@ -142,6 +142,7 @@ for key,val in indCodes																				; in option string indOpts
 }
 
 monCodes := readIni("EpicMonitorType")																; Epic EAP codes for monitors
+monSerials := readIni("MonitorSerialStrings")														; Regex matches for S/N strings
 monOrderType := readIni("MonitorOrder")																; String matches for order <mon> 
 
 initHL7()																							; HL7 definitions
@@ -991,7 +992,8 @@ WQlist() {
 			
 			if (obr_site="") {															; no "-site" in OBR.17 name
 				obr_site:="MAIN"
-				eventlog(fileIn " - " obr_prov ". No site associated with provider, substituting MAIN. Check ORM and Preventice users.")
+				eventlog(fileIn " - " obr_prov 
+					. ". No site associated with provider, substituting MAIN. Check ORM and Preventice users.")
 			}
 			if instr(sites0,obr_site) {
 				eventlog("Unregistered Sites0 report (" fileIn " - " obr_site ")")
@@ -1025,10 +1027,7 @@ WQlist() {
 			, strQ(res.site,"###",obr_site)												; site
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
-			, (res.dev~="Heart|IMD POST EVENT") ? "BGH"									; extracted
-			: (res.dev~="Mortara") ? "HOL"
-			: (res.dev~="Mini") ? "MINI"
-			: "HL7"
+			, strQ(ObjHasValue(monSerials,res.dev,1),"###","HL7")						; device type, returns "0" if no device in wqid
 			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
 		wqfiles.push(id)
 	}
