@@ -1038,7 +1038,7 @@ WQlist() {
 			, strQ(res.site,"###",obr_site)												; site
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
-			, strQ(ObjHasValue(monSerials,res.dev,1),"###","HL7")						; device type, returns "0" if no device in wqid
+			, strQ(ObjHasValue(monSerialStrings,res.dev,1),"###","HL7")					; device type, returns "0" if no device in wqid
 			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
 		wqfiles.push(id)
 	}
@@ -1050,11 +1050,7 @@ WQlist() {
 	{
 		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])\.pdf",fnID)							; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
 		id := fnID.1
-		ftype := (fnID.2="H") ? "HOL"													; type of file based on fnID label
-				: (fnID.2="Z") ? "ZIO"
-				: (fnID.2="E") ? "BGH"
-				: (fnID.2="M") ? "MINI"
-				: "???"																	; could condense as ftype := {"H":"PDF","Z":"ZIO","E":"CEM","M":"MINI"}[fnID.2]
+		ftype := strQ(monPdfStrings[fnID.2],"###","???")
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
 			LV_Modify(k,"Col9","")														; clear the "X" in the FullDisc column
 			continue																	; skip rest of processing
