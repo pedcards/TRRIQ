@@ -142,6 +142,7 @@ for key,val in indCodes																				; in option string indOpts
 }
 
 monCodes := readIni("EpicMonitorType")																; Epic EAP codes for monitors
+monOrderType := readIni("MonitorOrder")																; String matches for order <mon> 
 
 initHL7()																							; HL7 definitions
 hl7DirMap := {}
@@ -937,11 +938,7 @@ WQlist() {
 			, e0.name																	; name
 			, e0.mrn																	; mrn
 			, e0.provname																; prov
-			, (e0.mon="HOL" ? "24-hr "													; monitor type
-				: e0.mon="BGH" ? "30-day "
-				: e0.mon~="BGM|ZIO" ? "14-day "
-				: "")
-				. e0.mon
+			, monOrderType[e0.mon] " " e0.mon											; monitor type
 			, "")																		; fulldisc present, make blank
 		GuiControl, Enable, Register
 		GuiControl, Text, Register, Go to ORDERS tab
