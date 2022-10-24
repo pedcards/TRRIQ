@@ -141,9 +141,20 @@ for key,val in indCodes																				; in option string indOpts
 	indOpts .= tmpStr "|"
 }
 
-monCodes := readIni("EpicMonitorType")																; Epic EAP codes for monitors
-monSerials := readIni("MonitorSerialStrings")														; Regex matches for S/N strings
-monOrderType := readIni("MonitorOrder")																; String matches for order <mon> 
+monStrings := readIni("Monitors")																	; Monitor key strings
+monOrderType := {}
+monSerialStrings := {}
+monPdfStrings := {}
+monEpicEAP := {}
+for key,val in monStrings
+{
+	; Monitor letter code "H": Order abbrev "HOL": Order list dur "24-hr": Regex type "Pr|Hol": Regex S/N "Mortara": Epic EAP "CVCAR102:HOLTER MONITOR 24 HOUR" 
+	el := strSplit(val,":")
+	monOrderType[el.2]:=el.3																		; String matches for order <mon>
+	monSerialStrings[el.2]:=el.5																	; Regex matches for S/N strings
+	monPdfStrings[el.1]:=el.2																		; Abbrev based on PDF fname
+	monEpicEAP[el.4]:=el.6																			; Epic EAP codes for monitors
+}
 
 initHL7()																							; HL7 definitions
 hl7DirMap := {}
