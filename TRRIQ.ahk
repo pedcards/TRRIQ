@@ -3435,7 +3435,7 @@ ProcessHl7PDF:
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (type~="CEM|EOS") {
 		gosub Event_BGH_Hl7
-	} else if (ftype="Mini") {
+	} else if (ftype="BGM") {
 		gosub Holter_BGM_HL7
 	} else if (type="Holter") {
 		gosub Holter_Pr_Hl7
