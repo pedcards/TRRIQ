@@ -814,20 +814,7 @@ WQlist() {
 
 	WQscanHolterPDFs(wqfiles)															; Scan Holter PDFs folder for additional files
 
-/*	Generate mortaras.txt list for those that still require PDF download
-*/
-	GuiControl, Disabled, Grab FTP
-	loop % LV_GetCount() {
-		LV_GetText(x,A_Index,9)															; FTP
-		LV_GetText(y,A_Index,2)															; Name
-
-		if (x) {
-			tmpHolters .= RegExReplace(y,",\s+",",") "`n"
-			GuiControl, Enable, Grab FTP
-		}
-	}
-	FileDelete, .\files\mortaras.txt
-	FileAppend, % tmpHolters, .\files\mortaras.txt
+	WQlistPDFdownloads()																; generate mortaras.txt
 
 /*	Scan <pending> for missing webgrab
 	no webgrab means no registration received at Preventice for some reason
@@ -1310,6 +1297,25 @@ WQscanHolterPDFs(ByRef wqfiles) {
 	}
 
 	LV_ModifyCol(6,"Sort")																; date
+
+	Return
+}
+
+WQlistPDFdownloads() {
+/*	Generate mortaras.txt list for those that still require PDF download
+*/
+	GuiControl, Disabled, Grab FTP
+	loop % LV_GetCount() {
+		LV_GetText(x,A_Index,9)															; FTP
+		LV_GetText(y,A_Index,2)															; Name
+
+		if (x) {
+			tmpHolters .= RegExReplace(y,",\s+",",") "`n"
+			GuiControl, Enable, Grab FTP
+		}
+	}
+	FileDelete, .\files\mortaras.txt
+	FileAppend, % tmpHolters, .\files\mortaras.txt
 
 	Return
 }
