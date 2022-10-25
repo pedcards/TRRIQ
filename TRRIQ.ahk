@@ -153,7 +153,7 @@ for key,val in monStrings
 	monOrderType[el.2]:=el.3																		; String matches for order <mon>
 	monSerialStrings[el.2]:=el.5																	; Regex matches for S/N strings
 	monPdfStrings[el.1]:=el.2																		; Abbrev based on PDF fname
-	monEpicEAP[el.4]:=el.6																			; Epic EAP codes for monitors
+	monEpicEAP[el.6]:=el.4																			; Epic EAP codes for monitors
 }
 
 initHL7()																							; HL7 definitions
@@ -3901,7 +3901,7 @@ makeORU(wqid) {
 /*	Real world incoming Preventice ORU MSH.8 is a Preventice number.
 	If MSH.8 contains "EPIC", was generated from MakeTestORU(),	so test ORU will set to OBR.32 and OBX.5 as "###" for filling in by Access DB
 */
-	global fldval, hl7out, montype, isDevt, epList
+	global fldval, hl7out, montype, isDevt, epList, monEpicEAP
 	dict:=readIni("EpicResult")
 	
 	hl7time := A_Now
@@ -3948,11 +3948,7 @@ makeORU(wqid) {
 		rtf := "###"
 		EPdoc := "###"
 	}
-	obr4 := (montype~="i)PR|Hol") ? "CVCAR02^HOLTER MONITOR 24 HOUR^IMGEAP"
-			: (montype~="i)BGH") ? "CVCAR05^CARDIAC EVENT MONITOR^IMGEAP"
-			: (montype~="i)Mini|ZIO") ? "CVCAR102^HOLTER MONITOR 3-15 DAY^IMGEAP"
-			: ""
-	fldval.obr4 := obr4
+	fldval.obr4 := ObjHasValue(monEpicEAP,montype,1)
 	obrProv := fldvalProv()
 
 	buildHL7("OBR"
