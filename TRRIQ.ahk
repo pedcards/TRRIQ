@@ -155,6 +155,7 @@ for key,val in monStrings
 	monPdfStrings[el.1]:=el.2																		; Abbrev based on PDF fname
 	monEpicEAP[el.6]:=el.4																			; Epic EAP codes for monitors
 }
+monLate := readIni("LateMonitors")
 
 initHL7()																							; HL7 definitions
 hl7DirMap := {}
@@ -770,13 +771,11 @@ return
 }
 
 WQlist() {
-	global
-	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim, tmpHolters
-		, late_BGH := 45
-		, late_BGM := 30
-		, late_Mortara := 14
+	global wq, runningVer, wksloc
+
 	wqfiles := []
 	fldval := {}
+
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
@@ -791,7 +790,55 @@ WQlist() {
 	
 	readPrevTxt()																		; read prev.txt from website
 	
-	loop, parse, sites0, |																; move studies from sites0 to DONE
+	WQclearSites0()	 																	; move studies from sites0 to DONE
+	
+	/*	Add all incoming Epic ORDERS to WQlv_orders
+	*/
+	Gui, ListView, WQlv_orders
+	LV_Delete()
+	
+	WQscanEpicOrders()
+	
+	WriteSave(wq)
+	FileDelete, .lock
+	
+	checkPreventiceOrdersOut()															; check registrations that failed upload to Preventice
+	
+	/*	Generate Inbox WQlv_in tab for Main Campus user 
+	*/
+	if (wksloc="Main Campus") {
+		Gui, ListView, WQlv_in
+		LV_Delete()																		; clear the INBOX entries
+		
+		WQpreventiceResults(wqfiles)													; Process incoming Preventice results
+		WQscanHolterPDFs(wqfiles)														; Scan Holter PDFs folder for additional files
+		WQlistPDFdownloads()															; generate mortaras.txt
+		WQfindMissingWebgrab()															; find <pending> missing <webgrab>
+	}
+	
+	/*	Generate lv for ALL, site tabs, and pending reads
+	*/
+	WQpendingTabs()
+
+	WQpendingReads()
+
+	GuiControl, Text, PhaseNumbers
+		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
+		.	(tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update")))
+		.	"Preventice update: " tmp.MMDD " @ " tmp.hrmin "`n"
+		.	(tmp := parsedate(wq.selectSingleNode("/root/inventory").getAttribute("update")))
+		.	"Inventory update: " tmp.MMDD " @ " tmp.hrmin
+	
+	progress, off
+	return
+}
+
+WQclearSites0() {
+/*	Clear enroll nodes from sites0 locations
+*/
+	global sites0, wq
+
+	loop, parse, sites0,
 	{
 		site := A_LoopField
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
@@ -803,17 +850,41 @@ WQlist() {
 			eventlog("Moved " site " record " k.selectSingleNode("mrn").text " " k.selectSingleNode("name").text)
 		}
 	}
-	
-	/*	Scan Incoming ORDERS from EPIC
-	*/
-	Gui, ListView, WQlv_orders
-	LV_Delete()
-	
+	Return
+}
+
+WQscanEpicOrders() {
+/*	Scan all incoming Epic orders
+	3-pass method
+*/
+	global wq
+
 	if !IsObject(wq.selectSingleNode("/root/orders")) {
 		wq.addElement("orders","/root")
 	}
 	
-	Loop, files, % path.EpicHL7in "*"													; First pass: process new files
+	WQEpicOrdersNew()																	; Process new files
+
+	WQEpicOrdersPrevious()																; Scan previous *Z.hl7 files
+
+	WQepicOrdersCleanup()																; Remove extraneous orders
+
+	Return
+}
+
+WQepicOrdersNew() {
+/*	First pass: process new files
+	Find noval (not renamed) hl7 files in path.EpicHL7in
+	Find matching <enroll> node
+		Skip sites0
+		Skip Name or MRN string varies by more than 15%
+		Skip datediff > 5d
+	Adjust name, order, accession, account, encounter num for <enroll> node
+	Handle corresponding <orders> node
+*/
+	global wq, path, sites0, fldVal
+
+	Loop, files, % path.EpicHL7in "*"
 	{
 		e0 := {}
 		fileIn := A_LoopFileName
@@ -925,8 +996,18 @@ WQlist() {
 			, % path.EpicHL7in . fileOut
 		
 	}
-	
-	loop, Files, % path.EpicHL7in "*Z.hl7"												; Second pass: scan *Z.hl7 files
+
+	Return
+}
+
+WQepicOrdersPrevious() {
+/*	Second pass: scan previously added *Z.hl7 files
+	Another chance to clear sites0 and remnant files
+	Add line to Inbox LV
+*/
+	global path, wq, sites0, monOrderType
+
+	loop, Files, % path.EpicHL7in "*Z.hl7"
 	{
 		e0 := {}
 		fileIn := A_LoopFileName
@@ -959,8 +1040,16 @@ WQlist() {
 		GuiControl, Enable, Register
 		GuiControl, Text, Register, Go to ORDERS tab
 	}
-	
-	loop, % (ens:=wq.selectNodes("/root/orders/enroll")).Length							; Third pass: remove extraneous orders
+	Return
+}
+
+WQepicOrdersCleanup() {
+/*	Third pass: remove extraneous orders
+
+*/
+	global wq
+
+	loop, % (ens:=wq.selectNodes("/root/orders/enroll")).Length
 	{
 		e0 := {}
 		k := ens.item(A_Index-1)
@@ -978,19 +1067,33 @@ WQlist() {
 			removenode("/root/orders/enroll[@id='" e0.uid "']")
 		}
 	}
+	Return
+}
+
+checkPreventiceOrdersOut() {
+	global path
 	
-	WriteSave(wq)
-	FileDelete, .lock
+	loop, files, % path.PrevHL7out "Failed\*.txt"
+	{
+		filenm := A_LoopFileName
+		filenmfull := A_LoopFileFullPath
+		eventlog("Resending failed registration: " filenm)
+		FileMove, % filenmfull, % path.PrevHL7out filenm
+	}
 	
-	checkPreventiceOrdersOut()															; check registrations that failed upload to Preventice
-	
-	if (wksloc="Main Campus") {
-		
-	Gui, ListView, WQlv_in
-	LV_Delete()																			; clear the INBOX entries
-	
+	return
+}
+
+WQpreventiceResults(ByRef wqfiles) {
 /*	Process each incoming .hl7 RESULT from PREVENTICE
+	Parse OBR line for existing wqid, provider, site
+	Parse PV1 line for study date
+	Exit if this study already in <done>, move hl7 to tempfiles
+	Add line to WQlv_in
+	Add line to wqfiles
 */
+	global wq, path, sites0, hl7DirMap, monSerialStrings
+	
 	tmpHolters := ""
 	loop, Files, % path.PrevHL7in "*.hl7"
 	{
@@ -1046,9 +1149,14 @@ WQlist() {
 			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
 		wqfiles.push(id)
 	}
-	
+	Return
+}
+
+WQscanHolterPDFs(ByRef wqfiles) {
 /*	Scan Holter PDFs folder for additional files
 */
+	global path, pdfList, monPdfStrings
+
 	findfullPDF()																		; read Holter PDF dir into pdfList
 	for key,val in pdfList
 	{
@@ -1078,6 +1186,10 @@ WQlist() {
 
 	LV_ModifyCol(6,"Sort")																; date
 
+	Return
+}
+
+WQlistPDFdownloads() {
 /*	Generate mortaras.txt list for those that still require PDF download
 */
 	GuiControl, Disabled, Grab FTP
@@ -1093,9 +1205,15 @@ WQlist() {
 	FileDelete, .\files\mortaras.txt
 	FileAppend, % tmpHolters, .\files\mortaras.txt
 
+	Return
+}
+
+WQfindMissingWebgrab() {
 /*	Scan <pending> for missing webgrab
 	no webgrab means no registration received at Preventice for some reason
-*/	
+*/
+	global wq, path, monSerialStrings
+
 	loop, % (ens:=wq.selectNodes("/root/pending/enroll")).Length
 	{
 		en := ens.item(A_Index-1)
@@ -1115,17 +1233,22 @@ WQlist() {
 				, strQ(res.site,"###","???")											; site
 				, strQ(nicedate(res.date),"###")										; study date
 				, id																	; wqid
-				, ftype																	; study type
+				, ObjHasValue(monSerialStrings,res.dev,1)								; study type
 				, "No Reg"																; fulldisc present, make blank
 				, "X")
 			CLV_in.Row(LV_GetCount(),,"red")
 		}
 	}
+	Return
+}
 
-	}	; <-- finish Main Campus Inbox
-	
+WQpendingTabs() {
 /*	Now scan <pending/enroll> nodes
+	Generate ALL tab
+	Add each <enroll> to corresponding site
 */
+	global wq, sites, CLV_all, monLate
+
 	Gui, ListView, WQlv_all
 	LV_Delete()
 	
@@ -1146,9 +1269,9 @@ WQlist() {
 				;~ continue
 			;~ }
 			CLV_col := ""
-			if (instr(e0.dev,"Heart") && (dt > late_BGH))
-			|| (instr(e0.dev,"Mortara") && (dt > late_Mortara)) 
-			|| (instr(e0.dev,"Mini") && (dt > late_BGM)) {
+			if (instr(e0.dev,"Heart") && (dt > monLate.BGH))
+			|| (instr(e0.dev,"Mortara") && (dt > monLate.Mortara)) 
+			|| (instr(e0.dev,"Mini") && (dt > monLate.BGM)) {
 				CLV_col := "red"
 			}
 			
@@ -1189,8 +1312,14 @@ WQlist() {
 	Gui, ListView, WQlv_all														
 	LV_ModifyCol(2,"Sort")
 
+	Return
+}
+
+WQpendingReads() {
 /*	Scan outbound RawHL7 for studies pending read
 */
+	global wq, path
+
 	Gui, ListView, WQlv_unread
 	LV_Delete()
 	
@@ -1210,30 +1339,7 @@ WQlist() {
 			, e0.reading )
 	}
 	
-	GuiControl, Text, PhaseNumbers
-		,	% "Patients registered in Preventice (" wq.selectNodes("/root/pending/enroll").length ")`n"
-		.	(tmp := parsedate(wq.selectSingleNode("/root/pending").getAttribute("update")))
-		.	"Preventice update: " tmp.MMDD " @ " tmp.hrmin "`n"
-		.	(tmp := parsedate(wq.selectSingleNode("/root/inventory").getAttribute("update")))
-		.	"Inventory update: " tmp.MMDD " @ " tmp.hrmin
-	
-	fileIn :=
-	progress, off
-	return
-}
-
-checkPreventiceOrdersOut() {
-	global path
-	
-	loop, files, % path.PrevHL7out "Failed\*.txt"
-	{
-		filenm := A_LoopFileName
-		filenmfull := A_LoopFileFullPath
-		eventlog("Resending failed registration: " filenm)
-		FileMove, % filenmfull, % path.PrevHL7out filenm
-	}
-	
-	return
+	Return
 }
 
 cleanDone() {
