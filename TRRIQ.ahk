@@ -1136,7 +1136,10 @@ WQpreventiceResults(ByRef wqfiles) {
 			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			continue
 		}
-
+		if !(dev := ObjHasValue(monSerialStrings,res.dev,1)) {							; dev type returns "HL7" if no device in wqid
+			dev := "HL7" 
+		}
+	
 		LV_Add(""
 			, path.PrevHL7in fileIn														; path and filename
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
@@ -1145,7 +1148,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			, strQ(res.site,"###",obr_site)												; site
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
-			, strQ(ObjHasValue(monSerialStrings,res.dev,1),"###","HL7")					; device type, returns "0" if no device in wqid
+			, dev																		; device type
 			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
 		wqfiles.push(id)
 	}
