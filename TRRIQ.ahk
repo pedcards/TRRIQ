@@ -805,47 +805,17 @@ WQlist() {
 	
 	checkPreventiceOrdersOut()															; check registrations that failed upload to Preventice
 	
+	/*	Generate Inbox WQlv_in tab for Main Campus user 
+	*/
 	if (wksloc="Main Campus") {
+		Gui, ListView, WQlv_in
+		LV_Delete()																		; clear the INBOX entries
 		
-	Gui, ListView, WQlv_in
-	LV_Delete()																			; clear the INBOX entries
-	
-	WQpreventiceResults(wqfiles)														; Process incoming Preventice results
-
-	WQscanHolterPDFs(wqfiles)															; Scan Holter PDFs folder for additional files
-
-	WQlistPDFdownloads()																; generate mortaras.txt
-
-/*	Scan <pending> for missing webgrab
-	no webgrab means no registration received at Preventice for some reason
-*/	
-	loop, % (ens:=wq.selectNodes("/root/pending/enroll")).Length
-	{
-		en := ens.item(A_Index-1)
-		id := en.getAttribute("id")
-		wb := en.selectSingleNode("webgrab").text
-		if !(wb) {
-			res := readwq(id)
-			dt := dateDiff(res.date)
-			if (dt < 5) {																; ignore for 5 days to allow reg/sendout to process
-				Continue
-			}
-			LV_Add(""
-				, path.holterPDF val													; filename and path to HolterDir
-				, strQ(res.Name,"###",strX(val,"",1,0,"_",1))							; name from wqid or filename
-				, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))							; mrn
-				, strQ(res.dob,"###")													; dob
-				, strQ(res.site,"###","???")											; site
-				, strQ(nicedate(res.date),"###")										; study date
-				, id																	; wqid
-				, ftype																	; study type
-				, "No Reg"																; fulldisc present, make blank
-				, "X")
-			CLV_in.Row(LV_GetCount(),,"red")
-		}
+		WQpreventiceResults(wqfiles)													; Process incoming Preventice results
+		WQscanHolterPDFs(wqfiles)														; Scan Holter PDFs folder for additional files
+		WQlistPDFdownloads()															; generate mortaras.txt
+		WQfindMissingWebgrab()															; find <pending> missing <webgrab>
 	}
-
-	}	; <-- finish Main Campus Inbox
 	
 /*	Now scan <pending/enroll> nodes
 */
@@ -1317,6 +1287,40 @@ WQlistPDFdownloads() {
 	FileDelete, .\files\mortaras.txt
 	FileAppend, % tmpHolters, .\files\mortaras.txt
 
+	Return
+}
+
+WQfindMissingWebgrab() {
+/*	Scan <pending> for missing webgrab
+	no webgrab means no registration received at Preventice for some reason
+*/
+	global wq, path, monSerialStrings
+
+	loop, % (ens:=wq.selectNodes("/root/pending/enroll")).Length
+	{
+		en := ens.item(A_Index-1)
+		id := en.getAttribute("id")
+		wb := en.selectSingleNode("webgrab").text
+		if !(wb) {
+			res := readwq(id)
+			dt := dateDiff(res.date)
+			if (dt < 5) {																; ignore for 5 days to allow reg/sendout to process
+				Continue
+			}
+			LV_Add(""
+				, path.holterPDF val													; filename and path to HolterDir
+				, strQ(res.Name,"###",strX(val,"",1,0,"_",1))							; name from wqid or filename
+				, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))							; mrn
+				, strQ(res.dob,"###")													; dob
+				, strQ(res.site,"###","???")											; site
+				, strQ(nicedate(res.date),"###")										; study date
+				, id																	; wqid
+				, ObjHasValue(monSerialStrings,res.dev,1)								; study type
+				, "No Reg"																; fulldisc present, make blank
+				, "X")
+			CLV_in.Row(LV_GetCount(),,"red")
+		}
+	}
 	Return
 }
 
