@@ -810,6 +810,8 @@ WQlist() {
 	Gui, ListView, WQlv_in
 	LV_Delete()																			; clear the INBOX entries
 	
+	WQpreventiceResults(wqfiles)														; Process incoming Preventice results
+
 /*	Scan Holter PDFs folder for additional files
 */
 	findfullPDF()																		; read Holter PDF dir into pdfList
@@ -1236,8 +1238,16 @@ checkPreventiceOrdersOut() {
 	return
 }
 
+WQpreventiceResults(ByRef wqfiles) {
 /*	Process each incoming .hl7 RESULT from PREVENTICE
+	Parse OBR line for existing wqid, provider, site
+	Parse PV1 line for study date
+	Exit if this study already in <done>, move hl7 to tempfiles
+	Add line to WQlv_in
+	Add line to wqfiles
 */
+	global wq, path, sites0, hl7DirMap, monSerialStrings
+	
 	tmpHolters := ""
 	loop, Files, % path.PrevHL7in "*.hl7"
 	{
@@ -1293,7 +1303,7 @@ checkPreventiceOrdersOut() {
 			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
 		wqfiles.push(id)
 	}
-	
+	Return
 }
 
 cleanDone() {
