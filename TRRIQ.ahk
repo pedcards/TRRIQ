@@ -793,8 +793,8 @@ WQlist() {
 	
 	WQclearSites0()	 																	; move studies from sites0 to DONE
 	
-/*	Scan Incoming ORDERS from EPIC
-*/
+	/*	Add all incoming Epic ORDERS to WQlv_orders
+	*/
 	Gui, ListView, WQlv_orders
 	LV_Delete()
 	
@@ -1006,6 +1006,9 @@ WQclearSites0() {
 }
 
 WQscanEpicOrders() {
+/*	Scan all incoming Epic orders
+	3-pass method
+*/
 	global wq
 
 	if !IsObject(wq.selectSingleNode("/root/orders")) {
