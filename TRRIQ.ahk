@@ -812,36 +812,7 @@ WQlist() {
 	
 	WQpreventiceResults(wqfiles)														; Process incoming Preventice results
 
-/*	Scan Holter PDFs folder for additional files
-*/
-	findfullPDF()																		; read Holter PDF dir into pdfList
-	for key,val in pdfList
-	{
-		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])\.pdf",fnID)							; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
-		id := fnID.1
-		ftype := strQ(monPdfStrings[fnID.2],"###","???")
-		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
-			LV_Modify(k,"Col9","")														; clear the "X" in the FullDisc column
-			continue																	; skip rest of processing
-		}
-		res := readwq(id)																; get values for wqid if valid, else null
-		
-		LV_Add(""
-			, path.holterPDF val														; filename and path to HolterDir
-			, strQ(res.Name,"###",strX(val,"",1,0,"_",1))								; name from wqid or filename
-			, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))								; mrn
-			, strQ(res.dob,"###")														; dob
-			, strQ(res.site,"###","???")												; site
-			, strQ(nicedate(res.date),"###")											; study date
-			, id																		; wqid
-			, ftype																		; study type
-			, "")																		; fulldisc present, make blank
-		if (id) {
-			wqfiles.push(id)															; add non-null wqid to wqfiles
-		}
-	}
-
-	LV_ModifyCol(6,"Sort")																; date
+	WQscanHolterPDFs(wqfiles)															; Scan Holter PDFs folder for additional files
 
 /*	Generate mortaras.txt list for those that still require PDF download
 */
@@ -1303,6 +1274,43 @@ WQpreventiceResults(ByRef wqfiles) {
 			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
 		wqfiles.push(id)
 	}
+	Return
+}
+
+WQscanHolterPDFs(ByRef wqfiles) {
+/*	Scan Holter PDFs folder for additional files
+*/
+	global path, pdfList, monPdfStrings
+
+	findfullPDF()																		; read Holter PDF dir into pdfList
+	for key,val in pdfList
+	{
+		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])\.pdf",fnID)							; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
+		id := fnID.1
+		ftype := strQ(monPdfStrings[fnID.2],"###","???")
+		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
+			LV_Modify(k,"Col9","")														; clear the "X" in the FullDisc column
+			continue																	; skip rest of processing
+		}
+		res := readwq(id)																; get values for wqid if valid, else null
+		
+		LV_Add(""
+			, path.holterPDF val														; filename and path to HolterDir
+			, strQ(res.Name,"###",strX(val,"",1,0,"_",1))								; name from wqid or filename
+			, strQ(res.mrn,"###",strX(val,"_",1,1,"_",1))								; mrn
+			, strQ(res.dob,"###")														; dob
+			, strQ(res.site,"###","???")												; site
+			, strQ(nicedate(res.date),"###")											; study date
+			, id																		; wqid
+			, ftype																		; study type
+			, "")																		; fulldisc present, make blank
+		if (id) {
+			wqfiles.push(id)															; add non-null wqid to wqfiles
+		}
+	}
+
+	LV_ModifyCol(6,"Sort")																; date
+
 	Return
 }
 
