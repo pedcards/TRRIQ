@@ -373,7 +373,7 @@ PhaseGUIclose:
 	return
 }	
 
-menuTrriq:
+menuTrriq()
 {
 	Gui, phase:hide
 	FileGetTime, tmp, % A_ScriptName
@@ -381,7 +381,7 @@ menuTrriq:
 	Gui, phase:show
 	return
 }
-menuInstr:
+menuInstr()
 {
 	Gui, phase:hide
 	MsgBox How to...
@@ -389,7 +389,7 @@ menuInstr:
 	return
 }
 
-sendEmail:
+sendEmail()
 {
 	tmp := cmsgbox("Notification","Send email"
 			, "Terry Chun|"
@@ -407,7 +407,7 @@ sendEmail:
 	Return
 }
 
-changeLoc:
+changeLoc()
 {
 	MsgBox, 262193, Change clinic, Current location: %wksLoc%`n`nReally change the clinic location for this PC?`n`nWill restart TRRIQ
 	IfMsgBox, Ok
@@ -424,8 +424,10 @@ changeLoc:
 	return
 }
 
-lateReport:
+lateReport()
 {
+	global wq, path
+	
 	str := ""
 	ens:=wq.selectNodes("/root/pending/enroll")
 	num := ens.length
@@ -448,8 +450,10 @@ lateReport:
 	return
 }
 
-regReport:
+regReport()
 {
+	global wq, path
+
 	str := ""
 	ens:=wq.selectNodes("//enroll")
 	num := ens.length
