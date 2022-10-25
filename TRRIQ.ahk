@@ -3546,14 +3546,15 @@ ProcessHl7PDF:
 	
 	progress, off
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
-	if (type~="CEM|EOS") {
+	if (ftype="BGH") {
 		gosub Event_BGH_Hl7
 	} else if (ftype="BGM") {
 		gosub Holter_BGM_HL7
-	} else if (type="Holter") {
+	} else if (ftype="HOL") {
 		gosub Holter_Pr_Hl7
 	} else {
-		MsgBox % "No match!`n" type
+		eventlog("No match. OBR_TestCode=" type ", ftype=" ftype ".")
+		MsgBox % "No filetype match!"
 		return
 	}
 	
