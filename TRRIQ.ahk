@@ -771,13 +771,11 @@ return
 }
 
 WQlist() {
-	global
-	local k, ens, e0, id, now, dt, site, fnID, res, key, val, full, wqfiles, lvDim, tmpHolters
-		, late_BGH := 45
-		, late_BGM := 30
-		, late_Mortara := 14
+	global wq, runningVer, wksloc
+
 	wqfiles := []
 	fldval := {}
+
 	GuiControlGet, wqDim, Pos, WQtab
 	lvDim := "W" wqDimW-25 " H" wqDimH-35
 	
@@ -831,7 +829,6 @@ WQlist() {
 		.	(tmp := parsedate(wq.selectSingleNode("/root/inventory").getAttribute("update")))
 		.	"Inventory update: " tmp.MMDD " @ " tmp.hrmin
 	
-	fileIn :=
 	progress, off
 	return
 }
@@ -866,16 +863,16 @@ WQscanEpicOrders() {
 		wq.addElement("orders","/root")
 	}
 	
-	WQEpicOrders1()																		; Process new files
+	WQEpicOrdersNew()																	; Process new files
 
-	WQEpicOrders2()																		; Scan previous *Z.hl7 files
+	WQEpicOrdersPrevious()																; Scan previous *Z.hl7 files
 
-	WQepicOrders3()																		; Remove extraneous orders
+	WQepicOrdersCleanup()																; Remove extraneous orders
 
 	Return
 }
 
-WQepicOrders1() {
+WQepicOrdersNew() {
 /*	First pass: process new files
 	Find noval (not renamed) hl7 files in path.EpicHL7in
 	Find matching <enroll> node
@@ -1003,7 +1000,7 @@ WQepicOrders1() {
 	Return
 }
 
-WQepicOrders2() {
+WQepicOrdersPrevious() {
 /*	Second pass: scan previously added *Z.hl7 files
 	Another chance to clear sites0 and remnant files
 	Add line to Inbox LV
@@ -1046,7 +1043,7 @@ WQepicOrders2() {
 	Return
 }
 
-WQepicOrders3() {
+WQepicOrdersCleanup() {
 /*	Third pass: remove extraneous orders
 
 */
