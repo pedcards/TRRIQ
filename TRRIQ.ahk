@@ -155,6 +155,7 @@ for key,val in monStrings
 	monPdfStrings[el.1]:=el.2																		; Abbrev based on PDF fname
 	monEpicEAP[el.6]:=el.4																			; Epic EAP codes for monitors
 }
+monLate := readIni("LateMonitors")
 
 initHL7()																							; HL7 definitions
 hl7DirMap := {}
