@@ -3843,7 +3843,7 @@ Holter_Pr_Hl7:
 /*	Process newtxt from pdftotxt from HL7 extract
 */
 	eventlog("Holter_Pr_HL7")
-	monType := "PR"
+	monType := "HOL"
 	fullDisc := "i)60\s+s(ec)?/line"
 	
 	demog := stregX(newtxt,"Name:",1,0,"Medications:",1)
@@ -3977,7 +3977,7 @@ fieldsToCSV() {
 */
 	global fldval, fileOut1, fileOut2, monType
 	
-	if (monType~="PR|Zio|Mini") {
+	if (monType~="PR|HOL|Zio|Mini|BGM") {
 		tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
 			. "dem-Hookup_tech	dem-VOID2	dem-Meds	dem-Ordering	dem-Scanned_by	dem-Reading	"
 			. "dem-Test_date	dem-Scan_date	dem-Hookup_time	dem-Recording_time	dem-Analysis_time	dem-Indication	dem-VOID3	"
@@ -4398,7 +4398,7 @@ getPdfID(txt) {
 Holter_Pr2:
 {
 	eventlog("Holter_Pr2")
-	monType := "PR"
+	monType := "HOL"
 	fullDisc := "i)60\s+s(ec)?/line"
 	
 	if (fileinsize < 2000000) {															; Shortened files are usually < 1-2 Meg
@@ -4572,9 +4572,11 @@ CheckProc:
 			wqSetVal(id,"sex",ptDem["Sex"])
 			wqSetVal(id,"dob",ptDem["dob"])
 			wqSetVal(id,"dev"
-				, (montype="PR" ? "Mortara H3+ - " 
+				, (montype="HOL" ? "Mortara H3+ - " 
 				: montype="BGH" ? "BodyGuardian Heart - BG"
-				: montype="ZIO" ? "Zio" : "")
+				: montype="ZIO" ? "Zio" 
+				: montype="BGM" ? "BodyGuardian Mini - "
+				: "")
 				. fldVal["dem-Device_SN"])
 			wqSetVal(id,"prov",ptDem["Provider"])
 			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
@@ -4604,7 +4606,7 @@ return
 Holter_BGM_HL7:
 {
 	eventlog("Holter_BGMini_HL7")
-	monType := "Mini"
+	monType := "BGM"
 	
 	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
@@ -4632,7 +4634,7 @@ return
 Holter_BGM:
 {
 	eventlog("Holter_BGMini")
-	monType := "Mini"
+	monType := "BGM"
 	
 	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
@@ -5321,7 +5323,7 @@ formatField(pre, lab, txt) {
 	}
 	
 ;	Preventice Holter specific fixes
-	if (monType="PR") {
+	if (monType="HOL") {
 		if (lab="Name") {																; Break name into Last and First
 			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
 			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
@@ -5371,7 +5373,7 @@ formatField(pre, lab, txt) {
 	}
 
 ;	Body Guardian Mini specific fixes
-	if (monType="Mini") {
+	if (monType="BGM") {
 		if (lab ~= "Test_(date|end)") {													; convert dates to MDY format
 			txt := parseDate(txt).mdy
 		}
