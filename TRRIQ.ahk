@@ -153,7 +153,7 @@ for key,val in monStrings
 	monOrderType[el.2]:=el.3																		; String matches for order <mon>
 	monSerialStrings[el.2]:=el.5																	; Regex matches for S/N strings
 	monPdfStrings[el.1]:=el.2																		; Abbrev based on PDF fname
-	monEpicEAP[el.6]:=el.4																			; Epic EAP codes for monitors
+	monEpicEAP[el.2]:=el.6																			; Epic EAP codes for monitors
 }
 monLate := readIni("LateMonitors")
 
@@ -4062,7 +4062,7 @@ makeORU(wqid) {
 		rtf := "###"
 		EPdoc := "###"
 	}
-	fldval.obr4 := ObjHasValue(monEpicEAP,montype,1)
+	fldval.obr4 := monEpicEAP[montype]
 	obrProv := fldvalProv()
 
 	buildHL7("OBR"
