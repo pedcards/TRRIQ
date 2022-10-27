@@ -771,7 +771,7 @@ return
 }
 
 WQlist() {
-	global wq, runningVer, wksloc
+	global wq, runningVer, wksloc, fldval
 
 	wqfiles := []
 	fldval := {}
