@@ -908,7 +908,7 @@ WQepicOrdersNew() {
 			}
 			e0.match_NM := fuzzysearch(e0.name,format("{:U}",k.selectSingleNode("name").text))
 			e0.match_MRN := fuzzysearch(e0.mrn,k.selectSingleNode("mrn").text)
-			if (e0.match_NM > 0.15) && (e0.match_MRN > 0.15) {							; Name and MRN each vary by more than 15%
+			if (e0.match_NM > 0.15) || (e0.match_MRN > 0.15) {							; Name or MRN vary by more than 15%
 				continue
 			}
 			dt0 := dateDiff(e0.date,k.selectSingleNode("date").text)
