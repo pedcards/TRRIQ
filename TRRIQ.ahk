@@ -506,17 +506,24 @@ recoverDone(uid:="")
 	e.g. if the MA inadvertently marked record as DONE, new Preventice result
 	to supercede a prior prelim result (not if already signed in Epic). 
 */
+	global wq
 	Gui, phase:Hide
 	InputBox(val,"Search for...", "Enter name, MRN, or wqid to search`n")
 	letters := RegExMatch(val,"[a-zA-Z\-\s]+")
 	numbers := RegExMatch(val,"[0-9]+")
-	if ((letters)&&(numbers)) {
-		MsgBox UID
+	if ((letters)&&(numbers)) {															; contains letters AND numbers, is UID 2DMR4Z2XJE78
+		en := readWQ(val)
+		if (en.node != "done") {
+			MsgBox No matching UID
+			Gui, phase:Show
+			Return
+		}
+		MsgBox % en.name
 	}
-	else if (numbers) {
+	else if (numbers) {																	; contains numbers only, is MRN
 		MsgBox MRN
 	}
-	else if (letters) {
+	else if (letters) {																	; contains letters only, is Name
 		MsgBox Name
 	}
 	else {
