@@ -348,6 +348,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Send notification email, sendEmail
 	Menu, menuSys, Add, Find pending leftovers, cleanPending
 	Menu, menuSys, Add, CheckMWU, checkMWUapp											; position for test menu
+	Menu, menuSys, Add, Recover DONE record, recoverDone
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -496,6 +497,16 @@ cleanPending()
 	progress, off
 
 	Return
+}
+
+recoverDone(uid:="")
+{
+/*	Move record from DONE back to PENDING
+	ONLY do this if there is a good reason!
+	e.g. if the MA inadvertently marked record as DONE, new Preventice result
+	to supercede a prior prelim result (not if already signed in Epic). 
+*/
+
 }
 
 PhaseTask:
