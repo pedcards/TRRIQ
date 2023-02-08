@@ -506,7 +506,25 @@ recoverDone(uid:="")
 	e.g. if the MA inadvertently marked record as DONE, new Preventice result
 	to supercede a prior prelim result (not if already signed in Epic). 
 */
+	Gui, phase:Hide
+	InputBox(val,"Search for...", "Enter name, MRN, or wqid to search`n")
+	letters := RegExMatch(val,"[a-zA-Z\-\s]+")
+	numbers := RegExMatch(val,"[0-9]+")
+	if ((letters)&&(numbers)) {
+		MsgBox UID
+	}
+	else if (numbers) {
+		MsgBox MRN
+	}
+	else if (letters) {
+		MsgBox Name
+	}
+	else {
+		MsgBox *** unknown ***
+	}
 
+	Gui, phase:Show
+	Return
 }
 
 PhaseTask:
