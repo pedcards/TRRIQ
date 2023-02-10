@@ -508,6 +508,8 @@ recoverDone(uid:="")
 */
 	global wq
 	Gui, phase:Hide
+	
+	uid:=RegExReplace(uid,"Recover DONE record")										; ignore menu name passed from GUI
 	InputBox(val,"Search for...", "Enter name, MRN, or wqid to search`n")
 	letters := RegExMatch(val,"[a-zA-Z\-\s]+")
 	numbers := RegExMatch(val,"[0-9]+")
