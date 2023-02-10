@@ -510,9 +510,16 @@ recoverDone(uid:="")
 	Gui, phase:Hide
 	
 	uid:=RegExReplace(uid,"Recover DONE record")										; ignore menu name passed from GUI
-	InputBox(val,"Search for...", "Enter name, MRN, or wqid to search`n")
-	letters := RegExMatch(val,"[a-zA-Z\-\s]+")
-	numbers := RegExMatch(val,"[0-9]+")
+	if (uid) {
+		val:=uid
+		letters:=True
+		numbers:=True
+	} else {
+		InputBox(val,"Search for...", "Enter name, MRN, or wqid to search`n")
+		letters := RegExMatch(val,"[a-zA-Z\-\s]+")
+		numbers := RegExMatch(val,"[0-9]+")
+	}
+
 	if ((letters)&&(numbers)) {															; contains letters AND numbers, is UID 2DMR4Z2XJE78
 		en := readWQ(val)
 		if (en.node != "done") {
