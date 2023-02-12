@@ -552,7 +552,29 @@ recoverDone(uid:="")
 		uid := strX(knum,"  ",0,2,"",0,0)
 	}
 	else if (letters) {																	; contains letters only, is Name
-		MsgBox Name
+		nodes:=wq.selectNodes("/root/done/enroll")
+		loop % nodes.Length()
+		{
+			k := nodes.item(A_Index-1)
+			kname := k.selectSingleNode("name").text
+			if InStr(kname, val) {
+				kuid := k.getAttribute("id")
+				en := readWQ(kuid)
+				klist .= en.date "  " en.name "  " en.mrn "  " kuid "`n"
+			}
+		}
+		if (klist="") {
+			MsgBox No matching name
+			Gui, phase:Show
+			Return
+		}
+		Sort, klist, R
+		klist := StrReplace(klist, "`n", "|")
+		knum := CMsgBox("Select record","Select the correct record",trim(klist,"|"),"Q")
+		if (knum="xClose") {
+			Return
+		}
+		uid := strX(knum,"  ",0,2,"",0,0)
 	}
 	else {
 		MsgBox *** unknown ***
