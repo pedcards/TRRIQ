@@ -520,7 +520,7 @@ recoverDone(uid:="")
 		numbers := RegExMatch(val,"[0-9]+")
 	}
 
-	if ((letters)&&(numbers)) {															; contains letters AND numbers, is UID 2DMR4Z2XJE78
+	if ((letters)&&(numbers)) {															; contains letters AND numbers, is UID 2DMKLDFMN329
 		en := readWQ(val)
 		if (en.node != "done") {
 			MsgBox No matching UID
@@ -579,6 +579,22 @@ recoverDone(uid:="")
 	else {
 		MsgBox *** unknown ***
 	}
+
+	wq := new XML("worklist.xml")
+	en := readWQ(uid)
+	filecheck()
+	FileOpen(".lock", "W")
+
+	x := wq.selectSingleNode("/root/done/enroll[@id='" uid "']")					; reload x node
+	clone := x.cloneNode(true)
+	wq.selectSingleNode("/root/pending").appendChild(clone)							; copy x.clone to PENDING
+	x.parentNode.removeChild(x)														; remove x
+	eventlog("***** wqid " uid " (" en.mrn " from " en.date ") moved back to PENDING list.")
+
+	writeSave(wq)
+	FileDelete, .lock
+
+	MsgBox % "wqid " uid " (" en.mrn " from " en.date ") moved back to PENDING list."
 
 	Gui, phase:Show
 	Return
