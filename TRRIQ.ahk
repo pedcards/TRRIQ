@@ -527,10 +527,29 @@ recoverDone(uid:="")
 			Gui, phase:Show
 			Return
 		}
-		MsgBox % en.name
+		uid := val
 	}
-	else if (numbers) {																	; contains numbers only, is MRN
-		MsgBox MRN
+	else if (numbers) {																	; contains numbers only, is MRN 1249045
+		nodes := wq.selectNodes("/root/done/enroll[mrn='" val "']")
+		if !(nodes.length()) {
+			MsgBox No matching MRN
+			Gui, phase:Show
+			Return
+		}
+		loop, % nodes.Length()
+		{
+			k := nodes.item(A_Index-1)
+			kuid := k.getAttribute("id")
+			en := readWQ(kuid)
+			klist .= A_Index-1 ") " en.date "  " en.name "  " en.mrn "|"
+		}
+		Sort, klist, R
+		knum := CMsgBox("Select record","Select the correct record",trim(klist,"|"),"Q","v")
+		if (knum="xClose") {
+			Return
+		}
+		knum := strX(knum,"",0,1,")",0,1)
+		uid := nodes.item(knum).getAttribute("id")
 	}
 	else if (letters) {																	; contains letters only, is Name
 		MsgBox Name
