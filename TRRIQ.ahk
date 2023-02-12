@@ -541,15 +541,15 @@ recoverDone(uid:="")
 			k := nodes.item(A_Index-1)
 			kuid := k.getAttribute("id")
 			en := readWQ(kuid)
-			klist .= A_Index-1 ") " en.date "  " en.name "  " en.mrn "|"
+			klist .= en.date "  " en.name "  " en.mrn "  " kuid "`n"
 		}
 		Sort, klist, R
-		knum := CMsgBox("Select record","Select the correct record",trim(klist,"|"),"Q","v")
+		klist := StrReplace(klist, "`n", "|")
+		knum := CMsgBox("Select record","Select the correct record",trim(klist,"|"),"Q")
 		if (knum="xClose") {
 			Return
 		}
-		knum := strX(knum,"",0,1,")",0,1)
-		uid := nodes.item(knum).getAttribute("id")
+		uid := strX(knum,"  ",0,2,"",0,0)
 	}
 	else if (letters) {																	; contains letters only, is Name
 		MsgBox Name
