@@ -348,6 +348,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Send notification email, sendEmail
 	Menu, menuSys, Add, Find pending leftovers, cleanPending
 	Menu, menuSys, Add, CheckMWU, checkMWUapp											; position for test menu
+	Menu, menuSys, Add, Recover DONE record, recoverDone
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 		
@@ -495,6 +496,107 @@ cleanPending()
 	}
 	progress, off
 
+	Return
+}
+
+recoverDone(uid:="")
+{
+/*	Move record from DONE back to PENDING
+	ONLY do this if there is a good reason!
+	e.g. if the MA inadvertently marked record as DONE, new Preventice result
+	to supercede a prior prelim result (not if already signed in Epic). 
+*/
+	global wq
+	Gui, phase:Hide
+	
+	uid:=RegExReplace(uid,"Recover DONE record")										; ignore menu name passed from GUI
+	if (uid) {
+		val:=uid
+		letters:=True
+		numbers:=True
+	} else {
+		InputBox(val,"Search for...", "Enter name, MRN, or wqid to search`n")
+		letters := RegExMatch(val,"[a-zA-Z\-\s]+")
+		numbers := RegExMatch(val,"[0-9]+")
+	}
+
+	if ((letters)&&(numbers)) {															; contains letters AND numbers, is UID 2DMKLDFMN329
+		en := readWQ(val)
+		if (en.node != "done") {
+			MsgBox No matching UID
+			Gui, phase:Show
+			Return
+		}
+		uid := val
+	}
+	else if (numbers) {																	; contains numbers only, is MRN 1249045
+		nodes := wq.selectNodes("/root/done/enroll[mrn='" val "']")
+		if !(nodes.length()) {
+			MsgBox No matching MRN
+			Gui, phase:Show
+			Return
+		}
+		loop, % nodes.Length()
+		{
+			k := nodes.item(A_Index-1)
+			kuid := k.getAttribute("id")
+			en := readWQ(kuid)
+			klist .= en.date "  " en.name "  " en.mrn "  " kuid "`n"
+		}
+		Sort, klist, R
+		klist := StrReplace(klist, "`n", "|")
+		knum := CMsgBox("Select record","Select the correct record",trim(klist,"|"),"Q")
+		if (knum="xClose") {
+			Return
+		}
+		uid := strX(knum,"  ",0,2,"",0,0)
+	}
+	else if (letters) {																	; contains letters only, is Name
+		nodes:=wq.selectNodes("/root/done/enroll")
+		loop % nodes.Length()
+		{
+			k := nodes.item(A_Index-1)
+			kname := k.selectSingleNode("name").text
+			if InStr(kname, val) {
+				kuid := k.getAttribute("id")
+				en := readWQ(kuid)
+				klist .= en.date "  " en.name "  " en.mrn "  " kuid "`n"
+			}
+		}
+		if (klist="") {
+			MsgBox No matching name
+			Gui, phase:Show
+			Return
+		}
+		Sort, klist, R
+		klist := StrReplace(klist, "`n", "|")
+		knum := CMsgBox("Select record","Select the correct record",trim(klist,"|"),"Q")
+		if (knum="xClose") {
+			Return
+		}
+		uid := strX(knum,"  ",0,2,"",0,0)
+	}
+	else {
+		MsgBox *** unknown ***
+	}
+
+	wq := new XML("worklist.xml")
+	en := readWQ(uid)
+	filecheck()
+	FileOpen(".lock", "W")
+
+	x := wq.selectSingleNode("/root/done/enroll[@id='" uid "']")					; reload x node
+	clone := x.cloneNode(true)
+	wq.selectSingleNode("/root/pending").appendChild(clone)							; copy x.clone to PENDING
+	x.parentNode.removeChild(x)														; remove x
+	eventlog("***** wqid " uid " (" en.mrn " from " en.date ") moved back to PENDING list.")
+
+	writeSave(wq)
+	FileDelete, .lock
+
+	MsgBox % "wqid " uid " (" en.mrn " from " en.date ") moved back to PENDING list."
+
+	Gui, phase:Show
 	Return
 }
 
