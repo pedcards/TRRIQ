@@ -267,6 +267,10 @@ parsePreventiceFTP(tbl) {
 							: (btnUnits="KB") ? 1000
 							: (btnUnits="MB") ? 1000000 
 							: 0)
+		if (btnSize<5000) {																; filesize less than threshold 5 kb
+			badFtpFile .= btnName.innertext "`n"
+			Continue
+		}
 		btnName.click()
 		sleep 200
 	}
