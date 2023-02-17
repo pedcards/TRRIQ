@@ -281,6 +281,14 @@ parsePreventiceFTP(tbl) {
 			. "Please check the https://ftp.preventice.com site`n"
 			. "and contact Preventice support as needed."
 	}
+	if (badFtpFile) {
+		MsgBox 0x10, Bad FTP files
+			, % "Bad PDF files for these patients:`n`n"
+			. badFtpFile "`n`n"
+			. "Please check the https://ftp.preventice.com site`n"
+			. "and contact Preventice support as needed."
+
+	}
 	if !(ftpGot) {
 		progress, hide
 		return 0
