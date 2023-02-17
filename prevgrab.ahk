@@ -274,21 +274,6 @@ parsePreventiceFTP(tbl) {
 		btnName.click()
 		sleep 200
 	}
-	if (badFtpName) {
-		MsgBox 0x10, Missing FTP files
-			, % "Could not find PDF files for these patients:`n`n"
-			. badFtpName "`n`n"
-			. "Please check the https://ftp.preventice.com site`n"
-			. "and contact Preventice support as needed."
-	}
-	if (badFtpFile) {
-		MsgBox 0x10, Bad FTP files
-			, % "Bad PDF files for these patients:`n`n"
-			. badFtpFile "`n`n"
-			. "Please check the https://ftp.preventice.com site`n"
-			. "and contact Preventice support as needed."
-
-	}
 	if !(ftpGot) {
 		progress, hide
 		return 0
@@ -312,6 +297,21 @@ parsePreventiceFTP(tbl) {
 		progress, % tbar
 	}
 	eventlog("PREVGRAB: " A_TickCount-t0 " msec to download file(s).")
+
+	if (badFtpName) {
+		MsgBox 0x10, Missing FTP files
+			, % "Could not find PDF files for these patients:`n`n"
+			. badFtpName "`n`n"
+			. "Please check the https://ftp.preventice.com site`n"
+			. "and contact Preventice support as needed."
+	}
+	if (badFtpFile) {
+		MsgBox 0x10, Bad FTP files
+			, % "Bad PDF files for these patients:`n`n"
+			. badFtpFile "`n`n"
+			. "Please check the https://ftp.preventice.com site`n"
+			. "and contact Preventice support as needed."
+	}
 
 	Progress, Hide
 	Return 0
