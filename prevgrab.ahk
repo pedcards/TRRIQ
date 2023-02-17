@@ -260,6 +260,13 @@ parsePreventiceFTP(tbl) {
 		ftpGot := true
 		cols := gl.Page.tblRows[nm.bestNum].querySelectorAll(".ng-binding")
 		btnName := cols[0]
+		btnText := cols[1].innertext
+		btnSize := strX(btnText,"",0,1," ",1,1)
+		btnUnits := strX(btnText," ",1,1,"",0,0)
+		btnSize := btnSize * ((btnUnits="bytes") ? 1
+							: (btnUnits="KB") ? 1000
+							: (btnUnits="MB") ? 1000000 
+							: 0)
 		btnName.click()
 		sleep 200
 	}
