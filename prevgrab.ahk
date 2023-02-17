@@ -254,7 +254,7 @@ parsePreventiceFTP(tbl) {
 			. "FTP file: " ftpList[nm.bestNum] " "
 			. "(score " round(100*(2-nm.bestScore)/2,2) ")")
 		if (nm.bestScore>0.3) {															; skip if match less than 85%
-			badFtp .= k "`n"
+			badFtpName .= k "`n"
 			continue
 		}
 		ftpGot := true
@@ -263,10 +263,10 @@ parsePreventiceFTP(tbl) {
 		btnName.click()
 		sleep 200
 	}
-	if (badFtp) {
+	if (badFtpName) {
 		MsgBox 0x10, Missing FTP files
 			, % "Could not find PDF files for these patients:`n`n"
-			. k "`n`n"
+			. badFtpName "`n`n"
 			. "Please check the https://ftp.preventice.com site`n"
 			. "and contact Preventice support as needed."
 	}
