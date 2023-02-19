@@ -2075,6 +2075,7 @@ checkEpicOrder() {
 			break
 		}
 		if (fldval.accession) {
+			eventlog("Selected accession number " fldval.accession)
 			return
 		}
 	}
