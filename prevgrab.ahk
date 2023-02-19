@@ -254,21 +254,25 @@ parsePreventiceFTP(tbl) {
 			. "FTP file: " ftpList[nm.bestNum] " "
 			. "(score " round(100*(2-nm.bestScore)/2,2) ")")
 		if (nm.bestScore>0.3) {															; skip if match less than 85%
-			badFtp .= k "`n"
+			badFtpName .= k "`n"
 			continue
 		}
 		ftpGot := true
 		cols := gl.Page.tblRows[nm.bestNum].querySelectorAll(".ng-binding")
 		btnName := cols[0]
+		btnText := cols[1].innertext
+		btnSize := strX(btnText,"",0,1," ",1,1)
+		btnUnits := strX(btnText," ",1,1,"",0,0)
+		btnSize := btnSize * ((btnUnits="bytes") ? 1
+							: (btnUnits="KB") ? 1000
+							: (btnUnits="MB") ? 1000000 
+							: 0)
+		if (btnSize<5000) {																; filesize less than threshold 5 kb
+			badFtpFile .= btnName.innertext "`n"
+			Continue
+		}
 		btnName.click()
 		sleep 200
-	}
-	if (badFtp) {
-		MsgBox 0x10, Missing FTP files
-			, % "Could not find PDF files for these patients:`n`n"
-			. k "`n`n"
-			. "Please check the https://ftp.preventice.com site`n"
-			. "and contact Preventice support as needed."
 	}
 	if !(ftpGot) {
 		progress, hide
@@ -293,6 +297,21 @@ parsePreventiceFTP(tbl) {
 		progress, % tbar
 	}
 	eventlog("PREVGRAB: " A_TickCount-t0 " msec to download file(s).")
+
+	if (badFtpName) {
+		MsgBox 0x10, Missing FTP files
+			, % "Could not find PDF files for these patients:`n`n"
+			. badFtpName "`n`n"
+			. "Please check the https://ftp.preventice.com site`n"
+			. "and contact Preventice support as needed."
+	}
+	if (badFtpFile) {
+		MsgBox 0x10, Bad FTP files
+			, % "Bad PDF files for these patients:`n`n"
+			. badFtpFile "`n`n"
+			. "Please check the https://ftp.preventice.com site`n"
+			. "and contact Preventice support as needed."
+	}
 
 	Progress, Hide
 	Return 0
