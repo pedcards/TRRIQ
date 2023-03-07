@@ -2,6 +2,7 @@
 	Saves results for TRRIQ
 */
 
+#Requires AutoHotkey v1.1
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force  ; only allow one running instance per user
 #Include %A_ScriptDir%\includes
