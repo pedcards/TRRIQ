@@ -156,7 +156,7 @@ readXLSX(file) {
 	While !(valsEnd)																	; ROWS
 		{
 			RowNum := A_Index
-			row_nm :=																	; ROW name (service name)
+			row_name :=																	; ROW name (service name)
 			if (rowNum=1) {																; first row is title, skip
 				continue
 			}
@@ -202,11 +202,11 @@ readXLSX(file) {
 					}
 					
 					if (j:=objHasValue(Forecast_val,cel,"RX")) {						; match index value from Forecast_val
-						row_nm := Forecast_svc[j]										; get abbrev string from index
+						row_name := Forecast_svc[j]										; get abbrev string from index
 					} else {
-						row_nm := RegExReplace(cel,"(\s+)|[\/\*\?]","_")				; no match, create ad hoc and replace space, /, \, *, ? with "_"
+						row_name := RegExReplace(cel,"(\s+)|[\/\*\?]","_")				; no match, create ad hoc and replace space, /, \, *, ? with "_"
 					}
-					progress,, Scanning forecast, % row_nm
+					progress,, Scanning forecast, % row_name
 					continue															; results in some ROW NAME, now move to the next column
 				}
 				if !(cel~="[a-zA-Z]") {
@@ -214,10 +214,10 @@ readXLSX(file) {
 				}
 				
 				fcNode := "/root/forecast/call[@date='" fcDate[colNum] "']"
-				if !IsObject(y.selectSingleNode(fcNode "/" row_nm)) {					; create node for service person if not present
-					y.addElement(row_nm,fcNode)
+				if !IsObject(y.selectSingleNode(fcNode "/" row_name)) {					; create node for service person if not present
+					y.addElement(row_name,fcNode)
 				}
-				y.setText(fcNode "/" row_nm, cleanString(cel))							; setText changes text value for that node
+				y.setText(fcNode "/" row_name, cleanString(cel))						; setText changes text value for that node
 			}
 		}
 		
