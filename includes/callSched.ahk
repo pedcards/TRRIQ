@@ -177,7 +177,7 @@ readXLSX(file) {
 			}
 			if ((colNum=maxCol) && (rowHasVals=false)) {								; first blank row
 				valsEnd := true
-				arr[rowNum].Pop()
+				arr.Delete(rowNum)
 				Break
 			}
 			if ((cel="") && (colNum=maxCol)) {											; at maxCol and empty, break this cols loop
