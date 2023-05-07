@@ -171,19 +171,19 @@ readXLSX(file) {
 				maxCol:=colNum
 			}
 			cel := oWorkbook.Sheets(1).Range(colArr[colNum] rowNum).value				; Scan Sheet1 A2.. etc
-			arr[rowNum][colNum] := cel
 
 			if (cel!="") {
 				rowHasVals := true
-			}
-			if ((cel="") && (colNum=maxCol)) {											; at maxCol and empty, break this cols loop
-				Break
 			}
 			if ((colNum=maxCol) && (rowHasVals=false)) {								; first blank row
 				valsEnd := true
 				arr[rowNum].Pop()
 				Break
 			}
+			if ((cel="") && (colNum=maxCol)) {											; at maxCol and empty, break this cols loop
+				Break
+			}
+			arr[rowNum][colNum] := cel
 		}
 	}
 
