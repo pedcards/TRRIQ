@@ -118,15 +118,6 @@ if fileexist("worklist.xml") {
 /*	Read call schedule (Electronic Forecast and Qgenda)
 */
 fcVals := readIni("Forecast")
-Forecast_svc := []
-Forecast_val := []
-for key,val in fcVals
-{
-	tmpVal := strX(val,"",1,0,":",1)
-	tmpStr := strX(val,":",1,1,"",0)
-	Forecast_svc.Insert(tmpVal)
-	Forecast_val.Insert(tmpStr)
-}
 updateCall()
 
 /*	Initialize rest of vars and strings

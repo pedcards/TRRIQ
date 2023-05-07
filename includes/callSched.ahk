@@ -115,12 +115,20 @@ return
 
 parseForecast(fcRecent) {
 	global y, path, callChg
-		, forecast_val, forecast_svc
 	
 	; Initialize some stuff
 	if !IsObject(y.selectSingleNode("/root/forecast")) {								; create if for some reason doesn't exist
 		y.addElement("forecast","/root")
 	} 
+	Forecast_svc := []
+	Forecast_val := []
+	for key,val in fcVals
+	{
+		tmpVal := strX(val,"",1,0,":",1)
+		tmpStr := strX(val,":",1,1,"",0)
+		Forecast_svc.Insert(tmpVal)
+		Forecast_val.Insert(tmpStr)
+	}
 	
 	fcArr := readXLSX(A_WorkingDir "\fcTemp.xlsx")
 	
