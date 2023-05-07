@@ -145,13 +145,51 @@ Return
 }
 
 readXLSX(file) {
-; Scan through XLSX document
+; Read XLSX document into array
+	oWorkbook := ComObjGet(file)
+	colArr := ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"] 	; array of column letters
+	arr := {}
+	valsEnd := false																	; flag when reached the last row
 
+	While !(valsEnd)
+	{
+		rowNum := A_Index
+		arr[rowNum] := {}
+		rowHasVals := false
+		Loop
+		{
+			colNum := A_Index
+			if (colNum>maxCol) {
+				maxCol:=colNum
+			}
+			cel := oWorkbook.Sheets(1).Range(colArr[colNum] rowNum).value				; Scan Sheet1 A2.. etc
+			arr[rowNum][colNum] := cel
+
+			if (cel!="") {
+				rowHasVals := true
+			}
+			if ((cel="") && (colNum=maxCol)) {											; at maxCol and empty, break this cols loop
+				Break
+			}
+			if ((colNum=maxCol) && (rowHasVals=false)) {								; first blank row
+				valsEnd := true
+				arr[rowNum].Pop()
+				Break
+			}
+		}
+	}
+
+	oExcel := oWorkbook.Application
+	oExcel.DisplayAlerts := false
+	oExcel.quit
+
+	Return arr
+}
+
+temp() {
 	colArr := ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"] 	; array of column letters
 	fcDate:=[]																			; array of dates
-	oWorkbook := ComObjGet(file)
 	getVals := false																	; flag when have hit the Date vals row
-	valsEnd := false																	; flag when reached the last row
 
 	While !(valsEnd)																	; ROWS
 	{
@@ -221,9 +259,6 @@ readXLSX(file) {
 		}
 	}
 	
-	oExcel := oWorkbook.Application
-	oExcel.DisplayAlerts := false
-	oExcel.quit
 }
 
 readQgenda() {
