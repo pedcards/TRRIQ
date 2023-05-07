@@ -122,7 +122,7 @@ parseForecast(fcRecent) {
 		y.addElement("forecast","/root")
 	} 
 	
-	readXLSX(A_WorkingDir "\fcTemp.xlsx")
+	fcArr := readXLSX(A_WorkingDir "\fcTemp.xlsx")
 	
 	y.selectSingleNode("/root/forecast").setAttribute("xlsdate",fcRecent)				; change forecast[@xlsdate] to the XLS mod date
 	y.selectSingleNode("/root/forecast").setAttribute("mod",A_Now)						; change forecast[@mod] to now
@@ -184,9 +184,8 @@ readXLSX(file) {
 	oExcel.quit
 
 	Return arr
-}
 
-temp() {
+/*
 	colArr := ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"] 	; array of column letters
 	fcDate:=[]																			; array of dates
 	getVals := false																	; flag when have hit the Date vals row
@@ -258,7 +257,8 @@ temp() {
 			y.setText(fcNode "/" row_name, cleanString(cel))							; setText changes text value for that node
 		}
 	}
-	
+*/
+
 }
 
 readQgenda() {
