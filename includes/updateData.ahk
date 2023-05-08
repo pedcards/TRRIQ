@@ -3,7 +3,7 @@
 */
 
 readDocs() {
-	global y, path
+	global path
 	
 	progress,,% " ",Checking provider list for updates...
 	FileGetTime, fnameIN_dt, % path.chip "outdocs.xlsx"
@@ -31,8 +31,36 @@ readDocs() {
 	}
 
 	Docs := Object()
+	colIdx := []
+
+	loop % outArr.MaxIndex()
+	{
+		rowNum := A_Index
+		rowArr := outArr[rowNum]
+		if (rowNum=1) {
+			loop % rowArr.MaxIndex()
+			{
+				colIdx[A_Index] := rowArr[A_Index]
+			}
+			Continue
+		}
+		if (rowArr[1]="" or rowArr[4]="group") {										; skip group names, blank lines
+			Continue
+		}
+		if (rowArr[2]="" & rowArr[3]="" & rowArr[4]="") {								; Fields 2,3,4 blank = new group
+			tmpGrp := rowArr[1]
+			y.addElement("group","/root",{name:tmpGrp})
+			Continue
+		}
+		loop % rowArr.MaxIndex()
+		{
+			colNum := A_Index
+			cel := rowArr[colNum]
+		}
+	}
+
 	tmpChk := false
-	if FileExist(path.chip "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
+	if FileExist(path.chip "outdocs.csv") {												; if server access to chipotle outdocs, make a local copy
 		FileCopy, % path.chip "outdocs.csv", .\files\outdocs.csv, 1
 	}
 	Loop, Read, .\files\outdocs.csv
@@ -279,7 +307,7 @@ readXLSX(file) {
 	While (valsEnd<valsEndNum)
 	{
 		rowNum := A_Index
-		Progress, % rowNum
+		Progress, % rowNum, % rowNum
 		arr[rowNum] := {}																; create array for row
 		rowHasVals := False																; check for empty row
 		Loop
