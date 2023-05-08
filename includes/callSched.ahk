@@ -114,7 +114,7 @@ return
 }
 
 parseForecast(fcRecent) {
-	global y, path, callChg
+	global y, path, callChg, fcVals
 	
 	; Initialize some stuff
 	if !IsObject(y.selectSingleNode("/root/forecast")) {								; create if for some reason doesn't exist
@@ -131,7 +131,62 @@ parseForecast(fcRecent) {
 	}
 	
 	fcArr := readXLSX(A_WorkingDir "\fcTemp.xlsx")
-	
+	fcDate := []																		; array of dates
+
+	Loop % fcArr.MaxIndex()																; read ROWS
+	{
+		rowNum := A_Index
+		if (rowNum=1) {
+			Continue																	; first row is title, skip
+		}
+		fcRow := fcArr[rowNum]
+		rowName := ""																	; ROW name (service name)
+
+		Loop % fcRow.MaxIndex()															; read COLS
+		{
+			colNum := A_Index
+			cel := fcRow[colNum]
+			label := false
+			if (RegExMatch(cel,"\b(\d{1,2})\D(\d{1,2})(\D\d{2,4})?\b",tmp)) {			; matches date format
+				getVals := true
+				if !(tmp3) {															; get today's YYYY if not given
+					tmp3 := substr(A_now,1,4)
+				}
+				tmpDt := RegExReplace(tmp3,"\D") zDigit(tmp1) zDigit(tmp2) 				; tmpDt in format YYYYMMDD
+				fcDate[colNum] := tmpDt													; fill fcDate[1-7] with date strings
+				if !IsObject(y.selectSingleNode("/root/forecast/call[@date='" tmpDt "']")) {
+					y.addElement("call","/root/forecast", {date:tmpDt})					; create node if doesn't exist
+				}
+				continue																; keep getting col dates but don't get values yet
+			}
+			if !(getVals) {																; don't start parsing until we have passed date row
+				continue
+			}
+			cel := trim(RegExReplace(cel,"\s+"," "))									; remove extraneous whitespace
+
+			if (colNum=1) {																; first column (e.g. A1) is label column
+				if (j:=objHasValue(Forecast_val,cel,"RX")) {							; match index value from Forecast_val
+					row_name := Forecast_svc[j]											; get abbrev string from index
+				} else {
+					row_name := RegExReplace(cel,"(\s+)|[\/\*\?]","_")					; no match, create ad hoc and replace space, /, \, *, ? with "_"
+				}
+				progress,, Scanning forecast, % row_name
+				continue																; results in some ROW NAME, now move to the next column
+			}
+			
+			if !(cel~="[a-zA-Z]") {
+				cel := ""
+			}
+			
+			fcNode := "/root/forecast/call[@date='" fcDate[colNum] "']"
+			if !IsObject(y.selectSingleNode(fcNode "/" row_name)) {						; create node for service person if not present
+				y.addElement(row_name,fcNode)
+			}
+			y.setText(fcNode "/" row_name, cleanString(cel))							; setText changes text value for that node
+			
+		}
+	}
+
 	y.selectSingleNode("/root/forecast").setAttribute("xlsdate",fcRecent)				; change forecast[@xlsdate] to the XLS mod date
 	y.selectSingleNode("/root/forecast").setAttribute("mod",A_Now)						; change forecast[@mod] to now
 
@@ -149,7 +204,7 @@ parseForecast(fcRecent) {
 	Eventlog("Electronic Forecast " fcRecent " updated.")
 	callChg := true
 	
-Return
+	Return
 }
 
 readXLSX(file) {
@@ -162,12 +217,12 @@ readXLSX(file) {
 	While !(valsEnd)
 	{
 		rowNum := A_Index
-		arr[rowNum] := {}
-		rowHasVals := false
+		arr[rowNum] := {}																; create array for row
+		rowHasVals := False																; check for empty row
 		Loop
 		{
 			colNum := A_Index
-			if (colNum>maxCol) {
+			if (colNum>maxCol) {														; push to furthest col with info
 				maxCol:=colNum
 			}
 			cel := oWorkbook.Sheets(1).Range(colArr[colNum] rowNum).value				; Scan Sheet1 A2.. etc
@@ -180,7 +235,7 @@ readXLSX(file) {
 				arr.Delete(rowNum)
 				Break
 			}
-			if ((cel="") && (colNum=maxCol)) {											; at maxCol and empty, break this cols loop
+			if ((colNum=maxCol) && (cel="")) {											; at maxCol and empty, break this cols loop
 				Break
 			}
 			arr[rowNum][colNum] := cel
@@ -192,81 +247,6 @@ readXLSX(file) {
 	oExcel.quit
 
 	Return arr
-
-/*
-	colArr := ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"] 	; array of column letters
-	fcDate:=[]																			; array of dates
-	getVals := false																	; flag when have hit the Date vals row
-
-	While !(valsEnd)																	; ROWS
-	{
-		RowNum := A_Index
-		row_name :=																		; ROW name (service name)
-		if (rowNum=1) {																	; first row is title, skip
-			continue
-		}
-		
-		Loop																			; COLUMNS
-		{
-			colNum := A_Index															; next column
-			if (colNum=1) {
-				label:=true																; first column (e.g. A1) is label column
-			} else {
-				label:=false
-			}
-			if (ColNum>maxCol) {														; increment maxCol
-				maxCol:=colNum
-			}
-			
-			cel := oWorkbook.Sheets(1).Range(colArr[ColNum] RowNum).value				; Scan Sheet1 A2.. etc
-			if ((cel="") && (colnum=maxcol)) {											; at maxCol and empty, break this cols loop
-				break
-			}
-			if (RegExMatch(cel,"\b(\d{1,2})\D(\d{1,2})(\D\d{2,4})?\b",tmp)) {			; matches date format
-				getVals := true
-				if !(tmp3) {															; get today's YYYY if not given
-					tmp3 := substr(A_now,1,4)
-				}
-				tmpDt := RegExReplace(tmp3,"\D") zDigit(tmp1) zDigit(tmp2) 				; tmpDt in format YYYYMMDD
-				fcDate[colNum] := tmpDt													; fill fcDate[1-7] with date strings
-				if !IsObject(y.selectSingleNode("/root/forecast/call[@date='" tmpDt "']")) {
-					y.addElement("call","/root/forecast", {date:tmpDt})					; create node if doesn't exist
-				}
-				continue																; keep getting col dates but don't get values yet
-			}
-			
-			if !(getVals) {																; don't start parsing until we have passed date row
-				continue
-			}
-			
-			cel := trim(RegExReplace(cel,"\s+"," "))									; remove extraneous whitespace
-			if (label) {
-				if !(cel) {																; blank label means we've reached the end of rows
-					valsEnd := true														; flag to end
-					break																; break out of LOOP to next WHILE
-				}
-				
-				if (j:=objHasValue(Forecast_val,cel,"RX")) {							; match index value from Forecast_val
-					row_name := Forecast_svc[j]											; get abbrev string from index
-				} else {
-					row_name := RegExReplace(cel,"(\s+)|[\/\*\?]","_")					; no match, create ad hoc and replace space, /, \, *, ? with "_"
-				}
-				progress,, Scanning forecast, % row_name
-				continue																; results in some ROW NAME, now move to the next column
-			}
-			if !(cel~="[a-zA-Z]") {
-				cel := ""
-			}
-			
-			fcNode := "/root/forecast/call[@date='" fcDate[colNum] "']"
-			if !IsObject(y.selectSingleNode(fcNode "/" row_name)) {						; create node for service person if not present
-				y.addElement(row_name,fcNode)
-			}
-			y.setText(fcNode "/" row_name, cleanString(cel))							; setText changes text value for that node
-		}
-	}
-*/
-
 }
 
 readQgenda() {
