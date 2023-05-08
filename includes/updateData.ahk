@@ -23,6 +23,13 @@ readDocs() {
 	outArr := readXLSX(A_WorkingDir "\files\outdocs.xlsx")
 	
 	progress,,% " ",Scanning providers...
+	if fileexist(".\files\outdocs.xml") {
+		y := new XML(".\files\outdocs.xml")
+	} else {
+		y := new XML("<root/>")
+		y.save(".\files\outdocs.xml")
+	}
+
 	Docs := Object()
 	tmpChk := false
 	if FileExist(path.chip "outdocs.csv") {													; if server access to chipotle outdocs, make a local copy
