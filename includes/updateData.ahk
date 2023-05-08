@@ -1,5 +1,5 @@
 /*	Build call schedule
-	Extracted from chipotle.ahk
+	Get Docs list
 */
 
 updateCall() {
