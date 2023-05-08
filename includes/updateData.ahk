@@ -212,11 +212,13 @@ readXLSX(file) {
 	oWorkbook := ComObjGet(file)
 	colArr := ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"] 	; array of column letters
 	arr := {}
-	valsEnd := false																	; flag when reached the last row
+	valsEnd := 0																		; flag when reached the last row
+	valsEndNum := 3																		; number of blank rows to signify end
 
-	While !(valsEnd)
+	While (valsEnd<valsEndNum)
 	{
 		rowNum := A_Index
+		Progress, % rowNum
 		arr[rowNum] := {}																; create array for row
 		rowHasVals := False																; check for empty row
 		Loop
@@ -229,10 +231,13 @@ readXLSX(file) {
 
 			if (cel!="") {
 				rowHasVals := true
+				valsEnd:=0
 			}
-			if ((colNum=maxCol) && (rowHasVals=false)) {								; first blank row
-				valsEnd := true
-				arr.Delete(rowNum)
+			if ((colNum=maxCol) && (rowHasVals=false)) {								; blank row
+				valsEnd++
+			}
+			if (valsEnd=valsEndNum) {
+				arr.Delete(rowNum-valsEndNum+1,rowNum)									; delete end blank rows
 				Break
 			}
 			if ((colNum=maxCol) && (cel="")) {											; at maxCol and empty, break this cols loop
