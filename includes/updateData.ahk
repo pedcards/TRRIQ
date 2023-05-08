@@ -20,7 +20,11 @@ readDocs() {
 
 	FileCopy, % path.chip "outdocs.xlsx", % ".\files\outdocs.xlsx", 1
 
-	outArr := readXLSX(A_WorkingDir "\files\outdocs.xlsx")
+	oWorkbook := ComObjGet(A_WorkingDir "\files\outdocs.xlsx")
+	oWorkbook.SaveAs(A_WorkingDir "\files\outdocs.csv",xlCSV:=6)
+	oWorkbook :=
+
+	; outArr := readXLSX(A_WorkingDir "\files\outdocs.xlsx")
 	
 	progress,,% " ",Scanning providers...
 	if fileexist(".\files\outdocs.xml") {
