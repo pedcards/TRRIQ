@@ -7,87 +7,39 @@ readDocs() {
 	
 	progress,,% " ",Checking provider list for updates...
 	FileGetTime, fnameIN_dt, % path.chip "outdocs.xlsx"
-	FileGetTime, fnameOUT_dt, % ".\files\outdocs.xml"
+	FileGetTime, fnameLOC_dt, % ".\files\outdocs.xlsx"
 
-	if (fnameOUT_dt > fnameIN_dt) {														; skip if same or somehow XML newer  
-		Return
+	if (fnameIN_dt > fnameLOC_dt) {														; chipotle outdocs has been updated
+		FileCopy, % path.chip "outdocs.xlsx", % ".\files\outdocs.xlsx", 1
+
+		oWorkbook := ComObjGet(A_WorkingDir "\files\outdocs.xlsx")
+		oWorkbook.SaveAs(A_WorkingDir "\files\outdocstmp.csv",xlCSV:=6)
+		oWorkbook := ""
+		FileMove, % ".\files\outdocstmp.csv", % ".\files\outdocs.csv", 1
 	}
-	
-	; if FileExist(".lock") {
-	; 	return
-	; }
-	; FileOpen(".lock", "W")
-
-	FileCopy, % path.chip "outdocs.xlsx", % ".\files\outdocs.xlsx", 1
-
-	oWorkbook := ComObjGet(A_WorkingDir "\files\outdocs.xlsx")
-	oWorkbook.SaveAs(A_WorkingDir "\files\outdocs.csv",xlCSV:=6)
-	oWorkbook :=
-
-	; outArr := readXLSX(A_WorkingDir "\files\outdocs.xlsx")
 	
 	progress,,% " ",Scanning providers...
-	if fileexist(".\files\outdocs.xml") {
-		y := new XML(".\files\outdocs.xml")
-	} else {
-		y := new XML("<root/>")
-		y.save(".\files\outdocs.xml")
-	}
-
-	Docs := Object()
-	colIdx := []
-
-	loop % outArr.MaxIndex()
-	{
-		rowNum := A_Index
-		rowArr := outArr[rowNum]
-		if (rowNum=1) {
-			loop % rowArr.MaxIndex()
-			{
-				colIdx[A_Index] := rowArr[A_Index]
-			}
-			Continue
-		}
-		if (rowArr[1]="" or rowArr[4]="group") {										; skip group names, blank lines
-			Continue
-		}
-		if (rowArr[2]="" & rowArr[3]="" & rowArr[4]="") {								; Fields 2,3,4 blank = new group
-			tmpGrp := rowArr[1]
-			y.addElement("group","/root",{name:tmpGrp})
-			Continue
-		}
-		loop % rowArr.MaxIndex()
-		{
-			colNum := A_Index
-			cel := rowArr[colNum]
-		}
-	}
-
 	tmpChk := false
-	if FileExist(path.chip "outdocs.csv") {												; if server access to chipotle outdocs, make a local copy
-		FileCopy, % path.chip "outdocs.csv", .\files\outdocs.csv, 1
-	}
+	Docs := Object()
 	Loop, Read, .\files\outdocs.csv
 	{
 		tmp := StrSplit(A_LoopReadLine,",","""")
-		if (tmp.1="Name" or tmp.1="end" or tmp.1="") {				; header, end, or blank lines
+		if (tmp.1="Name" or tmp.1="end" or tmp.1="") {									; header, end, or blank lines
 			continue
 		}
-		if (tmp.4="group") {											; skip group names
+		if (tmp.4="group") {															; skip group names
 			continue
 		}
-		if (tmp.2="" and tmp.3="" and tmp.4="") {						; Fields 2,3,4 blank = new group
+		if (tmp.2="" and tmp.3="" and tmp.4="") {										; Fields 2,3,4 blank = new group
 			tmpGrp := tmp.1
 			tmpIdx := 0
-			tmpIdxG += 1
-			outGrps.Insert(tmpGrp)
 			continue
 		}
-		if !(tmp.4~="i)(seattlechildrens\.org|washington\.edu)") {		; skip non-SCH or non-UW providers
+		if !(tmp.4~="i)(seattlechildrens\.org|washington\.edu)") {						; skip non-SCH or non-UW providers
 			continue
 		}
 		tmpIdx += 1
-		tmpPrv := RegExReplace(tmp.1,"^(.*?) (.*?)$","$2, $1")			; input FIRST LAST NAME ==> LAST NAME, FIRST
+		tmpPrv := RegExReplace(tmp.1,"^(.*?) (.*?)$","$2, $1")							; input FIRST LAST NAME ==> LAST NAME, FIRST
 		Docs[tmpGrp,tmpIdx]:=tmpPrv
 		Docs[tmpGrp ".eml",tmpIdx] := tmp.4
 		Docs[tmpGrp ".npi",tmpIdx] := tmp.5
@@ -95,6 +47,7 @@ readDocs() {
 
 	return Docs
 }
+
 updateCall() {
 /*	Update call.xml 
 	- Read Qgenda schedule for base Call, Ward, ICU, EP, TXP schedule
