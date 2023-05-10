@@ -24,25 +24,40 @@ readDocs() {
 	Loop, Read, .\files\outdocs.csv
 	{
 		tmp := StrSplit(A_LoopReadLine,",","""")
+		if (A_Index=1) {
+			Loop, % tmp.MaxIndex() {
+				i := tmp[A_Index]
+				switch i																; grab idx nums for these cols
+				{
+				case "Name":
+					idxName := A_Index
+				case "Email":
+					idxEml := A_Index
+				case "NPI":
+					idxNPI := A_Index
+				}
+			}
+			Continue
+		}
 		if (tmp.1="Name" or tmp.1="end" or tmp.1="") {									; header, end, or blank lines
 			continue
 		}
-		if (tmp.4="group") {															; skip group names
+		if (tmp[idxEml]="group") {														; skip group numbers
 			continue
 		}
 		if (tmp.2="" and tmp.3="" and tmp.4="") {										; Fields 2,3,4 blank = new group
-			tmpGrp := tmp.1
+			tmpGrp := tmp[idxName]
 			tmpIdx := 0
 			continue
 		}
-		if !(tmp.4~="i)(seattlechildrens\.org|washington\.edu)") {						; skip non-SCH or non-UW providers
+		if !(tmp[idxEml]~="i)(seattlechildrens\.org|washington\.edu)") {				; skip non-SCH or non-UW providers
 			continue
 		}
 		tmpIdx += 1
-		tmpPrv := RegExReplace(tmp.1,"^(.*?) (.*?)$","$2, $1")							; input FIRST LAST NAME ==> LAST NAME, FIRST
+		tmpPrv := RegExReplace(tmp[idxName],"^(.*?) (.*?)$","$2, $1")					; input FIRST LAST NAME ==> LAST NAME, FIRST
 		Docs[tmpGrp,tmpIdx]:=tmpPrv
-		Docs[tmpGrp ".eml",tmpIdx] := tmp.4
-		Docs[tmpGrp ".npi",tmpIdx] := tmp.5
+		Docs[tmpGrp ".eml",tmpIdx] := tmp[idxEml]
+		Docs[tmpGrp ".npi",tmpIdx] := tmp[idxNPI]
 	}
 
 	return Docs
