@@ -26,7 +26,7 @@ readDocs() {
 		tmp := StrSplit(A_LoopReadLine,",","""")
 		if (A_Index=1) {
 			Loop, % tmp.MaxIndex() {
-				i := tmp[A_Index]
+				i := trim(tmp[A_Index])
 				switch i																; grab idx nums for these cols
 				{
 				case "Name":
