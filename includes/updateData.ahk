@@ -45,7 +45,7 @@ readDocs() {
 		if (tmp[idxEml]="group") {														; skip group numbers
 			continue
 		}
-		if (tmp.2="" and tmp.3="" and tmp.4="") {										; Fields 2,3,4 blank = new group
+		if (tmp.2="" and tmp.3="" and tmp.4="" and tmp.5="" and tmp.6="") {				; Fields 2,3,4 blank = new group
 			tmpGrp := tmp[idxName]
 			tmpIdx := 0
 			continue
