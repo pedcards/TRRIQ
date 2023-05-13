@@ -4737,7 +4737,7 @@ Holter_BGM2(newtxt) {
 /*
 
 */
-	global fldval, monType, fields, labels
+	global fldval, monType, fields, labels, fetchQuit
 
 	eventlog("Holter_BGMini2023")
 	monType := "BGM"
@@ -4793,8 +4793,6 @@ Holter_BGM2(newtxt) {
 	sumVTlongest := cleanspace(stRegX(sumVT,"Longest",1,1,"Fastest",1))
 	sumVTfastest := cleanspace(stregx(sumVT,"fastest",1,1,">>>end",1))
 
-Clipboard:=summary
-	
 	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
@@ -4805,8 +4803,6 @@ Clipboard:=summary
 	StringReplace, tmpstr, tmpstr, `r, `n, ALL
 	fieldcoladd("","INTERP",trim(cleanspace(tempstr)," `n"))
 	fieldcoladd("","Mon_type","Holter")
-	
-	ShortenPDF(fullDisc)
 	
 	fldval.done := true
 
