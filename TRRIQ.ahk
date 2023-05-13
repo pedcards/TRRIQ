@@ -3721,7 +3721,7 @@ moveWQ(id) {
 	global wq, fldval
 	
 	filecheck()
-	FileOpen(".lock", "W")															; Create lock file.
+	FileOpen(".lock", "W")																; Create lock file.
 	
 	wqStr := "/root/pending/enroll[@id='" id "']"
 	x := wq.selectSingleNode(wqStr)
