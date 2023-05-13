@@ -4733,6 +4733,86 @@ Holter_BGM:
 return	
 }
 
+Holter_BGM2(newtxt) {
+/*
+
+*/
+	global fldval, monType, fields, labels
+
+	eventlog("Holter_BGMini2023")
+	monType := "BGM"
+	
+	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	 */
+	demog := columns(newtxt,"\s+Long-Term Holter","Indication for Monitoring:",,"Preventice Services, LLC")
+	RegExMatch(demog,"O)(\d{1,2}\/\d{1,2}\/\d{2,4})\s+-\s+(\d{1,2}\/\d{1,2}\/\d{2,4})",t)
+	fldval["dem-Test_date"] := t[1]
+	fldval["dem-Test_end"] := t[2]
+	
+	demog := columns(demog,"\s+BodyGuardian MINI","Heart Rate",,"Artifact Time")
+	demog := RegExReplace(demog, "[\r\n]")
+	fields[1] := ["Prescribed Time","Diagnostic Time","Artifact Time"]
+	labels[1] := ["Recording_time","Analysis_time","null"]
+	fldval["dem-" labels[1][1]] := trim(stRegX(demog,fields[1][1],0,1,fields[1][2],1))
+	fldval["dem-" labels[1][2]] := trim(stRegX(demog,fields[1][2],0,1,fields[1][3],1))
+
+	summary := columns(newtxt,"Indication for Monitoring","Preventice Technologies",,"AFib Summary") ">>>"
+	summary := columns(summary,"AFib Summary",">>>",,"Heart Rate")
+	Clipboard:=summary
+
+	sumRate := stRegX(summary,"Overall",1,1,"Sinus",1)
+	sumRate := onecol(cleanblank(sumRate))
+	sumMin := cleanspace(stRegX(sumRate,"Minimum",1,1,"Average",1))
+	sumAvg := cleanspace(stRegX(sumRate,"Average",1,1,"Maximum",1))
+	sumMax := cleanspace(stRegX(sumRate,"Maximum",1,1,">>>end",1))
+	sumTot := cleanspace(stRegX(summary,"Total Beat Count",1,1,"\R+",1))
+
+	sumVE := stRegX(summary,"Ventricular Complexes",1,1,"Supraventricular Complexes",1)
+	fields[1] := ["VE Count","Isolated Count","Couplets","Bigeminy","Trigeminy","Morphologies"]
+	labels[1] := ["Total","SingleVE","Couplets","Bigeminy","Trigeminy","Morphologies"]
+	scanParams(sumVE,1,"ve",1)
+
+	sumSVE := stRegX(summary,"Supraventricular Complexes",1,1,"Patient Triggers")
+	fields[1] := ["SVE Count","Isolated Count","Couplets","Patient Triggers"]
+	labels[1] := ["Total","Single","Pairs","null"]
+	scanParams(sumSVE,1,"sve",1)
+
+	sumSVT := stRegX(summary,"SVT Summary",1,1,"AV Block Summary",1)
+	sumSVTtot := trim(stRegX(sumSVT,"Total Events",1,1,"\R+",1))
+	sumSVT := onecol(stRegX(sumSVT ">>>","Longest",1,0,">>>",1))
+	sumSVTlongest := cleanspace(stRegX(sumSVT,"Longest",1,1,"Fastest",1))
+	sumSVTfastest := cleanspace(stregx(sumSVT,"fastest",1,1,">>>end",1))
+
+	sumPause := stRegX(summary,"Total Pauses",1,0,"VT Summary",1)
+	sumPausetot := trim(stRegX(sumPause,"Total Pauses",1,1,"\R+",1))
+	sumPause := cleanspace(stRegX(sumPause ">>>","Longest Duration",1,1,">>>",1))
+
+	sumVT := stRegX(summary,"\R+VT Summary",1,1,"Heart Rate",1)
+	sumVTtot := trim(stRegX(sumVT,"Total Events",1,1,"\R+",1))
+	sumVT := onecol(stRegX(sumVT ">>>","Longest",1,0,">>>",1))
+	sumVTlongest := cleanspace(stRegX(sumVT,"Longest",1,1,"Fastest",1))
+	sumVTfastest := cleanspace(stregx(sumVT,"fastest",1,1,">>>end",1))
+
+Clipboard:=summary
+	
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	fieldsToCSV()
+	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
+	StringReplace, tmpstr, tmpstr, `r, `n, ALL
+	fieldcoladd("","INTERP",trim(cleanspace(tempstr)," `n"))
+	fieldcoladd("","Mon_type","Holter")
+	
+	ShortenPDF(fullDisc)
+	
+	fldval.done := true
+
+	return	
+}
+
 daycount(byref txt,day1) {
 	n:="(\d{2}:\d{2}:\d{2}) Day (\d{1,2})"
 	pos:=1, v:=0
