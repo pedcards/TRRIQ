@@ -3620,6 +3620,8 @@ ProcessPDF:
 		gosub Event_BGH
 	} else if (instr(newtxt,"Global Instrumentation LLC")) {							; BG Mini extended Holter
 		gosub Holter_BGM
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"Long-Term Holter Report")) {		; New BG Mini EL Holter 2023
+		Holter_BGM2(newtxt)
 	} else {
 		eventlog(fileNam " bad file.")
 		MsgBox No match!
