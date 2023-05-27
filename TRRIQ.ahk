@@ -4647,7 +4647,7 @@ Holter_BGM_HL7:
 	monType := "BGM"
 
 	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
-		gosub processPDF																; process from extracted PDF
+		gosub processPDF																; need to reprocess from extracted PDF
 		Return
 	}
 	
@@ -5445,7 +5445,7 @@ formatField(pre, lab, txt) {
 		return
 	}
 	
-;	Preventice Holter specific fixes
+;	Mortara Holter specific fixes
 	if (monType="HOL") {
 		if (lab="Name") {																; Break name into Last and First
 			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
