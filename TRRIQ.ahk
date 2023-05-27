@@ -3604,7 +3604,8 @@ ProcessPDF:
  *	into a single file (fileOut),
  *	move around the temp, CSV, and PDF files.
  */
-	RunWait, .\files\pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
+	; RunWait, .\files\pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
+	RunWait, .\files\pdftotext.exe -l 2 -table -fixed 3 .\devfiles\holter2023.pdf "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
 	newTxt:=""																			; clear the full txt variable
 	FileRead, maintxt, %filenam%.txt													; load into maintxt
 	FileDelete, %filenam%.txt
