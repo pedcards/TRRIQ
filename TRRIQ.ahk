@@ -4675,22 +4675,17 @@ return
 
 Holter_BGM:
 {
-	eventlog("Holter_BGMini")
+	eventlog("Holter_BGMini v1")
 	monType := "BGM"
 	
 	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	demog := columns(newtxt,"Patient\s+Information","Ventricular Tachycardia",1,"Test Start")
-	;~ fields[1] := ["MRN","Patient Name","Age","Date Of Birth","Gender","Site"
-				;~ , "Test Start","Test End","Test Duration","Analysis Duration"]
-	;~ labels[1] := ["MRN","Name","null","DOB","Sex","null"
-				;~ , "Test_date","Test_end","Recording_time","Analysis_time"]
 	fields[1] := ["Test Start","Test End","Test Duration","Analysis Duration"]
 	labels[1] := ["Test_date","Test_end","Recording_time","Analysis_time"]
 	scanParams(demog,1,"dem",1)
 	
 	t0 := parseDate(fldval["dem-Test_date"]).ymd
-	;~ t1 := t0.YMD t0.hr t0.min t0.sec
 	
 	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS") "<<<end"
 	daycount(summary,t0)
@@ -4739,8 +4734,8 @@ return
 }
 
 Holter_BGM2(newtxt) {
-/*
-
+/*	Get data from BGM 2023
+	Requires table format
 */
 	global fldval, monType, fields, labels, fetchQuit
 
