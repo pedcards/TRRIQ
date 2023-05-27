@@ -5497,10 +5497,16 @@ formatField(pre, lab, txt) {
 
 ;	Body Guardian Mini specific fixes
 	if (monType="BGM") {
-		if (lab ~= "Test_(date|end)") {													; convert dates to MDY format
+		; convert dates to MDY format
+		if (lab ~= "Test_(date|end)") {
 			txt := parseDate(txt).mdy
 		}
-		if RegExMatch(txt																; reconstitute Beats and BPM for longest/fastest/slowest fields
+		; remove commas from numbers
+		if (pre~="hrd|ve|sve") {
+			txt := StrReplace(txt, ",", "")
+		}
+		; reconstitute Beats and BPM for longest/fastest/slowest fields
+		if RegExMatch(txt
 		,"(.*)? \((\d{1,2}/\d{1,2}/\d{2,4} at \d{1,2}:\d{2}:\d{2})\)"
 		,res) {
 			res1 := RegExReplace(res1,"(\d+)\s*,\s*(\d+)","$1 beats, $2 bpm")
@@ -5508,13 +5514,23 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_time",res2)
 			return
 		}
+		; split value times for "32 12/15 08:23:17"
+		if RegExMatch(txt
+		,"\b(\d+)\s+(\d{1,2}/\d{1,2}(/\d{2,4})?\s+\d{2}:\d{2}:\d{2})"
+		,res) {
+			fieldColAdd(pre,lab,res1)
+			fieldColAdd(pre,lab "_time",res2)
+			return
+		}
+		; split "57 (29.4%)" into "57" and "29.4"
 		if RegExMatch(txt,"(.*?)\((.*?%)\)",res) {
 			fieldColAdd(pre,lab,res1)
 			fieldColAdd(pre,lab "_per",res2)
 			return
 		}
+		; convert DD:HH:MM:SS into Days & Hrs
 		if (lab~="_time") {
-			if RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res) {					; convert DD:HH:MM:SS into Days & Hrs
+			if RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res) {
 				txt := res1 " days, " res2 " hours"
 			}
 			if (txt~="^\d{14}$") {														; yyyymmddhhmmss
