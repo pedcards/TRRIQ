@@ -5258,6 +5258,13 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 }
 
 scanParams(txt,blk,pre:="par",rx:="") {
+/*	Parse lines of text for label-value pairs
+	Identify columns based on spacing
+		labels         	values
+		SVE Count:      39,807
+		Couplets:       1,432
+	Send result to fldval and to fileout
+*/
 	global fields, labels, fldval
 	colstr = (?<=(\s{2}))(\>\s*)?[^\s].*?(?=(\s{2}))
 	Loop, parse, txt, `n,`r
@@ -5405,6 +5412,10 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 }
 
 formatField(pre, lab, txt) {
+/*	Last second formatting of values
+	Generic, and per report type
+	Send result to fileOut strings
+*/
 	global monType, Docs, ptDem, fldval
 
 	if RegExMatch(txt,"(\d{1,2}) hr (\d{1,2}) min",t) {						; convert "24 hr 0 min" to "24:00"
@@ -5412,7 +5423,7 @@ formatField(pre, lab, txt) {
 	}
 	txt:=RegExReplace(txt,"i)( BPM)|( Event(s)?)|( Beat(s)?)|( sec(ond)?(s)?)")		; Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						; Fix time strings without space before AM|PM
-	txt:=RegExReplace(txt,"\(DD:HH:MM:SS\)")								; Remove time units
+	txt:=RegExReplace(txt,"\(DD:HH:MM:SS\)")								; Remove time units "(DD:HH:MM:SS)"
 	txt := trim(txt)
 	
 	if (lab="Name") {
