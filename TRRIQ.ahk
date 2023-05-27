@@ -4644,6 +4644,11 @@ Holter_BGM_HL7:
 {
 	eventlog("Holter_BGMini_HL7")
 	monType := "BGM"
+
+	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
+		gosub processPDF																; process from extracted PDF
+		Return
+	}
 	
 	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
