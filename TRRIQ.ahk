@@ -5257,6 +5257,38 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 	return trim(str.value("res")," :`n`r`t")
 }
 
+scanParamStr(txt,blk,pre:="par",rx:=1) {
+/*	Parse block of text for values between labels (rx=RegEx) 
+		Min HR
+		59
+		Avg HR	81
+		Max HR
+		172
+*/
+	global fields, labels, fldval
+	BO := 1
+	loop, % fields[blk].Length()
+	{
+		i := A_Index
+		if (rx) {
+			k := stRegX(txt,fields[blk,i],BO,1,fields[blk,i+1],1,BO)
+		} else {
+			k := strX(txt
+				, fields[blk,i],BO,StrLen(fields[blk,i])
+				, fields[blk,i+1],0,StrLen(fields[blk,i+1]),BO)
+		}
+		res := trim(cleanspace(k))
+
+		lbl := labels[blk,i]
+
+		fldfill(pre "-" lbl, res)
+		
+		formatfield(pre,lbl,res)
+	}
+
+	Return
+}
+
 scanParams(txt,blk,pre:="par",rx:="") {
 /*	Parse lines of text for label-value pairs
 	Identify columns based on spacing
