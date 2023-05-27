@@ -4790,8 +4790,8 @@ Holter_BGM2(newtxt) {
 	sumSVT := stRegX(summary,"SVT Summary",1,1,"AV Block Summary",1)
 	sumSVTtot := trim(stRegX(sumSVT,"Total Events",1,1,"\R+",1))
 	sumSVT := onecol(stRegX(sumSVT ">>>","Longest",1,0,">>>",1))
-	fldval["sve-Longest"] := cleanspace(stRegX(sumSVT,"Longest",1,1,"Fastest",1))
-	fldval["sve-Fastest"] := cleanspace(stregx(sumSVT,"fastest",1,1,">>>end",1))
+	fldval["sve-Longest"] := cleanspace(RegExReplace(stRegX(sumSVT,"Longest",1,1,"Fastest",1),"\d+ bpm"))
+	fldval["sve-Fastest"] := cleanspace(RegExReplace(stregx(sumSVT,"fastest",1,1,">>>end",1),"\d+ beats"))
 
 	sumPause := stRegX(summary,"Total Pauses",1,0,"VT Summary",1)
 	fldval["sve-Pauses"] := trim(stRegX(sumPause,"Total Pauses",1,1,"\R+",1))
@@ -4800,8 +4800,8 @@ Holter_BGM2(newtxt) {
 	sumVT := stRegX(summary,"\R+VT Summary",1,1,"Heart Rate",1)
 	sumVTtot := trim(stRegX(sumVT,"Total Events",1,1,"\R+",1))
 	sumVT := onecol(stRegX(sumVT ">>>","Longest",1,0,">>>",1))
-	fldval["ve-Longest"] := cleanspace(stRegX(sumVT,"Longest",1,1,"Fastest",1))
-	fldval["ve-Fastest"] := cleanspace(stregx(sumVT,"fastest",1,1,">>>end",1))
+	fldval["ve-Longest"] := cleanspace(RegExReplace(stRegX(sumVT,"Longest",1,1,"Fastest",1),"\d+ bpm"))
+	fldval["ve-Fastest"] := cleanspace(RegExReplace(stregx(sumVT,"fastest",1,1,">>>end",1),"\d+ beats"))
 
 	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -5516,7 +5516,7 @@ formatField(pre, lab, txt) {
 		}
 		; split value times for "32 12/15 08:23:17"
 		if RegExMatch(txt
-		,"\b(\d+)\s+(\d{1,2}/\d{1,2}(/\d{2,4})?\s+\d{2}:\d{2}:\d{2})"
+		,"\b([\d\.]+)s?\s+(\d{1,2}/\d{1,2}(/\d{2,4})?\s+\d{2}:\d{2}:\d{2})"
 		,res) {
 			fieldColAdd(pre,lab,res1)
 			fieldColAdd(pre,lab "_time",res2)
