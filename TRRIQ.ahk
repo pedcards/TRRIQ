@@ -4753,28 +4753,36 @@ Holter_BGM2(newtxt) {
 	demog := RegExReplace(demog, "[\r\n]")
 	fields[1] := ["Prescribed Time","Diagnostic Time","Artifact Time"]
 	labels[1] := ["Recording_time","Analysis_time","null"]
-	fldval["dem-" labels[1][1]] := trim(stRegX(demog,fields[1][1],0,1,fields[1][2],1))
-	fldval["dem-" labels[1][2]] := trim(stRegX(demog,fields[1][2],0,1,fields[1][3],1))
+	scanParamStr(demog,1,"dem")
 
 	summary := columns(newtxt,"Indication for Monitoring","Preventice Technologies",,"AFib Summary") ">>>"
 	summary := columns(summary,"AFib Summary",">>>",,"Heart Rate")
+	fields[1] := ["Total Beat Count","\R+"]
+	labels[1] := ["Total_beats","null"]
+	scanParamStr(summary,1,"hrd")
 	
 	sumRate := stRegX(summary,"Overall",1,1,"Sinus",1)
 	sumRate := onecol(cleanblank(sumRate))
-	fldval["hrd-Min"] := trim(cleanspace(stRegX(sumRate,"Minimum",1,1,"Average",1)))
-	fldval["hrd-Avg"]:= trim(cleanspace(stRegX(sumRate,"Average",1,1,"Maximum",1)))
-	fldval["hrd-Max"] := trim(cleanspace(stRegX(sumRate,"Maximum",1,1,">>>end",1)))
-	fldval["hrd-Total_beats"] := trim(cleanspace(stRegX(summary,"Total Beat Count",1,1,"\R+",1)))
+	fields[1] := ["Minimum","Average","Maximum",">>>end"]
+	labels[1] := ["Min","Avg","Max","null"]
+	scanParamStr(sumRate ">>>end",1,"hrd")
 
 	sumSinus := stRegX(summary,"Sinus",1,1,"Tachycardia|Ectopics",1)
 	sumSinus := oneCol(cleanblank(sumSinus))
-	fldval["hrd-Slowest"] := trim(cleanspace(stRegX(sumSinus,"Minimum",1,1,"Maximum",1)))
-	fldval["hrd-Fastest"] := trim(cleanspace(stRegX(sumSinus,"Maximum",1,1,">>>end",1)))
+	fields[1] := ["Minimum","Maximum",">>>end"]
+	labels[1] := ["Slowest","Fastest","null"]
+	scanParamStr(sumSinus ">>>end",1,"hrd")
 	
 	sumVE := stRegX(summary,"Ventricular Complexes",1,1,"Supraventricular Complexes",1)
 	fields[1] := ["VE Count","Isolated Count","Couplets","Bigeminy","Trigeminy","Morphologies"]
 	labels[1] := ["Total","SingleVE","Couplets","Bigeminy","Trigeminy","Morphologies"]
 	scanParams(sumVE,1,"ve",1)
+
+	sumVT := stRegX(summary,"\R+VT Summary",1,1,"Heart Rate",1)
+	sumVTtot := trim(stRegX(sumVT,"Total Events",1,1,"\R+",1))
+	sumVT := onecol(stRegX(sumVT ">>>end","Longest",1,0,">>>end",1))
+	fldval["ve-Longest"] := trim(cleanspace(RegExReplace(stRegX(sumVT,"Longest",1,1,"Fastest",1),"\d+ bpm")))
+	fldval["ve-Fastest"] := trim(cleanspace(RegExReplace(stregx(sumVT,"fastest",1,1,">>>end",1),"\d+ beats")))
 
 	sumSVE := stRegX(summary,"Supraventricular Complexes",1,1,"Patient Triggers")
 	fields[1] := ["SVE Count","Isolated Count","Couplets","Patient Triggers"]
@@ -4783,20 +4791,15 @@ Holter_BGM2(newtxt) {
 
 	sumSVT := stRegX(summary,"SVT Summary",1,1,"AV Block Summary",1)
 	sumSVTtot := trim(stRegX(sumSVT,"Total Events",1,1,"\R+",1))
-	sumSVT := onecol(stRegX(sumSVT ">>>","Longest",1,0,">>>",1))
-	fldval["sve-Longest"] := cleanspace(RegExReplace(stRegX(sumSVT,"Longest",1,1,"Fastest",1),"\d+ bpm"))
-	fldval["sve-Fastest"] := cleanspace(RegExReplace(stregx(sumSVT,"fastest",1,1,">>>end",1),"\d+ beats"))
+	sumSVT := onecol(stRegX(sumSVT ">>>end","Longest",1,0,">>>end",1))
+	fldval["sve-Longest"] := trim(cleanspace(RegExReplace(stRegX(sumSVT,"Longest",1,1,"Fastest",1),"\d+ bpm")))
+	fldval["sve-Fastest"] := trim(cleanspace(RegExReplace(stregx(sumSVT,"fastest",1,1,">>>end",1),"\d+ beats")))
 
 	sumPause := stRegX(summary,"Total Pauses",1,0,"VT Summary",1)
-	fldval["sve-Pauses"] := trim(stRegX(sumPause,"Total Pauses",1,1,"\R+",1))
-	fldval["sve-LongRR"] := cleanspace(stRegX(sumPause ">>>","Longest Duration",1,1,">>>",1))
+	fields[1] := ["Total Pauses","\R+","Longest Duration",">>>end"]
+	labels[1] := ["Pauses","null","LongRR","null"]
+	scanParamStr(sumPause ">>>end",1,"sve")
 	
-	sumVT := stRegX(summary,"\R+VT Summary",1,1,"Heart Rate",1)
-	sumVTtot := trim(stRegX(sumVT,"Total Events",1,1,"\R+",1))
-	sumVT := onecol(stRegX(sumVT ">>>","Longest",1,0,">>>",1))
-	fldval["ve-Longest"] := cleanspace(RegExReplace(stRegX(sumVT,"Longest",1,1,"Fastest",1),"\d+ bpm"))
-	fldval["ve-Fastest"] := cleanspace(RegExReplace(stregx(sumVT,"fastest",1,1,">>>end",1),"\d+ beats"))
-
 	gosub checkProc												; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
 		return													; fetchGUI was quit, so skip processing
