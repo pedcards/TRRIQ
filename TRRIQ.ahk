@@ -4657,13 +4657,13 @@ Holter_BGM_HL7:
 	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
 									, calcDuration(fldval["hrd-Analyzed_Time"]).DHM " (DD:HH:MM)")
 
-	gosub checkProc												; check validity of PDF, make demographics valid if not
+	gosub checkProc																		; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
-		return													; fetchGUI was quit, so skip processing
+		return																			; fetchGUI was quit, so skip processing
 	}
 	
 	fieldsToCSV()
-	fieldcoladd("","INTERP","")									; fldval["Narrative"]
+	fieldcoladd("","INTERP","")															; fldval["Narrative"]
 	fieldcoladd("","Mon_type","Holter")
 	
 	FileCopy, %fileIn%, %fileIn%-sh.pdf
@@ -4763,8 +4763,7 @@ Holter_BGM2(newtxt) {
 
 	summary := columns(newtxt,"Indication for Monitoring","Preventice Technologies",,"AFib Summary") ">>>"
 	summary := columns(summary,"AFib Summary",">>>",,"Heart Rate")
-	Clipboard:=summary
-
+	
 	sumRate := stRegX(summary,"Overall",1,1,"Sinus",1)
 	sumRate := onecol(cleanblank(sumRate))
 	sumMin := cleanspace(stRegX(sumRate,"Minimum",1,1,"Average",1))
