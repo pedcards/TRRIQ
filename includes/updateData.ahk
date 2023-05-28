@@ -1,6 +1,67 @@
 /*	Build call schedule
-	Extracted from chipotle.ahk
+	Get Docs list
 */
+
+readDocs() {
+	global path
+	
+	progress,,% " ",Checking provider list for updates...
+	FileGetTime, fnameIN_dt, % path.chip "outdocs.xlsx"
+	FileGetTime, fnameLOC_dt, % ".\files\outdocs.xlsx"
+
+	if (fnameIN_dt > fnameLOC_dt) {														; chipotle outdocs has been updated
+		FileCopy, % path.chip "outdocs.xlsx", % ".\files\outdocs.xlsx", 1
+
+		oWorkbook := ComObjGet(A_WorkingDir "\files\outdocs.xlsx")
+		oWorkbook.SaveAs(A_WorkingDir "\files\outdocstmp.csv",xlCSV:=6)
+		oWorkbook := ""
+		FileMove, % ".\files\outdocstmp.csv", % ".\files\outdocs.csv", 1
+	}
+	
+	progress,,% " ",Scanning providers...
+	tmpChk := false
+	Docs := Object()
+	Loop, Read, .\files\outdocs.csv
+	{
+		tmp := StrSplit(A_LoopReadLine,",","""")
+		if (A_Index=1) {
+			Loop, % tmp.MaxIndex() {
+				i := trim(tmp[A_Index])
+				switch i																; grab idx nums for these cols
+				{
+				case "Name":
+					idxName := A_Index
+				case "Email":
+					idxEml := A_Index
+				case "NPI":
+					idxNPI := A_Index
+				}
+			}
+			Continue
+		}
+		if (tmp.1="Name" or tmp.1="end" or tmp.1="") {									; header, end, or blank lines
+			continue
+		}
+		if (tmp[idxEml]="group") {														; skip group numbers
+			continue
+		}
+		if (tmp.2="" and tmp.3="" and tmp.4="" and tmp.5="" and tmp.6="") {				; Fields 2,3,4 blank = new group
+			tmpGrp := tmp[idxName]
+			tmpIdx := 0
+			continue
+		}
+		if !(tmp[idxEml]~="i)(seattlechildrens\.org|washington\.edu)") {				; skip non-SCH or non-UW providers
+			continue
+		}
+		tmpIdx += 1
+		tmpPrv := RegExReplace(tmp[idxName],"^(.*?) (.*?)$","$2, $1")					; input FIRST LAST NAME ==> LAST NAME, FIRST
+		Docs[tmpGrp,tmpIdx]:=tmpPrv
+		Docs[tmpGrp ".eml",tmpIdx] := tmp[idxEml]
+		Docs[tmpGrp ".npi",tmpIdx] := tmp[idxNPI]
+	}
+
+	return Docs
+}
 
 updateCall() {
 /*	Update call.xml 
@@ -41,6 +102,7 @@ updateCall() {
 		eventlog("Uploaded call list.")
 	}
 	FileDelete, .lock
+	FileCopy, .\files\call.xml, % path.chip "call.xml" , 1
 	
 	return
 }
@@ -113,44 +175,39 @@ return
 }
 
 parseForecast(fcRecent) {
-	global y, path, callChg
-		, forecast_val, forecast_svc
+	global y, path, callChg, fcVals
 	
 	; Initialize some stuff
 	if !IsObject(y.selectSingleNode("/root/forecast")) {								; create if for some reason doesn't exist
 		y.addElement("forecast","/root")
 	} 
-	colArr := ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"] 	; array of column letters
-	fcDate:=[]																			; array of dates
-	oWorkbook := ComObjGet(A_WorkingDir "\fcTemp.xlsx")
-	getVals := false																	; flag when have hit the Date vals row
-	valsEnd := false																	; flag when reached the last row
-	
-	; Scan through XLSX document
-	While !(valsEnd)																	; ROWS
+	Forecast_svc := []
+	Forecast_val := []
+	for key,val in fcVals
 	{
-		RowNum := A_Index
-		row_nm :=																		; ROW name (service name)
-		if (rowNum=1) {																	; first row is title, skip
-			continue
+		tmpVal := strX(val,"",1,0,":",1)
+		tmpStr := strX(val,":",1,1,"",0)
+		Forecast_svc.Insert(tmpVal)
+		Forecast_val.Insert(tmpStr)
+	}
+	
+	fcArr := readXLSX(A_WorkingDir "\fcTemp.xlsx")
+	fcDate := []																		; array of dates
+
+	Loop % fcArr.MaxIndex()																; read ROWS
+	{
+		rowNum := A_Index
+		if (rowNum=1) {
+			Continue																	; first row is title, skip
 		}
-		
-		Loop																			; COLUMNS
+		fcRow := fcArr[rowNum]
+		rowName := ""																	; ROW name (service name)
+
+		Loop % fcRow.MaxIndex()															; read COLS
 		{
-			colNum := A_Index															; next column
-			if (colNum=1) {
-				label:=true																; first column (e.g. A1) is label column
-			} else {
-				label:=false
-			}
-			if (ColNum>maxCol) {														; increment maxCol
-				maxCol:=colNum
-			}
-			
-			cel := oWorkbook.Sheets(1).Range(colArr[ColNum] RowNum).value				; Scan Sheet1 A2.. etc
-			if ((cel="") && (colnum=maxcol)) {											; at maxCol and empty, break this cols loop
-				break
-			}
+			colNum := A_Index
+			cel := fcRow[colNum]
+			label := false
 			if (RegExMatch(cel,"\b(\d{1,2})\D(\d{1,2})(\D\d{2,4})?\b",tmp)) {			; matches date format
 				getVals := true
 				if !(tmp3) {															; get today's YYYY if not given
@@ -163,42 +220,34 @@ parseForecast(fcRecent) {
 				}
 				continue																; keep getting col dates but don't get values yet
 			}
-			
 			if !(getVals) {																; don't start parsing until we have passed date row
 				continue
 			}
-			
 			cel := trim(RegExReplace(cel,"\s+"," "))									; remove extraneous whitespace
-			if (label) {
-				if !(cel) {																; blank label means we've reached the end of rows
-					valsEnd := true														; flag to end
-					break																; break out of LOOP to next WHILE
-				}
-				
+
+			if (colNum=1) {																; first column (e.g. A1) is label column
 				if (j:=objHasValue(Forecast_val,cel,"RX")) {							; match index value from Forecast_val
-					row_nm := Forecast_svc[j]											; get abbrev string from index
+					row_name := Forecast_svc[j]											; get abbrev string from index
 				} else {
-					row_nm := RegExReplace(cel,"(\s+)|[\/\*\?]","_")					; no match, create ad hoc and replace space, /, \, *, ? with "_"
+					row_name := RegExReplace(cel,"(\s+)|[\/\*\?]","_")					; no match, create ad hoc and replace space, /, \, *, ? with "_"
 				}
-				progress,, Scanning forecast, % row_nm
+				progress,, Scanning forecast, % row_name
 				continue																; results in some ROW NAME, now move to the next column
 			}
+			
 			if !(cel~="[a-zA-Z]") {
 				cel := ""
 			}
 			
 			fcNode := "/root/forecast/call[@date='" fcDate[colNum] "']"
-			if !IsObject(y.selectSingleNode(fcNode "/" row_nm)) {						; create node for service person if not present
-				y.addElement(row_nm,fcNode)
+			if !IsObject(y.selectSingleNode(fcNode "/" row_name)) {						; create node for service person if not present
+				y.addElement(row_name,fcNode)
 			}
-			y.setText(fcNode "/" row_nm, cleanString(cel))								; setText changes text value for that node
+			y.setText(fcNode "/" row_name, cleanString(cel))							; setText changes text value for that node
+			
 		}
 	}
-	
-	oExcel := oWorkbook.Application
-	oExcel.DisplayAlerts := false
-	oExcel.quit
-	
+
 	y.selectSingleNode("/root/forecast").setAttribute("xlsdate",fcRecent)				; change forecast[@xlsdate] to the XLS mod date
 	y.selectSingleNode("/root/forecast").setAttribute("mod",A_Now)						; change forecast[@mod] to now
 
@@ -216,7 +265,54 @@ parseForecast(fcRecent) {
 	Eventlog("Electronic Forecast " fcRecent " updated.")
 	callChg := true
 	
-Return
+	Return
+}
+
+readXLSX(file) {
+; Read XLSX document into array
+	oWorkbook := ComObjGet(file)
+	colArr := ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"] 	; array of column letters
+	arr := {}
+	valsEnd := 0																		; flag when reached the last row
+	valsEndNum := 3																		; number of blank rows to signify end
+
+	While (valsEnd<valsEndNum)
+	{
+		rowNum := A_Index
+		Progress, % rowNum, % rowNum
+		arr[rowNum] := {}																; create array for row
+		rowHasVals := False																; check for empty row
+		Loop
+		{
+			colNum := A_Index
+			if (colNum>maxCol) {														; push to furthest col with info
+				maxCol:=colNum
+			}
+			cel := oWorkbook.Sheets(1).Range(colArr[colNum] rowNum).value				; Scan Sheet1 A2.. etc
+
+			if (cel!="") {
+				rowHasVals := true
+				valsEnd:=0
+			}
+			if ((colNum=maxCol) && (rowHasVals=false)) {								; blank row
+				valsEnd++
+			}
+			if (valsEnd=valsEndNum) {
+				arr.Delete(rowNum-valsEndNum+1,rowNum)									; delete end blank rows
+				Break
+			}
+			if ((colNum=maxCol) && (cel="")) {											; at maxCol and empty, break this cols loop
+				Break
+			}
+			arr[rowNum][colNum] := cel
+		}
+	}
+
+	oExcel := oWorkbook.Application
+	oExcel.DisplayAlerts := false
+	oExcel.quit
+
+	Return arr
 }
 
 readQgenda() {

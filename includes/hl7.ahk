@@ -1,3 +1,4 @@
+#Requires AutoHotkey v1.1
 initHL7() {
 	global hl7, preventiceDDE
 	hl7 := Object()
@@ -27,6 +28,7 @@ processHL7(fnam) {
 	FileRead, txt, % fnam
 	StringReplace, txt, txt, `r`n, `r														; convert `r`n to `r
 	StringReplace, txt, txt, `n, `r															; convert `n to `r
+	fldval.hl7 := {}
 	loop, parse, txt, `r, `n																; parse HL7 message, split on `r, ignore `n
 	{
 		seg := A_LoopField																	; read next Segment line
@@ -58,9 +60,12 @@ hl7line(seg) {
 	
 	isOBX := (segName == "OBX")
 	segMap := hl7[segName]
-	segPre := (isOBX) ? "" 
-		: segName "_" . (instr(multiSeg,segName) ? segNum "_" : "")
-	
+	if (isOBX) {
+		segPre := ""
+	} else {
+		segPre := segName . (instr(multiSeg,segName) ? "_" segNum : "")
+		fldval.hl7[segPre] := {}
+	}
 	Loop, % fld.length()																; step through each of the fld[] strings
 	{
 		i := A_Index
@@ -68,7 +73,8 @@ hl7line(seg) {
 			continue
 		}
 		str := fld[i]																	; each segment field
-		val := StrSplit(str,"^")													; array of subelements
+		val := StrSplit(str,"^")														; array of subelements
+		fldval.hl7[segPre][i-1] := str
 		
 		strMap := segMap[i-1]															; get hl7 substring that maps to this 
 		if (strMap=="") {																; no mapped fields
@@ -82,26 +88,25 @@ hl7line(seg) {
 		loop, % map.length()
 		{
 			j := A_Index
-			if (map[j]=="") {														; skip if map value is null
+			if (map[j]=="") {															; skip if map value is null
 				continue
 			}
-			x := segPre	
-				. map[j]															; res.pre_map
+			x := strQ(segPre,"###_") map[j]												; res.pre_map
 			
-			if (map.length()=1) {													; for seg with only 1 map, ensure val is at least popuated with str
+			if (map.length()=1) {														; for seg with only 1 map, ensure val is at least popuated with str
 				val[j] := str
 			}
-			res[x] := val[j]														; add each mapped result as subelement, res.mapped_name
+			res[x] := val[j]															; add each mapped result as subelement, res.mapped_name
 			
-			if !(isOBX)  {															; non-OBX results
-				fldVal[x] := val[j]													; populate all fldVal.mapped_name
+			if !(isOBX)  {																; non-OBX results
+				fldVal[x] := val[j]														; populate all fldVal.mapped_name
 				obxVal[x] := val[j]
 			}
 		}
 	}
 	if (isOBX) {																		; need to special process OBX[], test result strings
 		if (res.ObsType == "ED") {
-			fldVal.Filename := res.Filename											; file follows
+			fldVal.Filename := res.Filename												; file follows
 			nBytes := Base64Dec( res.resValue, Bin )
 			File := FileOpen( path.PrevHL7in . res.Filename, "w")
 			File.RawWrite(Bin, nBytes)
@@ -116,7 +121,7 @@ hl7line(seg) {
 			obxval[segPre maplab] := result
 		}
 	}
-	fldval.hl7 .= seg "`n"
+	fldval.hl7string .= seg "`n"
 	
 	return res
 }
@@ -146,28 +151,28 @@ segField(fld,lbl="") {
 	return res
 }
 
+; https://www.autohotkey.com/boards/viewtopic.php?t=35964
 Base64Dec( ByRef B64, ByRef Bin ) {  ; By SKAN / 18-Aug-2017
-; from https://autohotkey.com/boards/viewtopic.php?t=35964
-Local Rqd := 0, BLen := StrLen(B64)                 ; CRYPT_STRING_BASE64 := 0x1
-  DllCall( "Crypt32.dll\CryptStringToBinary", "Str",B64, "UInt",BLen, "UInt",0x1
+	Local Rqd := 0, BLen := StrLen(B64)                 ; CRYPT_STRING_BASE64 := 0x1
+	DllCall( "Crypt32.dll\CryptStringToBinary", "Str",B64, "UInt",BLen, "UInt",0x1
          , "UInt",0, "UIntP",Rqd, "Int",0, "Int",0 )
-  VarSetCapacity( Bin, 128 ), VarSetCapacity( Bin, 0 ),  VarSetCapacity( Bin, Rqd, 0 )
-  DllCall( "Crypt32.dll\CryptStringToBinary", "Str",B64, "UInt",BLen, "UInt",0x1
+	VarSetCapacity( Bin, 128 ), VarSetCapacity( Bin, 0 ),  VarSetCapacity( Bin, Rqd, 0 )
+	DllCall( "Crypt32.dll\CryptStringToBinary", "Str",B64, "UInt",BLen, "UInt",0x1
          , "Ptr",&Bin, "UIntP",Rqd, "Int",0, "Int",0 )
-Return Rqd
+	Return Rqd
 }
 
 Base64Enc( ByRef Bin, nBytes, LineLength := 64, LeadingSpaces := 0 ) { ; By SKAN / 18-Aug-2017
-Local Rqd := 0, B64, B := "", N := 0 - LineLength + 1  ; CRYPT_STRING_BASE64 := 0x1
-  DllCall( "Crypt32.dll\CryptBinaryToString", "Ptr",&Bin ,"UInt",nBytes, "UInt",0x1, "Ptr",0,   "UIntP",Rqd )
-  VarSetCapacity( B64, Rqd * ( A_Isunicode ? 2 : 1 ), 0 )
-  DllCall( "Crypt32.dll\CryptBinaryToString", "Ptr",&Bin, "UInt",nBytes, "UInt",0x1, "Str",B64, "UIntP",Rqd )
-  If ( LineLength = 64 and ! LeadingSpaces )
-    Return B64
-  B64 := StrReplace( B64, "`r`n" )        
-  Loop % Ceil( StrLen(B64) / LineLength )
-    B .= Format("{1:" LeadingSpaces "s}","" ) . SubStr( B64, N += LineLength, LineLength ) . "`n" 
-Return RTrim( B,"`n" )    
+	Local Rqd := 0, B64, B := "", N := 0 - LineLength + 1  ; CRYPT_STRING_BASE64 := 0x1
+	DllCall( "Crypt32.dll\CryptBinaryToString", "Ptr",&Bin ,"UInt",nBytes, "UInt",0x1, "Ptr",0,   "UIntP",Rqd )
+	VarSetCapacity( B64, Rqd * ( A_Isunicode ? 2 : 1 ), 0 )
+	DllCall( "Crypt32.dll\CryptBinaryToString", "Ptr",&Bin, "UInt",nBytes, "UInt",0x1, "Str",B64, "UIntP",Rqd )
+	If ( LineLength = 64 and ! LeadingSpaces )
+		Return B64
+	B64 := StrReplace( B64, "`r`n" )        
+	Loop % Ceil( StrLen(B64) / LineLength )
+		B .= Format("{1:" LeadingSpaces "s}","" ) . SubStr( B64, N += LineLength, LineLength ) . "`n" 
+	Return RTrim( B,"`n" )    
 }
 
 buildHL7(seg,params) {
