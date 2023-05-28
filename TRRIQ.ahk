@@ -3620,6 +3620,8 @@ ProcessPDF:
 		gosub Event_BGH
 	} else if (instr(newtxt,"Global Instrumentation LLC")) {							; BG Mini extended Holter
 		gosub Holter_BGM
+	} else if (instr(newtxt,"Preventice") && instr(newtxt,"Long-Term Holter Report")) {		; New BG Mini EL Holter 2023
+		Holter_BGM2(newtxt)
 	} else {
 		eventlog(fileNam " bad file.")
 		MsgBox No match!
@@ -4642,6 +4644,11 @@ Holter_BGM_HL7:
 {
 	eventlog("Holter_BGMini_HL7")
 	monType := "BGM"
+
+	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
+		gosub processPDF																; need to reprocess from extracted PDF
+		Return
+	}
 	
 	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
@@ -4650,13 +4657,13 @@ Holter_BGM_HL7:
 	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
 									, calcDuration(fldval["hrd-Analyzed_Time"]).DHM " (DD:HH:MM)")
 
-	gosub checkProc												; check validity of PDF, make demographics valid if not
+	gosub checkProc																		; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
-		return													; fetchGUI was quit, so skip processing
+		return																			; fetchGUI was quit, so skip processing
 	}
 	
 	fieldsToCSV()
-	fieldcoladd("","INTERP","")									; fldval["Narrative"]
+	fieldcoladd("","INTERP","")															; fldval["Narrative"]
 	fieldcoladd("","Mon_type","Holter")
 	
 	FileCopy, %fileIn%, %fileIn%-sh.pdf
@@ -4668,22 +4675,17 @@ return
 
 Holter_BGM:
 {
-	eventlog("Holter_BGMini")
+	eventlog("Holter_BGMini v1")
 	monType := "BGM"
 	
 	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
 	 */
 	demog := columns(newtxt,"Patient\s+Information","Ventricular Tachycardia",1,"Test Start")
-	;~ fields[1] := ["MRN","Patient Name","Age","Date Of Birth","Gender","Site"
-				;~ , "Test Start","Test End","Test Duration","Analysis Duration"]
-	;~ labels[1] := ["MRN","Name","null","DOB","Sex","null"
-				;~ , "Test_date","Test_end","Recording_time","Analysis_time"]
 	fields[1] := ["Test Start","Test End","Test Duration","Analysis Duration"]
 	labels[1] := ["Test_date","Test_end","Recording_time","Analysis_time"]
 	scanParams(demog,1,"dem",1)
 	
 	t0 := parseDate(fldval["dem-Test_date"]).ymd
-	;~ t1 := t0.YMD t0.hr t0.min t0.sec
 	
 	summary := columns(newtxt,"\s+Ventricular Tachycardia","\s+Interpretation",,"Total QRS") "<<<end"
 	daycount(summary,t0)
@@ -4729,6 +4731,89 @@ Holter_BGM:
 	fldval.done := true
 
 return	
+}
+
+Holter_BGM2(newtxt) {
+/*	Get data from BGM 2023
+	Requires table format
+*/
+	global fldval, monType, fields, labels, fetchQuit
+
+	eventlog("Holter_BGMini2023")
+	monType := "BGM"
+	
+	/* Pulls text between field[n] and field[n+1], place in labels[n] name, with prefix "dem-" etc.
+	 */
+	demog := columns(newtxt,"\s+Long-Term Holter","Indication for Monitoring:",,"Preventice Services, LLC")
+	RegExMatch(demog,"O)(\d{1,2}\/\d{1,2}\/\d{2,4})\s+-\s+(\d{1,2}\/\d{1,2}\/\d{2,4})",t)
+	fldval["dem-Test_date"] := t[1]
+	fldval["dem-Test_end"] := t[2]
+	
+	demog := columns(demog,"\s+BodyGuardian MINI","Heart Rate",,"Artifact Time")
+	demog := RegExReplace(demog, "[\r\n]")
+	fields[1] := ["Prescribed Time","Diagnostic Time","Artifact Time"]
+	labels[1] := ["Recording_time","Analysis_time","null"]
+	scanParamStr(demog,1,"dem")
+
+	summary := columns(newtxt,"Indication for Monitoring","Preventice Technologies",,"AFib Summary") ">>>"
+	summary := columns(summary,"AFib Summary",">>>",,"Heart Rate")
+	fields[1] := ["Total Beat Count","\R+"]
+	labels[1] := ["Total_beats","null"]
+	scanParamStr(summary,1,"hrd")
+	
+	sumRate := stRegX(summary,"Overall",1,1,"Sinus",1)
+	sumRate := onecol(cleanblank(sumRate))
+	fields[1] := ["Minimum","Average","Maximum",">>>end"]
+	labels[1] := ["Min","Avg","Max","null"]
+	scanParamStr(sumRate ">>>end",1,"hrd")
+
+	sumSinus := stRegX(summary,"Sinus",1,1,"Tachycardia|Ectopics",1)
+	sumSinus := oneCol(cleanblank(sumSinus))
+	fields[1] := ["Minimum","Maximum",">>>end"]
+	labels[1] := ["Slowest","Fastest","null"]
+	scanParamStr(sumSinus ">>>end",1,"hrd")
+	
+	sumVE := stRegX(summary,"Ventricular Complexes",1,1,"Supraventricular Complexes",1)
+	fields[1] := ["VE Count","Isolated Count","Couplets","Bigeminy","Trigeminy","Morphologies"]
+	labels[1] := ["Total","SingleVE","Couplets","Bigeminy","Trigeminy","Morphologies"]
+	scanParams(sumVE,1,"ve",1)
+
+	sumVT := stRegX(summary,"\R+VT Summary",1,1,"Heart Rate",1)
+	sumVTtot := trim(stRegX(sumVT,"Total Events",1,1,"\R+",1))
+	sumVT := onecol(stRegX(sumVT ">>>end","Longest",1,0,">>>end",1))
+	fldval["ve-Longest"] := trim(cleanspace(RegExReplace(stRegX(sumVT,"Longest",1,1,"Fastest",1),"\d+ bpm")))
+	fldval["ve-Fastest"] := trim(cleanspace(RegExReplace(stregx(sumVT,"fastest",1,1,">>>end",1),"\d+ beats")))
+
+	sumSVE := stRegX(summary,"Supraventricular Complexes",1,1,"Patient Triggers")
+	fields[1] := ["SVE Count","Isolated Count","Couplets","Patient Triggers"]
+	labels[1] := ["Total","Single","Pairs","null"]
+	scanParams(sumSVE,1,"sve",1)
+
+	sumSVT := stRegX(summary,"SVT Summary",1,1,"AV Block Summary",1)
+	sumSVTtot := trim(stRegX(sumSVT,"Total Events",1,1,"\R+",1))
+	sumSVT := onecol(stRegX(sumSVT ">>>end","Longest",1,0,">>>end",1))
+	fldval["sve-Longest"] := trim(cleanspace(RegExReplace(stRegX(sumSVT,"Longest",1,1,"Fastest",1),"\d+ bpm")))
+	fldval["sve-Fastest"] := trim(cleanspace(RegExReplace(stregx(sumSVT,"fastest",1,1,">>>end",1),"\d+ beats")))
+
+	sumPause := stRegX(summary,"Total Pauses",1,0,"VT Summary",1)
+	fields[1] := ["Total Pauses","\R+","Longest Duration",">>>end"]
+	labels[1] := ["Pauses","null","LongRR","null"]
+	scanParamStr(sumPause ">>>end",1,"sve")
+	
+	gosub checkProc												; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return													; fetchGUI was quit, so skip processing
+	}
+	
+	fieldsToCSV()
+	tmpstr := stregx(newtxt,"Conclusions",1,1,"Reviewing Physician",1)
+	StringReplace, tmpstr, tmpstr, `r, `n, ALL
+	fieldcoladd("","INTERP",trim(cleanspace(tempstr)," `n"))
+	fieldcoladd("","Mon_type","Holter")
+	
+	fldval.done := true
+
+	return	
 }
 
 daycount(byref txt,day1) {
@@ -5175,7 +5260,46 @@ strVal(hay,n1,n2,BO:="",ByRef N:="") {
 	return trim(str.value("res")," :`n`r`t")
 }
 
+scanParamStr(txt,blk,pre:="par",rx:=1) {
+/*	Parse block of text for values between labels (rx=RegEx) 
+		Min HR
+		59
+		Avg HR	81
+		Max HR
+		172
+*/
+	global fields, labels, fldval
+	BO := 1
+	loop, % fields[blk].Length()
+	{
+		i := A_Index
+		if (rx) {
+			k := stRegX(txt,fields[blk,i],BO,1,fields[blk,i+1],1,BO)
+		} else {
+			k := strX(txt
+				, fields[blk,i],BO,StrLen(fields[blk,i])
+				, fields[blk,i+1],0,StrLen(fields[blk,i+1]),BO)
+		}
+		res := trim(cleanspace(k))
+
+		lbl := labels[blk,i]
+
+		fldfill(pre "-" lbl, res)
+		
+		formatfield(pre,lbl,res)
+	}
+
+	Return
+}
+
 scanParams(txt,blk,pre:="par",rx:="") {
+/*	Parse lines of text for label-value pairs
+	Identify columns based on spacing
+		labels         	values
+		SVE Count:      39,807
+		Couplets:       1,432
+	Send result to fldval and to fileout
+*/
 	global fields, labels, fldval
 	colstr = (?<=(\s{2}))(\>\s*)?[^\s].*?(?=(\s{2}))
 	Loop, parse, txt, `n,`r
@@ -5323,6 +5447,10 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 }
 
 formatField(pre, lab, txt) {
+/*	Last second formatting of values
+	Generic, and per report type
+	Send result to fileOut strings
+*/
 	global monType, Docs, ptDem, fldval
 
 	if RegExMatch(txt,"(\d{1,2}) hr (\d{1,2}) min",t) {						; convert "24 hr 0 min" to "24:00"
@@ -5330,7 +5458,7 @@ formatField(pre, lab, txt) {
 	}
 	txt:=RegExReplace(txt,"i)( BPM)|( Event(s)?)|( Beat(s)?)|( sec(ond)?(s)?)")		; Remove units from numbers
 	txt:=RegExReplace(txt,"(:\d{2}?)(AM|PM)","$1 $2")						; Fix time strings without space before AM|PM
-	txt:=RegExReplace(txt,"\(DD:HH:MM:SS\)")								; Remove time units
+	txt:=RegExReplace(txt,"\(DD:HH:MM:SS\)")								; Remove time units "(DD:HH:MM:SS)"
 	txt := trim(txt)
 	
 	if (lab="Name") {
@@ -5357,7 +5485,7 @@ formatField(pre, lab, txt) {
 		return
 	}
 	
-;	Preventice Holter specific fixes
+;	Mortara Holter specific fixes
 	if (monType="HOL") {
 		if (lab="Name") {																; Break name into Last and First
 			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
@@ -5409,10 +5537,16 @@ formatField(pre, lab, txt) {
 
 ;	Body Guardian Mini specific fixes
 	if (monType="BGM") {
-		if (lab ~= "Test_(date|end)") {													; convert dates to MDY format
+		; convert dates to MDY format
+		if (lab ~= "Test_(date|end)") {
 			txt := parseDate(txt).mdy
 		}
-		if RegExMatch(txt																; reconstitute Beats and BPM for longest/fastest/slowest fields
+		; remove commas from numbers
+		if (pre~="hrd|ve|sve") {
+			txt := StrReplace(txt, ",", "")
+		}
+		; reconstitute Beats and BPM for longest/fastest/slowest fields
+		if RegExMatch(txt
 		,"(.*)? \((\d{1,2}/\d{1,2}/\d{2,4} at \d{1,2}:\d{2}:\d{2})\)"
 		,res) {
 			res1 := RegExReplace(res1,"(\d+)\s*,\s*(\d+)","$1 beats, $2 bpm")
@@ -5420,13 +5554,23 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_time",res2)
 			return
 		}
+		; split value times for "32 12/15 08:23:17"
+		if RegExMatch(txt
+		,"\b([\d\.]+)s?\s+(\d{1,2}/\d{1,2}(/\d{2,4})?\s+\d{2}:\d{2}:\d{2})"
+		,res) {
+			fieldColAdd(pre,lab,res1)
+			fieldColAdd(pre,lab "_time",res2)
+			return
+		}
+		; split "57 (29.4%)" into "57" and "29.4"
 		if RegExMatch(txt,"(.*?)\((.*?%)\)",res) {
 			fieldColAdd(pre,lab,res1)
 			fieldColAdd(pre,lab "_per",res2)
 			return
 		}
+		; convert DD:HH:MM:SS into Days & Hrs
 		if (lab~="_time") {
-			if RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res) {					; convert DD:HH:MM:SS into Days & Hrs
+			if RegExMatch(txt,"(\d{1,2}):(\d{2}):\d{2}:\d{2}",res) {
 				txt := res1 " days, " res2 " hours"
 			}
 			if (txt~="^\d{14}$") {														; yyyymmddhhmmss
