@@ -902,7 +902,7 @@ WQclearSites0() {
 */
 	global sites0, wq
 
-	loop, parse, sites0,
+	loop, parse, sites0, |
 	{
 		site := A_LoopField
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
