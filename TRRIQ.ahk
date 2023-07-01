@@ -902,7 +902,7 @@ WQclearSites0() {
 */
 	global sites0, wq
 
-	loop, parse, sites0,
+	loop, parse, sites0, |
 	{
 		site := A_LoopField
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
@@ -1410,7 +1410,7 @@ WQpendingReads() {
 }
 
 cleanDone() {
-	global wq
+	global wq, sites0
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
@@ -1433,10 +1433,26 @@ cleanDone() {
 		en := ens.item(A_Index-1)
 		dt := en.selectSingleNode("date").text
 		name := en.selectSingleNode("name").text
+		site := en.selectSingleNode("site").text
+		uid := en.getAttribute("id")
+
+		if (name="" && site="") {
+			en.parentNode.removeChild(en)
+			eventlog("Removed blank UID " uid)
+			Continue
+		}
+
+		if (sites0~=site) {
+			en.parentNode.removeChild(en)
+			eventlog("Removed " site " record " uid " - " name)
+			Continue
+		}
+
 		dtDiff := dateDiff(dt)
 		if (dtDiff<180) {																; skip dates less than 180 days
 			continue
 		}
+
 		clone := en.cloneNode(true)
 		arc.selectSingleNode("/root/done").appendChild(clone)
 		en.parentNode.removeChild(en)
