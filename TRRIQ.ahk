@@ -2122,9 +2122,10 @@ parseORM() {
 */
 	global fldval, sitesLong, indCodes
 	
-	monType:=(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
+	monType:=(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"								; for extended recording
 		: tmp~="i)15 DAY" ? "BGM"
-		: tmp~="i)24 HOUR" ? "HOL"
+		: tmp~="i)24 HOUR" ? "HOL"														; for short report (includes full disclosure)
+		: tmp~="i)48 HOUR" ? "HOL"
 		: tmp~="i)RECORDER|EVENT" ? "BGH"
 		: tmp~="i)CUTOVER" ? "CUTOVER"
 		: ""
