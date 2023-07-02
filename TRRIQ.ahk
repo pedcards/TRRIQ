@@ -2876,6 +2876,7 @@ muWqSave(sernum) {
 	wq.addElement("sex",ptDem.newID,ptDem.sex)
 	wq.addElement("dob",ptDem.newID,ptDem.dob)
 	wq.addElement("dev",ptDem.newID,ptDem.dev)
+	wq.addElement("duration",ptDem.newID,ptDem.MonDuration)
 	if (ptDem.fellow) {
 		wq.addElement("fellow",ptDem.newID,ptDem.fellow)
 	}
