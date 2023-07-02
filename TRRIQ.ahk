@@ -1960,10 +1960,8 @@ readWQorder() {
 	ptDem.filename := fileIn
 	ptDem.Provider := ptDem.provname
 	
-	if (ptDem.monitor~="i)HOL") {														; for Mortara Holter
-		eventlog("Start Mortara prepare.")
-		mwuPhase := "Prepare"
-		mortaraUpload(mwuPhase)
+	if (ptDem.monitor~="i)HOL") {														; for short term BG Mini (24-48 hr)
+		BGregister("HOL")
 	} 
 	else if (ptDem.monitor~="i)BGM") {													; for BG Mini (and maybe Zio)
 		BGregister("BGM")
