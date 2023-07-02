@@ -876,7 +876,7 @@ WQlist() {
 		
 		WQpreventiceResults(wqfiles)													; Process incoming Preventice results
 		WQscanHolterPDFs(wqfiles)														; Scan Holter PDFs folder for additional files
-		WQlistPDFdownloads()															; generate mortaras.txt
+		WQlistPDFdownloads()															; generate wsftp.txt
 		WQfindMissingWebgrab()															; find <pending> missing <webgrab>
 	}
 	
@@ -1257,7 +1257,7 @@ WQscanHolterPDFs(ByRef wqfiles) {
 }
 
 WQlistPDFdownloads() {
-/*	Generate mortaras.txt list for those that still require PDF download
+/*	Generate wsftp.txt list for those that still require PDF download
 */
 	GuiControl, Disabled, Grab FTP
 	loop % LV_GetCount() {
@@ -1269,8 +1269,8 @@ WQlistPDFdownloads() {
 			GuiControl, Enable, Grab FTP
 		}
 	}
-	FileDelete, .\files\mortaras.txt
-	FileAppend, % tmpHolters, .\files\mortaras.txt
+	FileDelete, .\files\wsftp.txt
+	FileAppend, % tmpHolters, .\files\wsftp.txt
 
 	Return
 }
