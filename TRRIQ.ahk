@@ -1213,7 +1213,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, dev																		; device type
-			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
+			, (res.duration~="[1-2]") ? "X":"")											; flag FTP if 1-2 day Holter
 		wqfiles.push(id)
 	}
 	Return
