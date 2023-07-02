@@ -310,6 +310,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Send notification email, sendEmail
 	Menu, menuSys, Add, Find pending leftovers, cleanPending
 	Menu, menuSys, Add, CheckMWU, checkMWUapp											; position for test menu
+	Menu, menuSys, Add, Fix WQ device durations, fixDuration							; position for test menu
 	Menu, menuSys, Add, Recover DONE record, recoverDone
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
@@ -2488,6 +2489,37 @@ cleanTempFiles() {
 		. "Files deleted: " ct_other "`n"
 		. "FIles skipped: " ct_skip
 	return
+}
+
+fixDuration() {
+	global wq
+
+	str := ""
+	ens:=wq.selectNodes("/root/pending/enroll")
+	num := ens.length
+	Loop, % num
+	{
+		Progress,,,% A_Index "/" num 
+		k := ens.item(A_Index-1)
+		kDur := k.selectSingleNode("duration").Text
+		if (kDur) {																		; skip if has value
+			Continue
+		}
+		id	:= k.getAttribute("id")
+		kDevNode := k.selectSingleNode("dev")
+		kDev := kDevNode.Text
+		kDur := (kDev~="Mortara" ? "1"
+			: kDev~="Mini" ? "14"
+			: kDev~="Heart" ? "30"
+			: "")
+		wq.InsertElement("duration",kDevNode.NextSibling,kDur)
+		eventlog(id " Inserted duration '" kDur "'")
+	}
+	progress, off
+
+	WriteSave(wq)
+
+	Return
 }
 
 checkMWUapp()
