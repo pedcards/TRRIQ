@@ -3169,11 +3169,30 @@ BGregister(type) {
 	global wq, ptDem, fetchQuit, isDevt
 	SetTimer, idleTimer, Off
 	
-	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") 
-				. (type="BGM" ? "BodyGuardian Mini EL" : "")
-				. (type="HOL" ? "BodyGuardian Mini EL" : "")
-	
-	tmp:=CMsgBox(ptDem.Monitor
+	Switch type
+	{
+		case "BGH":
+		{
+			typeLong := "BodyGuardian Heart"
+			typeDesc := "30-day Event Recorder"
+			typeImg := ".\files\BGHeart.png"
+			ptDem.MonDuration := "30"
+		}
+		case "BGM":
+		{
+			typeLong := "BodyGuardian Mini EL"
+			typeDesc := "Extended Holter (3-14 day)"
+			typeDur := "3 days|7 days|14 days"
+			typeImg := ".\files\BGMini.png"
+		}
+		case "HOL":
+		{
+			typeLong := "BodyGuardian Mini EL"
+			typeDesc := "Short-term Holter (1-2 day)"
+			typeDur := "1 day|2 days"
+			typeImg := ".\files\BGMini.png"
+		}
+	}
 		, "Register type`n`n" typeLong
 			. (type="BGH" ? "`n30-day Event Recorder" : "")
 			. (type="BGM" ? "`nExtended Holter (3-14 day)" : "")
