@@ -2808,6 +2808,7 @@ MortaraUpload(tabnum="")
 		wq := new XML("worklist.xml")													; refresh WQ
 		ptDem["muphase"] := "prepare"
 		ptDem["hookup"] := "Office"
+		ptDem["MonDuration"] := "1"
 		muWqSave(SerNum)
 		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 		
@@ -3154,9 +3155,7 @@ makePreventiceORM() {
 	buildHL7("OBX"
 		,{2:"ST"
 		, 3:"12918^Deploy Duration (In Days)"
-		, 5:(ptDem.model~="Mortara" ? "1" : "")
-			. (ptDem.model~="Heart" ? "30" : "")
-			. (ptDem.model~="Mini" ? strQ(ptDem.HolterDuration,"###","14") : "") })
+		, 5:ptDem.MonDuration })
 	
 	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
@@ -3192,7 +3191,10 @@ BGregister(type) {
 		if (tmp="xClose") {
 			return
 		}
-		ptDem.HolterDuration := strX(tmp,"",1,0," ",1,1)
+		ptDem.MonDuration := strX(tmp,"",1,0," ",1,1)
+	}
+	if (type="BGH") {
+		ptDem.MonDuration := "30"
 	}
 	
 	fetchQuit := false
