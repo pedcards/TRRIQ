@@ -3169,7 +3169,9 @@ BGregister(type) {
 	global wq, ptDem, fetchQuit, isDevt
 	SetTimer, idleTimer, Off
 	
-	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini EL" : "")
+	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") 
+				. (type="BGM" ? "BodyGuardian Mini EL" : "")
+				. (type="HOL" ? "BodyGuardian Mini EL" : "")
 	
 	tmp:=CMsgBox(ptDem.Monitor
 		, "Register type`n`n" typeLong
