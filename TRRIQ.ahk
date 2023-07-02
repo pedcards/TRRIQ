@@ -2807,6 +2807,7 @@ MortaraUpload(tabnum="")
 		wq := new XML("worklist.xml")													; refresh WQ
 		ptDem["muphase"] := "prepare"
 		ptDem["hookup"] := "Office"
+		ptDem["MonDuration"] := "1"
 		muWqSave(SerNum)
 		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 		
@@ -3210,6 +3211,9 @@ BGregister(type) {
 			return
 		}
 		ptDem.MonDuration := strX(tmp,"",1,0," ",1,1)
+	}
+	if (type="BGH") {
+		ptDem.MonDuration := "30"
 	}
 	
 	fetchQuit := false
