@@ -3193,26 +3193,25 @@ BGregister(type) {
 			typeImg := ".\files\BGMini.png"
 		}
 	}
+	tmp:=CMsgBox(ptDem.Monitor															; Verify register this type
 		, "Register type`n`n" typeLong
-			. (type="BGH" ? "`n30-day Event Recorder" : "")
-			. (type="BGM" ? "`nExtended Holter (3-14 day)" : "")
+			. "`n" typeDesc
 		, "Yes|No"
-		, "Q", "V", 
-		, (type="BGH" ? ".\files\BGHeart.png" : "") 
-		. (type="BGM" ? ".\files\BGMini.png" : "") )
+		, "Q", "V",
+		, typeImg)
 	if (tmp!="Yes") {
-		return
+		Return
 	}
-	
-	if (type="BGM") {
-		tmp:=CMsgBox("Extended Holter duration"
+
+	if (type~="BGM|HOL") {																; Get Holter duration (days)
+		tmp:=CMsgBox("Holter duration"
 			, "Select expected duration of recording"
-			, "3 days|7 days|14 days"
+			, typeDur
 			, "Q")
 		if (tmp="xClose") {
 			return
 		}
-		ptDem.HolterDuration := strX(tmp,"",1,0," ",1,1)
+		ptDem.MonDuration := strX(tmp,"",1,0," ",1,1)
 	}
 	
 	fetchQuit := false
@@ -3285,7 +3284,7 @@ BGregister(type) {
 		eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	}
 	wq := new XML("worklist.xml")														; refresh WQ
-	bgWqSave(ptDem.ser)																; write to worklist.xml
+	bgWqSave(ptDem.ser)																	; write to worklist.xml
 	eventlog(type " " ptDem.ser " registered to " ptDem.mrn " " ptDem.nameL ".")
 	
 	removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
