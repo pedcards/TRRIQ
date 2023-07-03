@@ -188,20 +188,7 @@ PhaseGUI:
 		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
 		, No active orders
 	Gui, Add, Text, wp h30
-	Gui, Add, Text, Y+10 wp h100 Center, Transmit MORTARA HOLTER`nto Preventice
 	Gui, Font, Normal
-	
-	;~ GuiControlGet, btn1, Pos, BodyGuardian
-	GuiControlGet, btn2, Pos, MORTARA
-	
-	btnW := 90
-	btnH := 50
-	
-	Gui, Add, Picture
-		, % "Y" btn2Y+36 " X" btn2X+60 
-		. " w" btnW " h" btnH " "
-		. " +0x1000 vUpload gPhaseTask"
-		, .\files\H3.png
 	
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
