@@ -1910,6 +1910,7 @@ readWQlv:
 		eventlog("Filetype cannot be determined from WQlist (somehow).")
 		
 		MsgBox, 16, , Unrecognized filetype (somehow)
+		Return
 	}
 	
 	if (fldval.done) {
