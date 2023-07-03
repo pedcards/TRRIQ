@@ -310,6 +310,7 @@ PhaseGUI:
 	Menu, menuSys, Add, Send notification email, sendEmail
 	Menu, menuSys, Add, Find pending leftovers, cleanPending
 	Menu, menuSys, Add, CheckMWU, checkMWUapp											; position for test menu
+	Menu, menuSys, Add, Fix WQ device durations, fixDuration							; position for test menu
 	Menu, menuSys, Add, Recover DONE record, recoverDone
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
@@ -876,7 +877,7 @@ WQlist() {
 		
 		WQpreventiceResults(wqfiles)													; Process incoming Preventice results
 		WQscanHolterPDFs(wqfiles)														; Scan Holter PDFs folder for additional files
-		WQlistPDFdownloads()															; generate mortaras.txt
+		WQlistPDFdownloads()															; generate wsftp.txt
 		WQfindMissingWebgrab()															; find <pending> missing <webgrab>
 	}
 	
@@ -1213,7 +1214,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, dev																		; device type
-			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
+			, (res.duration<3) ? "X":"")												; flag FTP if 1-2 day Holter
 		wqfiles.push(id)
 	}
 	Return
@@ -1257,7 +1258,7 @@ WQscanHolterPDFs(ByRef wqfiles) {
 }
 
 WQlistPDFdownloads() {
-/*	Generate mortaras.txt list for those that still require PDF download
+/*	Generate wsftp.txt list for those that still require PDF download
 */
 	GuiControl, Disabled, Grab FTP
 	loop % LV_GetCount() {
@@ -1269,8 +1270,8 @@ WQlistPDFdownloads() {
 			GuiControl, Enable, Grab FTP
 		}
 	}
-	FileDelete, .\files\mortaras.txt
-	FileAppend, % tmpHolters, .\files\mortaras.txt
+	FileDelete, .\files\wsftp.txt
+	FileAppend, % tmpHolters, .\files\wsftp.txt
 
 	Return
 }
@@ -2490,6 +2491,37 @@ cleanTempFiles() {
 	return
 }
 
+fixDuration() {
+	global wq
+
+	str := ""
+	ens:=wq.selectNodes("/root/pending/enroll")
+	num := ens.length
+	Loop, % num
+	{
+		Progress,,,% A_Index "/" num 
+		k := ens.item(A_Index-1)
+		kDur := k.selectSingleNode("duration").Text
+		if (kDur) {																		; skip if has value
+			Continue
+		}
+		id	:= k.getAttribute("id")
+		kDevNode := k.selectSingleNode("dev")
+		kDev := kDevNode.Text
+		kDur := (kDev~="Mortara" ? "1"
+			: kDev~="Mini" ? "14"
+			: kDev~="Heart" ? "30"
+			: "")
+		wq.InsertElement("duration",kDevNode.NextSibling,kDur)
+		eventlog(id " Inserted duration '" kDur "'")
+	}
+	progress, off
+
+	WriteSave(wq)
+
+	Return
+}
+
 checkMWUapp()
 {
 	global isDevt, has_HS6
@@ -2808,6 +2840,7 @@ MortaraUpload(tabnum="")
 		wq := new XML("worklist.xml")													; refresh WQ
 		ptDem["muphase"] := "prepare"
 		ptDem["hookup"] := "Office"
+		ptDem["MonDuration"] := "1"
 		muWqSave(SerNum)
 		eventlog(ptDem["muphase"] ": " sernum " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 		
@@ -2875,6 +2908,7 @@ muWqSave(sernum) {
 	wq.addElement("sex",ptDem.newID,ptDem.sex)
 	wq.addElement("dob",ptDem.newID,ptDem.dob)
 	wq.addElement("dev",ptDem.newID,ptDem.dev)
+	wq.addElement("duration",ptDem.newID,ptDem.MonDuration)
 	if (ptDem.fellow) {
 		wq.addElement("fellow",ptDem.newID,ptDem.fellow)
 	}
@@ -3154,9 +3188,7 @@ makePreventiceORM() {
 	buildHL7("OBX"
 		,{2:"ST"
 		, 3:"12918^Deploy Duration (In Days)"
-		, 5:(ptDem.model~="Mortara" ? "1" : "")
-			. (ptDem.model~="Heart" ? "30" : "")
-			. (ptDem.model~="Mini" ? strQ(ptDem.HolterDuration,"###","14") : "") })
+		, 5:ptDem.MonDuration })
 	
 	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
@@ -3192,7 +3224,10 @@ BGregister(type) {
 		if (tmp="xClose") {
 			return
 		}
-		ptDem.HolterDuration := strX(tmp,"",1,0," ",1,1)
+		ptDem.MonDuration := strX(tmp,"",1,0," ",1,1)
+	}
+	if (type="BGH") {
+		ptDem.MonDuration := "30"
 	}
 	
 	fetchQuit := false
@@ -3524,6 +3559,7 @@ bgWqSave(sernum) {
 	wq.addElement("sex",ptDem.newID,ptDem.sex)
 	wq.addElement("dob",ptDem.newID,ptDem.dob)
 	wq.addElement("dev",ptDem.newID,ptDem.dev)
+	wq.addElement("duration",ptDem.newID,ptDem.MonDuration)
 	if (ptDem.fellow) {
 		wq.addElement("fellow",ptDem.newID,ptDem.fellow)
 	}

@@ -230,7 +230,7 @@ parsePreventiceFTP(tbl) {
 	eventlog("PREVGRAB: Found " ftpList.length() " PDF files.")
 
 	Progress,0,Please be patient...,Fetching PDF files
-	loop, read, .\files\mortaras.txt
+	loop, read, .\files\wsftp.txt
 	{
 		k := A_LoopReadLine
 		if (k="") {
