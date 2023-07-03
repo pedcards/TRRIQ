@@ -178,10 +178,10 @@ PhaseGUI:
 		, Refresh lists
 	Gui, Add, Button
 		, Y+10 wp h40 gPrevGrab Disabled
-		, Grab Preventice updates
+		, Check Preventice inventory
 	Gui, Add, Button
 		, Y+10 wp h40 gFtpGrab Disabled
-		, Grab FTP
+		, Grab FTP full disclosure 
 	Gui, Add, Text, wp h20																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
@@ -203,7 +203,7 @@ PhaseGUI:
 	if (wksloc="Main Campus") {
 		GuiControl 
 			, Enable
-			, Grab Preventice updates
+			, Check Preventice inventory
 
 		Gui, Tab, INBOX
 		Gui, Add, Listview
@@ -1247,14 +1247,14 @@ WQscanHolterPDFs(ByRef wqfiles) {
 WQlistPDFdownloads() {
 /*	Generate wsftp.txt list for those that still require PDF download
 */
-	GuiControl, Disabled, Grab FTP
+	GuiControl, Disabled, Grab FTP full disclosure
 	loop % LV_GetCount() {
 		LV_GetText(x,A_Index,9)															; FTP
 		LV_GetText(y,A_Index,2)															; Name
 
 		if (x) {
 			tmpHolters .= RegExReplace(y,",\s+",",") "`n"
-			GuiControl, Enable, Grab FTP
+			GuiControl, Enable, Grab FTP full disclosure
 		}
 	}
 	FileDelete, .\files\wsftp.txt
