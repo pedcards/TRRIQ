@@ -1530,7 +1530,7 @@ parsePrevEnroll(det) {
 	Match to existing/likely enroll nodes
 	Update enroll node with new info if missing
 */
-	global wq
+	global wq, sites0
 
 	res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
 			, name:RegExReplace(format("{:U}"
@@ -1546,6 +1546,12 @@ parsePrevEnroll(det) {
 		res.dev .= res.name																; append string so will not match in enrollcheck
 	}
 	
+	/*	Ignore sites0 enrollments entirely
+	*/
+		if (res.site~=sites0) {
+			Return
+		}
+
 	/*	Check whether any params match this device
 	*/
 		if (id:=enrollcheck("[@id='" res.id "']")) {									; id returned in Preventice ORU
