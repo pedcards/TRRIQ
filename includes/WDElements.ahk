@@ -62,14 +62,22 @@ Class WDElement extends Session
 		return this.Send("value","POST", {"text":text})
 	}
 	
-	click()
+	click(slient:=1)
 	{
-		return this.Send("click","POST",{"":""})
+		if slient
+			return this.Execute("arguments[0].click()")
+		else
+			return this.Send("click","POST",{"":""})
 	}
 	
 	Move()
 	{
 		return this.Send("moveto","POST",{"element_id":this.id})
+	}
+
+	onchange()
+	{
+		return this.Execute("arguments[0].onchange()")
 	}
 
 	Title
@@ -137,11 +145,49 @@ Class WDElement extends Session
 		
 		Set
 		{
-			this.Clear()
-			return this.Send("value","POST", {"text":Value})
+			this.Execute("arguments[0].value = '" Value "'")
 		}
 	}
 	
+
+	checked
+	{
+		get
+		{
+			return  this.Execute("arguments[0].checked")
+		}
+
+		set
+		{
+		}
+	}
+
+	href
+	{
+		get
+		{
+			return  this.GetProperty("href")
+		}
+
+		set
+		{
+			this.Execute("arguments[0].href = '" Value "'")
+		}
+	}
+
+	src
+	{
+		get
+		{
+			return  this.GetProperty("src")
+		}
+
+		set
+		{
+			this.Execute("arguments[0].src = '" Value "'")
+		}
+	}
+
 	InnerText
 	{
 		get

@@ -37,6 +37,11 @@ Class Rufaydium
 				this.capabilities := new FireFoxCapabilities(this.Driver.browser,this.Driver.Options)
 			case "operadriver" :
 				this.capabilities := new OperaCapabilities(this.Driver.browser,this.Driver.Options)
+			case "BraveDriver" :
+				this.capabilities := new BraveCapabilities(this.Driver.browser,this.Driver.Options)
+				this.capabilities.Setbinary("C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe") 
+				; drive might crash for 32 Brave on 64 bit OS there for we can load binary while new session, 
+				; i.e. >> NewSession("32bit brave browser exe location")
 		}
 		if !isobject(cap := this.capabilities.cap)
 			this.capabilities := capabilities.Simple
@@ -279,7 +284,8 @@ Class Session
 
 	close()
 	{
-		This.currentTab := this.Send("window","DELETE")
+		Tabs := this.Send("window","DELETE")
+		this.Switch(this.currentTab := tabs[tabs.Length()])
 	}
 
 	send(url,Method,Payload:= 0,WaitForResponse:=1)
@@ -342,40 +348,94 @@ Class Session
 
 	SwitchTab(i:=0)
 	{
-		if i
-		{
-			return this.Switch(This.currentTab := this.GetTabs()[i])
-		}
+		return this.Switch(This.currentTab := this.GetTabs()[i])
 	}
 
 	SwitchbyTitle(Title:="")
 	{
+		; Rufaydium will soon use CDP Target's methods to re-access sessions and pages 
+		; might able to access pages even after restarting webdriver
+		; Targets := this.CDP.GetTargets() 
 		handles := this.GetTabs()
-		for k , handle in handles
-		{
-			this.switch(handle)
-			if instr(this.title(),Title)
+		try pages := this.Detail() ; if Browser closed by user this will closed the session
+		if !pages
+			this.quit()
+		if isobject(this.CDP) ;&& Targets
+		{	
+			for k , handle in handles
 			{
-				This.currentTab := handle
-				break
+				for i, t in pages ;Targets.targetInfos
+				{
+					if instr(Handle,t.id)
+					{
+						if instr(t.Title, Title)
+						{
+							This.currentTab := handle ; "CDwindow-" t.targetid
+							this.Switch(This.currentTab )
+							;this.CDP.Switch(t.targetid)
+							return
+						}
+					}
+				}
 			}
+		}	
+		else
+		{
+			for k , handle in handles
+			{
+				this.switch(handle)
+				if instr(this.title(),Title)
+				{
+					This.currentTab := handle
+					break
+				}
+			}
+			this.Switch(This.currentTab )
 		}
-		this.Switch(This.currentTab )
 	}
 
-	SwitchbyURL(url:="")
+	SwitchbyURL(url:="",Silent:=1)
 	{
+		; Rufaydium will soon use CDP Target's methods to re-access sessions and pages 
+		; might able to access pages even after restarting webdriver
+		;Targets := this.CDP.GetTargets() 
 		handles := this.GetTabs()
-		for k , handle in handles
-		{
-			this.switch(handle)
-			if instr(this.URL(),url)
+		try pages := this.Detail() ; if Browser closed by user this will closed the session
+		if !pages
+			this.quit()
+
+		if isobject(this.CDP)
+		{	
+			for k , handle in handles
 			{
-				This.currentTab := handle
-				break
+				for i, t in pages ;Targets.targetInfos
+				{
+					if instr(Handle,t.id)
+					{
+						if instr(t.url, url)
+						{
+							This.currentTab := Handle ;"CDwindow-" t.targetid
+							this.Switch(This.currentTab )
+							;this.CDP.Switch(t.targetid)
+							return
+						}
+					}
+				}
 			}
+		}	
+		else
+		{
+			for k , handle in handles
+			{
+				this.switch(handle)
+				if instr(this.url,url)
+				{
+					This.currentTab := handle
+					break
+				}
+			}
+			this.Switch(This.currentTab )
 		}
-		this.Switch(This.currentTab )
 	}
 
 	url
@@ -600,13 +660,17 @@ Class Session
 
 	getElementsbyClassName(Class)
 	{
-		Class = [class='%Class%']
-		return this.findelements(by.selector,Class)
+		return this.findelements(by.selector,"[class='" Class "']")
+	}
+
+	getElementsbyTagName(Name)
+	{
+		return this.findelements(by.TagName,Name)
 	}
 
 	getElementsbyName(Name)
 	{
-		return this.findelements(by.TagName,Name)
+		return this.findelements(by.selector,"[Name='" Name "']")
 	}
 
 	getElementsbyXpath(xPath)
@@ -792,14 +856,19 @@ Class Session
 
 	Actions(Interactions*)
 	{
-		ActionArray := []
-		for i, interaction in Interactions
+		if Interactions.count()
 		{
-			ActionArray.push(interaction.perform())
-			Interactions.clear()
-			Interaction := ""
-		}
-		return this.Send("actions","POST",{"actions":ActionArray})
+			ActionArray := []
+			for i, interaction in Interactions
+			{
+				ActionArray.push(interaction.perform())
+				Interactions.clear()
+				Interaction := ""
+			}
+			return this.Send("actions","POST",{"actions":ActionArray})
+		}	
+		else
+			return this.Send("actions","DELETE")	
 	}
 
 	execute_sql()
@@ -892,10 +961,7 @@ wkhtmltopdf(HtML,pdf,options)
 	while !FileExist(htmlloc)
 		sleep, 200
 
-	if !A_Is64bitOS
-		wkhtmltopdf := "C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
-	else 
-		wkhtmltopdf := "C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe"
+	RegRead, wkhtmltopdf, HKLM, Software\wkhtmltopdf, PdfPath
 
 	if IsObject(options)
 	{
