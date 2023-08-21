@@ -878,6 +878,7 @@ WQlist() {
 		WQpreventiceResults(wqfiles)													; Process incoming Preventice results
 		WQscanHolterPDFs(wqfiles)														; Scan Holter PDFs folder for additional files
 		WQlistPDFdownloads()															; generate wsftp.txt
+		WQlistBadPDFs()																	; find loose PDFs that Chrome couldn't rename 
 		WQfindMissingWebgrab()															; find <pending> missing <webgrab>
 	}
 	
@@ -1273,6 +1274,33 @@ WQlistPDFdownloads() {
 	FileDelete, .\files\wsftp.txt
 	FileAppend, % tmpHolters, .\files\wsftp.txt
 
+	Return
+}
+
+WQlistBadPDFs() {
+/*	Chrome (or wsftp) fails to download files with "," in filename
+	Ends up saving bad filename, e.g. "SMITH, JEROME.PDF" ==> "SMITH"
+	Copy all files completed by ftpgrab() to HolterPDFs
+*/
+	global path
+
+	FileGetTime, wsftpDate, .\files\wsftp.txt
+	d1 := SubStr(wsftpDate, 1, 8)
+
+	loop, files, % ".\pdftemp\*"
+	{
+		fName := A_LoopFileFullPath
+		FileGetTime, fNameDate, % fName
+		d2 := SubStr(fNameDate, 1, 8)
+		if (d1 = d2) {																	; downloaded file on same date as wsftp.txt
+			foundit := true
+			FileMove, % fName, % path.HolterPDF A_LoopFileName ".PDF"
+			eventlog("WQlistBadPDFs moved loose file '" A_LoopFileName "'.")
+		}
+	}
+	if (foundit) {
+		Gosub phaseGUI																	; any file moves, regenerate phaseGUI
+	}
 	Return
 }
 
