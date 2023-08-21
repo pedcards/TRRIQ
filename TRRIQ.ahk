@@ -1292,14 +1292,14 @@ WQlistBadPDFs() {
 		FileGetTime, fNameDate, % fName
 		d1 := SubStr(fNameDate, 1, 8)
 		d2 := SubStr(wsftpDate, 1, 8)
-		if (d1 = d2) {
+		if (d1 = d2) {																	; downloaded file on same date as wsftp.txt
 			foundit := true
 			FileMove, % fName, % path.HolterPDF A_LoopFileName ".PDF"
 			eventlog("WQlistBadPDFs moved loose file '" A_LoopFileName "'.")
 		}
 	}
 	if (foundit) {
-		Gosub phaseGUI
+		Gosub phaseGUI																	; any file moves, regenerate phaseGUI
 	}
 	Return
 }
