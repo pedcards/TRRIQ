@@ -1285,13 +1285,13 @@ WQlistBadPDFs() {
 	global path
 
 	FileGetTime, wsftpDate, .\files\wsftp.txt
+	d1 := SubStr(wsftpDate, 1, 8)
 
 	loop, files, % ".\pdftemp\*"
 	{
 		fName := A_LoopFileFullPath
 		FileGetTime, fNameDate, % fName
-		d1 := SubStr(fNameDate, 1, 8)
-		d2 := SubStr(wsftpDate, 1, 8)
+		d2 := SubStr(fNameDate, 1, 8)
 		if (d1 = d2) {																	; downloaded file on same date as wsftp.txt
 			foundit := true
 			FileMove, % fName, % path.HolterPDF A_LoopFileName ".PDF"
