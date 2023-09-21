@@ -61,6 +61,7 @@ MainLoop:
 	}
 	wb.visible := gl.settings.isVisible													; for progress bars
 	wb.capabilities.HeadlessMode := gl.settings.isHeadless								; for Chrome/Edge window
+	wb.capabilities.IncognitoMode := gl.settings.isIncognito							; incognito mode does not save passwords
 	gl.Page := wb.NewSession()															; Session in gl.Page
 
 	if (A_Args[1]="ftp") {
