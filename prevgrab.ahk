@@ -415,12 +415,12 @@ parsePreventiceInventory(tbl) {
 
 	lbl := ["button","model","ser"]
 	
-	trows := tbl.getElementsByName("tr")
+	trows := tbl.getElementsbyTagName("tr")
 	loop % trows.length()+1																; loop through rows
 	{
 		r_idx := A_index-1
 		trow := trows[r_idx]
-		tcols := trow.getElementsByName("td")
+		tcols := trow.getElementsbyTagName("td")
 		res := []
 		loop % lbl.length()																; loop through cols
 		{
