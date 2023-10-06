@@ -737,6 +737,15 @@ checkVersion(ver) {
 }
 
 WQtask() {
+/*	Double click from clinic location (or ALL) 
+	For studies in-flight, registered but not resulted
+	Tech tasks: 
+		Add note
+		Mark as uploaded to Preventice
+		Mark as completed
+	Admin tasks:
+		?
+*/
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {
 		return
@@ -749,10 +758,15 @@ WQtask() {
 	if (idx="ID") {
 		return
 	}
-	global wq, user
+	global wq, user, adminMode
 	
 	;~ Gui, phase:Hide
 	pt := readWQ(idx)
+
+	if (adminMode) {
+
+		Return
+	}
 	idstr := "/root/pending/enroll[@id='" idx "']"
 	
 	list :=
@@ -1883,7 +1897,11 @@ readWQ(idx) {
 readWQlv:
 {
 /*	Retrieve info from WQlist line
-	Will be for HL7 data, or an additional file in Holter PDFs folder
+	Will be for HL7 result, or an additional file in Holter PDFs folder
+	Tech task: 
+		* Process result
+	Admin task:
+		* "HL7 error"
 */
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {																; Must be in WQlv listview
@@ -1919,6 +1937,11 @@ readWQlv:
 	
 	fldVal := readWQ(wqid)																; wqid would have been determined by parsing hl7
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
+	
+	if (adminMode) {
+
+		Return
+	}
 	if (fldval.node = "done") {															; task has been done already by another user
 		MsgBox, 262208, Completed, File has already been processed!
 		WQlist()																		; refresh list and return
