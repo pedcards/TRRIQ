@@ -304,6 +304,7 @@ PhaseGUI:
 	
 	Menu, menuSys, Add, Clean tempfiles, CleanTempFiles
 	Menu, menuSys, Add, Change clinic location, changeLoc
+	Menu, menuSys, Add, Toggle admin mode, toggleAdmin
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuSys, Add, Update call schedules, updateCall
@@ -320,6 +321,11 @@ PhaseGUI:
 	
 	Gui, Menu, menuBar
 	Gui, Show,, TRRIQ Dashboard
+
+	if (adminMode) {
+		Gui, Color, Fuchsia
+		Gui, Show,, TRRIQ Dashboard - ADMIN MODE
+	}
 	
 	SetTimer, idleTimer, 500
 	return
@@ -386,6 +392,17 @@ changeLoc()
 		eventlog("Removed wks node for " A_ComputerName)
 		Reload
 	}
+	return
+}
+
+toggleAdmin()
+{
+	global adminMode, user
+	if (user!="tchun1") {
+		return
+	} 
+	adminMode := !(adminMode)
+	gosub PhaseGUI
 	return
 }
 
