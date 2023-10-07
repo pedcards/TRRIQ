@@ -1919,6 +1919,11 @@ readWQlv:
 	LV_GetText(wqid,x,7)																; WQID
 	LV_GetText(ftype,x,8)																; filetype
 	SplitPath,fileIn,fnam,,fExt,fileNam
+	if (adminMode) {
+		adminWQlv(wqid)																		; Troubleshoot result
+		Gosub PhaseGUI
+		Return
+	}
 	
 	wq := new XML("worklist.xml")														; refresh WQ
 	blocks := Object()																	; clear all objects
@@ -1939,11 +1944,6 @@ readWQlv:
 	fldVal := readWQ(wqid)																; wqid would have been determined by parsing hl7
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
 	
-	if (adminMode) {
-		adminWQlv()																		; Troubleshoot result
-		Gosub PhaseGUI
-		Return
-	}
 	if (fldval.node = "done") {															; task has been done already by another user
 		MsgBox, 262208, Completed, File has already been processed!
 		WQlist()																		; refresh list and return
