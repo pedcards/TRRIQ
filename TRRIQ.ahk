@@ -758,12 +758,12 @@ WQtask() {
 	if (idx="ID") {
 		return
 	}
+	
+	global wq, user, adminMode
 	if (adminMode) {
 		adminWQtask(idx)
 		Return
 	}
-	
-	global wq, user, adminMode
 	
 	;~ Gui, phase:Hide
 	pt := readWQ(idx)
