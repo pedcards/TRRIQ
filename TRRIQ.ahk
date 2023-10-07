@@ -5862,6 +5862,13 @@ adminWQlv() {
 
 }
 
+adminWQtask() {
+/*	Troubleshoot clinic task problems
+
+*/
+
+}
+
 cleancolon(ByRef txt) {
 	if substr(txt,1,1)=":" {
 		txt:=substr(txt,2)
