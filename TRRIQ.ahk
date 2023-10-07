@@ -5856,11 +5856,20 @@ httpComm(verb) {
 	return response
 }
 
-adminWQlv() {
+adminWQlv(id) {
 /*	Troubleshoot wqlv result problems
 
 */
+	en := readWQ(id)
 
+	entxt := "wqid: '" id "'`n"
+	for key,val in en
+	{
+		entxt .= key ": '" val "'`n"
+	}
+	MsgBox % entxt
+	
+	Return
 }
 
 adminWQtask(id) {
