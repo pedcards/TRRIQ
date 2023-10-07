@@ -302,21 +302,24 @@ PhaseGUI:
 	}
 	WQlist()
 	
-	Menu, menuSys, Add, Clean tempfiles, CleanTempFiles
 	Menu, menuSys, Add, Change clinic location, changeLoc
-	Menu, menuSys, Add, Toggle admin mode, toggleAdmin
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuSys, Add, Update call schedules, updateCall
-	Menu, menuSys, Add, Send notification email, sendEmail
-	Menu, menuSys, Add, Find pending leftovers, cleanPending
 	Menu, menuSys, Add, CheckMWU, checkMWUapp											; position for test menu
-	Menu, menuSys, Add, Fix WQ device durations, fixDuration							; position for test menu
-	Menu, menuSys, Add, Recover DONE record, recoverDone
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
+	Menu, menuAdmin, Add, Toggle admin mode, toggleAdmin
+	Menu, menuAdmin, Add, Clean tempfiles, CleanTempFiles
+	Menu, menuAdmin, Add, Send notification email, sendEmail
+	Menu, menuAdmin, Add, Find pending leftovers, cleanPending
+	Menu, menuAdmin, Add, Fix WQ device durations, fixDuration							; position for test menu
+	Menu, menuAdmin, Add, Recover DONE record, recoverDone
 		
 	Menu, menuBar, Add, System, :menuSys
+	if (user~="i)tchun1|docte") {
+		Menu, menuBar, Add, Admin, :menuAdmin
+	}
 	Menu, menuBar, Add, Help, :menuHelp
 	
 	Gui, Menu, menuBar
@@ -397,10 +400,7 @@ changeLoc()
 
 toggleAdmin()
 {
-	global adminMode, user
-	if (user!="tchun1") {
-		return
-	} 
+	global adminMode
 	adminMode := !(adminMode)
 	gosub PhaseGUI
 	return
