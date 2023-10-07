@@ -758,15 +758,16 @@ WQtask() {
 	if (idx="ID") {
 		return
 	}
+	if (adminMode) {
+		adminWQtask(idx)
+		Return
+	}
+	
 	global wq, user, adminMode
 	
 	;~ Gui, phase:Hide
 	pt := readWQ(idx)
 
-	if (adminMode) {
-
-		Return
-	}
 	idstr := "/root/pending/enroll[@id='" idx "']"
 	
 	list :=
@@ -5862,11 +5863,13 @@ adminWQlv() {
 
 }
 
-adminWQtask() {
+adminWQtask(id) {
 /*	Troubleshoot clinic task problems
 
 */
-
+	MsgBox % "adminWQtask(id) will have an action`n"
+			. "when we figure out what it needs."
+	Return
 }
 
 cleancolon(ByRef txt) {
