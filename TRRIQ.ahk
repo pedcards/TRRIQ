@@ -1939,7 +1939,8 @@ readWQlv:
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
 	
 	if (adminMode) {
-
+		adminWQlv()																		; Troubleshoot result
+		Gosub PhaseGUI
 		Return
 	}
 	if (fldval.node = "done") {															; task has been done already by another user
@@ -5852,6 +5853,13 @@ httpComm(verb) {
 	}
 
 	return response
+}
+
+adminWQlv() {
+/*	Troubleshoot wqlv result problems
+
+*/
+
 }
 
 cleancolon(ByRef txt) {
