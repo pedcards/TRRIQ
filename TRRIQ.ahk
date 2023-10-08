@@ -5860,16 +5860,25 @@ adminWQlv(id) {
 /*	Troubleshoot wqlv result problems
 
 */
+	eventlog("adminWQlv(" id ")")
 	en := readWQ(id)
+	Gui, Destroy
+	Gui, adLV:Default
+	Gui, +AlwaysOnTop
 
-	entxt := "wqid: '" id "'`n"
-	for key,val in en
+	Gui, Add, Text, x10 , % "wqid: " id
+	for key,val in en																	; Add buttons for each field in <enroll>
 	{
-		entxt .= key ": '" val "'`n"
+		Gui, Add, Button, x10 w100 gadminWQLVchange, % key
+		Gui, Add, Text, yp+6 x120 , % val
 	}
-	MsgBox % entxt
-	
+	Gui, Add, Button, Center x10 w300 gadminWQlvFix, Analyze record
+	Gui, Show,, adminWQLV repair
+
+	WinWaitClose, adminWQLV repair
+	Gui, Destroy
 	Return
+
 }
 
 adminWQtask(id) {
