@@ -5879,6 +5879,40 @@ adminWQlv(id) {
 	Gui, Destroy
 	Return
 
+	adminWQlvFix:
+	/*	Analyze record for errors
+		(This might end up being big enough to merit its own function)
+	*/
+	if (en.webgrab="") {																; Common cause of "noreg error"
+		wqSetVal(id,"webgrab",A_now)
+		WriteOut("/root/pending/enroll[@id='" id "']","webgrab")
+		eventlog("adminWQlvFix: Added missing webgrab.")
+		fixChange .= "Missing <webgrab>`n"
+	}
+
+	if (en.duration="") {																; Shows as "Missing FTP error"
+		if (en.dev~="Mortara") {
+			lvDuration := 1
+		}
+		else if (en.dev~="Mini EL") {
+			lvDuration := 14
+		}
+		else if (en.dev~="Heart") {
+			lvDuration := 30
+		}
+		if (lvDuration) {																; Any lvDuration, writeout
+			wqSetVal(id,"duration",lvDuration)
+			WriteOut("/root/pending/enroll[@id='" id "']","duration")
+			eventlog("adminWQlvFix: Added missing duration.")
+			fixChange .= "Missing <duration>`n"
+		}
+	}
+
+	if (fixChange) {																	; Any fixChange, notify and reload
+		MsgBox 0x40030, adminWQlv, % fixChange
+		adminWQlv(id)
+	}
+	Return
 }
 
 adminWQtask(id) {
