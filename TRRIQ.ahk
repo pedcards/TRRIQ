@@ -1399,7 +1399,7 @@ WQpendingTabs() {
 			CLV_col := ""
 			if (instr(e0.dev,"Heart") && (dt > monLate.BGH))
 			|| (instr(e0.dev,"Mortara") && (dt > monLate.Mortara)) 
-			|| (instr(e0.dev,"Mini") && (dt > monLate.BGM)) {
+			|| (instr(e0.dev,"Mini EL") && (dt > monLate.BGM)) {
 				CLV_col := "red"
 			}
 			
@@ -2597,7 +2597,7 @@ fixDuration() {
 		kDevNode := k.selectSingleNode("dev")
 		kDev := kDevNode.Text
 		kDur := (kDev~="Mortara" ? "1"
-			: kDev~="Mini" ? "14"
+			: kDev~="Mini EL" ? "14"
 			: kDev~="Heart" ? "30"
 			: "")
 		wq.InsertElement("duration",kDevNode.NextSibling,kDur)
