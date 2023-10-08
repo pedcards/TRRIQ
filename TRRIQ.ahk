@@ -5872,7 +5872,7 @@ adminWQlv(id) {
 		Gui, Add, Button, x10 w100 gadminWQLVchange, % key
 		Gui, Add, Text, yp+6 x120 , % val
 	}
-	Gui, Add, Button, Center x10 w300 gadminWQlvFix, Analyze record
+	Gui, Add, Button, Center x10 w300 gadminWQlvGoto, Analyze record
 	Gui, Show,, adminWQLV repair
 
 	WinWaitClose, adminWQLV repair
@@ -5907,13 +5907,19 @@ adminWQlv(id) {
 	} 
 	Return
 
-	adminWQlvFix:
-	/*	Analyze record for errors
-		(This might end up being big enough to merit its own function)
-	*/
+	adminWQlvGoto:
+	en.id := id
+	adminWQlvFix(en)
+	Return
+}
+
+adminWQlvFix(en) {
+/*	Analyze record for errors
+	(This might end up being big enough to merit its own function)
+*/
 	if (en.webgrab="") {																; Common cause of "noreg error"
-		wqSetVal(id,"webgrab",A_now)
-		WriteOut("/root/pending/enroll[@id='" id "']","webgrab")
+		wqSetVal(en.id,"webgrab",A_now)
+		WriteOut("/root/pending/enroll[@id='" en.id "']","webgrab")
 		eventlog("adminWQlvFix: Added missing webgrab.")
 		fixChange .= "Missing <webgrab>`n"
 	}
@@ -5929,8 +5935,8 @@ adminWQlv(id) {
 			lvDuration := 30
 		}
 		if (lvDuration) {																; Any lvDuration, writeout
-			wqSetVal(id,"duration",lvDuration)
-			WriteOut("/root/pending/enroll[@id='" id "']","duration")
+			wqSetVal(en.id,"duration",lvDuration)
+			WriteOut("/root/pending/enroll[@id='" en.id "']","duration")
 			eventlog("adminWQlvFix: Added missing duration.")
 			fixChange .= "Missing <duration>`n"
 		}
@@ -5938,10 +5944,12 @@ adminWQlv(id) {
 
 	if (fixChange) {																	; Any fixChange, notify and reload
 		MsgBox 0x40030, adminWQlv, % fixChange
-		adminWQlv(id)
+		adminWQlv(en.id)
 	}
 	Return
+
 }
+
 
 adminWQtask(id) {
 /*	Troubleshoot clinic task problems
