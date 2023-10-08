@@ -5879,6 +5879,34 @@ adminWQlv(id) {
 	Gui, Destroy
 	Return
 
+	adminWQLVchange:
+	/*	Change value for a field
+	*/
+	fld := A_GuiControl
+	InputBox(butval,"Change value", fld ": " en[fld] "`n`n", en[fld])
+	if (butval="") {
+		Return
+	}
+	if (butval!=en[fld]) {
+		MsgBox 0x40013, Change settings
+			, % "Change value [" fld "]`n`n"
+				. "old: " en[fld] "`n"
+				. "new: " butval "`n`n"
+				. "This will overwrite worklist.xml!"
+		IfMsgBox Yes, {																	; update WQ, save worklist, reload UI
+			wqSetVal(id,fld,butval)
+			WriteOut("/root/pending/enroll[@id='" id "']",fld)
+			adminWQlv(id)
+			Return
+		} Else IfMsgBox No, {															; unchanged, back to UI
+			Return
+		} Else IfMsgBox Cancel, {														; no change, close UI
+			Gui, Submit
+			Return
+		}
+	} 
+	Return
+
 	adminWQlvFix:
 	/*	Analyze record for errors
 		(This might end up being big enough to merit its own function)
