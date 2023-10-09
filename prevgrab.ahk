@@ -27,7 +27,7 @@ Config:
 		gl.isDevt := false
 	}
 
-	; A_Args[1] := "ftp"				;*******************************
+	A_Args[1] := "ftp"				;*******************************
 
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
@@ -579,11 +579,11 @@ preventiceLogin() {
 */
 	gl.Page
 		.getElementById(gl.login.attr_user)
-		.value := gl.login.user_name
+		.SendKey(gl.login.user_name)													; .value := gl.login.user_name
 	
 	gl.Page
 		.getElementById(gl.login.attr_pass)
-		.value := gl.login.user_pass
+		.SendKey(gl.login.user_pass)													; .value := gl.login.user_pass
 	
 	gl.Page
 		.getElementByID(gl.login.attr_btn)
