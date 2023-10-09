@@ -302,21 +302,24 @@ PhaseGUI:
 	}
 	WQlist()
 	
-	Menu, menuSys, Add, Clean tempfiles, CleanTempFiles
 	Menu, menuSys, Add, Change clinic location, changeLoc
-	Menu, menuSys, Add, Toggle admin mode, toggleAdmin
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuSys, Add, Update call schedules, updateCall
-	Menu, menuSys, Add, Send notification email, sendEmail
-	Menu, menuSys, Add, Find pending leftovers, cleanPending
 	Menu, menuSys, Add, CheckMWU, checkMWUapp											; position for test menu
-	Menu, menuSys, Add, Fix WQ device durations, fixDuration							; position for test menu
-	Menu, menuSys, Add, Recover DONE record, recoverDone
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
+	Menu, menuAdmin, Add, Toggle admin mode, toggleAdmin
+	Menu, menuAdmin, Add, Clean tempfiles, CleanTempFiles
+	Menu, menuAdmin, Add, Send notification email, sendEmail
+	Menu, menuAdmin, Add, Find pending leftovers, cleanPending
+	Menu, menuAdmin, Add, Fix WQ device durations, fixDuration							; position for test menu
+	Menu, menuAdmin, Add, Recover DONE record, recoverDone
 		
 	Menu, menuBar, Add, System, :menuSys
+	if (user~="i)tchun1|docte") {
+		Menu, menuBar, Add, Admin, :menuAdmin
+	}
 	Menu, menuBar, Add, Help, :menuHelp
 	
 	Gui, Menu, menuBar
@@ -397,10 +400,7 @@ changeLoc()
 
 toggleAdmin()
 {
-	global adminMode, user
-	if (user!="tchun1") {
-		return
-	} 
+	global adminMode
 	adminMode := !(adminMode)
 	gosub PhaseGUI
 	return
@@ -737,6 +737,15 @@ checkVersion(ver) {
 }
 
 WQtask() {
+/*	Double click from clinic location (or ALL) 
+	For studies in-flight, registered but not resulted
+	Tech tasks: 
+		Add note
+		Mark as uploaded to Preventice
+		Mark as completed
+	Admin tasks:
+		?
+*/
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {
 		return
@@ -749,10 +758,16 @@ WQtask() {
 	if (idx="ID") {
 		return
 	}
-	global wq, user
+	
+	global wq, user, adminMode
+	if (adminMode) {
+		adminWQtask(idx)
+		Return
+	}
 	
 	;~ Gui, phase:Hide
 	pt := readWQ(idx)
+
 	idstr := "/root/pending/enroll[@id='" idx "']"
 	
 	list :=
@@ -1384,7 +1399,7 @@ WQpendingTabs() {
 			CLV_col := ""
 			if (instr(e0.dev,"Heart") && (dt > monLate.BGH))
 			|| (instr(e0.dev,"Mortara") && (dt > monLate.Mortara)) 
-			|| (instr(e0.dev,"Mini") && (dt > monLate.BGM)) {
+			|| (instr(e0.dev,"Mini EL") && (dt > monLate.BGM)) {
 				CLV_col := "red"
 			}
 			
@@ -1883,7 +1898,11 @@ readWQ(idx) {
 readWQlv:
 {
 /*	Retrieve info from WQlist line
-	Will be for HL7 data, or an additional file in Holter PDFs folder
+	Will be for HL7 result, or an additional file in Holter PDFs folder
+	Tech task: 
+		* Process result
+	Admin task:
+		* "HL7 error"
 */
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {																; Must be in WQlv listview
@@ -1900,6 +1919,11 @@ readWQlv:
 	LV_GetText(wqid,x,7)																; WQID
 	LV_GetText(ftype,x,8)																; filetype
 	SplitPath,fileIn,fnam,,fExt,fileNam
+	if (adminMode) {
+		adminWQlv(wqid)																		; Troubleshoot result
+		Gosub PhaseGUI
+		Return
+	}
 	
 	wq := new XML("worklist.xml")														; refresh WQ
 	blocks := Object()																	; clear all objects
@@ -1919,6 +1943,7 @@ readWQlv:
 	
 	fldVal := readWQ(wqid)																; wqid would have been determined by parsing hl7
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
+	
 	if (fldval.node = "done") {															; task has been done already by another user
 		MsgBox, 262208, Completed, File has already been processed!
 		WQlist()																		; refresh list and return
@@ -2572,7 +2597,7 @@ fixDuration() {
 		kDevNode := k.selectSingleNode("dev")
 		kDev := kDevNode.Text
 		kDur := (kDev~="Mortara" ? "1"
-			: kDev~="Mini" ? "14"
+			: kDev~="Mini EL" ? "14"
 			: kDev~="Heart" ? "30"
 			: "")
 		wq.InsertElement("duration",kDevNode.NextSibling,kDur)
@@ -5829,6 +5854,110 @@ httpComm(verb) {
 	}
 
 	return response
+}
+
+adminWQlv(id) {
+/*	Troubleshoot wqlv result problems
+
+*/
+	eventlog("adminWQlv(" id ")")
+	en := readWQ(id)
+	Gui, Destroy
+	Gui, adLV:Default
+	Gui, +AlwaysOnTop
+
+	Gui, Add, Text, x10 , % "wqid: " id
+	for key,val in en																	; Add buttons for each field in <enroll>
+	{
+		Gui, Add, Button, x10 w100 gadminWQLVchange, % key
+		Gui, Add, Text, yp+6 x120 , % val
+	}
+	Gui, Add, Button, Center x10 w300 gadminWQlvGoto, Analyze record
+	Gui, Show,, adminWQLV repair
+
+	WinWaitClose, adminWQLV repair
+	Gui, Destroy
+	Return
+
+	adminWQLVchange:
+	/*	Change value for a field
+	*/
+	fld := A_GuiControl
+	InputBox(butval,"Change value", fld ": " en[fld] "`n`n", en[fld])
+	if (butval="") {
+		Return
+	}
+	if (butval!=en[fld]) {
+		MsgBox 0x40013, Change settings
+			, % "Change value [" fld "]`n`n"
+				. "old: " en[fld] "`n"
+				. "new: " butval "`n`n"
+				. "This will overwrite worklist.xml!"
+		IfMsgBox Yes, {																	; update WQ, save worklist, reload UI
+			wqSetVal(id,fld,butval)
+			WriteOut("/root/pending/enroll[@id='" id "']",fld)
+			adminWQlv(id)
+			Return
+		} Else IfMsgBox No, {															; unchanged, back to UI
+			Return
+		} Else IfMsgBox Cancel, {														; no change, close UI
+			Gui, Submit
+			Return
+		}
+	} 
+	Return
+
+	adminWQlvGoto:
+	en.id := id
+	adminWQlvFix(en)
+	Return
+}
+
+adminWQlvFix(en) {
+/*	Analyze record for errors
+	(This might end up being big enough to merit its own function)
+*/
+	if (en.webgrab="") {																; Common cause of "noreg error"
+		wqSetVal(en.id,"webgrab",A_now)
+		WriteOut("/root/pending/enroll[@id='" en.id "']","webgrab")
+		eventlog("adminWQlvFix: Added missing webgrab.")
+		fixChange .= "Missing <webgrab>`n"
+	}
+
+	if (en.duration="") {																; Shows as "Missing FTP error"
+		if (en.dev~="Mortara") {
+			lvDuration := 1
+		}
+		else if (en.dev~="Mini EL") {
+			lvDuration := 14
+		}
+		else if (en.dev~="Heart") {
+			lvDuration := 30
+		}
+		if (lvDuration) {																; Any lvDuration, writeout
+			wqSetVal(en.id,"duration",lvDuration)
+			WriteOut("/root/pending/enroll[@id='" en.id "']","duration")
+			eventlog("adminWQlvFix: Added missing duration.")
+			fixChange .= "Missing <duration>`n"
+		}
+	}
+
+	if (fixChange) {																	; Any fixChange, notify and reload
+		MsgBox 0x40030, adminWQlv, % fixChange
+		adminWQlv(en.id)
+	}
+	Return
+
+}
+
+
+adminWQtask(id) {
+/*	Troubleshoot clinic task problems
+
+*/
+	MsgBox % "adminWQtask(id) will have an action`n"
+			. "when we figure out what it needs."
+	Return
 }
 
 cleancolon(ByRef txt) {
