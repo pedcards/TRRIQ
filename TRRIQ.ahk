@@ -188,7 +188,19 @@ PhaseGUI:
 		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
 		, No active orders
 	Gui, Add, Text, wp h30
+	Gui, Add, Text, Y+10 wp h100 Center, Transmit BG MINI`nto Preventice
 	Gui, Font, Normal
+
+	GuiControlGet, btn1, Pos, BG MINI
+
+	btnW := 79
+	btnH := 61
+
+	Gui, Add, Picture
+		, % "Y" btn1Y+30 " X" btn1X+70
+		. " w" btnW " h" btnH " "
+		. " +0x1000 vUpload gPhaseTask"
+		, .\files\BGM.png
 	
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
