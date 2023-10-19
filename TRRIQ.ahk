@@ -66,8 +66,8 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 /*	Get valid WebUploadDir
 */
-webUploadDir := checkPHCpath()														; Find the location of Holter data files
-check_h3(path.webupload,webUploadStr)													; Find the H3 data folders on C:
+webUploadDir := checkPHCpath()															; Find the location of Holter data files
+; check_h3(path.webupload,webUploadStr)													; Find the H3 data folders on C:
 checkPCwks()
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
@@ -675,8 +675,8 @@ checkPCwks() {
 }
 
 checkPHCpath() {
-/*	Check registry location for H3/HS6 install
-	Get DirectoryPath value
+/*	Find Exe shortcut in Start Menu
+	Find AppData path to files
 */
 	global has_HS6
 
