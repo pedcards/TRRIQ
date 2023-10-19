@@ -3252,12 +3252,12 @@ makePreventiceORM() {
 			, 4:indSeg })
 	}
 	
-	buildHL7("OBX"
+	buildHL7("OBX"																		; OBX Service Type = {MCT,CEM,Holter}
 		,{2:"ST"
 		, 3:"12915^Service Type"
-		, 5:strQ((ptDem.model~="Mortara") ? 1 : "","Holter")
-			. strQ((ptDem.model~="Heart") ? 1 : "","CEM")
-			. strQ((ptDem.model~="Mini") ? 1 : "","Holter") })
+		, 5:strQ((ptDem.model~="Mini$") ? 1 : "","Holter")
+			. strQ((ptDem.model~="Mini EL$") ? 1 : "","Holter")
+			. strQ((ptDem.model~="Mini Plus Lite$") ? 1 : "","CEM") })
 	
 	buildHL7("OBX"
 		,{2:"ST"
