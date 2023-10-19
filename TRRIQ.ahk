@@ -3285,6 +3285,11 @@ makePreventiceORM() {
 }
 
 BGregister(type) {
+/*	Register a BodyGuardian device (short term Holter, long term Holter, Event monitor)
+	Gather and verify demographic info from Epic order message
+	Create <pending/enroll> based on <orders/enroll> node
+	Generate and Preventice ORM
+*/
 	global wq, ptDem, fetchQuit, isDevt
 	SetTimer, idleTimer, Off
 	
