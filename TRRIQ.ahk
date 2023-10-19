@@ -2040,10 +2040,10 @@ readWQorder() {
 	if (ptDem.monitor~="i)HOL") {														; for short term BG Mini (24-48 hr)
 		BGregister("HOL")
 	} 
-	else if (ptDem.monitor~="i)BGM") {													; for BG Mini (and maybe Zio)
+	else if (ptDem.monitor~="i)BGM") {													; for long term BG Mini (3-15 days)
 		BGregister("BGM")
 	}
-	else if (ptDem.monitor~="i)BGH") {													; for BG Heart
+	else if (ptDem.monitor~="i)BGH") {													; for BGM Plus Lite, formerly BG Heart (30 day CEM)
 		BGregister("BGH")
 	}
 	
