@@ -3174,6 +3174,9 @@ UiFieldFill(fld,val,win) {
 }
 
 makePreventiceORM() {
+/*	Generate Preventice ORM using data in ptDem
+	Based on specs document from Preventice 
+*/
 	global wq, ptDem, fetchQuit, hl7out, path, indCodes, sitesCode, sitesFacility
 	
 	hl7time := A_Now
@@ -3220,7 +3223,7 @@ makePreventiceORM() {
 	buildHL7("ORC",{2:""})
 	
 	buildHL7("OBR"
-		,{2:ptDem.wqid
+		,{2:ptDem.wqid																	; technically this is "placer order number" ==> SecondaryID at Preventice
 		, 4:strQ((ptDem.model~="Mortara") ? 1 : "","Holter^Holter")
 			. strQ((ptDem.model~="Heart") ? 1 : "","CEM^CEM")
 			. strQ((ptDem.model~="Mini") ? 1 : "","Holter^Holter")
