@@ -3259,10 +3259,12 @@ makePreventiceORM() {
 			. strQ((ptDem.model~="Mini EL$") ? 1 : "","Holter")
 			. strQ((ptDem.model~="Mini Plus Lite$") ? 1 : "","CEM") })
 	
-	buildHL7("OBX"
+	buildHL7("OBX"																		; OBX Device = {BC2002A,BC2003A,BGMPLite}
 		,{2:"ST"
 		, 3:"12916^Device"
-		, 5:ptDem.model })
+		, 5:strQ((ptDem.model~="Mini$") ? 1 : "","BC2002A")
+			. strQ((ptDem.model~="Mini EL$") ? 1 : "","BC2003A")
+			. strQ((ptDem.model~="Mini Plus Lite$") ? 1 : "","BGMPLite") })
 	
 	buildHL7("OBX"
 		,{2:"ST"
