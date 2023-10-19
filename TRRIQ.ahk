@@ -66,7 +66,7 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 /*	Get valid WebUploadDir
 */
-webUploadDir := checkH3registry()														; Find the location of Holter data files
+webUploadDir := checkPHCpath()														; Find the location of Holter data files
 check_h3(path.webupload,webUploadStr)													; Find the H3 data folders on C:
 checkPCwks()
 
@@ -674,7 +674,7 @@ checkPCwks() {
 	Return
 }
 
-checkH3registry() {
+checkPHCpath() {
 /*	Check registry location for H3/HS6 install
 	Get DirectoryPath value
 */
