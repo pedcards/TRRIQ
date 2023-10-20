@@ -117,7 +117,6 @@ for key,val in monStrings
 	monPdfStrings[el.1]:=el.2																		; Abbrev based on PDF fname
 	monEpicEAP[el.2]:=el.6																			; Epic EAP codes for monitors
 }
-monLate := readIni("LateMonitors")
 
 initHL7()																							; HL7 definitions
 hl7DirMap := {}
@@ -1374,7 +1373,7 @@ WQpendingTabs() {
 	Generate ALL tab
 	Add each <enroll> to corresponding site
 */
-	global wq, sites, CLV_all, monLate
+	global wq, sites, CLV_all
 
 	Gui, ListView, WQlv_all
 	LV_Delete()
