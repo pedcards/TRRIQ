@@ -4342,7 +4342,7 @@ makeTestORU() {
 		,{2:ptDem.wqid
 		, 3:PVID
 		, 4:strQ(ptDem.model~="Mortara" ? 1 : "","Holter^Holter")
-			. strQ(ptDem.model~="Heart" ? 1 : "","CEM^CEM")
+			. strQ(ptDem.model~="Heart|Lite" ? 1 : "","CEM^CEM")
 			. strQ(ptDem.model~="Mini" ? 1 : "","Holter^Holter")
 		, 7:hl7time
 		, 16:ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
