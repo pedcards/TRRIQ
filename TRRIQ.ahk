@@ -3750,8 +3750,8 @@ ProcessHl7PDF:
 		gosub Event_BGH_Hl7
 	} else if (fldVal.dev~="Mini EL") {
 		gosub Holter_BGM_EL_HL7
-	} else if (fldVal.dev~="Mini$") {
-		gosub Holter_BGM_SL_Hl7
+	} else if (fldVal.dev~="Mini$") {													; May be able to consolidate EL and SL
+		gosub Holter_BGM_SL_Hl7															; as the reports will be essentiall identical
 	} else if (fldVal.dev~="Mortara") {
 		gosub Holter_Pr_Hl7
 	} else {
