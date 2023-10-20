@@ -1395,12 +1395,7 @@ WQpendingTabs() {
 			;~ if (instr(e0.dev,"BG") && (dt < 30)) {									; skip BGH less than 30 days
 				;~ continue
 			;~ }
-			CLV_col := ""
-			if (instr(e0.dev,"Heart") && (dt > monLate.BGH))
-			|| (instr(e0.dev,"Mortara") && (dt > monLate.Mortara)) 
-			|| (instr(e0.dev,"Mini EL") && (dt > monLate.BGM)) {
-				CLV_col := "red"
-			}
+			CLV_col := (dt-e0.duration > 10) ? "red" : ""
 			
 			Gui, ListView, WQlv%i%														; add to clinic loc listview
 			LV_Add(""
