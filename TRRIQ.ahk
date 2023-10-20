@@ -3751,7 +3751,7 @@ ProcessHl7PDF:
 	} else if (ftype="BGM") {
 		gosub Holter_BGM_EL_HL7
 	} else if (ftype="HOL") {
-		gosub Holter_Pr_Hl7
+		gosub Holter_BGM_SL_Hl7
 	} else {
 		eventlog("No match. OBR_TestCode=" type ", ftype=" ftype ".")
 		MsgBox % "No filetype match!"
@@ -4805,7 +4805,38 @@ CheckProc:
 return
 }
 
-Holter_BGM_HL7:
+Holter_BGM_SL_HL7:
+{
+	eventlog("Holter_BGMini_SL_HL7")
+	monType := "HOL"
+
+	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
+		gosub processPDF																; need to reprocess from extracted PDF
+		Return
+	}
+	
+	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
+	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
+	fldval["dem-Recording_time"] := strQ(fldval["Monitoring_Period"], parsedate("###").DHM
+									, calcDuration(fldval["hrd-Total_Time"]).DHM " (DD:HH:MM)")
+	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
+									, calcDuration(fldval["hrd-Analyzed_Time"]).DHM " (DD:HH:MM)")
+
+	gosub checkProc																		; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return																			; fetchGUI was quit, so skip processing
+	}
+	
+	fieldsToCSV()
+	fieldcoladd("","INTERP","")															; fldval["Narrative"]
+	fieldcoladd("","Mon_type","Holter")
+	
+	FileCopy, %fileIn%, %fileIn%-sh.pdf
+	
+	fldval.done := true
+
+return
+}
 
 Holter_BGM_EL_HL7:
 {
