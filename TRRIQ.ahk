@@ -3748,10 +3748,12 @@ ProcessHl7PDF:
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (ftype="BGH") {
 		gosub Event_BGH_Hl7
-	} else if (ftype="BGM") {
+	} else if (fldVal.dev~="Mini EL") {
 		gosub Holter_BGM_EL_HL7
-	} else if (ftype="HOL") {
+	} else if (fldVal.dev~="Mini$") {
 		gosub Holter_BGM_SL_Hl7
+	} else if (fldVal.dev~="Mortara") {
+		gosub Holter_Pr_Hl7
 	} else {
 		eventlog("No match. OBR_TestCode=" type ", ftype=" ftype ".")
 		MsgBox % "No filetype match!"
