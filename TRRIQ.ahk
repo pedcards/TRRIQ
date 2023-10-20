@@ -3749,7 +3749,7 @@ ProcessHl7PDF:
 	if (ftype="BGH") {
 		gosub Event_BGH_Hl7
 	} else if (ftype="BGM") {
-		gosub Holter_BGM_HL7
+		gosub Holter_BGM_EL_HL7
 	} else if (ftype="HOL") {
 		gosub Holter_Pr_Hl7
 	} else {
@@ -4806,8 +4806,10 @@ return
 }
 
 Holter_BGM_HL7:
+
+Holter_BGM_EL_HL7:
 {
-	eventlog("Holter_BGMini_HL7")
+	eventlog("Holter_BGMini_EL_HL7")
 	monType := "BGM"
 
 	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
