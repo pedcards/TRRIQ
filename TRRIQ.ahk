@@ -5777,7 +5777,7 @@ formatField(pre, lab, txt) {
 		}
 	}
 	
-;	ZIO patch specific search fixes
+/*	ZIO patch specific search fixes
 	if (monType="Zio") {
 		if (RegExMatch(txt,"(\d){1,2} days (\d){1,2} hours ",tmp)) {		;	Split recorded/analyzed time in to Days and Hours
 			fieldColAdd(pre,lab "_D",strX(tmp,"",1,1, " days",1,5))
@@ -5813,6 +5813,7 @@ formatField(pre, lab, txt) {
 			txt := "0"
 		}
 	}
+*/
 	
 	fieldColAdd(pre,lab,txt)
 	return
