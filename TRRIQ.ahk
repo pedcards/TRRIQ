@@ -5684,7 +5684,7 @@ formatField(pre, lab, txt) {
 	}
 	
 ;	Mortara Holter specific fixes
-	if (monType="HOL") {
+	if (ptDem.model~="Mortara") {
 		if (lab="Name") {																; Break name into Last and First
 			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
 			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
@@ -5722,8 +5722,8 @@ formatField(pre, lab, txt) {
 		}
 	}
 
-;	Body Guardian Heart specific fixes
-	if (monType="BGH") {
+;	Body Guardian Heart specific fixes, possibly apply to BGM Plus Lite as well?
+	if (ptDem.model~="Heart|Lite") {
 		if (lab="Name") {
 			ptDem["nameL"] := strX(txt," ",0,1,"",0)
 			ptDem["nameF"] := strX(txt,"",1,0," ",1,1)
@@ -5733,8 +5733,8 @@ formatField(pre, lab, txt) {
 		}
 	}
 
-;	Body Guardian Mini specific fixes
-	if (monType="BGM") {
+;	Body Guardian Mini specific fixes, possibly applies to both EL and SL?
+	if (ptDem.model~="Mini") {
 		; convert dates to MDY format
 		if (lab ~= "Test_(date|end)") {
 			txt := parseDate(txt).mdy
