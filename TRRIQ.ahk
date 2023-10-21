@@ -2651,6 +2651,32 @@ checkMWUapp()
 	return																	
 }
 
+HolterConnect(phase="") 
+{
+	global wq, ptDem, fetchQuit, user, isDevt
+
+	MsgBox 0x21, Holter Connect, Launch HOLTER CONNECT`nto import/upload Holter?
+	IfMsgBox OK, {
+	} Else {
+		Return
+	}
+	; checkBGMdrive()
+/*
+	Wait until drive mounted with label "BG MINI"
+	Get S/N and date
+	Find matching <enroll>
+	Launch local Cygnus
+	Wait for zip saved in .unassigned
+	New filename probably belongs to the matched enroll
+	Wait for zip moved to archive
+	Mark as uploaded in worklist
+	Wait for BG MINI unmounted
+
+*/
+
+	Return
+}
+
 MortaraUpload(tabnum="")
 {
 	global wq, mu_UI, ptDem, fetchQuit, MtCt, webUploadDir, user, isDevt, mwuPhase
