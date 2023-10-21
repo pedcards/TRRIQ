@@ -145,10 +145,15 @@ MainLoop: ; ===================== This is the main part ========================
 		Gosub PhaseGUI
 		WinWaitClose, TRRIQ Dashboard
 		
-		if (phase="Upload") {
+		if (phase="MortaraUpload") {
 			eventlog("Start Mortara upload.")
 			mwuPhase := "Transfer"
 			MortaraUpload(mwuPhase)
+		}
+		if (phase="HolterUpload") {
+			eventlog("Start Mortara upload.")
+			hcPhase := "Transfer"
+			HolterConnect(hcPhase)
 		}
 	}
 	
