@@ -2722,7 +2722,11 @@ HolterConnect(phase="")
 	}
 
 	bgmDrive := findBGMdrive()
-	sernum := getBGMser(bgmDrive)
+	serNum := getBGMser(bgmDrive)
+	if (serNum="") {
+		eventlog("No valid BG MINI drive detected by timeout.")
+		Return 
+	} 
 /*
 	Wait until drive mounted with label "BG MINI"
 	Get S/N and date
