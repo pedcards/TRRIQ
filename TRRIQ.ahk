@@ -2697,6 +2697,13 @@ findBGMdrive() {
 	Return hit
 }
 
+getBGMser(drive) {
+	FileReadLine, txt, % drive ":\LOG", 1
+	serNum := stRegX(txt "<<<","S/N:\s+",1,1,"<<<",1)
+	serNum := RegExReplace(serNum,"BGMINI-")
+	Return serNum
+}
+
 HolterConnect(phase="") 
 {
 	global wq, ptDem, fetchQuit, user, isDevt
@@ -2715,6 +2722,7 @@ HolterConnect(phase="")
 	}
 
 	bgmDrive := findBGMdrive()
+	sernum := getBGMser(bgmDrive)
 /*
 	Wait until drive mounted with label "BG MINI"
 	Get S/N and date
