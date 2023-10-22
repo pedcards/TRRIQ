@@ -2697,13 +2697,6 @@ findBGMdrive() {
 	Return hit
 }
 
-getBGMser(drive) {
-	FileReadLine, txt, % drive ":\LOG", 1
-	serNum := stRegX(txt "<<<","S/N:\s+",1,1,"<<<",1)
-	serNum := RegExReplace(serNum,"BGMINI-")
-	Return serNum
-}
-
 getBGMdata(drive:="D") {
 /*	Assuming valid drive
 	Read start time in D:\LOG (tz=UTC+0)
@@ -2766,7 +2759,6 @@ HolterConnect(phase="")
 	}
 
 	; bgmDrive := findBGMdrive()
-	; serNum := getBGMser(bgmDrive)
 	bgmData := getBGMdata(bgmDrive) 
 	if (bgmData.ser="") {
 		eventlog("No valid BG MINI drive detected by timeout.")
