@@ -2660,6 +2660,43 @@ checkBGMdrive() {
 	Return
 }
 
+findBGMdrive() {
+/*	Wait until BG MINI drive attached, return matching drive letter
+*/
+	match := "Multimedia"																; Match string
+	loops := 20 																		; Increments of 0.5 sec (20 = 10 sec)
+
+	Gui, hcTm:Font, s18 bold
+	Gui, hcTm:Add, Text, , Attach BG MINI to cable
+	Gui, hcTm:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
+	; Gui, hcTm:+ToolWindow																; No title bar
+	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
+	Gui, hcTm:Show, AutoSize, BG Mini connect
+
+	Loop, % loops
+	{
+		GuiControl, , % HcCt, % 100*A_Index/loops
+		DriveGet, drives, List															; Get all attached drive letters
+		drives := RegExReplace(drives,"[COFWZ]")										; Remove letters used for network drives 
+		Loop, parse, drives
+		{
+			DriveGet, label, Label, %A_LoopField%:
+			if (label=match) {
+				hit := A_LoopField
+			}
+		}
+		if (hit) {
+			Break
+		}
+		if !WinExist("BG Mini connect") {
+			Break
+		}
+		sleep 500
+	}
+	Gui, hcTm:Destroy
+	Return hit
+}
+
 HolterConnect(phase="") 
 {
 	global wq, ptDem, fetchQuit, user, isDevt
