@@ -2762,12 +2762,13 @@ HolterConnect(phase="")
 	{
 		WinActivate, "Holter Connect"
 	} else {
-		Run, .\files\Cygnus.application,,,cygnusApp
+		; Run, .\files\Cygnus.application,,,cygnusApp
 	}
 
-	bgmDrive := findBGMdrive()
-	serNum := getBGMser(bgmDrive)
-	if (serNum="") {
+	; bgmDrive := findBGMdrive()
+	; serNum := getBGMser(bgmDrive)
+	bgmData := getBGMdata(bgmDrive) 
+	if (bgmData.ser="") {
 		eventlog("No valid BG MINI drive detected by timeout.")
 		Return 
 	} 
