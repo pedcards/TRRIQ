@@ -2663,17 +2663,17 @@ checkBGMdrive() {
 findBGMdrive() {
 /*	Wait until BG MINI drive attached, return matching drive letter
 */
-	match := "Multimedia"																; Match string
-	loops := 20 																		; Increments of 0.5 sec (20 = 10 sec)
+	match := "BG MINI"																	; Match string
+	delay := 1																			; Wait this many minutes
 
 	Gui, hcTm:Font, s18 bold
-	Gui, hcTm:Add, Text, , Attach BG MINI to cable
+	Gui, hcTm:Add, Text, , Log in to Holter Connect and`nAttach BG MINI to cable
 	Gui, hcTm:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
 	; Gui, hcTm:+ToolWindow																; No title bar
 	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcTm:Show, AutoSize, BG Mini connect
 
-	Loop, % loops
+	Loop, % (loops:=delay*120)															; 60 sec/120 loops
 	{
 		GuiControl, , % HcCt, % 100*A_Index/loops
 		DriveGet, drives, List															; Get all attached drive letters
@@ -2685,10 +2685,10 @@ findBGMdrive() {
 				hit := A_LoopField
 			}
 		}
-		if (hit) {
+		if (hit) {																		; got a hit
 			Break
 		}
-		if !WinExist("BG Mini connect") {
+		if !WinExist("BG Mini connect") {												; user closed progress window
 			Break
 		}
 		sleep 500
