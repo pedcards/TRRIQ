@@ -2697,7 +2697,7 @@ findBGMdrive() {
 	Return hit
 }
 
-getBGMdata(drive:="D") {
+getBGMlog(drive:="D") {
 /*	Assuming valid drive
 	Read start time in D:\LOG (tz=UTC+0)
 	Possibly demographics stored in matching DATA\hh-mm-ss
@@ -2759,7 +2759,7 @@ HolterConnect(phase="")
 	}
 
 	; bgmDrive := findBGMdrive()
-	bgmData := getBGMdata(bgmDrive) 
+	bgmData := getBGMlog(bgmDrive) 
 	if (bgmData.ser="") {
 		eventlog("No valid BG MINI drive detected by timeout.")
 		Return 
