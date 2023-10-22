@@ -2651,16 +2651,26 @@ checkMWUapp()
 	return																	
 }
 
+checkBGMdrive() {
+/*	Check status of BG MINI drive attached
+
+*/
+	bgmDrive := findBGMdrive()
+	
+	Return
+}
+
 HolterConnect(phase="") 
 {
 	global wq, ptDem, fetchQuit, user, isDevt
 
 	MsgBox 0x21, Holter Connect, Launch HOLTER CONNECT`nto import/upload Holter?
 	IfMsgBox OK, {
+		eventlog("Confirmed to launch Holter Connect.")
 	} Else {
 		Return
 	}
-	; checkBGMdrive()
+	checkBGMdrive()
 /*
 	Wait until drive mounted with label "BG MINI"
 	Get S/N and date
