@@ -2707,7 +2707,14 @@ HolterConnect(phase="")
 	} Else {
 		Return
 	}
-	checkBGMdrive()
+	IfWinExist, "Holter Connect"
+	{
+		WinActivate, "Holter Connect"
+	} else {
+		Run, .\files\Cygnus.application,,,cygnusApp
+	}
+
+	bgmDrive := findBGMdrive()
 /*
 	Wait until drive mounted with label "BG MINI"
 	Get S/N and date
