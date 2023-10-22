@@ -2704,6 +2704,50 @@ getBGMser(drive) {
 	Return serNum
 }
 
+getBGMdata(drive:="D") {
+/*	Assuming valid drive
+	Read start time in D:\LOG (tz=UTC+0)
+	Possibly demographics stored in matching DATA\hh-mm-ss
+*/
+	; FileRead, txt, % drive ":\LOG"
+	FileRead, txt, .\tempfiles\TESTLOG
+	Loop, Parse, txt, `r`n
+	{
+		k := A_LoopField
+		if InStr(k, "S/N") {
+			serNum := stRegX(k "<<<","S/N:\s+",1,1,"<<<",1)
+			serNum := RegExReplace(serNum,"BGMINI-")
+			Continue
+		}
+		if InStr(k, "TIMEZONE") {
+			bgmTZ := stRegX(k "<<<","TIMEZONE:",1,1,"<<<",1)
+			Continue
+		}
+		if InStr(k, "SAMPLING:") {
+			stamp := stRegX(k,"",1,0,"\[",1)
+			date := stRegX(stamp,"",1,0," ",1,n)
+				dd := SubStr(date, 1, 2)
+				mm := SubStr(date, 4, 2)
+				yyyy := SubStr(date, 7, 4)
+			time := stRegX(stamp," ",n,1," ",1)
+				hr := SubStr(time, 1, 2)
+				min := SubStr(time, 4, 2)
+				sec := SubStr(time, 7, 2)
+			dt := yyyy . mm . dd . hr . min . sec
+			tzNow := A_Now
+			tzUTC := A_NowUTC
+			tzNow -= tzUTC, Hours
+			dt += tzNow, Hours
+			bgmStartDT := dt															; Recording start time (local time)
+			Continue
+		}
+		if InStr(k, "Measurement stopped") {
+
+		}
+	}
+	Return {ser:serNum,tz:bgmTZ,start:bgmStartDT}
+}
+
 HolterConnect(phase="") 
 {
 	global wq, ptDem, fetchQuit, user, isDevt
