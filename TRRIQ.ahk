@@ -2762,7 +2762,20 @@ checkBGMstatus(drive:="D") {
 	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcStat:Show, AutoSize, BG Mini status
 
-}
+	loop,
+		{
+			/*	Check status of D drive
+			*/
+			DriveGet, driveStat, Status, %drive%:
+			driveStat := (driveStat="Ready") ? 1 : 0
+			GuiControl, hcStat: , Attached , % driveStat
+			if (driveStat=0) {
+				Break
+			}
+	
+			Sleep 1000
+		}
+	}
 
 HolterConnect(phase="") 
 {
