@@ -2752,6 +2752,11 @@ checkBGMstatus(drive:="C") {
 */
 	static Attached, Cleared, Imported, Uploaded
 
+	folderBGM := "C:\Programs\BGM\DATA"
+	; folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
+	folderUnassigned := "C:\Programs\Cygnus\.unassigned"
+	; folderUnassigned := A_AppData "\Cygnus\.unassigned"									; Imports folder
+
 	Gui, hcStat:Font, s12 bold
 	Gui, hcStat:Add, Checkbox, vAttached , BG MINI attached
 	Gui, hcStat:Add, Checkbox, vCleared  , BG MINI cleared
@@ -2761,7 +2766,7 @@ checkBGMstatus(drive:="C") {
 	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcStat:Show, AutoSize, BG Mini Status
 
-	filelist0 := getfolderlist("C:\Programs\DATA")
+	filelist0 := getfolderlist(folderUnassigned)										; Get baseline .unassigned folder
 
 	loop,
 	{
@@ -2776,14 +2781,14 @@ checkBGMstatus(drive:="C") {
 		/*	Check presence of DATA folder on D
 		*/
 		if !(dataStat) {
-			dataStat := !(FileExist(drive ":\Programs\DATA")~="D")
+			dataStat := !(FileExist(folderBGM)~="D")
 			GuiControl, hcStat: , Cleared , % dataStat
 		}
 		
 		/*	Check whether new zip appears in .unassigned folder
 		*/
 		if !(importStat) {																; Only check folder until it changes
-			filelist1 := getfolderlist(drive ":\Programs\DATA")
+			filelist1 := getfolderlist(folderUnassigned)								; Check for addition to filelist0
 			importStat := (filelist1 != filelist0)
 			GuiControl, hcStat: , Imported, % importStat 
 		}
