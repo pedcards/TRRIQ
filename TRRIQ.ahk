@@ -151,7 +151,7 @@ MainLoop: ; ===================== This is the main part ========================
 			MortaraUpload(mwuPhase)
 		}
 		if (phase="HolterUpload") {
-			eventlog("Start Mortara upload.")
+			eventlog("Start Holter Connect.")
 			hcPhase := "Transfer"
 			HolterConnect(hcPhase)
 		}
