@@ -2651,15 +2651,6 @@ checkMWUapp()
 	return																	
 }
 
-checkBGMdrive() {
-/*	Check status of BG MINI drive attached
-
-*/
-	bgmDrive := findBGMdrive()
-	
-	Return
-}
-
 findBGMdrive() {
 /*	Wait until BG MINI drive attached, return matching drive letter
 */
