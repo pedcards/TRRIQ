@@ -2768,8 +2768,7 @@ checkBGMstatus(drive:="C") {
 	{
 		/*	Check status of D drive
 		*/
-		DriveGet, driveStat, Status, %drive%:
-		driveStat := (driveStat="Ready")
+		driveStat := (FileExist(drive ":")~="D")
 		GuiControl, hcStat: , Attached , % driveStat
 		if (driveStat=0) {
 			Break
