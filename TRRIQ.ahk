@@ -2842,7 +2842,7 @@ HolterConnect(phase="")
 	} 
 
 	if (phase="Transfer") {
-		checkBGMstatus()
+		bgmStatus := checkBGMstatus()
 	}
 /*
 	Wait until drive mounted with label "BG MINI"
