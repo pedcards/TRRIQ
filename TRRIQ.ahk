@@ -2843,6 +2843,9 @@ HolterConnect(phase="")
 
 	if (phase="Transfer") {
 		bgmStatus := checkBGMstatus()
+		if !(bgmStatus.upload) {														; Can't confirm BGM was uploaded
+
+		}
 	}
 /*
 	Wait until drive mounted with label "BG MINI"
