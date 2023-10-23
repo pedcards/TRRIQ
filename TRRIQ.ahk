@@ -2793,6 +2793,17 @@ checkBGMstatus(drive:="C") {
 			GuiControl, hcStat: , Imported, % importStat 
 		}
 
+		/*	Check when zip disappears from .unassigned folder, returns to filelist0
+		*/
+		if (importStat) {																; Only check if import has happened
+			filelist2 := getfolderlist(folderUnassigned)								; Check for return to filelist0
+			uploadStat := (filelist2 = filelist0)
+			GuiControl, hcStat: , Uploaded, % uploadStat
+		}
+		if (uploadStat) {
+			Break 																		; Once imported and uploaded we are done
+		}
+
 		Sleep 1000
 	}
 }
