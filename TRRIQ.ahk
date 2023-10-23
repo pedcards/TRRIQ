@@ -2777,8 +2777,10 @@ checkBGMstatus(drive:="C") {
 			
 			/*	Check presence of DATA folder on D
 			*/
+		if !(dataStat) {
 			dataStat := !(FileExist(drive ":\Programs\DATA")~="D")
 			GuiControl, hcStat: , Cleared , % dataStat
+		}
 			
 			Sleep 1000
 		}
