@@ -2786,6 +2786,18 @@ checkBGMstatus(drive:="C") {
 		}
 	}
 
+getfolderlist(path) {
+	Loop, % path "\*"
+	{
+		file := A_LoopFileName
+		if (file="") {
+			Break
+		}
+		list .= file "`n"
+	}
+	Return list
+}
+
 HolterConnect(phase="") 
 {
 	global wq, ptDem, fetchQuit, user, isDevt
