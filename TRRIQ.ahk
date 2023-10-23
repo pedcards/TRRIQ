@@ -2745,8 +2745,9 @@ checkBGMstatus(drive:="C") {
 	
 	folderBGM := "C:\Programs\BGM\DATA"
 	; folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
-	folderUnassigned := "C:\Programs\Cygnus\.unassigned"
-	; folderUnassigned := A_AppData "\Cygnus\.unassigned"									; Imports folder
+	folderCygnus := "C:\Programs\Cygnus"
+	; folderUnassigned := A_AppData "\Cygnus"												; Cygnus folder
+	folderUnassigned := folderCygnus "\.unassigned"
 
 	Gui, hcStat:Font, s12 bold
 	Gui, hcStat:Add, Checkbox, vAttached , BG MINI attached
@@ -2778,7 +2779,7 @@ checkBGMstatus(drive:="C") {
 		/*	Check presence of DATA folder on D
 		*/
 		if !(dataStat) {
-			dataStat := !(FileExist(folderBGM)~="D")
+			dataStat := !(FileExist(folderBGM)~="D")									; D=Directory
 			GuiControl, hcStat: , Cleared , % dataStat
 		}
 		
