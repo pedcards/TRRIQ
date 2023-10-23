@@ -2741,6 +2741,29 @@ getBGMlog(drive:="D") {
 	Return {ser:serNum,tz:bgmTZ,start:bgmStartDT}
 }
 
+checkBGMstatus(drive:="D") {
+/*	Status window for BGM transfers
+	Check D: still attached
+	Check presence of DATA folder
+	Check APPDATA/Roaming/Cygnus/Acquired/.unassigned baseline = imported
+	Compare for disappearance of zip in .unassigned and appearance of folder = uploaded
+	Check appearance of dated log file Cygnus/Logs/Log_2023-10-21.log
+	
+*/
+	static Attached, Cleared, Imported, Uploaded
+
+	Gui, hcStat:Font, s12 bold
+	Gui, hcStat:Add, Checkbox, vAttached , BG MINI attached
+	Gui, hcStat:Add, Checkbox, vCleared  , BG MINI cleared
+	Gui, hcStat:Add, Checkbox, vImported , DATA imported
+	Gui, hcStat:Add, Checkbox, vUploaded , DATA uploaded
+	Gui, hcStat:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
+	; Gui, hcStat:+ToolWindow																; No title bar
+	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
+	Gui, hcStat:Show, AutoSize, BG Mini status
+
+}
+
 HolterConnect(phase="") 
 {
 	global wq, ptDem, fetchQuit, user, isDevt
