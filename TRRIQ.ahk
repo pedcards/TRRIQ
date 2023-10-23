@@ -2741,7 +2741,7 @@ getBGMlog(drive:="D") {
 	Return {ser:serNum,tz:bgmTZ,start:bgmStartDT}
 }
 
-checkBGMstatus(drive:="D") {
+checkBGMstatus(drive:="C") {
 /*	Status window for BGM transfers
 	Check D: still attached
 	Check presence of DATA folder
@@ -2772,7 +2772,12 @@ checkBGMstatus(drive:="D") {
 			if (driveStat=0) {
 				Break
 			}
-	
+			
+			/*	Check presence of DATA folder on D
+			*/
+			dataStat := !(FileExist(drive ":\Programs\DATA")~="D")
+			GuiControl, hcStat: , Cleared , % dataStat
+			
 			Sleep 1000
 		}
 	}
