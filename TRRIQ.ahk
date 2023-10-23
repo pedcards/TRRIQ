@@ -2867,9 +2867,9 @@ HolterConnect(phase="")
 	} 
 
 	if (phase="Transfer") {
-		bgmStatus := checkBGMstatus()
+		bgmStatus := checkBGMstatus()													; Wait to complete import and upload, or quit
 		if !(bgmStatus.upload) {														; Can't confirm BGM was uploaded
-
+			
 		}
 	}
 /*
