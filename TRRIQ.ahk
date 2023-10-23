@@ -2857,6 +2857,7 @@ HolterConnect(phase="")
 	Wait for zip moved to archive
 	Mark as uploaded in worklist
 	Wait for BG MINI unmounted
+	Check Cygnus/Logs/Log_2023-10-17.log for [SendUploadSuccessEvent]
 
 */
 
