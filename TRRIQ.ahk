@@ -2751,7 +2751,7 @@ checkBGMstatus(drive:="C") {
 	
 */
 	static Attached, Cleared, Imported, Uploaded
-
+	
 	folderBGM := "C:\Programs\BGM\DATA"
 	; folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
 	folderUnassigned := "C:\Programs\Cygnus\.unassigned"
@@ -2770,6 +2770,13 @@ checkBGMstatus(drive:="C") {
 
 	loop,
 	{
+		/*	Check if user closed window
+		*/
+		if !WinExist("BG Mini Status") {
+			eventlog("User closed BG Mini Status window")
+			Break
+		}
+
 		/*	Check status of D drive
 		*/
 		driveStat := (FileExist(drive ":")~="D")
