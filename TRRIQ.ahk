@@ -2765,26 +2765,34 @@ checkBGMstatus(drive:="C") {
 	filelist0 := getfolderlist("C:\Programs\DATA")
 
 	loop,
-		{
-			/*	Check status of D drive
-			*/
-			DriveGet, driveStat, Status, %drive%:
+	{
+		/*	Check status of D drive
+		*/
+		DriveGet, driveStat, Status, %drive%:
 		driveStat := (driveStat="Ready")
-			GuiControl, hcStat: , Attached , % driveStat
-			if (driveStat=0) {
-				Break
-			}
-			
-			/*	Check presence of DATA folder on D
-			*/
+		GuiControl, hcStat: , Attached , % driveStat
+		if (driveStat=0) {
+			Break
+		}
+		
+		/*	Check presence of DATA folder on D
+		*/
 		if !(dataStat) {
 			dataStat := !(FileExist(drive ":\Programs\DATA")~="D")
 			GuiControl, hcStat: , Cleared , % dataStat
 		}
-			
-			Sleep 1000
+		
+		/*	Check whether new zip appears in .unassigned folder
+		*/
+		if !(importStat) {																; Only check folder until it changes
+			filelist1 := getfolderlist(drive ":\Programs\DATA")
+			importStat := (filelist1 != filelist0)
+			GuiControl, hcStat: , Imported, % importStat 
 		}
+
+		Sleep 1000
 	}
+}
 
 getfolderlist(path) {
 	Loop, % path "\*"
