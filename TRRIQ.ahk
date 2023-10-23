@@ -2685,6 +2685,12 @@ findBGMdrive() {
 		sleep 500
 	}
 	Gui, hcTm:Destroy
+
+	if (hit) {
+		eventlog("Found [BG MINI] drive " hit ":.")
+	} else {
+		eventlog("No [BG MINI] drive found.")
+	}
 	Return hit
 }
 
@@ -2729,6 +2735,8 @@ getBGMlog(drive:="D") {
 
 		}
 	}
+
+	eventlog("BGM LOG: S/N=" serNum ", TZ=" bgmTZ ", Start Time=" bgmStartDT " (local).")
 	Return {ser:serNum,tz:bgmTZ,start:bgmStartDT}
 }
 
@@ -2828,6 +2836,7 @@ checkBGMstatus(drive:="C") {
 		uploadStat := (getCygnusLog().sendDT)
 	}
 
+	eventlog("checkBGMstatus: BGM Attached=" driveStat ", BGM Cleared=" dataStat ", Imported=" importStat ", Uploaded=" uploadStat)
 	Return {data:dataStat,import:importStat,upload:uploadStat}
 }
 
@@ -2869,7 +2878,7 @@ HolterConnect(phase="")
 	if (phase="Transfer") {
 		bgmStatus := checkBGMstatus()													; Wait to complete import and upload, or quit
 		if !(bgmStatus.upload) {														; Can't confirm BGM was uploaded
-			
+			eventlog("Cannot confirm that BGM was uploaded.")
 		}
 	}
 /*
