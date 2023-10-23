@@ -2762,6 +2762,8 @@ checkBGMstatus(drive:="C") {
 	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcStat:Show, AutoSize, BG Mini status
 
+	filelist0 := getfolderlist("C:\Programs\DATA")
+
 	loop,
 		{
 			/*	Check status of D drive
