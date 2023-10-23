@@ -2753,7 +2753,6 @@ checkBGMstatus(drive:="C") {
 	Gui, hcStat:Add, Checkbox, vCleared  , BG MINI cleared
 	Gui, hcStat:Add, Checkbox, vImported , DATA imported
 	Gui, hcStat:Add, Checkbox, vUploaded , DATA uploaded
-	Gui, hcStat:Add, Progress, h6 -smooth hwndHcCt, 0									; Start progress bar at 0
 	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcStat:Show, AutoSize, BG Mini Status
 
@@ -2804,6 +2803,7 @@ checkBGMstatus(drive:="C") {
 
 		Sleep 1000
 	}
+	Return {data:dataStat,import:importStat,upload:uploadStat}
 }
 
 getfolderlist(path) {
