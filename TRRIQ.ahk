@@ -2694,7 +2694,7 @@ getBGMlog(drive:="D") {
 	Possibly demographics stored in matching DATA\hh-mm-ss
 */
 	; FileRead, txt, % drive ":\LOG"
-	FileRead, txt, .\tempfiles\TESTLOG
+	FileRead, txt, .\devfiles\BGM\TESTLOG
 	Loop, Parse, txt, `r`n
 	{
 		k := A_LoopField
@@ -2735,7 +2735,7 @@ getBGMlog(drive:="D") {
 getCygnusLog() {
 /*	Read the most recent logfile in Cygnus\Logs
 */
-	folder := "C:\Programs\Cygnus\Logs"
+	folder := ".\devfiles\Cygnus\Logs"
 	; folder := A_AppData "\Cygnus\Logs"
 	file := folder "\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 	FileRead, txt, % file
@@ -2761,9 +2761,9 @@ checkBGMstatus(drive:="C") {
 */
 	static Attached, Cleared, Imported, Uploaded
 	
-	folderBGM := "C:\Programs\BGM\DATA"
+	folderBGM := ".\devfiles\BGM\DATA"
 	; folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
-	folderCygnus := "C:\Programs\Cygnus"
+	folderCygnus := ".\devfiles\Cygnus"
 	; folderCygnus := A_AppData "\Cygnus"													; Cygnus folder
 	folderUnassigned := folderCygnus "\.unassigned"
 
@@ -2857,7 +2857,7 @@ HolterConnect(phase="")
 	{
 		WinActivate, "Holter Connect"
 	} else {
-		; Run, .\files\Cygnus.application,,,cygnusApp
+		Run, .\files\Cygnus.application,,,cygnusApp
 	}
 	bgmDrive := findBGMdrive()															; Get drive letter for [BG MINI]
 	bgmData := getBGMlog(bgmDrive) 														; Get TZ, S/N, and Start time from LOG 
