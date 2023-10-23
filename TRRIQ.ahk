@@ -2834,9 +2834,8 @@ HolterConnect(phase="")
 	} else {
 		; Run, .\files\Cygnus.application,,,cygnusApp
 	}
-checkBGMstatus()
-	; bgmDrive := findBGMdrive()
-	bgmData := getBGMlog(bgmDrive) 
+	bgmDrive := findBGMdrive()															; Get drive letter for [BG MINI]
+	bgmData := getBGMlog(bgmDrive) 														; Get TZ, S/N, and Start time from LOG 
 	if (bgmData.ser="") {
 		eventlog("No valid BG MINI drive detected by timeout.")
 		Return 
