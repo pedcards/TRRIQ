@@ -2905,13 +2905,34 @@ HolterConnect(phase="")
 	bgmData := {}
 	bgmData.ser := "2031181"
 	bgmData.start := "20231019"
-		Return 
-	} 
+	eventlog("S/N " bgmData.ser ", connected " bgmData.start ".")
 
 	if (phase="Transfer") {
+		match := findBGMenroll(bgmData.ser,bgmData.start) 								; Find enrollments that match S/N an start date
+		if (match="") {
+			MsgBox NO MATCHING REGISTRATIONS
+			eventlog("No matching BGM registrations.")
+			Return
+		}
+		m2 := StrSplit(match, "|")														; Array of matches (including WQIDs)
+		match := RegExReplace(match, "WQ:\[[A-Z0-9]+\]")								; Remove WQIDs (cMsgBox returns max 63 chars)
+		tmp := CMsgBox("BG Mini Registrations"
+			, "Which patient match?"
+			, match
+			, "Q", "v")
+		eventlog("Selected " strX(tmp,"",1,1,"`n",1,1))
+		num := StrX(tmp,"",0,1,".",0,1)
+		wqid := stRegX(m2[num],"WQ:\[",1,1,"]",1)										; Get wqid from button index number
+
 		bgmStatus := checkBGMstatus()													; Wait to complete import and upload, or quit
 		if !(bgmStatus.upload) {														; Can't confirm BGM was uploaded
 			eventlog("Cannot confirm that BGM was uploaded.")
+			MsgBox 0x14, BG Mini Transfer, Did BG MINI upload successfully?
+			IfMsgBox Yes, {
+
+			} Else IfMsgBox No, {
+
+			}
 		}
 	}
 /*
