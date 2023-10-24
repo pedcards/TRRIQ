@@ -2796,7 +2796,7 @@ checkBGMstatus(drive:="C") {
 
 		/*	Check status of D drive
 		*/
-		driveStat := (FileExist(drive ":")~="D")
+		driveStat := (FileExist(drive ":")~="D") ? 1 : 0								; D=Directory
 		GuiControl, hcStat: , Attached , % driveStat
 		if (driveStat=0) {
 			Break
@@ -2805,7 +2805,7 @@ checkBGMstatus(drive:="C") {
 		/*	Check presence of DATA folder on D
 		*/
 		if !(dataStat) {
-			dataStat := !(FileExist(folderBGM)~="D")									; D=Directory
+			dataStat := (FileExist(folderBGM)~="D") ? 0 : 1								; Checked when DATA gone
 			GuiControl, hcStat: , Cleared , % dataStat
 		}
 		
