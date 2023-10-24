@@ -2876,7 +2876,7 @@ findBGMenroll(serNum,dt) {
 			eventlog("Found registration match: " name " [" mrn "] " enDT)
 		}
 	}
-	match := Trim(match, "|")
+	match .= "NONE OF THE ABOVE"
 	Return match	
 }
 
