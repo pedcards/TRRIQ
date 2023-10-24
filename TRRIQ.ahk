@@ -2934,6 +2934,21 @@ HolterConnect(phase="")
 
 			}
 		}
+
+		wq := new XML("worklist.xml")													; refresh WQ
+		wqStr := "/root/pending/enroll[@id='" wqid "']"
+		wqTR:=wq.selectSingleNode(wqStr)
+		pt := readWQ(wqid)
+		
+		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
+			wq.addElement("sent",wqStr)
+		}
+		wq.setText(wqStr "/sent",substr(A_now,1,8))
+		wq.setAtt(wqStr "/sent",{user:user})
+		WriteOut("/root/pending","enroll[@id='" wqid "']")
+		eventlog(pt.MRN " " pt.Name " study " wqid.Date " uploaded to Preventice.")
+		MsgBox, 262208, Transfer, Successful data upload to Preventice.
+
 	}
 /*
 	Wait until drive mounted with label "BG MINI"
