@@ -2852,6 +2852,34 @@ getfolderlist(path) {
 	Return list
 }
 
+findBGMenroll(serNum,dt) {
+/*	Find best enrollment that matches S/N and recording date/time
+*/
+	global wq
+
+	DaysOut := 7																		; How many days after registration to match
+
+	ens := wq.selectNodes("//pending/enroll[dev='BodyGuardian Mini EL - " serNum "']")		; all nodes that match S/N
+	Loop, % ens.Length()
+	{
+		en := ens.item(A_Index-1)
+		enDT := en.selectSingleNode("date").Text
+		diff := dateDiff(enDT,dt)
+		if (diff > DaysOut)||(diff < -2) {												; skip if too old or beyond DaysOut
+			Continue
+		} else {
+			butNum ++
+			wqid := en.getAttribute("id")
+			name := en.selectSingleNode("name").Text
+			mrn := en.selectSingleNode("mrn").Text
+			match .= butNum ". " name "`n" mrn "`n" niceDate(enDT) "WQ:[" wqid "]|"
+			eventlog("Found registration match: " name " [" mrn "] " enDT)
+		}
+	}
+	match := Trim(match, "|")
+	Return match	
+}
+
 HolterConnect(phase="") 
 {
 	global wq, ptDem, fetchQuit, user, isDevt
