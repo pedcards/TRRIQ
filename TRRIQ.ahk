@@ -2925,7 +2925,7 @@ HolterConnect(phase="")
 		num := StrX(tmp,"",0,1,".",0,1)
 		wqid := stRegX(m2[num],"WQ:\[",1,1,"]",1)										; Get wqid from button index number
 
-		bgmStatus := checkBGMstatus()													; Wait to complete import and upload, or quit
+		bgmStatus := checkBGMstatus(bgmDrive)											; Wait to complete import and upload, or quit
 		if !(bgmStatus.upload) {														; Can't confirm BGM was uploaded
 			eventlog("Cannot confirm that BGM was uploaded.")
 			MsgBox 0x14, BG Mini Transfer, Did BG MINI upload successfully?
