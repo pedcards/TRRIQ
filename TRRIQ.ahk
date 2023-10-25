@@ -2854,13 +2854,13 @@ getfolderlist(path) {
 }
 
 findBGMenroll(serNum,dt) {
-/*	Find best enrollment that matches S/N and recording date/time
+/*	Find best enrollment that matches S/N and recording date/time for BGM SL
 */
 	global wq
 
 	DaysOut := 7																		; How many days after registration to match
 
-	ens := wq.selectNodes("//pending/enroll[dev='BodyGuardian Mini EL - " serNum "']")		; all nodes that match S/N
+	ens := wq.selectNodes("//pending/enroll[dev='BodyGuardian Mini - " serNum "']")		; all nodes that match S/N
 	Loop, % ens.Length()
 	{
 		en := ens.item(A_Index-1)
