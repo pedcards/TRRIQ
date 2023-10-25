@@ -2699,8 +2699,8 @@ getBGMlog(drive:="D") {
 	Read start time in D:\LOG (tz=UTC+0)
 	Possibly demographics stored in matching DATA\hh-mm-ss
 */
-	; FileRead, txt, % drive ":\LOG"
-	FileRead, txt, .\devfiles\BGM\TESTLOG
+	FileRead, txt, % drive ":\LOG"
+	; FileRead, txt, .\devfiles\BGM\TESTLOG
 	Loop, Parse, txt, `r`n
 	{
 		k := A_LoopField
@@ -2769,10 +2769,10 @@ checkBGMstatus(drive:="C") {
 */
 	static Attached, Cleared, Imported, Uploaded
 	
-	folderBGM := ".\devfiles\BGM\DATA"
-	; folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
-	folderCygnus := ".\devfiles\Cygnus"
-	; folderCygnus := A_AppData "\Cygnus"													; Cygnus folder
+	; folderBGM := ".\devfiles\BGM\DATA"
+	folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
+	; folderCygnus := ".\devfiles\Cygnus"
+	folderCygnus := A_AppData "\Cygnus"													; Cygnus folder
 	folderUnassigned := folderCygnus "\.unassigned"
 
 	Gui, hcStat:Font, s12 bold
@@ -2898,13 +2898,13 @@ HolterConnect(phase="")
 	}
 	bgmDrive := findBGMdrive(1)															; Get drive letter for [BG MINI]
 	bgmData := getBGMlog(bgmDrive) 														; Get TZ, S/N, and Start time from LOG 
-	; if (bgmData.ser="") {
-	; 	eventlog("No valid BG MINI drive detected by timeout.")
-	; 	Return 
-	; } 
+	if (bgmData.ser="") {
+		eventlog("No valid BG MINI drive detected by timeout.")
+		Return 
+	} 
 	bgmData := {}
-	bgmData.ser := "2031181"
-	bgmData.start := "20231019"
+	; bgmData.ser := "2031181"
+	; bgmData.start := "20231019"
 	eventlog("S/N " bgmData.ser ", connected " bgmData.start ".")
 
 	if (phase="Transfer") {
