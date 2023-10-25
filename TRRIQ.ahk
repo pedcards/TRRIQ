@@ -2660,8 +2660,8 @@ findBGMdrive(delay:=5) {
 	Gui, hcTm:Font, s18 bold
 	Gui, hcTm:Add, Text, , Log in to Holter Connect and`nAttach BG MINI to cable
 	Gui, hcTm:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
-	; Gui, hcTm:+ToolWindow																; No title bar
 	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
+	Gui, hcTM: +AlwaysOnTop
 	Gui, hcTm:Show, AutoSize, BG Mini connect
 
 	Loop, % (loops:=delay*120)															; 60 sec/120 loops
