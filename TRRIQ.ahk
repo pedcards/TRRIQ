@@ -3502,6 +3502,102 @@ UiFieldFill(fld,val,win) {
 	return
 }
 
+makeEpicORM() {
+	/*	Generate a test ORM from "Epic" 
+		
+	*/
+	global hl7out, path
+	
+	Random, seq, 100000, 199999
+	hl7time := A_Now
+	hl7out := Object()
+
+	name := "TESTBGM^TESTBGM^"
+	mrn := "11122233"
+	dob := "20091215"
+	sex := "F"
+	address := "6115 EVANSTON AVE N^^SEATTLE^WA^98103^US^^^KING"
+	phone := "(206)867-5309^P^HOME~(206)867-5309^P^MOBILE"
+	Random, encNum, 500000000, 599999999
+	Random, orderNum, 400000000, 499999999
+	Random, accNum, 50000000, 59999999
+	Random, account, 40000000, 49999999
+	study := "CVCAR02^HOLTER MONITOR 24 HOUR"
+	ordering := "1144301409^CHUN^TERRENCE^U"
+
+	buildHL7("MSH"
+		,{1:"^~\&"
+		, 2:"HS"
+		, 3:"IMG_ARRIVE_APPT"
+		, 4:"PREVENTICE"
+		, 5:"PREVENTICE"
+		, 6:hl7time
+		, 7:""
+		, 8:"ORM^O01"
+		, 9:seq
+		, 10:"P"
+		, 11:"2.5.1" })
+	
+	buildHL7("PID"
+		,{3:mrn
+		, 5:name
+		, 7:dob
+		, 8:sex
+		, 18:account })
+	
+	buildHL7("NK1"
+		,{2:"LOPEZ^JENNIFER^^"
+		, 3:"MOT"
+		, 4:address
+		, 5:phone
+		, 7:"1^Y^LG~1^Y^LW" })
+	buildHL7("NK1"
+		,{2:"AFFLECK^BEN^^"
+		, 3:"FAT"
+		, 4:address
+		, 5:phone
+		, 7:"1^Y^LG~1^Y^LW" })
+
+	buildHL7("PV1"
+		,{2:"O"
+		, 3:"CRD"
+		, 8:"1144301409^CHUN^TERRENCE^U^^^^^^^^^MSOW_ORG_ID"
+		, 19:encNum
+		, 44:hl7time })
+		
+	buildHL7("ORC"
+		,{1:"NW"
+		, 2:orderNum
+		, 3:"OT-" accNum
+		, 7:"^^^" hl7time "^^ROUTINE" 
+		, 10:"SILENTSCHDBKGRD^SILENT SCHEDULING^BACKGROUND^^"
+		, 12:ordering })
+	
+	buildHL7("OBR"
+		,{2:orderNum
+		, 3:"OT-" accNum
+		, 4:study
+		, 16:ordering
+		, 27:"^^^" hl7time "^^ROUTINE"
+		, 31:"Premature Atrial Contractions (PAC's)"
+		, 32:"" })
+	
+	buildHL7("NTE"
+		,{3:"Should monitor be placed during this appointment or hospital stay?->Yes"
+		, 4:""
+		, 5:"" })
+	buildHL7("NTE"
+		,{3:"Reason for exam:->Premature Atrial Contractions (PAC's)" 
+		, 4:""
+		, 5:"" })
+		
+	fileNm := "TRRIQ_ORM_" A_Now
+	FileAppend, % hl7Out.msg, % path.EpicHL7in . fileNm
+	eventlog("Epic test order completed: " fileNm)
+	MsgBox, 262208, makeEpicORM, Test order created!
+	return
+}
+
 makePreventiceORM() {
 /*	Generate Preventice ORM using data in ptDem
 	Based on specs document from Preventice 
