@@ -2652,11 +2652,10 @@ checkMWUapp()
 	return																	
 }
 
-findBGMdrive() {
+findBGMdrive(delay:=5) {
 /*	Wait until BG MINI drive attached, return matching drive letter
 */
 	match := "BG MINI"																	; Match string
-	delay := 1																			; Wait this many minutes
 
 	Gui, hcTm:Font, s18 bold
 	Gui, hcTm:Add, Text, , Log in to Holter Connect and`nAttach BG MINI to cable
