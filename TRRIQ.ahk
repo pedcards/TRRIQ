@@ -3852,6 +3852,8 @@ BGregister(type) {
 	*/
 	if (isDevt=true) {
 		makeTestORU()
+		wqSetVal(ptDem.uid,"webgrab",A_Now)
+		WriteOut("/root/pending/enroll[@id='" ptDem.uid "']","webgrab")
 	}
 	/*
 	*/
