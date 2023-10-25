@@ -2743,8 +2743,8 @@ getBGMlog(drive:="D") {
 getCygnusLog() {
 /*	Read the most recent logfile in Cygnus\Logs
 */
-	folder := ".\devfiles\Cygnus\Logs"
-	; folder := A_AppData "\Cygnus\Logs"
+	; folder := ".\devfiles\Cygnus\Logs"
+	folder := A_AppData "\Roaming\Cygnus\Logs"
 	file := folder "\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 	FileRead, txt, % file
 	Loop, Parse, txt, `r`n																; Read to end of Log to catch last event
@@ -2758,7 +2758,7 @@ getCygnusLog() {
 	Return {sendDT:sendDT}
 } 
 
-checkBGMstatus(drive:="C") {
+checkBGMstatus(drive:="D") {
 /*	Status window for BGM transfers
 	Check D: still attached
 	Check presence of DATA folder
@@ -2772,7 +2772,7 @@ checkBGMstatus(drive:="C") {
 	; folderBGM := ".\devfiles\BGM\DATA"
 	folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
 	; folderCygnus := ".\devfiles\Cygnus"
-	folderCygnus := A_AppData "\Cygnus"													; Cygnus folder
+	folderCygnus := A_AppData "\Roaming\Cygnus"													; Cygnus folder
 	folderUnassigned := folderCygnus "\.unassigned"
 
 	Gui, hcStat:Font, s12 bold
