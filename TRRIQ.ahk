@@ -2710,7 +2710,7 @@ getBGMlog(drive:="D") {
 			Continue
 		}
 		if InStr(k, "TIMEZONE") {
-			bgmTZ := stRegX(k "<<<","TIMEZONE:",1,1,"<<<",1)
+			bgmTZ := stRegX(k "<<<","TIMEZONE:",1,1,";|<<<",1)
 			Continue
 		}
 		if InStr(k, "SAMPLING:") {
@@ -3802,7 +3802,7 @@ BGregister(type) {
 		
 		if !(ptDem.model) {																; Types in an ad hoc number
 			ptDem.model := typeLong
-			if (type="BGM") {
+			if (type~="BGM|HOL") {
 				ptDem.ser := RegExReplace(ptDem.ser,"[a-zA-Z]")							; BGM s/n has no BG prefix
 			}
 				eventlog("User typed ad hoc S/N " ptDem.ser ", type " i ".")
