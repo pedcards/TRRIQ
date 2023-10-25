@@ -326,6 +326,7 @@ PhaseGUI:
 	Menu, menuAdmin, Add, Find pending leftovers, cleanPending
 	Menu, menuAdmin, Add, Fix WQ device durations, fixDuration							; position for test menu
 	Menu, menuAdmin, Add, Recover DONE record, recoverDone
+	Menu, menuAdmin, Add, Create test order, makeEpicORM
 		
 	Menu, menuBar, Add, System, :menuSys
 	if (user~="i)tchun1|docte") {
