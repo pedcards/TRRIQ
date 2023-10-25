@@ -2927,12 +2927,12 @@ HolterConnect(phase="")
 
 		bgmStatus := checkBGMstatus(bgmDrive)											; Wait to complete import and upload, or quit
 		if !(bgmStatus.upload) {														; Can't confirm BGM was uploaded
-			eventlog("Cannot confirm that BGM was uploaded.")
 			MsgBox 0x14, BG Mini Transfer, Did BG MINI upload successfully?
 			IfMsgBox Yes, {
-
-			} Else IfMsgBox No, {
-
+				eventlog("Confirmed BGM uploaded successfully.")
+			} Else {
+				eventlog("Reports BGM did NOT upload.")
+				Return																	; Return to PhaseGUI, can try again or ignore
 			}
 		}
 
