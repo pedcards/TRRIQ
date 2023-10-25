@@ -2781,6 +2781,7 @@ checkBGMstatus(drive:="C") {
 	Gui, hcStat:Add, Checkbox, vImported , DATA imported
 	Gui, hcStat:Add, Checkbox, vUploaded , DATA uploaded
 	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
+	Gui, hcStat: +AlwaysOnTop
 	Gui, hcStat:Show, AutoSize, BG Mini Status
 
 	filelist0 := getfolderlist(folderUnassigned)										; Get baseline .unassigned folder
@@ -2890,9 +2891,9 @@ HolterConnect(phase="")
 	} Else {
 		Return
 	}
-	IfWinExist, "Holter Connect"
+	IfWinExist, Holter Connect
 	{
-		WinActivate, "Holter Connect"
+		WinActivate, Holter Connect
 	} else {
 		Run, .\files\Cygnus.application,,,cygnusApp
 	}
