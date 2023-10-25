@@ -4763,7 +4763,7 @@ makeTestORU() {
 	
 	tmpPrv := parseName(ptDem.provider)
 	buildHL7("PV1"
-		,{7:ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		,{7:ptDem.NPI "^" tmpPrv.last "-" ptDem.loc "^" tmpPrv.first
 		, 39:A_now })
 	
 	buildHL7("OBR"
@@ -4773,7 +4773,7 @@ makeTestORU() {
 			. strQ(ptDem.model~="Heart|Lite" ? 1 : "","CEM^CEM")
 			. strQ(ptDem.model~="Mini" ? 1 : "","Holter^Holter")
 		, 7:hl7time
-		, 16:ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, 16:ptDem.NPI "^" tmpPrv.last "-" ptDem.loc "^" tmpPrv.first
 		, 20:"OnComplete"
 		, 22:A_now })
 	
