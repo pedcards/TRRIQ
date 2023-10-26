@@ -2786,6 +2786,7 @@ checkBGMstatus(drive:="D") {
 	Gui, hcStat:Show, AutoSize, BG Mini Status
 
 	filelist0 := getfolderlist(folderUnassigned)										; Get baseline .unassigned folder
+	sleep 200
 
 	loop,
 	{
@@ -2799,8 +2800,10 @@ checkBGMstatus(drive:="D") {
 		/*	Check status of D drive
 		*/
 		driveStat := (FileExist(drive ":")~="D") ? 1 : 0								; D=Directory
+		sleep 200
 		GuiControl, hcStat: , Attached , % driveStat
 		if (driveStat=0) {
+			eventlog("Drive " drive " disconnected.")
 			Break
 		}
 		
@@ -2808,6 +2811,7 @@ checkBGMstatus(drive:="D") {
 		*/
 		if !(dataStat) {
 			dataStat := (FileExist(folderBGM)~="D") ? 0 : 1								; Checked when DATA gone
+			sleep 200
 			GuiControl, hcStat: , Cleared , % dataStat
 		}
 		
@@ -2815,7 +2819,7 @@ checkBGMstatus(drive:="D") {
 		*/
 		if !(importStat) {																; Only check folder until it changes
 			filelist1 := getfolderlist(folderUnassigned)								; Check for addition to filelist0
-			importStat := (filelist1 != filelist0)
+			sleep 200
 			GuiControl, hcStat: , Imported, % importStat 
 		}
 
@@ -2823,14 +2827,14 @@ checkBGMstatus(drive:="D") {
 		*/
 		if (importStat) {																; Only check if import has happened
 			filelist2 := getfolderlist(folderUnassigned)								; Check for return to filelist0
-			uploadStat := (filelist2 = filelist0)
+			sleep 200
 			GuiControl, hcStat: , Uploaded, % uploadStat
 		}
 		if (uploadStat) {
 			Break 																		; Once imported and uploaded we are done
 		}
 
-		Sleep 1000
+		Sleep 200
 	}
 	Gui, hcStat:Destroy
 
