@@ -2938,7 +2938,6 @@ HolterConnect(phase="")
 
 		wq := new XML("worklist.xml")													; refresh WQ
 		wqStr := "/root/pending/enroll[@id='" wqid "']"
-		wqTR:=wq.selectSingleNode(wqStr)
 		pt := readWQ(wqid)
 		
 		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
@@ -2948,23 +2947,9 @@ HolterConnect(phase="")
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[@id='" wqid "']")
 		eventlog(pt.MRN " " pt.Name " study " wqid.Date " uploaded to Preventice.")
-		MsgBox, 262208, Transfer, Successful data upload to Preventice.
 
 	}
-/*
-	Wait until drive mounted with label "BG MINI"
-	Get S/N and date
-	Find matching <enroll>
-	Launch local Cygnus
-	Wait for zip saved in .unassigned
-	New filename probably belongs to the matched enroll
-	Wait for zip moved to archive
-	Mark as uploaded in worklist
-	Wait for BG MINI unmounted
-	Check Cygnus/Logs/Log_2023-10-17.log for [SendUploadSuccessEvent]
-
-*/
-
+	
 	Return
 }
 
