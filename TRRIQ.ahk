@@ -2770,10 +2770,11 @@ checkBGMstatus(drive:="D") {
 	static Attached, Cleared, Imported, Uploaded
 	
 	; folderBGM := ".\devfiles\BGM\DATA"
-	folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
 	; folderCygnus := ".\devfiles\Cygnus"
-	folderCygnus := A_AppData "\Roaming\Cygnus"													; Cygnus folder
+	folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
+	folderCygnus := A_AppData "\Cygnus"													; Cygnus folder
 	folderUnassigned := folderCygnus "\.unassigned"
+	eventlog("BGM=" folderBGM ", Cygnus=" folderCygnus ", Unassigned=" folderUnassigned)
 
 	Gui, hcStat:Font, s12 bold
 	Gui, hcStat:Add, Checkbox, vAttached , BG MINI attached
