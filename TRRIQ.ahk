@@ -2775,6 +2775,7 @@ checkBGMstatus(drive:="D") {
 	folderCygnus := A_AppData "\Cygnus"													; Cygnus folder
 	folderUnassigned := folderCygnus "\.unassigned"
 	eventlog("BGM=" folderBGM ", Cygnus=" folderCygnus ", Unassigned=" folderUnassigned)
+	driveStat:=dataStat:=importStat:=uploadStat:=0										; assume all false
 
 	Gui, hcStat:Font, s12 bold
 	Gui, hcStat:Add, Checkbox, vAttached , BG MINI attached
@@ -2809,36 +2810,46 @@ checkBGMstatus(drive:="D") {
 		
 		/*	Check presence of DATA folder on D
 		*/
-		if !(dataStat) {
+		if (dataStat=0) {
 			dataStat := (FileExist(folderBGM)~="D") ? 0 : 1								; Checked when DATA gone
 			sleep 200
 			GuiControl, hcStat: , Cleared , % dataStat
+			if (dataStat=1) {
+				eventlog("DATA folder removed.")
+			}
 		}
 		
 		/*	Check whether new zip appears in .unassigned folder
 		*/
-		if !(importStat) {																; Only check folder until it changes
+		if (importStat=0) {																; Only check folder until it changes
 			filelist1 := getfolderlist(folderUnassigned)								; Check for addition to filelist0
 			sleep 200
+			importStat := (filelist1 = filelist0) ? 0 : 1
 			GuiControl, hcStat: , Imported, % importStat 
+			if (importStat=1) {
+				eventlog("New files in Unassigned.")
+			}
 		}
 
 		/*	Check when zip disappears from .unassigned folder, returns to filelist0
 		*/
-		if (importStat) {																; Only check if import has happened
+		if (importStat=1) {																; Only check if import has happened
 			filelist2 := getfolderlist(folderUnassigned)								; Check for return to filelist0
 			sleep 200
+			uploadStat := (filelist2 = filelist0) ? 1 : 0
 			GuiControl, hcStat: , Uploaded, % uploadStat
-		}
-		if (uploadStat) {
-			Break 																		; Once imported and uploaded we are done
+			if (uploadStat=1) {
+				eventlog("New files deleted from Unassigned.")
+				Break 																	; Once imported and uploaded we are done
+			}
 		}
 
 		Sleep 200
 	}
 	Gui, hcStat:Destroy
 
-	if !(uploadStat) {																	; Perchance quit, check Cygnus log
+	if (uploadStat=0) {																	; Perchance quit, check Cygnus log
+		eventlog("Break without uploadStat.")
 		uploadStat := (getCygnusLog().sendDT)
 	}
 
