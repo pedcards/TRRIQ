@@ -2903,7 +2903,7 @@ HolterConnect(phase="")
 		eventlog("No valid BG MINI drive detected by timeout.")
 		Return 
 	} 
-	bgmData := {}
+	; bgmData := {}
 	; bgmData.ser := "2031181"
 	; bgmData.start := "20231019"
 	eventlog("S/N " bgmData.ser ", connected " bgmData.start ".")
@@ -2922,6 +2922,9 @@ HolterConnect(phase="")
 			, match
 			, "Q", "v")
 		eventlog("Selected " strX(tmp,"",1,1,"`n",1,1))
+		if (tmp="NONE OF THE ABOVE") {
+			Return
+		}
 		num := StrX(tmp,"",0,1,".",0,1)
 		wqid := stRegX(m2[num],"WQ:\[",1,1,"]",1)										; Get wqid from button index number
 
@@ -2949,7 +2952,7 @@ HolterConnect(phase="")
 		eventlog(pt.MRN " " pt.Name " study " wqid.Date " uploaded to Preventice.")
 
 	}
-	
+
 	Return
 }
 
