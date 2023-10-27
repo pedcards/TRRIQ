@@ -2740,7 +2740,7 @@ getBGMlog(drive:="D") {
 	Return {ser:serNum,tz:bgmTZ,start:bgmStartDT}
 }
 
-getCygnusLog() {
+scanCygnusLog() {
 /*	Read the most recent logfile in Cygnus\Logs
 */
 	; folder := ".\devfiles\Cygnus\Logs"
@@ -2786,6 +2786,7 @@ checkBGMstatus(drive:="D") {
 	Gui, hcStat: +AlwaysOnTop
 	Gui, hcStat:Show, AutoSize, BG Mini Status
 
+	now0 := A_Now
 	filelist0 := getfolderlist(folderUnassigned)										; Get baseline .unassigned folder
 	sleep 200
 
@@ -2850,7 +2851,10 @@ checkBGMstatus(drive:="D") {
 
 	if (uploadStat=0) {																	; Perchance quit, check Cygnus log
 		eventlog("Break without uploadStat.")
-		uploadStat := (getCygnusLog().sendDT)
+		uploadStat := 1
+		if (sendDT := scanCygnusLog().sendDT) {											; Scan log for Send Uploa
+			eventlog("Cygnus log SendUploadSuccess [" sendDT "].")
+		}
 	}
 
 	eventlog("checkBGMstatus: BGM Attached=" driveStat ", BGM Cleared=" dataStat ", Imported=" importStat ", Uploaded=" uploadStat)
