@@ -2755,12 +2755,12 @@ scanCygnusLog() {
 			start := SubStr(RegExReplace(t1, "[ :\-]"),1,14)
 			sernum := t2
 			done := ""
+			sendDT := ""
 		}
 		if RegExMatch(k,"^(.*?)\..*?" . "\[S\/N: (\d*)\].*?"							; Detect upload successful
 			.  "\[UploadTask\].*?" . "successful",t) {
 			done := SubStr(RegExReplace(t1, "[ :\-]"),1,14)
 			sernum := t2
-			sendDT := ""
 		}
 		if InStr(k, "SendUploadSuccessEvent") {											; Detect mark SuccessEvent
 			sendDT := stRegX(k,"",1,0,"[\[\]\.]",1)
