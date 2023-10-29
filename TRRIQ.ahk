@@ -2744,18 +2744,30 @@ scanCygnusLog() {
 /*	Read the most recent logfile in Cygnus\Logs
 */
 	; folder := ".\devfiles\Cygnus\Logs"
-	folder := A_AppData "\Roaming\Cygnus\Logs"
+	folder := A_AppData "\Cygnus\Logs"
 	file := folder "\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 	FileRead, txt, % file
 	Loop, Parse, txt, `r`n																; Read to end of Log to catch last event
 	{
 		k := A_LoopField
-		if InStr(k, "SendUploadSuccessEvent") {											; Detect successful send
+		if RegExMatch(k,"^(.*?)\..*?" . "\[S\/N: (\d*)\].*?"							; Detect starting upload
+			.  "\[UploadTask\].*?" . "starting upload",t) {
+			start := SubStr(RegExReplace(t1, "[ :\-]"),1,14)
+			sernum := t2
+			done := ""
+		}
+		if RegExMatch(k,"^(.*?)\..*?" . "\[S\/N: (\d*)\].*?"							; Detect upload successful
+			.  "\[UploadTask\].*?" . "successful",t) {
+			done := SubStr(RegExReplace(t1, "[ :\-]"),1,14)
+			sernum := t2
+			sendDT := ""
+		}
+		if InStr(k, "SendUploadSuccessEvent") {											; Detect mark SuccessEvent
 			sendDT := stRegX(k,"",1,0,"[\[\]\.]",1)
 			sendDT := SubStr(RegExReplace(sendDT, "[ :\-]"),1,14)
 		}
 	}
-	Return {sendDT:sendDT}
+	Return {start:start,done:done,sendDT:sendDT}
 } 
 
 checkBGMstatus(drive:="D") {
