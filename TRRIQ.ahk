@@ -3776,7 +3776,7 @@ BGregister(type) {
 			typeLong := "BodyGuardian Mini EL"
 			typeDesc := "Extended Holter (3-14 day)"
 			typeDur := "3 days|7 days|14 days"
-			typeImg := ".\files\BGMini.png"
+			typeImg := ".\files\BGMini-orig.png"
 		}
 		case "HOL":
 		{
