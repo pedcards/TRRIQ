@@ -2845,6 +2845,18 @@ checkBGMstatus(drive:="D") {
 			}
 		}
 
+		/*	Check CygnusLog for start and finish upload
+		*/
+		if (importStat=1) {
+			cyg := scanCygnusLog()
+			if (cyg.start) {															; Uncleared start
+				eventlog("Cygnus start upload " cyg.start)
+			}
+			if (cyg.start)&&(cyg.done) {												; Last done
+				eventlog("Cygnus done upload " cyg.done)
+			}
+		}
+
 		/*	Check when zip disappears from .unassigned folder, returns to filelist0
 		*/
 		if (importStat=1) {																; Only check if import has happened
