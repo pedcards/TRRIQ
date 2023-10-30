@@ -2771,7 +2771,7 @@ scanCygnusLog() {
 	Return {start:start,done:done,sendDT:sendDT}
 } 
 
-checkBGMstatus(drive:="D") {
+checkBGMstatus(drive:="D",title:="") {
 /*	Status window for BGM transfers
 	Check D: still attached
 	Check presence of DATA folder
@@ -2791,6 +2791,7 @@ checkBGMstatus(drive:="D") {
 	driveStat:=dataStat:=importStat:=uploadStat:=0										; assume all false
 
 	Gui, hcStat:Font, s12 bold
+	Gui, hcStat:Add, Text, Center, % title
 	Gui, hcStat:Add, Checkbox, vAttached , BG MINI attached
 	Gui, hcStat:Add, Checkbox, vCleared  , BG MINI cleared
 	Gui, hcStat:Add, Checkbox, vImported , DATA imported
@@ -2972,8 +2973,10 @@ HolterConnect(phase="")
 		}
 		num := StrX(tmp,"",0,1,".",0,1)
 		wqid := stRegX(m2[num],"WQ:\[",1,1,"]",1)										; Get wqid from button index number
+		pt := readWQ(wqid)
+		title := pt.Name "`nS/N " bgmData.ser
 
-		bgmStatus := checkBGMstatus(bgmDrive)											; Wait to complete import and upload, or quit
+		bgmStatus := checkBGMstatus(bgmDrive,title)										; Wait to complete import and upload, or quit
 		if !(bgmStatus.upload) {														; Can't confirm BGM was uploaded
 			MsgBox 0x14, BG Mini Transfer, Did BG MINI upload successfully?
 			IfMsgBox Yes, {
@@ -2986,7 +2989,6 @@ HolterConnect(phase="")
 
 		wq := new XML("worklist.xml")													; refresh WQ
 		wqStr := "/root/pending/enroll[@id='" wqid "']"
-		pt := readWQ(wqid)
 		
 		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
 			wq.addElement("sent",wqStr)
