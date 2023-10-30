@@ -3765,7 +3765,8 @@ BGregister(type) {
 	{
 		case "BGH":
 		{
-			typeLong := "BodyGuardian Mini Plus Lite"
+			; typeLong := "BodyGuardian Mini Plus Lite"
+			typeLong := "BodyGuardian Heart"
 			typeDesc := "30-day Event Recorder"
 			typeImg := ".\files\BGHeart.png"
 			ptDem.MonDuration := "30"
