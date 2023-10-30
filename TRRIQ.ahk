@@ -2765,6 +2765,7 @@ scanCygnusLog() {
 		if InStr(k, "SendUploadSuccessEvent") {											; Detect mark SuccessEvent
 			sendDT := stRegX(k,"",1,0,"[\[\]\.]",1)
 			sendDT := SubStr(RegExReplace(sendDT, "[ :\-]"),1,14)
+			start := done := ""
 		}
 	}
 	Return {start:start,done:done,sendDT:sendDT}
