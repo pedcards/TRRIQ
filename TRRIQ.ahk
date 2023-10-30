@@ -1958,11 +1958,13 @@ readWQlv:
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
 	
 	if (fldval.node = "done") {															; task has been done already by another user
+		eventlog("WQlv " fldval.Name " clicked, but already DONE.")
 		MsgBox, 262208, Completed, File has already been processed!
 		WQlist()																		; refresh list and return
 		return
 	}
 	if (fldval.webgrab="") {
+		eventlog("WQlv " fldval.Name " not found in webgrab.")
 		MsgBox 0x40030
 			, Registration issue
 			, % "No registration found on Preventice site.`n"
@@ -5276,6 +5278,7 @@ Holter_BGM_SL_HL7:
 	monType := "HOL"
 
 	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
+		eventlog("No OBX data.")
 		gosub processPDF																; need to reprocess from extracted PDF
 		Return
 	}
@@ -5309,6 +5312,7 @@ Holter_BGM_EL_HL7:
 	monType := "BGM"
 
 	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
+		eventlog("No OBX data.")
 		gosub processPDF																; need to reprocess from extracted PDF
 		Return
 	}
