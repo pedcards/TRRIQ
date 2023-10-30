@@ -22,21 +22,6 @@ Class WDElement extends Session
 		return this.Send("rect","GET")
 	}
 	
-	Size()
-	{
-		return this.Send("Size","GET")
-	}
-	
-	Location()
-	{
-		return this.Send("location","GET")
-	}
-	
-	LocationInView()
-	{
-		return this.Send("location_in_view","GET")
-	}
-	
 	enabled()
 	{
 		return this.Send("enabled","GET")
@@ -62,14 +47,22 @@ Class WDElement extends Session
 		return this.Send("value","POST", {"text":text})
 	}
 	
-	click()
+	click(slient:=1)
 	{
-		return this.Send("click","POST",{"":""})
+		if slient
+			return this.Execute("arguments[0].click()")
+		else
+			return this.Send("click","POST",{"":""})
 	}
 	
 	Move()
 	{
 		return this.Send("moveto","POST",{"element_id":this.id})
+	}
+
+	onchange()
+	{
+		return this.Execute("arguments[0].onchange()")
 	}
 
 	Title
@@ -137,11 +130,49 @@ Class WDElement extends Session
 		
 		Set
 		{
-			this.Clear()
-			return this.Send("value","POST", {"text":Value})
+			this.Execute("arguments[0].value = '" Value "'")
 		}
 	}
 	
+
+	checked
+	{
+		get
+		{
+			return  this.Execute("arguments[0].checked")
+		}
+
+		set
+		{
+		}
+	}
+
+	href
+	{
+		get
+		{
+			return  this.GetProperty("href")
+		}
+
+		set
+		{
+			this.Execute("arguments[0].href = '" Value "'")
+		}
+	}
+
+	src
+	{
+		get
+		{
+			return  this.GetProperty("src")
+		}
+
+		set
+		{
+			this.Execute("arguments[0].src = '" Value "'")
+		}
+	}
+
 	InnerText
 	{
 		get
@@ -268,6 +299,17 @@ Class WDElement extends Session
 		return r
 	}
 
+	Screenshot(location:=0)
+	{
+		Base64Canvas :=  this.Send("screenshot","GET")
+		if Base64Canvas
+		{
+			nBytes := Base64Dec( Base64Canvas, Bin ) ; thank you Skan :)
+			File := FileOpen(location, "w")
+			File.RawWrite(Bin, nBytes)
+			File.Close()
+		}
+	}
 }
 
 Class ShadowElement extends Session

@@ -27,7 +27,7 @@ Config:
 		gl.isDevt := false
 	}
 
-	; A_Args[1] := "ftp"				;*******************************
+	A_Args[1] := "ftp"				;*******************************
 
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
@@ -61,6 +61,7 @@ MainLoop:
 	}
 	wb.visible := gl.settings.isVisible													; for progress bars
 	wb.capabilities.HeadlessMode := gl.settings.isHeadless								; for Chrome/Edge window
+	wb.capabilities.IncognitoMode := gl.settings.isIncognito							; incognito mode does not save passwords
 	gl.Page := wb.NewSession()															; Session in gl.Page
 
 	if (A_Args[1]="ftp") {
@@ -230,7 +231,7 @@ parsePreventiceFTP(tbl) {
 	eventlog("PREVGRAB: Found " ftpList.length() " PDF files.")
 
 	Progress,0,Please be patient...,Fetching PDF files
-	loop, read, .\files\mortaras.txt
+	loop, read, .\files\wsftp.txt
 	{
 		k := A_LoopReadLine
 		if (k="") {
@@ -415,12 +416,12 @@ parsePreventiceInventory(tbl) {
 
 	lbl := ["button","model","ser"]
 	
-	trows := tbl.getElementsByName("tr")
+	trows := tbl.getElementsbyTagName("tr")
 	loop % trows.length()+1																; loop through rows
 	{
 		r_idx := A_index-1
 		trow := trows[r_idx]
-		tcols := trow.getElementsByName("td")
+		tcols := trow.getElementsbyTagName("td")
 		res := []
 		loop % lbl.length()																; loop through cols
 		{
@@ -578,11 +579,11 @@ preventiceLogin() {
 */
 	gl.Page
 		.getElementById(gl.login.attr_user)
-		.value := gl.login.user_name
+		.SendKey(gl.login.user_name)													; .value := gl.login.user_name
 	
 	gl.Page
 		.getElementById(gl.login.attr_pass)
-		.value := gl.login.user_pass
+		.SendKey(gl.login.user_pass)													; .value := gl.login.user_pass
 	
 	gl.Page
 		.getElementByID(gl.login.attr_btn)

@@ -4,38 +4,59 @@
 
 Class RunDriver
 {
-	__New(Location,Parameters:= "--port=0000")
+	__New(Location,Parameters:= "--port=0")
 	{
+		if !FileExist(Location)
+			if !instr(Location,".exe")
+				Location .= ".exe"
 		SplitPath, Location,Name,Dir,,DriverName
 		this.Dir := Dir ? Dir : A_ScriptDir
 		this.exe := Name
-		this.param := Parameters
+		if RegExMatch(Parameters, "--port=(\d+)",P)
+			this.param := p1 ? p : 0
 		this.Name := DriverName
 		switch this.Name
 		{
 			case "chromedriver" :
 				this.Options := "goog:chromeOptions"
 				this.browser := "chrome"
-				Parameters := RegExReplace(Parameters, "(--port)=(0000)", $1 "=9515")
+				if !this.param
+					this.param := RegExReplace(Parameters, "(--port)=(\d+)", "$1=9515")
 			case "msedgedriver" : 
 				this.Options := "ms:edgeOptions"
 				this.browser := "msedge"
-				Parameters := RegExReplace(Parameters, "(--port)=(0000)", $1 "=9516")
+				if !this.param
+					this.param := RegExReplace(Parameters, "(--port)=(\d+)", "$1=9516")
 			case "geckodriver" : 
 				this.Options := "moz:firefoxOptions"
 				this.browser := "firefox"
-				Parameters := RegExReplace(Parameters, "(--port)=(0000)", $1 "=9517")
+				if !this.param
+					this.param := RegExReplace(Parameters, "(--port)=(\d+)", "$1=9517")
 			case "operadriver" :
 				this.Options := "goog:chromeOptions"
 				this.browser := "opera"
-				Parameters := RegExReplace(Parameters, "(--port)=(0000)", $1 "=9518")
+				if !this.param
+					this.param := RegExReplace(Parameters, "(--port)=(\d+)", "$1=9518")
+			case "BraveDriver" :
+				this.Options := "goog:chromeOptions"
+				this.browser := "Brave"
+				this.exe := "chromedriver.exe"
+				if !this.param
+					this.param := RegExReplace(Parameters, "(--port)=(\d+)", "$1=9515")	
 			Default:
-				Parameters := RegExReplace(Parameters, "(--port)=(0000)", $1 "=9519")
+				if !this.param
+					this.param := RegExReplace(Parameters, "(--port)=(\d+)", "$1=9519")
 		}
 		
 		if !FileExist(Location) and this.browser
-			Location := this.GetDriver()
-		This.Target := Location " " chr(34) Parameters chr(34)
+		{
+			if A_Is64bitOS
+				Location := this.GetDriver(,"64")
+			else
+				Location := this.GetDriver()
+		}
+			
+		This.Target := Location " " chr(34) this.param chr(34)
 		if !FileExist(Location)
 		{
 			Msgbox,64,Rufaydium WebDriver Support,Unable to download driver`nRufaydium exiting
@@ -49,8 +70,9 @@ Class RunDriver
 			Msgbox,64,"Rufaydium WebDriver Support,Unable to download driver from`nURL :" this.DriverUrl "`nRufaydium exiting"
 			ExitApp
 		}
-		
-		PID := this.GetPIDbyName(Name)
+	
+
+		PID := this.GetDriverbyPort(this.Port)
 		if PID
 		{
 			this.PID := PID
@@ -69,6 +91,12 @@ Class RunDriver
 		Process, Close, % This.PID
 	}
 	
+	Delete()
+	{
+		Process, Close, % This.PID
+		FileDelete, % this.Dir "\" this.exe
+	}
+
 	Launch()
 	{
 		Run % this.Target,,Hide,PID
@@ -117,28 +145,61 @@ Class RunDriver
 		switch this.Name
 		{
 			case "chromedriver" :
-				this.zip := "chromedriver_win32.zip"
+				this.zip := "chromedriver-win32.zip"
+				RegExMatch(Version,"Chrome version ([\d.]+).*\n.*browser version is (\d+)",Dver)
 				if RegExMatch(Version,"Chrome version ([\d.]+).*\n.*browser version is (\d+.\d+.\d+)",bver)
+				{
+					if Dver < 115 ; 
+					{
+						uri := "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json"
+						for k, obj in json.load(this.GetVersion(uri)).versions
+						{
+							if instr(obj.version,bver2)
+							{
+								for i, download in obj.downloads.chromedriver
+								{
+									if download.platform = "win32"
+									{
+										this.DriverUrl := download.url
+										break
+									}
+								}
+								break
+							}
+						}
+					}
+					else
+					{
+						uri := "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_"  bver2
+						DriverVersion := this.GetVersion(uri)
+						this.DriverUrl := "https://chromedriver.storage.googleapis.com/" DriverVersion "/" this.zip
+					}
+				}
+				else
+				{
+					uri := "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json"
+					DriverVersion := json.load(this.GetVersion(uri)).channels.Stable.version
+					this.DriverUrl := "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/" DriverVersion "/win32/chromedriver-win32.zip"
+				}
+			case "BraveDriver" :
+				this.zip := "chromedriver_win32.zip"
+				if RegExMatch(Version,"Chrome version ([\d.]+).*\n.*browser version is (\d+.\d+.\d+)",bver) ; iam clueless for response when loading another binary which does not matches chrome driver 
 					uri := "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_"  bver2
 				else
 					uri := "https://chromedriver.storage.googleapis.com/LATEST_RELEASE", bver1 := "unknown"
-				
 				DriverVersion := this.GetVersion(uri)
 				this.DriverUrl := "https://chromedriver.storage.googleapis.com/" DriverVersion "/" this.zip
-			
 			case "msedgedriver" :
 				if instr(bit,"64")
 					this.zip := "edgedriver_win64.zip"
 				else 
 					this.zip := "edgedriver_win32.zip" 
-
 				if RegExMatch(Version,"version ([\d.]+).*\n.*browser version is (\d+)",bver)
 					uri := "https://msedgedriver.azureedge.net/LATEST_" "RELEASE_" bver2
 				else if(Version != "STABLE")
 					uri := "https://msedgedriver.azureedge.net/LATEST_RELEASE_" Version
 				else
 					uri := "https://msedgedriver.azureedge.net/LATEST_" Version, bver1 := "unknown"
-
 				DriverVersion := this.GetVersion(uri) ; Thanks RaptorX fixing Issues GetEdgeDrive
 				this.DriverUrl := "https://msedgedriver.azureedge.net/" DriverVersion "/" this.zip
 			case "geckodriver" :
@@ -201,7 +262,7 @@ Class RunDriver
 		
 		while FileExist(this.Dir "\" this.exe)
 		{
-			Process, Close, % this.GetPIDbyName(this.exe)
+			Process, Close, % this.GetDriverbyPort(this.Port)
 			FileMove, % this.Dir "\" this.exe, % this.Dir "\Backup\" this.name " Version " bver1 ".exe", 1
 		}
 		
@@ -217,6 +278,7 @@ Class RunDriver
 			WebRequest.Open("GET", uri, false)
 			WebRequest.SetRequestHeader("Content-Type","application/json")
 			WebRequest.Send()
+			bytes := WebRequest.Responsebody
 			loop, % WebRequest.GetResponseHeader("Content-Length") ;loop over responsebody 1 byte at a time
 					text .= chr(bytes[A_Index-1]) ;lookup each byte and assign a charter
 			return SubStr(text, 3)
@@ -230,7 +292,7 @@ Class RunDriver
 
 	DownloadnExtract()
 	{
-		static fso := ComObjCreate("Scripting.FileSystemObject")
+		;static fso := ComObjCreate("Scripting.FileSystemObject") idr why this is here
 		URLDownloadToFile, % this.DriverUrl,  % this.zip
 		AppObj := ComObjCreate("Shell.Application")
 		FolderObj := AppObj.Namespace(this.zip)	
@@ -247,11 +309,40 @@ Class RunDriver
 			return this.Dir "\" this.exe
 	}
 
+	GetDriverbyPort(Port)
+	{
+		for process in ComObjGet("winmgmts:").ExecQuery("SELECT * FROM Win32_Process WHERE Name = '" this.exe "'")
+		{
+			RegExMatch(process.CommandLine, "(--port)=(\d+)",$)
+			if (Port != $2)
+			 	continue
+			else
+				return Process.processId
+		}
+	}
+
 	GetPIDbyName(name) 
 	{
-		static wmi := ComObjGet("winmgmts:\\.\root\cimv2")
-		for Process in wmi.ExecQuery("SELECT * FROM Win32_Process WHERE Name = '" name "'")
+		for Process in ComObjGet("winmgmts:\\.\root\cimv2").ExecQuery("SELECT * FROM Win32_Process WHERE Name = '" name "'")
 			return Process.processId
+	}
+
+	GetPortbyPID(PID)
+	{
+		for process in ComObjGet("winmgmts:\\.\root\cimv2").ExecQuery("Select * from Win32_Process where ProcessId=" PID)
+		{
+			RegExMatch(process.CommandLine, "(--port)=(\d+)",$)
+			 return $2
+		}
+	}
+
+	GetPath() 
+	{
+		if this.PID
+			for process in ComObjGet("winmgmts:").ExecQuery("Select * FROM Win32_Process WHERE ProcessId=" This.PID)
+			{
+				return process.ExecutablePath
+			}		
 	}
 }
 

@@ -117,7 +117,6 @@ for key,val in monStrings
 	monPdfStrings[el.1]:=el.2																		; Abbrev based on PDF fname
 	monEpicEAP[el.2]:=el.6																			; Epic EAP codes for monitors
 }
-monLate := readIni("LateMonitors")
 
 initHL7()																							; HL7 definitions
 hl7DirMap := {}
@@ -146,10 +145,15 @@ MainLoop: ; ===================== This is the main part ========================
 		Gosub PhaseGUI
 		WinWaitClose, TRRIQ Dashboard
 		
-		if (phase="Upload") {
+		if (phase="MortaraUpload") {
 			eventlog("Start Mortara upload.")
 			mwuPhase := "Transfer"
 			MortaraUpload(mwuPhase)
+		}
+		if (phase="HolterUpload") {
+			eventlog("Start Holter Connect.")
+			hcPhase := "Transfer"
+			HolterConnect(hcPhase)
 		}
 	}
 	
@@ -178,31 +182,38 @@ PhaseGUI:
 		, Refresh lists
 	Gui, Add, Button
 		, Y+10 wp h40 gPrevGrab Disabled
-		, Grab Preventice updates
+		, Check Preventice inventory
 	Gui, Add, Button
 		, Y+10 wp h40 gFtpGrab Disabled
-		, Grab FTP
+		, Grab FTP full disclosure 
 	Gui, Add, Text, wp h20																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
 		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
 		, No active orders
 	Gui, Add, Text, wp h30
-	Gui, Add, Text, Y+10 wp h100 Center, Transmit MORTARA HOLTER`nto Preventice
+	Gui, Add, Text, Y+10 wp Center, Transmit	     Transmit
+	Gui, Add, Text, Y+1 wp Center H100, MORTARA	     BG MINI
 	Gui, Font, Normal
-	
-	;~ GuiControlGet, btn1, Pos, BodyGuardian
-	GuiControlGet, btn2, Pos, MORTARA
-	
-	btnW := 90
-	btnH := 50
-	
+
+	GuiControlGet, btn1, Pos, MORTARA
+	GuiControlGet, btn2, Pos, BG MINI
+
+	btnW := 79
+	btnH := 61
+
 	Gui, Add, Picture
-		, % "Y" btn2Y+36 " X" btn2X+60 
+		, % "Y" btn1Y+20 " X" btn1X+16
 		. " w" btnW " h" btnH " "
-		. " +0x1000 vUpload gPhaseTask"
+		. " +0x1000 vMortaraUpload gPhaseTask"
 		, .\files\H3.png
 	
+	Gui, Add, Picture
+	, % "Y" btn2Y+20 " X" btn2X+130
+	. " w" btnW " h" btnH " "
+	. " +0x1000 vHolterUpload gPhaseTask"
+	, .\files\BGMini.png
+
 	tmpsite := RegExReplace(sites,"TRI\|")
 	tmpsite := wksloc="Main Campus" ? tmpsite : RegExReplace(tmpsite,site.tab "\|",site.tab "||")
 	Gui, Add, Tab3																		; add Tab bar with tracked sites
@@ -216,7 +227,7 @@ PhaseGUI:
 	if (wksloc="Main Campus") {
 		GuiControl 
 			, Enable
-			, Grab Preventice updates
+			, Check Preventice inventory
 
 		Gui, Tab, INBOX
 		Gui, Add, Listview
@@ -302,23 +313,34 @@ PhaseGUI:
 	}
 	WQlist()
 	
-	Menu, menuSys, Add, Clean tempfiles, CleanTempFiles
 	Menu, menuSys, Add, Change clinic location, changeLoc
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuSys, Add, Update call schedules, updateCall
-	Menu, menuSys, Add, Send notification email, sendEmail
-	Menu, menuSys, Add, Find pending leftovers, cleanPending
 	Menu, menuSys, Add, CheckMWU, checkMWUapp											; position for test menu
-	Menu, menuSys, Add, Recover DONE record, recoverDone
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
+	Menu, menuAdmin, Add, Toggle admin mode, toggleAdmin
+	Menu, menuAdmin, Add, Clean tempfiles, CleanTempFiles
+	Menu, menuAdmin, Add, Send notification email, sendEmail
+	Menu, menuAdmin, Add, Find pending leftovers, cleanPending
+	Menu, menuAdmin, Add, Fix WQ device durations, fixDuration							; position for test menu
+	Menu, menuAdmin, Add, Recover DONE record, recoverDone
+	Menu, menuAdmin, Add, Create test order, makeEpicORM
 		
 	Menu, menuBar, Add, System, :menuSys
+	if (user~="i)tchun1|docte") {
+		Menu, menuBar, Add, Admin, :menuAdmin
+	}
 	Menu, menuBar, Add, Help, :menuHelp
 	
 	Gui, Menu, menuBar
 	Gui, Show,, TRRIQ Dashboard
+
+	if (adminMode) {
+		Gui, Color, Fuchsia
+		Gui, Show,, TRRIQ Dashboard - ADMIN MODE
+	}
 	
 	SetTimer, idleTimer, 500
 	return
@@ -385,6 +407,14 @@ changeLoc()
 		eventlog("Removed wks node for " A_ComputerName)
 		Reload
 	}
+	return
+}
+
+toggleAdmin()
+{
+	global adminMode
+	adminMode := !(adminMode)
+	gosub PhaseGUI
 	return
 }
 
@@ -719,6 +749,15 @@ checkVersion(ver) {
 }
 
 WQtask() {
+/*	Double click from clinic location (or ALL) 
+	For studies in-flight, registered but not resulted
+	Tech tasks: 
+		Add note
+		Mark as uploaded to Preventice
+		Mark as completed
+	Admin tasks:
+		?
+*/
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {
 		return
@@ -731,10 +770,16 @@ WQtask() {
 	if (idx="ID") {
 		return
 	}
-	global wq, user
+	
+	global wq, user, adminMode
+	if (adminMode) {
+		adminWQtask(idx)
+		Return
+	}
 	
 	;~ Gui, phase:Hide
 	pt := readWQ(idx)
+
 	idstr := "/root/pending/enroll[@id='" idx "']"
 	
 	list :=
@@ -876,7 +921,8 @@ WQlist() {
 		
 		WQpreventiceResults(wqfiles)													; Process incoming Preventice results
 		WQscanHolterPDFs(wqfiles)														; Scan Holter PDFs folder for additional files
-		WQlistPDFdownloads()															; generate mortaras.txt
+		WQlistPDFdownloads()															; generate wsftp.txt
+		WQlistBadPDFs()																	; find loose PDFs that Chrome couldn't rename 
 		WQfindMissingWebgrab()															; find <pending> missing <webgrab>
 	}
 	
@@ -902,7 +948,7 @@ WQclearSites0() {
 */
 	global sites0, wq
 
-	loop, parse, sites0,
+	loop, parse, sites0, |
 	{
 		site := A_LoopField
 		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
@@ -1213,7 +1259,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, dev																		; device type
-			, (res.dev~="Mortara") ? "X":"")											; flag FTP if Mortara
+			, (res.duration<3) ? "X":"")												; flag FTP if 1-2 day Holter
 		wqfiles.push(id)
 	}
 	Return
@@ -1257,21 +1303,48 @@ WQscanHolterPDFs(ByRef wqfiles) {
 }
 
 WQlistPDFdownloads() {
-/*	Generate mortaras.txt list for those that still require PDF download
+/*	Generate wsftp.txt list for those that still require PDF download
 */
-	GuiControl, Disabled, Grab FTP
+	GuiControl, Disabled, Grab FTP full disclosure
 	loop % LV_GetCount() {
 		LV_GetText(x,A_Index,9)															; FTP
 		LV_GetText(y,A_Index,2)															; Name
 
 		if (x) {
 			tmpHolters .= RegExReplace(y,",\s+",",") "`n"
-			GuiControl, Enable, Grab FTP
+			GuiControl, Enable, Grab FTP full disclosure
 		}
 	}
-	FileDelete, .\files\mortaras.txt
-	FileAppend, % tmpHolters, .\files\mortaras.txt
+	FileDelete, .\files\wsftp.txt
+	FileAppend, % tmpHolters, .\files\wsftp.txt
 
+	Return
+}
+
+WQlistBadPDFs() {
+/*	Chrome (or wsftp) fails to download files with "," in filename
+	Ends up saving bad filename, e.g. "SMITH, JEROME.PDF" ==> "SMITH"
+	Copy all files completed by ftpgrab() to HolterPDFs
+*/
+	global path
+
+	FileGetTime, wsftpDate, .\files\wsftp.txt
+	d1 := SubStr(wsftpDate, 1, 8)
+
+	loop, files, % ".\pdftemp\*"
+	{
+		fName := A_LoopFileFullPath
+		FileGetTime, fNameDate, % fName
+		d2 := SubStr(fNameDate, 1, 8)
+		if (d1 = d2) {																	; downloaded file on same date as wsftp.txt
+			foundit := true
+			FileMove, % fName, % path.HolterPDF A_LoopFileName ".PDF"
+			eventlog("WQlistBadPDFs moved loose file '" A_LoopFileName "'.")
+		}
+	}
+	if (foundit) {
+		Gosub phaseGUI																	; any file moves, regenerate phaseGUI
+	}
 	Return
 }
 
@@ -1314,7 +1387,7 @@ WQpendingTabs() {
 	Generate ALL tab
 	Add each <enroll> to corresponding site
 */
-	global wq, sites, CLV_all, monLate
+	global wq, sites, CLV_all
 
 	Gui, ListView, WQlv_all
 	LV_Delete()
@@ -1335,12 +1408,7 @@ WQpendingTabs() {
 			;~ if (instr(e0.dev,"BG") && (dt < 30)) {									; skip BGH less than 30 days
 				;~ continue
 			;~ }
-			CLV_col := ""
-			if (instr(e0.dev,"Heart") && (dt > monLate.BGH))
-			|| (instr(e0.dev,"Mortara") && (dt > monLate.Mortara)) 
-			|| (instr(e0.dev,"Mini") && (dt > monLate.BGM)) {
-				CLV_col := "red"
-			}
+			CLV_col := (dt-e0.duration > 10) ? "red" : ""
 			
 			Gui, ListView, WQlv%i%														; add to clinic loc listview
 			LV_Add(""
@@ -1410,7 +1478,7 @@ WQpendingReads() {
 }
 
 cleanDone() {
-	global wq
+	global wq, sites0
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
@@ -1433,10 +1501,26 @@ cleanDone() {
 		en := ens.item(A_Index-1)
 		dt := en.selectSingleNode("date").text
 		name := en.selectSingleNode("name").text
+		site := en.selectSingleNode("site").text
+		uid := en.getAttribute("id")
+
+		if (name="" && site="") {
+			en.parentNode.removeChild(en)
+			eventlog("Removed blank UID " uid)
+			Continue
+		}
+
+		if (sites0~=site) {
+			en.parentNode.removeChild(en)
+			eventlog("Removed " site " record " uid " - " name)
+			Continue
+		}
+
 		dtDiff := dateDiff(dt)
 		if (dtDiff<180) {																; skip dates less than 180 days
 			continue
 		}
+
 		clone := en.cloneNode(true)
 		arc.selectSingleNode("/root/done").appendChild(clone)
 		en.parentNode.removeChild(en)
@@ -1453,6 +1537,12 @@ cleanDone() {
 
 
 readPrevTxt() {
+/*	Read data files from Preventice:
+		* Patient Status Report_v2.xml sent by email every M-F 6 AM
+		* prev.txt grabbed from prevgrab.exe
+			- Enrollments (inactive, as taken from PSR_v2)
+			- Inventory
+*/
 	global wq
 	
 	Progress,,% " ",Updating Preventice data
@@ -1526,7 +1616,7 @@ parsePrevEnroll(det) {
 	Match to existing/likely enroll nodes
 	Update enroll node with new info if missing
 */
-	global wq
+	global wq, sites0
 
 	res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
 			, name:RegExReplace(format("{:U}"
@@ -1542,6 +1632,12 @@ parsePrevEnroll(det) {
 		res.dev .= res.name																; append string so will not match in enrollcheck
 	}
 	
+	/*	Ignore sites0 enrollments entirely
+	*/
+		if (res.site~=sites0) {
+			Return
+		}
+
 	/*	Check whether any params match this device
 	*/
 		if (id:=enrollcheck("[@id='" res.id "']")) {									; id returned in Preventice ORU
@@ -1815,7 +1911,11 @@ readWQ(idx) {
 readWQlv:
 {
 /*	Retrieve info from WQlist line
-	Will be for HL7 data, or an additional file in Holter PDFs folder
+	Will be for HL7 result, or an additional file in Holter PDFs folder
+	Tech task: 
+		* Process result
+	Admin task:
+		* "HL7 error"
 */
 	agc := A_GuiControl
 	if !instr(agc,"WQlv") {																; Must be in WQlv listview
@@ -1832,6 +1932,11 @@ readWQlv:
 	LV_GetText(wqid,x,7)																; WQID
 	LV_GetText(ftype,x,8)																; filetype
 	SplitPath,fileIn,fnam,,fExt,fileNam
+	if (adminMode) {
+		adminWQlv(wqid)																		; Troubleshoot result
+		Gosub PhaseGUI
+		Return
+	}
 	
 	wq := new XML("worklist.xml")														; refresh WQ
 	blocks := Object()																	; clear all objects
@@ -1851,6 +1956,7 @@ readWQlv:
 	
 	fldVal := readWQ(wqid)																; wqid would have been determined by parsing hl7
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
+	
 	if (fldval.node = "done") {															; task has been done already by another user
 		MsgBox, 262208, Completed, File has already been processed!
 		WQlist()																		; refresh list and return
@@ -1893,6 +1999,7 @@ readWQlv:
 		eventlog("Filetype cannot be determined from WQlist (somehow).")
 		
 		MsgBox, 16, , Unrecognized filetype (somehow)
+		Return
 	}
 	
 	if (fldval.done) {
@@ -1944,15 +2051,13 @@ readWQorder() {
 	ptDem.filename := fileIn
 	ptDem.Provider := ptDem.provname
 	
-	if (ptDem.monitor~="i)HOL") {														; for Mortara Holter
-		eventlog("Start Mortara prepare.")
-		mwuPhase := "Prepare"
-		mortaraUpload(mwuPhase)
+	if (ptDem.monitor~="i)HOL") {														; for short term BG Mini (24-48 hr)
+		BGregister("HOL")
 	} 
-	else if (ptDem.monitor~="i)BGM") {													; for BG Mini (and maybe Zio)
+	else if (ptDem.monitor~="i)BGM") {													; for long term BG Mini (3-15 days)
 		BGregister("BGM")
 	}
-	else if (ptDem.monitor~="i)BGH") {													; for BG Heart
+	else if (ptDem.monitor~="i)BGH") {													; for BGM Plus Lite, formerly BG Heart (30 day CEM)
 		BGregister("BGH")
 	}
 	
@@ -2108,9 +2213,10 @@ parseORM() {
 */
 	global fldval, sitesLong, indCodes
 	
-	monType:=(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"
+	monType:=(tmp:=fldval.OBR_TestName)~="i)14 DAY" ? "BGM"								; for extended recording
 		: tmp~="i)15 DAY" ? "BGM"
-		: tmp~="i)24 HOUR" ? "HOL"
+		: tmp~="i)24 HOUR" ? "HOL"														; for short report (includes full disclosure)
+		: tmp~="i)48 HOUR" ? "HOL"
 		: tmp~="i)RECORDER|EVENT" ? "BGH"
 		: tmp~="i)CUTOVER" ? "CUTOVER"
 		: ""
@@ -2427,6 +2533,18 @@ checkweb(id) {
 
 ftpGrab() {
 	global path
+/*	Added this due to problems with FTP downloads
+*/
+	Gui, phase:Hide
+	MsgBox 0x40030
+		, FTP issue
+		, % "TRRIQ is currently having issues downloading from the FTP site.`n`n"
+		. "Go to the https://ftp.preventice.com website to manually download the files.`n`n"
+		. "Sorry for the inconvenience!`n`n-The Management"
+	Gui, phase:Show
+	Return
+/*
+*/
 	Gui, phase:Hide
 	RunWait, PrevGrab.exe "ftp" 
 	FileMove, .\pdfTemp\*.pdf, % path.holterPDF "*.*"
@@ -2474,6 +2592,37 @@ cleanTempFiles() {
 	return
 }
 
+fixDuration() {
+	global wq
+
+	str := ""
+	ens:=wq.selectNodes("/root/pending/enroll")
+	num := ens.length
+	Loop, % num
+	{
+		Progress,,,% A_Index "/" num 
+		k := ens.item(A_Index-1)
+		kDur := k.selectSingleNode("duration").Text
+		if (kDur) {																		; skip if has value
+			Continue
+		}
+		id	:= k.getAttribute("id")
+		kDevNode := k.selectSingleNode("dev")
+		kDev := kDevNode.Text
+		kDur := (kDev~="Mortara" ? "1"
+			: kDev~="Mini EL" ? "14"
+			: kDev~="Heart" ? "30"
+			: "")
+		wq.InsertElement("duration",kDevNode.NextSibling,kDur)
+		eventlog(id " Inserted duration '" kDur "'")
+	}
+	progress, off
+
+	WriteSave(wq)
+
+	Return
+}
+
 checkMWUapp()
 {
 	global isDevt, has_HS6
@@ -2501,6 +2650,357 @@ checkMWUapp()
 	}
 	
 	return																	
+}
+
+findBGMdrive(delay:=5) {
+/*	Wait until BG MINI drive attached, return matching drive letter
+*/
+	match := "BG MINI"																	; Match string
+
+	Gui, hcTm:Font, s18 bold
+	Gui, hcTm:Add, Text, , Log in to Holter Connect and`nAttach BG MINI to cable
+	Gui, hcTm:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
+	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
+	Gui, hcTM: +AlwaysOnTop
+	Gui, hcTm:Show, AutoSize, BG Mini connect
+
+	Loop, % (loops:=delay*120)															; 60 sec/120 loops
+	{
+		GuiControl, , % HcCt, % 100*A_Index/loops
+		DriveGet, drives, List															; Get all attached drive letters
+		drives := RegExReplace(drives,"[COFWZ]")										; Remove letters used for network drives 
+		Loop, parse, drives
+		{
+			DriveGet, label, Label, %A_LoopField%:
+			if (label=match) {
+				hit := A_LoopField
+			}
+		}
+		if (hit) {																		; got a hit
+			Break
+		}
+		if !WinExist("BG Mini connect") {												; user closed progress window
+			Break
+		}
+		sleep 500
+	}
+	Gui, hcTm:Destroy
+
+	if (hit) {
+		eventlog("Found [BG MINI] drive " hit ":.")
+	} else {
+		eventlog("No [BG MINI] drive found.")
+	}
+	Return hit
+}
+
+getBGMlog(drive:="D") {
+/*	Assuming valid drive
+	Read start time in D:\LOG (tz=UTC+0)
+	Possibly demographics stored in matching DATA\hh-mm-ss
+*/
+	FileRead, txt, % drive ":\LOG"
+	; FileRead, txt, .\devfiles\BGM\TESTLOG
+	Loop, Parse, txt, `r`n
+	{
+		k := A_LoopField
+		if InStr(k, "S/N") {
+			serNum := stRegX(k "<<<","S/N:\s+",1,1,"<<<",1)
+			serNum := RegExReplace(serNum,"BGMINI-")
+			Continue
+		}
+		if InStr(k, "TIMEZONE") {
+			bgmTZ := stRegX(k "<<<","TIMEZONE:",1,1,";|<<<",1)
+			Continue
+		}
+		if InStr(k, "SAMPLING:") {
+			stamp := stRegX(k,"",1,0,"\[",1)
+			date := stRegX(stamp,"",1,0," ",1,n)
+				dd := SubStr(date, 1, 2)
+				mm := SubStr(date, 4, 2)
+				yyyy := SubStr(date, 7, 4)
+			time := stRegX(stamp," ",n,1," ",1)
+				hr := SubStr(time, 1, 2)
+				min := SubStr(time, 4, 2)
+				sec := SubStr(time, 7, 2)
+			dt := yyyy . mm . dd . hr . min . sec
+			tzNow := A_Now
+			tzUTC := A_NowUTC
+			tzNow -= tzUTC, Hours
+			dt += tzNow, Hours
+			bgmStartDT := dt															; Recording start time (local time)
+			Continue
+		}
+		if InStr(k, "Measurement stopped") {
+
+		}
+	}
+
+	eventlog("BGM LOG: S/N=" serNum ", TZ=" bgmTZ ", Start Time=" bgmStartDT " (local).")
+	Return {ser:serNum,tz:bgmTZ,start:bgmStartDT}
+}
+
+scanCygnusLog() {
+/*	Read the most recent logfile in Cygnus\Logs
+*/
+	; folder := ".\devfiles\Cygnus\Logs"
+	folder := A_AppData "\Cygnus\Logs"
+	file := folder "\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+	FileRead, txt, % file
+	Loop, Parse, txt, `r`n																; Read to end of Log to catch last event
+	{
+		k := A_LoopField
+		if RegExMatch(k,"^(.*?)\..*?" . "\[S\/N: (\d*)\].*?"							; Detect starting upload
+			.  "\[UploadTask\].*?" . "starting upload",t) {
+			start := SubStr(RegExReplace(t1, "[ :\-]"),1,14)
+			sernum := t2
+			done := ""
+			sendDT := ""
+		}
+		if RegExMatch(k,"^(.*?)\..*?" . "\[S\/N: (\d*)\].*?"							; Detect upload successful
+			.  "\[UploadTask\].*?" . "successful",t) {
+			done := SubStr(RegExReplace(t1, "[ :\-]"),1,14)
+			sernum := t2
+		}
+		if InStr(k, "SendUploadSuccessEvent") {											; Detect mark SuccessEvent
+			sendDT := stRegX(k,"",1,0,"[\[\]\.]",1)
+			sendDT := SubStr(RegExReplace(sendDT, "[ :\-]"),1,14)
+			start := done := ""
+		}
+	}
+	Return {start:start,done:done,sendDT:sendDT}
+} 
+
+checkBGMstatus(drive:="D",title:="") {
+/*	Status window for BGM transfers
+	Check D: still attached
+	Check presence of DATA folder
+	Check APPDATA/Roaming/Cygnus/Acquired/.unassigned baseline = imported
+	Compare for disappearance of zip in .unassigned and appearance of folder = uploaded
+	Check appearance of dated log file Cygnus/Logs/Log_2023-10-21.log
+	
+*/
+	static Attached, Cleared, Imported, Uploaded
+	
+	; folderBGM := ".\devfiles\BGM\DATA"
+	; folderCygnus := ".\devfiles\Cygnus"
+	folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
+	folderCygnus := A_AppData "\Cygnus"													; Cygnus folder
+	folderUnassigned := folderCygnus "\.unassigned"
+	eventlog("BGM=" folderBGM ", Cygnus=" folderCygnus ", Unassigned=" folderUnassigned)
+	driveStat:=dataStat:=importStat:=uploadStat:=0										; assume all false
+
+	Gui, hcStat:Font, s12 bold
+	Gui, hcStat:Add, Text, Center, % title
+	Gui, hcStat:Add, Checkbox, vAttached , BG MINI attached
+	Gui, hcStat:Add, Checkbox, vCleared  , BG MINI cleared
+	Gui, hcStat:Add, Checkbox, vImported , DATA imported
+	Gui, hcStat:Add, Checkbox, vUploaded , DATA uploaded
+	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
+	Gui, hcStat: +AlwaysOnTop
+	Gui, hcStat:Show, AutoSize, BG Mini Status
+
+	now0 := A_Now
+	filelist0 := getfolderlist(folderUnassigned)										; Get baseline .unassigned folder
+	sleep 200
+
+	loop,
+	{
+		/*	Check if user closed window
+		*/
+		if !WinExist("BG Mini Status") {
+			eventlog("User closed BG Mini Status window")
+			Break
+		}
+
+		/*	Check status of D drive
+		*/
+		driveStat := (FileExist(drive ":")~="D") ? 1 : 0								; D=Directory
+		sleep 200
+		GuiControl, hcStat: , Attached , % driveStat
+		if (driveStat=0) {
+			eventlog("Drive " drive " disconnected.")
+			Break
+		}
+		
+		/*	Check presence of DATA folder on D
+		*/
+		if (dataStat=0) {
+			dataStat := (FileExist(folderBGM)~="D") ? 0 : 1								; Checked when DATA gone
+			sleep 200
+			GuiControl, hcStat: , Cleared , % dataStat
+			if (dataStat=1) {
+				eventlog("DATA folder removed.")
+			}
+		}
+		
+		/*	Check whether new zip appears in .unassigned folder
+		*/
+		if (importStat=0) {																; Only check folder until it changes
+			filelist1 := getfolderlist(folderUnassigned)								; Check for addition to filelist0
+			sleep 200
+			importStat := (filelist1 = filelist0) ? 0 : 1
+			GuiControl, hcStat: , Imported, % importStat 
+			if (importStat=1) {
+				eventlog("New files in Unassigned.")
+			}
+		}
+
+		/*	Check CygnusLog for start and finish upload
+		*/
+		if (importStat=1) {
+			cyg := scanCygnusLog()
+			if (cyg.start) {															; Uncleared start
+				eventlog("Cygnus start upload " cyg.start)
+			}
+			if (cyg.start)&&(cyg.done) {												; Last done
+				eventlog("Cygnus done upload " cyg.done)
+			}
+		}
+
+		/*	Check when zip disappears from .unassigned folder, returns to filelist0
+		*/
+		if (importStat=1) {																; Only check if import has happened
+			filelist2 := getfolderlist(folderUnassigned)								; Check for return to filelist0
+			sleep 200
+			uploadStat := (filelist2 = filelist0) ? 1 : 0
+			GuiControl, hcStat: , Uploaded, % uploadStat
+			if (uploadStat=1) {
+				eventlog("New files deleted from Unassigned.")
+				Break 																	; Once imported and uploaded we are done
+			}
+		}
+
+		Sleep 200
+	}
+	Gui, hcStat:Destroy
+
+	if (uploadStat=0) {																	; Perchance quit, check Cygnus log
+		eventlog("Break without uploadStat.")
+		uploadStat := 1
+		if (sendDT := scanCygnusLog().sendDT) {											; Scan log for Send Uploa
+			eventlog("Cygnus log SendUploadSuccess [" sendDT "].")
+		}
+	}
+
+	eventlog("checkBGMstatus: BGM Attached=" driveStat ", BGM Cleared=" dataStat ", Imported=" importStat ", Uploaded=" uploadStat)
+	Return {data:dataStat,import:importStat,upload:uploadStat}
+}
+
+getfolderlist(path) {
+	Loop, % path "\*"
+	{
+		file := A_LoopFileName
+		if (file="") {
+			Break
+		}
+		list .= file "`n"
+	}
+	Return list
+}
+
+findBGMenroll(serNum,dt) {
+/*	Find best enrollment that matches S/N and recording date/time for BGM SL
+*/
+	global wq
+
+	DaysOut := 7																		; How many days after registration to match
+
+	ens := wq.selectNodes("//pending/enroll[dev='BodyGuardian Mini - " serNum "']")		; all nodes that match S/N
+	Loop, % ens.Length()
+	{
+		en := ens.item(A_Index-1)
+		enDT := en.selectSingleNode("date").Text
+		diff := dateDiff(enDT,dt)
+		if (diff > DaysOut)||(diff < -2) {												; skip if too old or beyond DaysOut
+			Continue
+		} else {
+			butNum ++
+			wqid := en.getAttribute("id")
+			name := en.selectSingleNode("name").Text
+			mrn := en.selectSingleNode("mrn").Text
+			match .= butNum ". " name "`n" mrn "`n" niceDate(enDT) "WQ:[" wqid "]|"
+			eventlog("Found registration match: " name " [" mrn "] " enDT)
+		}
+	}
+	match .= "NONE OF THE ABOVE"
+	Return match	
+}
+
+HolterConnect(phase="") 
+{
+	global wq, ptDem, fetchQuit, user, isDevt
+
+	MsgBox 0x21, Holter Connect, Launch HOLTER CONNECT`nto import/upload Holter?
+	IfMsgBox OK, {
+		eventlog("Confirmed to launch Holter Connect.")
+	} Else {
+		Return
+	}
+	IfWinExist, Holter Connect
+	{
+		WinActivate, Holter Connect
+	} else {
+		Run, .\files\Cygnus.application,,,cygnusApp
+	}
+	bgmDrive := findBGMdrive()															; Get drive letter for [BG MINI]
+	bgmData := getBGMlog(bgmDrive) 														; Get TZ, S/N, and Start time from LOG 
+	if (bgmData.ser="") {
+		eventlog("No valid BG MINI drive detected by timeout.")
+		Return 
+	} 
+	; bgmData := {}
+	; bgmData.ser := "2031181"
+	; bgmData.start := "20231019"
+	eventlog("S/N " bgmData.ser ", connected " bgmData.start ".")
+
+	if (phase="Transfer") {
+		match := findBGMenroll(bgmData.ser,bgmData.start) 								; Find enrollments that match S/N an start date
+		if (match="") {
+			MsgBox NO MATCHING REGISTRATIONS
+			eventlog("No matching BGM registrations.")
+			Return
+		}
+		m2 := StrSplit(match, "|")														; Array of matches (including WQIDs)
+		match := RegExReplace(match, "WQ:\[[A-Z0-9]+\]")								; Remove WQIDs (cMsgBox returns max 63 chars)
+		tmp := CMsgBox("BG Mini Registrations"
+			, "Which patient match?"
+			, match
+			, "Q", "v")
+		eventlog("Selected " strX(tmp,"",1,1,"`n",1,1))
+		if (tmp="NONE OF THE ABOVE") {
+			Return
+		}
+		num := StrX(tmp,"",0,1,".",0,1)
+		wqid := stRegX(m2[num],"WQ:\[",1,1,"]",1)										; Get wqid from button index number
+		pt := readWQ(wqid)
+		title := pt.Name "`nS/N " bgmData.ser
+
+		bgmStatus := checkBGMstatus(bgmDrive,title)										; Wait to complete import and upload, or quit
+		if !(bgmStatus.upload) {														; Can't confirm BGM was uploaded
+			MsgBox 0x14, BG Mini Transfer, Did BG MINI upload successfully?
+			IfMsgBox Yes, {
+				eventlog("Confirmed BGM uploaded successfully.")
+			} Else {
+				eventlog("Reports BGM did NOT upload.")
+				Return																	; Return to PhaseGUI, can try again or ignore
+			}
+		}
+
+		wq := new XML("worklist.xml")													; refresh WQ
+		wqStr := "/root/pending/enroll[@id='" wqid "']"
+		
+		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
+			wq.addElement("sent",wqStr)
+		}
+		wq.setText(wqStr "/sent",substr(A_now,1,8))
+		wq.setAtt(wqStr "/sent",{user:user})
+		WriteOut("/root/pending","enroll[@id='" wqid "']")
+		eventlog(pt.MRN " " pt.Name " study " wqid.Date " uploaded to Preventice.")
+
+	}
+
+	Return
 }
 
 MortaraUpload(tabnum="")
@@ -2859,6 +3359,7 @@ muWqSave(sernum) {
 	wq.addElement("sex",ptDem.newID,ptDem.sex)
 	wq.addElement("dob",ptDem.newID,ptDem.dob)
 	wq.addElement("dev",ptDem.newID,ptDem.dev)
+	wq.addElement("duration",ptDem.newID,ptDem.MonDuration)
 	if (ptDem.fellow) {
 		wq.addElement("fellow",ptDem.newID,ptDem.fellow)
 	}
@@ -3037,7 +3538,106 @@ UiFieldFill(fld,val,win) {
 	return
 }
 
+makeEpicORM() {
+	/*	Generate a test ORM from "Epic" 
+		
+	*/
+	global hl7out, path
+	
+	Random, seq, 100000, 199999
+	hl7time := A_Now
+	hl7out := Object()
+
+	name := "TESTBGM^TESTBGM^"
+	mrn := "11122233"
+	dob := "20091215"
+	sex := "F"
+	address := "6115 EVANSTON AVE N^^SEATTLE^WA^98103^US^^^KING"
+	phone := "(206)867-5309^P^HOME~(206)867-5309^P^MOBILE"
+	Random, encNum, 500000000, 599999999
+	Random, orderNum, 400000000, 499999999
+	Random, accNum, 50000000, 59999999
+	Random, account, 40000000, 49999999
+	study := "CVCAR02^HOLTER MONITOR 24 HOUR"
+	ordering := "1144301409^CHUN^TERRENCE^U"
+
+	buildHL7("MSH"
+		,{1:"^~\&"
+		, 2:"HS"
+		, 3:"IMG_ARRIVE_APPT"
+		, 4:"PREVENTICE"
+		, 5:"PREVENTICE"
+		, 6:hl7time
+		, 7:""
+		, 8:"ORM^O01"
+		, 9:seq
+		, 10:"P"
+		, 11:"2.5.1" })
+	
+	buildHL7("PID"
+		,{3:mrn
+		, 5:name
+		, 7:dob
+		, 8:sex
+		, 18:account })
+	
+	buildHL7("NK1"
+		,{2:"LOPEZ^JENNIFER^^"
+		, 3:"MOT"
+		, 4:address
+		, 5:phone
+		, 7:"1^Y^LG~1^Y^LW" })
+	buildHL7("NK1"
+		,{2:"AFFLECK^BEN^^"
+		, 3:"FAT"
+		, 4:address
+		, 5:phone
+		, 7:"1^Y^LG~1^Y^LW" })
+
+	buildHL7("PV1"
+		,{2:"O"
+		, 3:"CRD"
+		, 8:"1144301409^CHUN^TERRENCE^U^^^^^^^^^MSOW_ORG_ID"
+		, 19:encNum
+		, 44:hl7time })
+		
+	buildHL7("ORC"
+		,{1:"NW"
+		, 2:orderNum
+		, 3:"OT-" accNum
+		, 7:"^^^" hl7time "^^ROUTINE" 
+		, 10:"SILENTSCHDBKGRD^SILENT SCHEDULING^BACKGROUND^^"
+		, 12:ordering })
+	
+	buildHL7("OBR"
+		,{2:orderNum
+		, 3:"OT-" accNum
+		, 4:study
+		, 16:ordering
+		, 27:"^^^" hl7time "^^ROUTINE"
+		, 31:"Premature Atrial Contractions (PAC's)"
+		, 32:"" })
+	
+	buildHL7("NTE"
+		,{3:"Should monitor be placed during this appointment or hospital stay?->Yes"
+		, 4:""
+		, 5:"" })
+	buildHL7("NTE"
+		,{3:"Reason for exam:->Premature Atrial Contractions (PAC's)" 
+		, 4:""
+		, 5:"" })
+		
+	fileNm := "TRRIQ_ORM_" A_Now
+	FileAppend, % hl7Out.msg, % path.EpicHL7in . fileNm
+	eventlog("Epic test order completed: " fileNm)
+	MsgBox, 262208, makeEpicORM, Test order created!
+	return
+}
+
 makePreventiceORM() {
+/*	Generate Preventice ORM using data in ptDem
+	Based on specs document from Preventice 
+*/
 	global wq, ptDem, fetchQuit, hl7out, path, indCodes, sitesCode, sitesFacility
 	
 	hl7time := A_Now
@@ -3084,7 +3684,7 @@ makePreventiceORM() {
 	buildHL7("ORC",{2:""})
 	
 	buildHL7("OBR"
-		,{2:ptDem.wqid
+		,{2:ptDem.wqid																	; technically this is "placer order number" ==> SecondaryID at Preventice
 		, 4:strQ((ptDem.model~="Mortara") ? 1 : "","Holter^Holter")
 			. strQ((ptDem.model~="Heart") ? 1 : "","CEM^CEM")
 			. strQ((ptDem.model~="Mini") ? 1 : "","Holter^Holter")
@@ -3113,17 +3713,19 @@ makePreventiceORM() {
 			, 4:indSeg })
 	}
 	
-	buildHL7("OBX"
+	buildHL7("OBX"																		; OBX Service Type = {MCT,CEM,Holter}
 		,{2:"ST"
 		, 3:"12915^Service Type"
-		, 5:strQ((ptDem.model~="Mortara") ? 1 : "","Holter")
-			. strQ((ptDem.model~="Heart") ? 1 : "","CEM")
-			. strQ((ptDem.model~="Mini") ? 1 : "","Holter") })
+		, 5:strQ((ptDem.model="BodyGuardian Mini") ? 1 : "","Holter")
+			. strQ((ptDem.model="BodyGuardian Mini EL") ? 1 : "","Holter")
+			. strQ((ptDem.model="BodyGuardian Mini Plus Lite") ? 1 : "","CEM") })
 	
-	buildHL7("OBX"
+	buildHL7("OBX"																		; OBX Device = {BC2002A,BC2003A,BGMPLite}
 		,{2:"ST"
 		, 3:"12916^Device"
-		, 5:ptDem.model })
+		, 5:strQ((ptDem.model="BodyGuardian Mini") ? 1 : "","BC2002A")
+			. strQ((ptDem.model="BodyGuardian Mini EL") ? 1 : "","BC2003A")
+			. strQ((ptDem.model="BodyGuardian Mini Plus Lite") ? 1 : "","BGMPLite") })
 	
 	buildHL7("OBX"
 		,{2:"ST"
@@ -3138,9 +3740,7 @@ makePreventiceORM() {
 	buildHL7("OBX"
 		,{2:"ST"
 		, 3:"12918^Deploy Duration (In Days)"
-		, 5:(ptDem.model~="Mortara" ? "1" : "")
-			. (ptDem.model~="Heart" ? "30" : "")
-			. (ptDem.model~="Mini" ? strQ(ptDem.HolterDuration,"###","14") : "") })
+		, 5:ptDem.MonDuration })
 	
 	fileNm := ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "-" hl7time ".txt"
 	FileAppend, % hl7Out.msg, % ".\tempfiles\" fileNm
@@ -3151,32 +3751,57 @@ makePreventiceORM() {
 }
 
 BGregister(type) {
+/*	Register a BodyGuardian device (short term Holter, long term Holter, Event monitor)
+	Gather and verify demographic info from Epic order message
+	Create <pending/enroll> based on <orders/enroll> node
+	Generate and Preventice ORM
+*/
 	global wq, ptDem, fetchQuit, isDevt
 	SetTimer, idleTimer, Off
 	
-	typeLong := (type="BGH" ? "BodyGuardian Heart" : "") . (type="BGM" ? "BodyGuardian Mini EL" : "")
-	
-	tmp:=CMsgBox(ptDem.Monitor
-		, "Register type`n`n" typeLong
-			. (type="BGH" ? "`n30-day Event Recorder" : "")
-			. (type="BGM" ? "`nExtended Holter (3-14 day)" : "")
-		, "Yes|No"
-		, "Q", "V", 
-		, (type="BGH" ? ".\files\BGHeart.png" : "") 
-		. (type="BGM" ? ".\files\BGMini.png" : "") )
-	if (tmp!="Yes") {
-		return
+	Switch type
+	{
+		case "BGH":
+		{
+			typeLong := "BodyGuardian Mini Plus Lite"
+			typeDesc := "30-day Event Recorder"
+			typeImg := ".\files\BGHeart.png"
+			ptDem.MonDuration := "30"
+		}
+		case "BGM":
+		{
+			typeLong := "BodyGuardian Mini EL"
+			typeDesc := "Extended Holter (3-14 day)"
+			typeDur := "3 days|7 days|14 days"
+			typeImg := ".\files\BGMini.png"
+		}
+		case "HOL":
+		{
+			typeLong := "BodyGuardian Mini"
+			typeDesc := "Short-term Holter (1-2 day)"
+			typeDur := "1 day|2 days"
+			typeImg := ".\files\BGMini.png"
+		}
 	}
-	
-	if (type="BGM") {
-		tmp:=CMsgBox("Extended Holter duration"
+	tmp:=CMsgBox(ptDem.Monitor															; Verify register this type
+		, "Register type`n`n" typeLong
+			. "`n" typeDesc
+		, "Yes|No"
+		, "Q", "V",
+		, typeImg)
+	if (tmp!="Yes") {
+		Return
+	}
+
+	if (type~="BGM|HOL") {																; Get Holter duration (days)
+		tmp:=CMsgBox("Holter duration"
 			, "Select expected duration of recording"
-			, "3 days|7 days|14 days"
+			, typeDur
 			, "Q")
 		if (tmp="xClose") {
 			return
 		}
-		ptDem.HolterDuration := strX(tmp,"",1,0," ",1,1)
+		ptDem.MonDuration := strX(tmp,"",1,0," ",1,1)
 	}
 	
 	fetchQuit := false
@@ -3212,7 +3837,7 @@ BGregister(type) {
 		
 		if !(ptDem.model) {																; Types in an ad hoc number
 			ptDem.model := typeLong
-			if (type="BGM") {
+			if (type~="BGM|HOL") {
 				ptDem.ser := RegExReplace(ptDem.ser,"[a-zA-Z]")							; BGM s/n has no BG prefix
 			}
 				eventlog("User typed ad hoc S/N " ptDem.ser ", type " i ".")
@@ -3249,7 +3874,7 @@ BGregister(type) {
 		eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	}
 	wq := new XML("worklist.xml")														; refresh WQ
-	bgWqSave(ptDem.ser)																; write to worklist.xml
+	bgWqSave(ptDem.ser)																	; write to worklist.xml
 	eventlog(type " " ptDem.ser " registered to " ptDem.mrn " " ptDem.nameL ".")
 	
 	removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
@@ -3262,6 +3887,8 @@ BGregister(type) {
 	*/
 	if (isDevt=true) {
 		makeTestORU()
+		wqSetVal(ptDem.uid,"webgrab",A_Now)
+		WriteOut("/root/pending/enroll[@id='" ptDem.uid "']","webgrab")
 	}
 	/*
 	*/
@@ -3508,6 +4135,7 @@ bgWqSave(sernum) {
 	wq.addElement("sex",ptDem.newID,ptDem.sex)
 	wq.addElement("dob",ptDem.newID,ptDem.dob)
 	wq.addElement("dev",ptDem.newID,ptDem.dev)
+	wq.addElement("duration",ptDem.newID,ptDem.MonDuration)
 	if (ptDem.fellow) {
 		wq.addElement("fellow",ptDem.newID,ptDem.fellow)
 	}
@@ -3583,9 +4211,11 @@ ProcessHl7PDF:
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
 	if (ftype="BGH") {
 		gosub Event_BGH_Hl7
-	} else if (ftype="BGM") {
-		gosub Holter_BGM_HL7
-	} else if (ftype="HOL") {
+	} else if (fldVal.dev~="Mini EL") {
+		gosub Holter_BGM_EL_HL7
+	} else if (fldVal.dev~="Mini(?!\sEL|Plus)") {										; May be able to consolidate EL and SL
+		gosub Holter_BGM_SL_Hl7															; as the reports will be essentiall identical
+	} else if (fldVal.dev~="Mortara") {
 		gosub Holter_Pr_Hl7
 	} else {
 		eventlog("No match. OBR_TestCode=" type ", ftype=" ftype ".")
@@ -4168,17 +4798,17 @@ makeTestORU() {
 	
 	tmpPrv := parseName(ptDem.provider)
 	buildHL7("PV1"
-		,{7:ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		,{7:ptDem.NPI "^" tmpPrv.last "-" ptDem.loc "^" tmpPrv.first
 		, 39:A_now })
 	
 	buildHL7("OBR"
 		,{2:ptDem.wqid
 		, 3:PVID
 		, 4:strQ(ptDem.model~="Mortara" ? 1 : "","Holter^Holter")
-			. strQ(ptDem.model~="Heart" ? 1 : "","CEM^CEM")
+			. strQ(ptDem.model~="Heart|Lite" ? 1 : "","CEM^CEM")
 			. strQ(ptDem.model~="Mini" ? 1 : "","Holter^Holter")
 		, 7:hl7time
-		, 16:ptDem.NPI "^" tmpPrv.last "^" tmpPrv.first
+		, 16:ptDem.NPI "^" tmpPrv.last "-" ptDem.loc "^" tmpPrv.first
 		, 20:"OnComplete"
 		, 22:A_now })
 	
@@ -4640,9 +5270,42 @@ CheckProc:
 return
 }
 
-Holter_BGM_HL7:
+Holter_BGM_SL_HL7:
 {
-	eventlog("Holter_BGMini_HL7")
+	eventlog("Holter_BGMini_SL_HL7")
+	monType := "HOL"
+
+	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
+		gosub processPDF																; need to reprocess from extracted PDF
+		Return
+	}
+	
+	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
+	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
+	fldval["dem-Recording_time"] := strQ(fldval["Monitoring_Period"], parsedate("###").DHM
+									, calcDuration(fldval["hrd-Total_Time"]).DHM " (DD:HH:MM)")
+	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
+									, calcDuration(fldval["hrd-Analyzed_Time"]).DHM " (DD:HH:MM)")
+
+	gosub checkProc																		; check validity of PDF, make demographics valid if not
+	if (fetchQuit=true) {
+		return																			; fetchGUI was quit, so skip processing
+	}
+	
+	fieldsToCSV()
+	fieldcoladd("","INTERP","")															; fldval["Narrative"]
+	fieldcoladd("","Mon_type","Holter")
+	
+	FileCopy, %fileIn%, %fileIn%-sh.pdf
+	
+	fldval.done := true
+
+return
+}
+
+Holter_BGM_EL_HL7:
+{
+	eventlog("Holter_BGMini_EL_HL7")
 	monType := "BGM"
 
 	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
@@ -5486,7 +6149,7 @@ formatField(pre, lab, txt) {
 	}
 	
 ;	Mortara Holter specific fixes
-	if (monType="HOL") {
+	if (ptDem.model~="Mortara") {
 		if (lab="Name") {																; Break name into Last and First
 			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
 			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
@@ -5524,8 +6187,8 @@ formatField(pre, lab, txt) {
 		}
 	}
 
-;	Body Guardian Heart specific fixes
-	if (monType="BGH") {
+;	Body Guardian Heart specific fixes, possibly apply to BGM Plus Lite as well?
+	if (ptDem.model~="Heart|Lite") {
 		if (lab="Name") {
 			ptDem["nameL"] := strX(txt," ",0,1,"",0)
 			ptDem["nameF"] := strX(txt,"",1,0," ",1,1)
@@ -5535,8 +6198,8 @@ formatField(pre, lab, txt) {
 		}
 	}
 
-;	Body Guardian Mini specific fixes
-	if (monType="BGM") {
+;	Body Guardian Mini specific fixes, possibly applies to both EL and SL?
+	if (ptDem.model~="Mini") {
 		; convert dates to MDY format
 		if (lab ~= "Test_(date|end)") {
 			txt := parseDate(txt).mdy
@@ -5714,6 +6377,110 @@ httpComm(verb) {
 	}
 
 	return response
+}
+
+adminWQlv(id) {
+/*	Troubleshoot wqlv result problems
+
+*/
+	eventlog("adminWQlv(" id ")")
+	en := readWQ(id)
+	Gui, Destroy
+	Gui, adLV:Default
+	Gui, +AlwaysOnTop
+
+	Gui, Add, Text, x10 , % "wqid: " id
+	for key,val in en																	; Add buttons for each field in <enroll>
+	{
+		Gui, Add, Button, x10 w100 gadminWQLVchange, % key
+		Gui, Add, Text, yp+6 x120 , % val
+	}
+	Gui, Add, Button, Center x10 w300 gadminWQlvGoto, Analyze record
+	Gui, Show,, adminWQLV repair
+
+	WinWaitClose, adminWQLV repair
+	Gui, Destroy
+	Return
+
+	adminWQLVchange:
+	/*	Change value for a field
+	*/
+	fld := A_GuiControl
+	InputBox(butval,"Change value", fld ": " en[fld] "`n`n", en[fld])
+	if (butval="") {
+		Return
+	}
+	if (butval!=en[fld]) {
+		MsgBox 0x40013, Change settings
+			, % "Change value [" fld "]`n`n"
+				. "old: " en[fld] "`n"
+				. "new: " butval "`n`n"
+				. "This will overwrite worklist.xml!"
+		IfMsgBox Yes, {																	; update WQ, save worklist, reload UI
+			wqSetVal(id,fld,butval)
+			WriteOut("/root/pending/enroll[@id='" id "']",fld)
+			adminWQlv(id)
+			Return
+		} Else IfMsgBox No, {															; unchanged, back to UI
+			Return
+		} Else IfMsgBox Cancel, {														; no change, close UI
+			Gui, Submit
+			Return
+		}
+	} 
+	Return
+
+	adminWQlvGoto:
+	en.id := id
+	adminWQlvFix(en)
+	Return
+}
+
+adminWQlvFix(en) {
+/*	Analyze record for errors
+	(This might end up being big enough to merit its own function)
+*/
+	if (en.webgrab="") {																; Common cause of "noreg error"
+		wqSetVal(en.id,"webgrab",A_now)
+		WriteOut("/root/pending/enroll[@id='" en.id "']","webgrab")
+		eventlog("adminWQlvFix: Added missing webgrab.")
+		fixChange .= "Missing <webgrab>`n"
+	}
+
+	if (en.duration="") {																; Shows as "Missing FTP error"
+		if (en.dev~="Mortara") {
+			lvDuration := 1
+		}
+		else if (en.dev~="Mini EL") {
+			lvDuration := 14
+		}
+		else if (en.dev~="Heart") {
+			lvDuration := 30
+		}
+		if (lvDuration) {																; Any lvDuration, writeout
+			wqSetVal(en.id,"duration",lvDuration)
+			WriteOut("/root/pending/enroll[@id='" en.id "']","duration")
+			eventlog("adminWQlvFix: Added missing duration.")
+			fixChange .= "Missing <duration>`n"
+		}
+	}
+
+	if (fixChange) {																	; Any fixChange, notify and reload
+		MsgBox 0x40030, adminWQlv, % fixChange
+		adminWQlv(en.id)
+	}
+	Return
+
+}
+
+
+adminWQtask(id) {
+/*	Troubleshoot clinic task problems
+
+*/
+	MsgBox % "adminWQtask(id) will have an action`n"
+			. "when we figure out what it needs."
+	Return
 }
 
 cleancolon(ByRef txt) {
