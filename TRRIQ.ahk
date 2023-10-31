@@ -3892,7 +3892,7 @@ BGregister(type) {
 	}
 	wq := new XML("worklist.xml")														; refresh WQ
 	bgWqSave(ptDem.ser)																	; write to worklist.xml
-	eventlog(type " " ptDem.ser " [" typeDur" days] "
+	eventlog(type " " ptDem.ser " [" typeDur " days] "
 		. "registered to " ptDem.mrn " " ptDem.nameL ".")
 	
 	removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
