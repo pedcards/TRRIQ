@@ -3765,8 +3765,22 @@ BGregister(type) {
 	{
 		case "BGH":																		; Keep "BGH" type for 30-day CEM
 		{
+		/*	This section will be necessary until all clinics
+			have completely transitioned to BGMPL
+		*/
+			tmp:=CMsgBox("30-day Event Recorder"
+				, "Which monitor is available in clinic?"
+				, "BodyGuardian Heart|BodyGuardian Mini Plus Lite|Quit"
+				, "Q")
+			if (tmp~="Body") {
+				typeLong := tmp
+			} else {
+				Return
+			}
+		/*
+		*/
 			; typeLong := "BodyGuardian Mini Plus Lite"
-			typeLong := "BodyGuardian Heart"
+			; typeLong := "BodyGuardian Heart"
 			typeDesc := "30-day Event Recorder"
 			typeImg := ".\files\BGHeart.png"
 			ptDem.MonDuration := "30"
