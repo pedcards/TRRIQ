@@ -3763,7 +3763,7 @@ BGregister(type) {
 	
 	Switch type
 	{
-		case "BGH":
+		case "BGH":																		; Keep "BGH" type for 30-day CEM
 		{
 			; typeLong := "BodyGuardian Mini Plus Lite"
 			typeLong := "BodyGuardian Heart"
@@ -3771,14 +3771,14 @@ BGregister(type) {
 			typeImg := ".\files\BGHeart.png"
 			ptDem.MonDuration := "30"
 		}
-		case "BGM":
+		case "BGM":																		; Use "BGM" type for extended Holter
 		{
 			typeLong := "BodyGuardian Mini EL"
 			typeDesc := "Extended Holter (3-14 day)"
 			typeDur := "3 days|7 days|14 days"
 			typeImg := ".\files\BGMini-orig.png"
 		}
-		case "HOL":
+		case "HOL":																		; Use "HOL" type for 24h Holter
 		{
 			typeLong := "BodyGuardian Mini"
 			typeDesc := "Short-term Holter (1-2 day)"
