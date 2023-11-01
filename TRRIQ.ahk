@@ -3774,6 +3774,7 @@ BGregister(type) {
 				, "Q")
 			if (tmp~="Body") {
 				typeLong := tmp
+				eventlog("Selected type " tmp)
 			} else {
 				Return
 			}
