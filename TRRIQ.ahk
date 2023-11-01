@@ -326,6 +326,7 @@ PhaseGUI:
 	Menu, menuAdmin, Add, Find pending leftovers, cleanPending
 	Menu, menuAdmin, Add, Fix WQ device durations, fixDuration							; position for test menu
 	Menu, menuAdmin, Add, Recover DONE record, recoverDone
+	Menu, menuAdmin, Add, Check running users/versions, runningUsers
 	Menu, menuAdmin, Add, Create test order, makeEpicORM
 		
 	Menu, menuBar, Add, System, :menuSys
@@ -487,6 +488,21 @@ cleanPending()
 		}
 	}
 	progress, off
+
+	Return
+}
+
+runningUsers() {
+/*	Scan log for running user versions
+*/
+	Gui, Hide
+	FileRead, log, % ".\logs\" A_YYYY "." A_MM ".log"
+	Loop, parse, log, `n`r
+	{
+		k := A_LoopField
+		RegExMatch(k,"^(.*?) \[(.*?)/(.*?)/(.*?)\] (.*?)$",fld)
+		MsgBox % fld1 "`n" fld2 "`n" fld3 "`n" fld4 "`n" fld5
+	}
 
 	Return
 }
