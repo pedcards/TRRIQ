@@ -501,9 +501,22 @@ runningUsers() {
 	{
 		k := A_LoopField
 		RegExMatch(k,"^(.*?) \[(.*?)/(.*?)/(.*?)\] (.*?)$",fld)
-		MsgBox % fld1 "`n" fld2 "`n" fld3 "`n" fld4 "`n" fld5
+		kDate := fld1
+		kUser := fld2
+		kWKS := fld3
+		kSess := fld4
+		kTxt := fld5
+		if InStr(ignored, kSess) {
+			Continue
+		}
+		if InStr(kTxt, "<<<<< Session end") {
+			ignored .= kSess "|"
+		}
+		if InStr(kTxt, ">>>>> Started") {
+			open .= kDate " " kUser " " kTxt "`n"
+		}
 	}
-
+	MsgBox % open
 	Return
 }
 
