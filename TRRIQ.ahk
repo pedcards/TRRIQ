@@ -3802,7 +3802,7 @@ BGregister(type) {
 		*/
 			tmp:=CMsgBox("30-day Event Recorder"
 				, "Which monitor is available in clinic?"
-				, "BodyGuardian Heart|BodyGuardian Mini Plus Lite|Quit"
+				, "BodyGuardian Heart|BodyGuardian Mini PLUS Lite|Quit"
 				, "Q")
 			if (tmp~="Body") {
 				typeLong := tmp
