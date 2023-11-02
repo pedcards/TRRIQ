@@ -1174,7 +1174,10 @@ WQepicOrdersPrevious() {
 			, e0.name																	; name
 			, e0.mrn																	; mrn
 			, e0.provname																; prov
-			, monOrderType[e0.mon] " " e0.mon											; monitor type
+			, monOrderType[e0.mon] " "													; monitor type
+				. (e0.mon="BGH"															; relabel BGH=>CEM
+				? "CEM"
+				: e0.mon)
 			, "")																		; fulldisc present, make blank
 		GuiControl, Enable, Register
 		GuiControl, Text, Register, Go to ORDERS tab
