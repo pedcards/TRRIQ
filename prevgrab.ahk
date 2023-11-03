@@ -282,7 +282,7 @@ parsePreventiceFTP(tbl) {
 	}
 
 	t0 := A_TickCount
-	while (A_TickCount-t0 < 5000) {														; wait for .crdownload to begin
+	while (A_TickCount-t0 < maxTick) {														; wait for .crdownload to begin
 		if FileExist(dlPath "\*crdownload") {
 			Break
 		}
