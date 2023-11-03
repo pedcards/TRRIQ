@@ -332,6 +332,34 @@ ftpWait(path, maxTick) {
 	Return
 }
 
+ftpSaveCheck() {
+/*	Check for presence of "Save As" window from chrome.exe (do we need edge too?)
+*/
+	global dlPath
+
+	if (uid := WinExist("Save As ahk_exe chrome.exe")) {
+		SetTimer, ftpSaveCheck, Off
+		ControlGet, fnam, Selected,, Edit1, % "ahk_id " uid
+		Control, EditPaste
+			, % dlPath "\"
+			, Edit1
+			, % "ahk_id" uid
+		ControlClick, &Save, % "ahk_id " uid,,,, NA
+		Sleep, 500
+
+		ControlGet, fnam, Selected,, Edit1, % "ahk_id " uid
+		Control, EditPaste
+			, % fnam
+			, Edit1
+			, % "ahk_id" uid
+		ControlClick, &Save, % "ahk_id " uid,,,, NA
+		Sleep, 500
+
+		eventlog("Saving file " fnam)
+		SetTimer, ftpSaveCheck, On
+	} 
+	Return
+}
 
 checkFtpRow(num=0) {
 	col := gl.Page.tblRows[num].querySelectorAll(".ng-binding")							; all div with class "ng-binding"
