@@ -180,8 +180,8 @@ parsePreventiceFTP(tbl) {
 	Sort by date
 	Retrieve the last 1-2 weeks of records
 */
+	global dlPath
 	maxTick := 120000
-	dlFiles := regexreplace(A_AppData, "AppData.*?$") "Downloads" 
 	dlPath := A_WorkingDir "\pdfTemp"
 	gl.Page.CDP.Call("Browser.setDownloadBehavior", { "behavior" : "allow", "downloadPath" : dlPath}) 
 	Progress,,% " ",FTP page loaded
