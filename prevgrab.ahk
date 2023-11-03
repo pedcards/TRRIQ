@@ -282,24 +282,8 @@ parsePreventiceFTP(tbl) {
 		return 0
 	}
 
-	t0 := A_TickCount
-	while (A_TickCount-t0 < maxTick) {														; wait for .crdownload to begin
-		if FileExist(dlPath "\*crdownload") {
-			Break
-		}
-	}
-	eventlog("PREVGRAB: " A_TickCount-t0 " msec to start download.")
-
-	t0 := A_TickCount
-	while FileExist(dlPath "\*crdownload") {											; wait for .crdownload to finish
-		t1 := A_TickCount-t0
-		if (t1 > maxTick) {
-			Break
-		}
-		tbar := SubStr(round(t1/100),-2)
-		progress, % tbar
-	}
-	eventlog("PREVGRAB: " A_TickCount-t0 " msec to download file(s).")
+	; ftpWait(dlPath, 5000)
+	ftpWait(dlPath, maxTick)
 
 	if (badFtpName) {
 		MsgBox 0x10, Missing FTP files
@@ -319,6 +303,35 @@ parsePreventiceFTP(tbl) {
 	Progress, Hide
 	Return 0
 }
+
+ftpWait(path, maxTick) {
+	/*	Wait for download to begin
+	*/
+	SetTimer, ftpSaveCheck, 500
+
+	t0 := A_TickCount
+	while (A_TickCount-t0 < maxTick) {														; wait for .crdownload to begin
+		if FileExist(Path "\*crdownload") {
+			Break
+		}
+	}
+	eventlog("PREVGRAB: " A_TickCount-t0 " msec to start " path)
+
+	t0 := A_TickCount
+	while FileExist(Path "\*crdownload") {											; wait for .crdownload to finish
+		t1 := A_TickCount-t0
+		if (t1 > maxTick) {
+			Break
+		}
+		tbar := SubStr(round(t1/200),-2)
+		progress, % tbar
+	}
+	eventlog("PREVGRAB: " A_TickCount-t0 " msec to finish " path)
+
+	SetTimer, ftpSaveCheck, Delete
+	Return
+}
+
 
 checkFtpRow(num=0) {
 	col := gl.Page.tblRows[num].querySelectorAll(".ng-binding")							; all div with class "ng-binding"
