@@ -496,28 +496,59 @@ runningUsers() {
 /*	Scan log for running user versions
 */
 	Gui, Hide
-	FileRead, log, % ".\logs\" A_YYYY "." A_MM ".log"
-	Loop, parse, log, `n`r
+	Loop, Files, % ".\logs\*.log" 
 	{
-		k := A_LoopField
-		RegExMatch(k,"^(.*?) \[(.*?)/(.*?)/(.*?)\] (.*?)$",fld)
-		kDate := fld1
-		kUser := fld2
-		kWKS := fld3
-		kSess := fld4
-		kTxt := fld5
-		if InStr(ignored, kSess) {
-			Continue
+		k := A_LoopFileName
+		flist .= k "`n"
+	}
+	Sort, flist, R
+
+	Loop, parse, flist, `r`n
+	{
+		fnam := A_LoopField
+		FileRead, log, % ".\logs\" fnam
+		open := ignored := ""
+
+		Loop, parse, log, `n`r
+		{
+			k := A_LoopField
+			RegExMatch(k,"^(.*?) \[(.*?)/(.*?)/(.*?)\] (.*?)$",fld)
+			kDate := fld1
+			kUser := fld2
+			kWKS := fld3
+			kSess := fld4
+			kTxt := fld5
+			if InStr(ignored, kSess) {
+				Continue
+			}
+			if InStr(kTxt, "<<<<< Session end") {
+				ignored .= kSess "|"
+			}
+			if InStr(kTxt, ">>>>> Started") {
+				RegExMatch(kTxt,"(DEVT|PROD).*?(ver \d{12})",m)
+				if InStr(kTxt,"DEVT") {
+					Continue
+				}
+				open .= RegExReplace(kDate,"\|\|","-") " [" kUser "] " m1 " " m2 "|"
+			}
 		}
-		if InStr(kTxt, "<<<<< Session end") {
-			ignored .= kSess "|"
-		}
-		if InStr(kTxt, ">>>>> Started") {
-			open .= kDate " " kUser " " kTxt "`n"
+
+		Gui, RU:Destroy
+		Gui, RU:Default
+		Gui, RU:Add, ListBox, w400 r20 , % open
+		Gui, RU:Add, Button, Default gButtonQuit, Quit
+		Gui, RU:Show, , % "Open users - " fnam
+		WinWaitClose, Open users
+		if (RUquit) {
+			Break
 		}
 	}
-	MsgBox % open
 	Return
+
+	ButtonQuit:
+		Gui, RU:Destroy
+		RUquit := true
+		Return
 }
 
 recoverDone(uid:="")
