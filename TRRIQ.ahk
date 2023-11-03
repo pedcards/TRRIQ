@@ -326,6 +326,7 @@ PhaseGUI:
 	Menu, menuAdmin, Add, Find pending leftovers, cleanPending
 	Menu, menuAdmin, Add, Fix WQ device durations, fixDuration							; position for test menu
 	Menu, menuAdmin, Add, Recover DONE record, recoverDone
+	Menu, menuAdmin, Add, Check running users/versions, runningUsers
 	Menu, menuAdmin, Add, Create test order, makeEpicORM
 		
 	Menu, menuBar, Add, System, :menuSys
@@ -489,6 +490,65 @@ cleanPending()
 	progress, off
 
 	Return
+}
+
+runningUsers() {
+/*	Scan log for running user versions
+*/
+	Gui, Hide
+	Loop, Files, % ".\logs\*.log" 
+	{
+		k := A_LoopFileName
+		flist .= k "`n"
+	}
+	Sort, flist, R
+
+	Loop, parse, flist, `r`n
+	{
+		fnam := A_LoopField
+		FileRead, log, % ".\logs\" fnam
+		open := ignored := ""
+
+		Loop, parse, log, `n`r
+		{
+			k := A_LoopField
+			RegExMatch(k,"^(.*?) \[(.*?)/(.*?)/(.*?)\] (.*?)$",fld)
+			kDate := fld1
+			kUser := fld2
+			kWKS := fld3
+			kSess := fld4
+			kTxt := fld5
+			if InStr(ignored, kSess) {
+				Continue
+			}
+			if InStr(kTxt, "<<<<< Session end") {
+				ignored .= kSess "|"
+			}
+			if InStr(kTxt, ">>>>> Started") {
+				RegExMatch(kTxt,"(DEVT|PROD).*?(ver \d{12})",m)
+				if InStr(kTxt,"DEVT") {
+					Continue
+				}
+				open .= RegExReplace(kDate,"\|\|","-") " [" kUser "] " m1 " " m2 "|"
+			}
+		}
+
+		Gui, RU:Destroy
+		Gui, RU:Default
+		Gui, RU:Add, ListBox, w400 r20 , % open
+		Gui, RU:Add, Button, Default gButtonQuit, Quit
+		Gui, RU:Show, , % "Open users - " fnam
+		WinWaitClose, Open users
+		if (RUquit) {
+			Break
+		}
+	}
+	Return
+
+	ButtonQuit:
+		Gui, RU:Destroy
+		RUquit := true
+		Return
 }
 
 recoverDone(uid:="")
@@ -1145,7 +1205,10 @@ WQepicOrdersPrevious() {
 			, e0.name																	; name
 			, e0.mrn																	; mrn
 			, e0.provname																; prov
-			, monOrderType[e0.mon] " " e0.mon											; monitor type
+			, monOrderType[e0.mon] " "													; monitor type
+				. (e0.mon="BGH"															; relabel BGH=>CEM
+				? "CEM"
+				: e0.mon)
 			, "")																		; fulldisc present, make blank
 		GuiControl, Enable, Register
 		GuiControl, Text, Register, Go to ORDERS tab
@@ -1958,11 +2021,13 @@ readWQlv:
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
 	
 	if (fldval.node = "done") {															; task has been done already by another user
+		eventlog("WQlv " fldval.Name " clicked, but already DONE.")
 		MsgBox, 262208, Completed, File has already been processed!
 		WQlist()																		; refresh list and return
 		return
 	}
 	if (fldval.webgrab="") {
+		eventlog("WQlv " fldval.Name " not found in webgrab.")
 		MsgBox 0x40030
 			, Registration issue
 			, % "No registration found on Preventice site.`n"
@@ -3761,21 +3826,37 @@ BGregister(type) {
 	
 	Switch type
 	{
-		case "BGH":
+		case "BGH":																		; Keep "BGH" type for 30-day CEM
 		{
-			typeLong := "BodyGuardian Mini Plus Lite"
+		/*	This section will be necessary until all clinics
+			have completely transitioned to BGMPL
+		*/
+			tmp:=CMsgBox("30-day Event Recorder"
+				, "Which monitor is available in clinic?"
+				, "BodyGuardian Heart|BodyGuardian Mini PLUS Lite|Quit"
+				, "Q")
+			if (tmp~="Body") {
+				typeLong := tmp
+				eventlog("Selected type " tmp)
+			} else {
+				Return
+			}
+		/*
+		*/
+			; typeLong := "BodyGuardian Mini Plus Lite"
+			; typeLong := "BodyGuardian Heart"
 			typeDesc := "30-day Event Recorder"
 			typeImg := ".\files\BGHeart.png"
 			ptDem.MonDuration := "30"
 		}
-		case "BGM":
+		case "BGM":																		; Use "BGM" type for extended Holter
 		{
 			typeLong := "BodyGuardian Mini EL"
 			typeDesc := "Extended Holter (3-14 day)"
 			typeDur := "3 days|7 days|14 days"
-			typeImg := ".\files\BGMini.png"
+			typeImg := ".\files\BGMini-orig.png"
 		}
-		case "HOL":
+		case "HOL":																		; Use "HOL" type for 24h Holter
 		{
 			typeLong := "BodyGuardian Mini"
 			typeDesc := "Short-term Holter (1-2 day)"
@@ -3875,7 +3956,8 @@ BGregister(type) {
 	}
 	wq := new XML("worklist.xml")														; refresh WQ
 	bgWqSave(ptDem.ser)																	; write to worklist.xml
-	eventlog(type " " ptDem.ser " registered to " ptDem.mrn " " ptDem.nameL ".")
+	eventlog(type " " ptDem.ser " [" ptDem.MonDuration " days] "
+		. "registered to " ptDem.mrn " " ptDem.nameL ".")
 	
 	removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
 	writeOut("root","orders")
@@ -3969,8 +4051,8 @@ selectDev(model="") {
 	{
 		GuiControlGet, boxed, , selBox													; get values from box and edit
 		GuiControlGet, typed, , selEdit
-		choice := (boxed) ? boxed : "BG" RegExReplace(typed,"[[:alpha:]]")
-		if !(choice~="^(BG)?\d{7}$") {													; ignore if doesn't match full ser num
+		choice := (boxed) ? boxed : "BGMLITE" RegExReplace(typed,"[[:alpha:]]")
+		if !(choice~="^(BGMLITE)?\d{7}$") {												; ignore if doesn't match full ser num
 			return
 		}
 		Gui, dev:Destroy
@@ -4213,7 +4295,7 @@ ProcessHl7PDF:
 		gosub Event_BGH_Hl7
 	} else if (fldVal.dev~="Mini EL") {
 		gosub Holter_BGM_EL_HL7
-	} else if (fldVal.dev~="Mini(?!\sEL|Plus)") {										; May be able to consolidate EL and SL
+	} else if (fldVal.dev~="Mini(?!\sEL|\sPlus)") {										; May be able to consolidate EL and SL
 		gosub Holter_BGM_SL_Hl7															; as the reports will be essentiall identical
 	} else if (fldVal.dev~="Mortara") {
 		gosub Holter_Pr_Hl7
@@ -5276,6 +5358,7 @@ Holter_BGM_SL_HL7:
 	monType := "HOL"
 
 	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
+		eventlog("No OBX data.")
 		gosub processPDF																; need to reprocess from extracted PDF
 		Return
 	}
@@ -5309,6 +5392,7 @@ Holter_BGM_EL_HL7:
 	monType := "BGM"
 
 	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
+		eventlog("No OBX data.")
 		gosub processPDF																; need to reprocess from extracted PDF
 		Return
 	}
