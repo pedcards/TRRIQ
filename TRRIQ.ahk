@@ -3949,6 +3949,15 @@ BGregister(type) {
 				return
 			}
 		}
+		if (type="HOL") {
+			InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
+			if (note) {
+				ptDem.fedex := note
+				eventlog("Fedex number " note " entered.")
+			} else {
+				eventlog("Fedex ignored.")
+			}
+		}
 		
 		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
 		writeOut("/root","inventory")
