@@ -304,31 +304,47 @@ parsePreventiceFTP(tbl) {
 	Return 0
 }
 
-ftpWait(path, maxTick) {
-	/*	Wait for download to begin
-	*/
-	SetTimer, ftpSaveCheck, 500
+ftpStart() {
+/*	Wait for overall download to start in local .\pdfTemp folder
+	Starts as *crdownload, then download.html, then deleted
+*/
+	folder := gl.pdfTemp
+	localstat := gl.localstat
 
-	t0 := A_TickCount
-	while (A_TickCount-t0 < maxTick) {														; wait for .crdownload to begin
-		if FileExist(Path "\*crdownload") {
-			Break
+	if (gl.localstat) {																	; crdownload initiated
+		if !FileExist(folder "\*crdownload") {											; check if stopped
+			gl.localstat := False
+			eventlog(folder " stopped.")
+		}
+	} else {																			; crdownload not initiated
+		if FileExist(folder "\*crdownload") {											; check if started
+			gl.localstat := True
+			eventlog(folder " started.")
 		}
 	}
-	eventlog("PREVGRAB: " A_TickCount-t0 " msec to start " path)
 
-	t0 := A_TickCount
-	while FileExist(Path "\*crdownload") {											; wait for .crdownload to finish
-		t1 := A_TickCount-t0
-		if (t1 > maxTick) {
-			Break
+	Return
+}
+
+ftpFiles() {
+/*	Watch for files to appear/disappear in user ~\Downloads folder
+	During download named *.tmp and *crdownload, then renamed to .PDF when done
+*/
+	folder := gl.userDownloads
+	dloadStat := gl.dloadStat
+
+	if (gl.dloadStat) {																	; crdownload initiated
+		if !FileExist(folder "\*crdownload") {											; check if stopped
+			gl.dloadStat := "Done"
+			eventlog(folder " stopped.")
 		}
-		tbar := SubStr(round(t1/200),-2)
-		progress, % tbar
+	} else {																			; crdownload not initiated
+		if FileExist(folder "\*crdownload") {											; check if started
+			gl.dloadStat := True
+			eventlog(folder " started.")
+		}
 	}
-	eventlog("PREVGRAB: " A_TickCount-t0 " msec to finish " path)
 
-	SetTimer, ftpSaveCheck, Delete
 	Return
 }
 
