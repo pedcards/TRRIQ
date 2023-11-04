@@ -283,9 +283,7 @@ parsePreventiceFTP(tbl) {
 	}
 
 	t0 := A_TickCount
-	gl.localstat := False
 	gl.dloadStat := False
-	SetTimer, ftpStart, 500
 	SetTimer, ftpFiles, 500
 	SetTimer, ftpSaveCheck, 500
 	
@@ -298,7 +296,6 @@ parsePreventiceFTP(tbl) {
 		progress, % tbar
 		sleep 500
 	}
-	SetTimer, ftpStart, Delete
 	SetTimer, ftpFiles, Delete
 	SetTimer, ftpSaveCheck, Delete
 
@@ -323,28 +320,6 @@ parsePreventiceFTP(tbl) {
 
 	Progress, Hide
 	Return 0
-}
-
-ftpStart() {
-/*	Wait for overall download to start in local .\pdfTemp folder
-	Starts as *crdownload, then download.html, then deleted
-*/
-	folder := gl.pdfTemp
-	localstat := gl.localstat
-
-	if (gl.localstat) {																	; crdownload initiated
-		if !FileExist(folder "\*crdownload") {											; check if stopped
-			gl.localstat := False
-			eventlog(folder " stopped.")
-		}
-	} else {																			; crdownload not initiated
-		if FileExist(folder "\*crdownload") {											; check if started
-			gl.localstat := True
-			eventlog(folder " started.")
-		}
-	}
-
-	Return
 }
 
 ftpFiles() {
