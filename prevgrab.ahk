@@ -282,8 +282,29 @@ parsePreventiceFTP(tbl) {
 		return 0
 	}
 
-	; ftpWait(dlPath, 5000)
-	ftpWait(dlPath, maxTick)
+	t0 := A_TickCount
+	gl.localstat := False
+	gl.dloadStat := False
+	SetTimer, ftpStart, 500
+	SetTimer, ftpFiles, 500
+	SetTimer, ftpSaveCheck, 500
+	
+	while (t1 < gl.maxTick) {
+		if (gl.dloadStat="Done") {
+			Break
+		}
+		t1 := A_TickCount-t0
+		tbar := SubStr(round(t1/200),-2)
+		progress, % tbar
+		sleep 500
+	}
+	SetTimer, ftpStart, Delete
+	SetTimer, ftpFiles, Delete
+	SetTimer, ftpSaveCheck, Delete
+
+	if (gl.dloadStat="Done") {
+
+	}
 
 	if (badFtpName) {
 		MsgBox 0x10, Missing FTP files
