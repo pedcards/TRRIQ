@@ -254,6 +254,7 @@ parsePreventiceFTP(tbl) {
 				nm.bestName := rowName
 			}
 		}
+		ftpDList.Push(nm.bestName)
 		eventlog("PREVGRAB: List name: " k ". "
 			. "FTP file: " ftpList[nm.bestNum] " "
 			. "(score " round(100*(2-nm.bestScore)/2,2) ")")
@@ -301,7 +302,11 @@ parsePreventiceFTP(tbl) {
 	SetTimer, ftpSaveCheck, Delete
 
 	if (gl.dloadStat="Done") {
-
+		For key,val in ftpDList
+		{
+			FileMove, % gl.userDownloads "\" val, % gl.pdfTemp, 1
+			eventlog("Moved " val " to " gl.pdfTemp)
+		}
 	}
 
 	if (badFtpName) {
