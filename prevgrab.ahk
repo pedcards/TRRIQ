@@ -212,7 +212,7 @@ parsePreventiceFTP(tbl) {
 	sleep 100
 
 	Progress,0,% " ",Parsing FTP list
-	ftpList := {}
+	ftpList := {}																		; Capture every row in table
 	loop
 	{
 		num := A_Index-1
@@ -232,6 +232,7 @@ parsePreventiceFTP(tbl) {
 	eventlog("PREVGRAB: Found " ftpList.length() " PDF files.")
 
 	Progress,0,Please be patient...,Fetching PDF files
+	ftpDList := {}																		; Capture matching filenames
 	loop, read, .\files\wsftp.txt
 	{
 		k := A_LoopReadLine
