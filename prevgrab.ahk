@@ -31,6 +31,8 @@ Config:
 
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
+	gl.pdfTemp := gl.TRRIQ_path "\pdfTemp"
+	gl.userDownloads := strx(A_AppData,"",0,1,"AppData",0,7) "Downloads"  
 	wq := new XML(gl.TRRIQ_path "\worklist.xml")
 	
 	gl.settings := readIni("settings")
