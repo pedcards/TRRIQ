@@ -27,7 +27,7 @@ Config:
 		gl.isDevt := false
 	}
 
-	A_Args[1] := "ftp"				;*******************************
+	; A_Args[1] := "ftp"				;*******************************
 
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
@@ -306,7 +306,7 @@ parsePreventiceFTP(tbl) {
 		For key,val in ftpDList
 		{
 			FileMove, % gl.userDownloads "\" val, % gl.pdfTemp, 1
-			eventlog("PREVGRAB: Moved " val " to " gl.pdfTemp)
+			eventlog("PREVGRAB: Moved " val " to pdfTemp.")
 		}
 	}
 
