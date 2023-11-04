@@ -298,6 +298,7 @@ parsePreventiceFTP(tbl) {
 		progress, % tbar
 		sleep 500
 	}
+	eventlog("PREVGRAB: FTP downloads completed in " round((A_TickCount-t0)/1000,2) " sec.")
 	SetTimer, ftpFiles, Delete
 	SetTimer, ftpSaveCheck, Delete
 
@@ -305,7 +306,7 @@ parsePreventiceFTP(tbl) {
 		For key,val in ftpDList
 		{
 			FileMove, % gl.userDownloads "\" val, % gl.pdfTemp, 1
-			eventlog("Moved " val " to " gl.pdfTemp)
+			eventlog("PREVGRAB: Moved " val " to " gl.pdfTemp)
 		}
 	}
 
@@ -335,12 +336,10 @@ ftpFiles() {
 	if (gl.dloadStat) {																	; crdownload initiated
 		if !FileExist(gl.userDownloads "\*crdownload") {								; check if stopped
 			gl.dloadStat := "Done"
-			eventlog(gl.userDownloads " stopped.")
 		}
 	} else {																			; crdownload not initiated
 		if FileExist(gl.userDownloads "\*crdownload") {									; check if started
 			gl.dloadStat := True
-			eventlog(gl.userDownloads " started.")
 		}
 	}
 
@@ -353,7 +352,7 @@ ftpSaveCheck() {
 	if (uid := WinExist("Save As ahk_exe chrome.exe")) {
 		ControlGet, fnam, Selected,, Edit1, % "ahk_id " uid
 		ControlClick, &Save, % "ahk_id " uid,,,, NA
-		eventlog("Saving file " fnam)
+		eventlog("PREVGRAB: Saving file " fnam)
 	} 
 	Return
 }
