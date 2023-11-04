@@ -327,18 +327,15 @@ ftpFiles() {
 /*	Watch for files to appear/disappear in user ~\Downloads folder
 	During download named *.tmp and *crdownload, then renamed to .PDF when done
 */
-	folder := gl.userDownloads
-	dloadStat := gl.dloadStat
-
 	if (gl.dloadStat) {																	; crdownload initiated
-		if !FileExist(folder "\*crdownload") {											; check if stopped
+		if !FileExist(gl.userDownloads "\*crdownload") {								; check if stopped
 			gl.dloadStat := "Done"
-			eventlog(folder " stopped.")
+			eventlog(gl.userDownloads " stopped.")
 		}
 	} else {																			; crdownload not initiated
-		if FileExist(folder "\*crdownload") {											; check if started
+		if FileExist(gl.userDownloads "\*crdownload") {									; check if started
 			gl.dloadStat := True
-			eventlog(folder " started.")
+			eventlog(gl.userDownloads " started.")
 		}
 	}
 
