@@ -32,7 +32,6 @@ Config:
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
 	gl.pdfTemp := gl.TRRIQ_path "\pdfTemp"
-	gl.userDownloads := strx(A_AppData,"",0,1,"AppData",0,7) "Downloads"  
 	wq := new XML(gl.TRRIQ_path "\worklist.xml")
 	
 	gl.settings := readIni("settings")
@@ -232,7 +231,6 @@ parsePreventiceFTP(tbl) {
 	eventlog("PREVGRAB: Found " ftpList.length() " PDF files.")
 
 	Progress,0,Please be patient...,Fetching PDF files
-	ftpDList := {}																		; Capture matching filenames
 	loop, read, .\files\wsftp.txt
 	{
 		k := A_LoopReadLine
@@ -254,7 +252,6 @@ parsePreventiceFTP(tbl) {
 				nm.bestName := rowName
 			}
 		}
-		ftpDList.Push(nm.bestName)
 		eventlog("PREVGRAB: List name: " k ". "
 			. "FTP file: " ftpList[nm.bestNum] " "
 			. "(score " round(100*(2-nm.bestScore)/2,2) ")")
@@ -301,14 +298,6 @@ parsePreventiceFTP(tbl) {
 	eventlog("PREVGRAB: FTP downloads completed in " round((A_TickCount-t0)/1000,2) " sec.")
 	SetTimer, ftpFiles, Delete
 	SetTimer, ftpSaveCheck, Delete
-
-	if (gl.dloadStat="Done") {
-		For key,val in ftpDList
-		{
-			FileMove, % gl.userDownloads "\" val, % gl.pdfTemp, 1
-			eventlog("PREVGRAB: Moved " val " to pdfTemp.")
-		}
-	}
 
 	if (badFtpName) {
 		MsgBox 0x10, Missing FTP files
