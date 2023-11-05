@@ -323,11 +323,11 @@ ftpFiles() {
 	During download named *.tmp and *crdownload, then renamed to .PDF when done
 */
 	if (gl.dloadStat) {																	; crdownload initiated
-		if !FileExist(gl.userDownloads "\*crdownload") {								; check if stopped
+		if !FileExist(gl.pdfTemp "\*crdownload") {										; check if stopped
 			gl.dloadStat := "Done"
 		}
 	} else {																			; crdownload not initiated
-		if FileExist(gl.userDownloads "\*crdownload") {									; check if started
+		if FileExist(gl.pdfTemp "\*crdownload") {										; check if started
 			gl.dloadStat := True
 		}
 	}
