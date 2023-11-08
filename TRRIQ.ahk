@@ -2851,7 +2851,7 @@ checkBGMstatus(drive:="D",title:="") {
 	; folderCygnus := ".\devfiles\Cygnus"
 	folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
 	folderCygnus := A_AppData "\Cygnus"													; Cygnus folder
-	folderUnassigned := folderCygnus "\.unassigned"
+	folderUnassigned := folderCygnus "\Acquired\.unassigned"
 	eventlog("BGM=" folderBGM ", Cygnus=" folderCygnus ", Unassigned=" folderUnassigned)
 	driveStat:=dataStat:=importStat:=uploadStat:=0										; assume all false
 
