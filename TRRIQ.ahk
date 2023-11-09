@@ -3884,6 +3884,19 @@ BGregister(type) {
 		}
 		ptDem.MonDuration := strX(tmp,"",1,0," ",1,1)
 	}
+	i := cMsgBox("Hook-up","Delivery type", type="HOL" ? "Office" : "Office|Home")
+	if (i="xClose") {
+		eventlog("Cancelled delivery type.")
+		return
+	}
+	if (i="Home") {
+		ptDem.hookup := "Home"
+		ptDem.model := typeLong
+		eventlog("Selected HOME hookup.")
+	} else {
+		ptDem.hookup := "Office"
+		eventlog("Selected OFFICE hookup.")
+	}
 	
 	fetchQuit := false
 	gosub getDem																		; need to grab CIS demographics
@@ -3897,18 +3910,7 @@ BGregister(type) {
 		return
 	}
 	
-	i := cMsgBox("Hook-up","Delivery type", type="HOL" ? "Office" : "Office|Home")
-	if (i="xClose") {
-		eventlog("Cancelled delivery type.")
-		return
-	}
-	if (i="Home") {
-		ptDem["hookup"] := "Home"
-		ptDem["model"] := typeLong
-		eventlog(type " home registration for " ptDem["mrn"] " " ptDem["nameL"] ".") 
-	} 
-	else {																				; either Office or [X]
-		ptDem["hookup"] := "Office"
+	if (ptDem.hookup="Office") {
 		ptDem.ser := selectDev(typeLong)												; need to grab a ser num from inventory
 		if (ptDem.ser="") {
 			eventlog("Cancelled selectDev.")
