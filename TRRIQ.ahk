@@ -3897,7 +3897,7 @@ BGregister(type) {
 		return
 	}
 	
-	i := cMsgBox("Hook-up","Delivery type","Office|Home")
+	i := cMsgBox("Hook-up","Delivery type", type="HOL" ? "Office" : "Office|Home")
 	if (i="xClose") {
 		eventlog("Cancelled delivery type.")
 		return
