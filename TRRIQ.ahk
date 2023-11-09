@@ -24,6 +24,7 @@ userinstance := substr(tobase(A_TickCount,36),-3)
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
 	isDevt := true
+	FileDelete, .lock
 	path:=readIni("devtpaths")
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
