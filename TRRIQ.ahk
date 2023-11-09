@@ -2599,18 +2599,6 @@ checkweb(id) {
 
 ftpGrab() {
 	global path
-/*	Added this due to problems with FTP downloads
-*/
-	Gui, phase:Hide
-	MsgBox 0x40030
-		, FTP issue
-		, % "TRRIQ is currently having issues downloading from the FTP site.`n`n"
-		. "Go to the https://ftp.preventice.com website to manually download the files.`n`n"
-		. "Sorry for the inconvenience!`n`n-The Management"
-	Gui, phase:Show
-	Return
-/*
-*/
 	Gui, phase:Hide
 	RunWait, PrevGrab.exe "ftp" 
 	FileMove, .\pdfTemp\*.pdf, % path.holterPDF "*.*"

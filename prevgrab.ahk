@@ -27,10 +27,11 @@ Config:
 		gl.isDevt := false
 	}
 
-	A_Args[1] := "ftp"				;*******************************
+	; A_Args[1] := "ftp"				;*******************************
 
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
+	gl.pdfTemp := gl.TRRIQ_path "\pdfTemp"
 	wq := new XML(gl.TRRIQ_path "\worklist.xml")
 	
 	gl.settings := readIni("settings")
@@ -180,9 +181,8 @@ parsePreventiceFTP(tbl) {
 	Sort by date
 	Retrieve the last 1-2 weeks of records
 */
-	maxTick := 120000
-	dlPath := A_WorkingDir "\pdfTemp"
-	gl.Page.CDP.Call("Browser.setDownloadBehavior", { "behavior" : "allow", "downloadPath" : dlPath}) 
+	gl.maxTick := 120000
+	gl.Page.CDP.Call("Browser.setDownloadBehavior", { "behavior" : "allow", "downloadPath" : gl.pdfTemp}) 
 	Progress,,% " ",FTP page loaded
 
 	hdr := gl.Page.querySelector("div.table-header-wrapper")
@@ -211,7 +211,7 @@ parsePreventiceFTP(tbl) {
 	sleep 100
 
 	Progress,0,% " ",Parsing FTP list
-	ftpList := {}
+	ftpList := {}																		; Capture every row in table
 	loop
 	{
 		num := A_Index-1
@@ -282,23 +282,22 @@ parsePreventiceFTP(tbl) {
 	}
 
 	t0 := A_TickCount
-	while (A_TickCount-t0 < 5000) {														; wait for .crdownload to begin
-		if FileExist(dlPath "\*crdownload") {
+	gl.dloadStat := False
+	SetTimer, ftpFiles, 500
+	SetTimer, ftpSaveCheck, 500
+	
+	while (t1 < gl.maxTick) {
+		if (gl.dloadStat="Done") {
 			Break
 		}
-	}
-	eventlog("PREVGRAB: " A_TickCount-t0 " msec to start download.")
-
-	t0 := A_TickCount
-	while FileExist(dlPath "\*crdownload") {											; wait for .crdownload to finish
 		t1 := A_TickCount-t0
-		if (t1 > maxTick) {
-			Break
-		}
-		tbar := SubStr(round(t1/100),-2)
+		tbar := SubStr(round(t1/200),-2)
 		progress, % tbar
+		sleep 500
 	}
-	eventlog("PREVGRAB: " A_TickCount-t0 " msec to download file(s).")
+	eventlog("PREVGRAB: FTP downloads completed in " round((A_TickCount-t0)/1000,2) " sec.")
+	SetTimer, ftpFiles, Delete
+	SetTimer, ftpSaveCheck, Delete
 
 	if (badFtpName) {
 		MsgBox 0x10, Missing FTP files
@@ -317,6 +316,34 @@ parsePreventiceFTP(tbl) {
 
 	Progress, Hide
 	Return 0
+}
+
+ftpFiles() {
+/*	Watch for files to appear/disappear in user ~\Downloads folder
+	During download named *.tmp and *crdownload, then renamed to .PDF when done
+*/
+	if (gl.dloadStat) {																	; crdownload initiated
+		if !FileExist(gl.pdfTemp "\*crdownload") {										; check if stopped
+			gl.dloadStat := "Done"
+		}
+	} else {																			; crdownload not initiated
+		if FileExist(gl.pdfTemp "\*crdownload") {										; check if started
+			gl.dloadStat := True
+		}
+	}
+
+	Return
+}
+
+ftpSaveCheck() {
+/*	Check for presence of "Save As" window from chrome.exe (do we need edge too?)
+*/
+	if (uid := WinExist("Save As ahk_exe chrome.exe")) {
+		ControlGet, fnam, Selected,, Edit1, % "ahk_id " uid
+		ControlClick, &Save, % "ahk_id " uid,,,, NA
+		eventlog("PREVGRAB: Saving file " fnam)
+	} 
+	Return
 }
 
 checkFtpRow(num=0) {
