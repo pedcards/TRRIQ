@@ -4171,7 +4171,18 @@ getPatInfo() {
 			ptDem[addr] := trim(i)
 		}
 	}
-	if (ptDem.addr1="") {
+	if (ptDem.addr1~="PO BOX")&&(ptDem.hookup="Home") {
+		MsgBox 0x40031
+			, ADDRESS CORRECTION
+			, Cannot HOME register to PO BOX address`n`nEnter street address for patient?
+		IfMsgBox OK, {
+			ptDem.addr1 := ""
+		} Else {
+			fetchQuit := true
+			return
+		}
+	}
+	if (ptDem.addr1~="PO BOX")||(ptDem.addr1="") {
 		InputBox(addr1, "Registration requires mailing address","`n`nEnter mailing address","")
 		InputBox(addr2, "Registration requires mailing address","`n`nEnter city", ptDem.city)
 		if (addr1) {
