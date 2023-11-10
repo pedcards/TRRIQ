@@ -6312,6 +6312,10 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab "_time",res2)
 			return
 		}
+		; convert Max/Min_time to readable format
+		if (lab ~= "(Max|Min)_time") {
+			txt := ParseDate(txt).DT
+		}
 		; split value times for "32 12/15 08:23:17"
 		if RegExMatch(txt
 		,"\b([\d\.]+)s?\s+(\d{1,2}/\d{1,2}(/\d{2,4})?\s+\d{2}:\d{2}:\d{2})"
