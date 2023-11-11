@@ -115,6 +115,7 @@ PreventiceWebGrab(phase) {
 	loop
 	{
 		progress,,% "Page " A_index,
+		WinHide, % "Save password ahk_exe chrome.exe"
 
 		tbl := gl.Page.getElementsByClassName(web.tbl)[0]								; get the Main Table
 		if !IsObject(tbl) {
@@ -539,6 +540,7 @@ wbUrl(url) {
 			progress,,% "Sending login"
 			loginErr := preventiceLogin()
 			eventlog("PREVGRAB: Login " ((loginErr) ? "submitted." : "attempted."))
+			WinHide, % "Save password ahk_exe chrome.exe"
 			sleep 1000
 		}
 		if (gl.Page.URL=url) {
