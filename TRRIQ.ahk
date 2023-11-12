@@ -1370,6 +1370,8 @@ WQlistPDFdownloads() {
 /*	Generate wsftp.txt list for those that still require PDF download
 */
 	GuiControl, Disabled, Grab FTP full disclosure
+	Return
+	
 	loop % LV_GetCount() {
 		LV_GetText(x,A_Index,9)															; FTP
 		LV_GetText(y,A_Index,2)															; Name
