@@ -1323,7 +1323,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, dev																		; device type
-			, (res.duration<3) ? "":"")													; flag FTP if 1-2 day Holter *** changed "X":"" to suppress X
+			, (res.duration<3) ? "X":"")												; flag FTP if 1-2 day Holter
 		wqfiles.push(id)
 	}
 	Return
@@ -1370,8 +1370,6 @@ WQlistPDFdownloads() {
 /*	Generate wsftp.txt list for those that still require PDF download
 */
 	GuiControl, Disabled, Grab FTP full disclosure
-	Return
-	
 	loop % LV_GetCount() {
 		LV_GetText(x,A_Index,9)															; FTP
 		LV_GetText(y,A_Index,2)															; Name
