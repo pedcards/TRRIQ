@@ -5119,6 +5119,16 @@ getPdfID(txt,fnam:="") {
 		res.mrn := trim(stregX(txt,"Secondary ID:?",1,1,"Age:?",1))
 		res.ser := trim(stregX(txt,"Recorder (No|Number):?",1,1,"\R",1))
 		res.wqid := strQ(findWQid(res.date,res.mrn,"Mortara H3+ - " res.ser).id,"###","00000") "_H"
+	} else if instr(txt,"Full Disclosure Report") {										; BG Mini short term
+		res.type := "H"
+		RegExMatch(fnam, "O)GB_SCH_(.*?)_(.*?)_(.*?)_(.*?)_FD",fnid)
+		res.site := fnid.1
+		res.mrn := fnid.2
+		res.nameL := fnid.3
+		res.nameF := fnid.4
+		dt := parseDate(stRegX(txt,"Full Disclosure Report\R+",1,1,"-",1))
+			res.date := dt.YMD
+		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "_H"
 	} else if instr(txt,"BodyGuardian Heart") {											; BG Heart
 		res.type := "E"
 		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Enrollment Info|Patient ID",1)," `t`r`n"))
