@@ -1337,12 +1337,16 @@ WQscanHolterPDFs(ByRef wqfiles) {
 	findfullPDF()																		; read Holter PDF dir into pdfList
 	for key,val in pdfList
 	{
-		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])\.pdf",fnID)							; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
+		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])(-full)?\.pdf",fnID)					; get filename WQID if PDF has been renamed (fnid.1 = wqid, fnid.2 = type, fnid.3=full)
 		id := fnID.1
 		ftype := strQ(monPdfStrings[fnID.2],"###","???")
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
 			LV_Modify(k,"Col9","")														; clear the "X" in the FullDisc column
 			continue																	; skip rest of processing
+		}
+		if (fnID.3) {																	; Do not add PDF file if not in WQLV
+			eventlog(val " does not match ID in WQLV.")
+			Continue
 		}
 		res := readwq(id)																; get values for wqid if valid, else null
 		
