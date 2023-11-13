@@ -5076,8 +5076,9 @@ findFullPdf(wqid:="") {
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
 			if InStr(newtxt, "Full Disclosure Report") {								; likely Full Disclosure Report
 				dt := ParseDate(flds.date)
-				newFnam := strQ(flds.mrn,"### " flds.nameL " " dt.MM "-" dt.DD "-" dt.YYYY)
+				newFnam := strQ(flds.mrn,"### " flds.nameL " " dt.MM "-" dt.DD "-" dt.YYYY "_WQ" flds.wqid,fnam)
 				FileMove, %fileIn%, % path.holterPDF newFnam "-full.pdf", 1
+				pdfList.push(newFnam "-full.pdf")
 				Continue
 			} else {
 				FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1					; Everything else, rename the unprocessed PDF
