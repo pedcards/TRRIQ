@@ -4378,6 +4378,7 @@ outputfiles:
 		. fldval["dem-Name_L"] "_" 
 		. tmpDate.YMD "_"
 		. "@" fldval["wqid"] ".hl7"
+	progress, 20, % tmpFile, Moving output files
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile														; copy ORU hl7 to tempfiles
 	FileCopy, % tmpFile, % path.EpicHL7out													; create copy in RawHL7
@@ -4387,6 +4388,7 @@ outputfiles:
 	
 	/*	Save CSV in tempfiles, and copy to Import folder
 	*/
+	progress, 40, Save CSV in Import folder
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	
@@ -4410,6 +4412,7 @@ outputfiles:
 	
 	/*	Copy PDF to HolterPDF folder and archive
 	*/
+	progress, 60, Copy PDF to HolterPDF and Archive
 	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
 	FileCopy, % fileHIM, % path.holterPDF filenameOut "-short.pdf", 1						; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
@@ -4420,6 +4423,7 @@ outputfiles:
 
 	/*	Create short+full FrankenHolter
 	*/
+	progress, 95, Concatenate full PDF
 	Loop, Files, % path.holterPDF filenameOut "*-full.pdf", F
 	{
 		fn1 := path.holterPDF filenameOut "-short.pdf"
@@ -4433,6 +4437,7 @@ outputfiles:
 	
 	/*	Append info to fileWQ (probably obsolete in Epic)
 	*/
+	progress, 100, Clean up
 	fileWQ := ma_date "," user "," 															; date processed and MA user
 			. """" fldval["dem-Ordering"] """" ","											; extracted provider
 			. """" fldval["dem-Name_L"] ", " fldval["dem-Name_F"] """" ","					; CIS name
