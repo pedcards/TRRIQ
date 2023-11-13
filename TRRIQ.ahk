@@ -5037,7 +5037,9 @@ findFullPdf(wqid:="") {
 			if FileExist(fnam) {
 				FileDelete, % fileIn
 				eventlog("Found complete PDF, deleted -full.pdf")
+				Continue
 			}
+			pdflist.push(fname)																	; Add to pdflist, no need to scan
 			Continue
 		}
 		
