@@ -4417,6 +4417,19 @@ outputfiles:
 	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
 	FileMove, % path.PrevHL7in fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
+
+	/*	Create short+full FrankenHolter
+	*/
+	Loop, Files, % path.holterPDF filenameOut "*-full.pdf", F
+	{
+		fn1 := path.holterPDF filenameOut "-short.pdf"
+		fn2 := A_LoopFileFullPath
+		fn3 := path.holterPDF filenameOut ".pdf"
+		RunWait, % ".\files\pdftk.exe """ fn1 """ """ fn2 """ output """ fn3 """" ,,min
+		Sleep, 1000
+		FileMove, % fn3, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the concatenated PDF to holterDir Archive
+		FileDelete, % fn2																	; Delete the full PDF
+	}
 	
 	/*	Append info to fileWQ (probably obsolete in Epic)
 	*/
