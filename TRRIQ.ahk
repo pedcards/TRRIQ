@@ -5063,7 +5063,14 @@ findFullPdf(wqid:="") {
 			}
 			
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
-			FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1						; rename the unprocessed PDF
+			if InStr(newtxt, "Full Disclosure Report") {								; likely Full Disclosure Report
+				dt := ParseDate(flds.date)
+				newFnam := strQ(flds.mrn,"### " flds.nameL " " dt.MM "-" dt.DD "-" dt.YYYY)
+				FileMove, %fileIn%, % path.holterPDF newFnam "-full.pdf", 1
+				Continue
+			} else {
+				FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1					; Everything else, rename the unprocessed PDF
+			}
 			If ErrorLevel
 			{
 				MsgBox, 262160, File error, % ""										; Failed to move file
