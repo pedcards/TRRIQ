@@ -5031,6 +5031,15 @@ findFullPdf(wqid:="") {
 		; 	continue
 		; if FileExist(fnam "-short.pdf") 
 		; 	continue
+		if (fname~="i)-full\.pdf") {
+			fNamCheck := RegExReplace(fname,"i)-full\.pdf$")
+			fnam := path.holterPDF "Archive\" fNamCheck ".pdf"
+			if FileExist(fnam) {
+				FileDelete, % fileIn
+				eventlog("Found complete PDF, deleted -full.pdf")
+			}
+			Continue
+		}
 		
 		RegExMatch(fname,"O)_WQ([A-Z0-9]+)(_\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
 		
