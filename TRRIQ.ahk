@@ -5046,7 +5046,7 @@ findFullPdf(wqid:="") {
 			FileDelete, %fnam%.txt
 			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
 			
-			flds := getPdfID(newtxt)
+			flds := getPdfID(newtxt,fnam)
 			
 			if (AllowSavedPDF="true") && InStr(flds.wqid,"00000") {
 				eventlog("Unmatched PDF: " fileIn)
@@ -5098,7 +5098,7 @@ findFullPdf(wqid:="") {
 	return false																		; fell through without a match
 }
 
-getPdfID(txt) {
+getPdfID(txt,fnam:="") {
 /*	Parses txt for demographics
 	returns type=H,E,Z,M and demographics in an array, and wqid if found
 	or error if no match
