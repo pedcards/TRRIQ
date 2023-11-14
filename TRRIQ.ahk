@@ -5424,6 +5424,37 @@ Holter_BGM_SL_HL7:
 		gosub processPDF																; need to reprocess from extracted PDF
 		Return
 	}
+	if !FileExist(path.holterPDF "*" fldval.wqid "_H-full.pdf") {
+		eventlog("Full disclosure PDF not found.")
+			
+		msg := cmsgbox("Missing full disclosure PDF"
+			, fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
+			. "Click [Email] to send a message to Preventice,"
+			. "or [Cancel] to return to menu."
+			, "Email|Cancel"
+			, "E", "V")
+		if (msg~="Cancel|Close|xClose") {
+			eventlog("Skipping full disclosure. Return to menu.")
+		}
+		if (msg="Email") {
+			progress,100 ,,Generating email...
+			Eml := ComObjCreate("Outlook.Application").CreateItem(0)					; Create item [0]
+			Eml.BodyFormat := 2															; HTML format
+			
+			Eml.To := "HolterNotificationGroup@preventice.com"
+			Eml.cc := "EkgMaInbox@seattlechildrens.org; terrence.chun@seattlechildrens.org"
+			Eml.Subject := "Missing full disclosure PDF"
+			Eml.Display																	; Display first to get default signature
+			Eml.HTMLBody := "Please upload the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
+				. " MRN#" fldval["dem-MRN"] " study date " fldval["dem-Test_date"]
+				. " to the eCardio FTP site.<br><br>Thank you!<br>"
+				. Eml.HTMLBody															; Prepend to existing default message
+			ObjRelease(Eml)																; or Eml:=""
+			eventlog("Email sent to Preventice.")
+		}
+		fldval.done := ""
+		Return
+	}
 	
 	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
