@@ -1323,7 +1323,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, dev																		; device type
-			, (res.duration<3) ? "":"")													; flag FTP if 1-2 day Holter *** changed "X":"" to suppress X
+			, (res.duration<3) ? "X":"")												; flag FTP if 1-2 day Holter
 		wqfiles.push(id)
 	}
 	Return
@@ -1337,12 +1337,16 @@ WQscanHolterPDFs(ByRef wqfiles) {
 	findfullPDF()																		; read Holter PDF dir into pdfList
 	for key,val in pdfList
 	{
-		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])\.pdf",fnID)							; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
+		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])(-full)?\.pdf",fnID)					; get filename WQID if PDF has been renamed (fnid.1 = wqid, fnid.2 = type, fnid.3=full)
 		id := fnID.1
 		ftype := strQ(monPdfStrings[fnID.2],"###","???")
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
 			LV_Modify(k,"Col9","")														; clear the "X" in the FullDisc column
 			continue																	; skip rest of processing
+		}
+		if (fnID.3) {																	; Do not add PDF file if not in WQLV
+			eventlog(val " does not match ID in WQLV.")
+			Continue
 		}
 		res := readwq(id)																; get values for wqid if valid, else null
 		
@@ -1370,8 +1374,6 @@ WQlistPDFdownloads() {
 /*	Generate wsftp.txt list for those that still require PDF download
 */
 	GuiControl, Disabled, Grab FTP full disclosure
-	Return
-	
 	loop % LV_GetCount() {
 		LV_GetText(x,A_Index,9)															; FTP
 		LV_GetText(y,A_Index,2)															; Name
@@ -4376,6 +4378,7 @@ outputfiles:
 		. fldval["dem-Name_L"] "_" 
 		. tmpDate.YMD "_"
 		. "@" fldval["wqid"] ".hl7"
+	progress, 20, % tmpFile, Moving output files
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile														; copy ORU hl7 to tempfiles
 	FileCopy, % tmpFile, % path.EpicHL7out													; create copy in RawHL7
@@ -4385,6 +4388,7 @@ outputfiles:
 	
 	/*	Save CSV in tempfiles, and copy to Import folder
 	*/
+	progress, 40, Save CSV in Import folder
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	
@@ -4408,6 +4412,7 @@ outputfiles:
 	
 	/*	Copy PDF to HolterPDF folder and archive
 	*/
+	progress, 60, Copy PDF to HolterPDF and Archive
 	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
 	FileCopy, % fileHIM, % path.holterPDF filenameOut "-short.pdf", 1						; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
@@ -4415,9 +4420,24 @@ outputfiles:
 	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
 	FileMove, % path.PrevHL7in fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
+
+	/*	Create short+full FrankenHolter
+	*/
+	progress, 95, Concatenate full PDF
+	Loop, Files, % path.holterPDF filenameOut "*-full.pdf", F
+	{
+		fn1 := path.holterPDF filenameOut "-short.pdf"
+		fn2 := A_LoopFileFullPath
+		fn3 := path.holterPDF filenameOut ".pdf"
+		RunWait, % ".\files\pdftk.exe """ fn1 """ """ fn2 """ output """ fn3 """" ,,min
+		Sleep, 1000
+		FileMove, % fn3, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the concatenated PDF to holterDir Archive
+		FileDelete, % fn2																	; Delete the full PDF
+	}
 	
 	/*	Append info to fileWQ (probably obsolete in Epic)
 	*/
+	progress, 100, Clean up
 	fileWQ := ma_date "," user "," 															; date processed and MA user
 			. """" fldval["dem-Ordering"] """" ","											; extracted provider
 			. """" fldval["dem-Name_L"] ", " fldval["dem-Name_F"] """" ","					; CIS name
@@ -5033,6 +5053,17 @@ findFullPdf(wqid:="") {
 		; 	continue
 		; if FileExist(fnam "-short.pdf") 
 		; 	continue
+		if (fname~="i)-full\.pdf") {
+			fNamCheck := RegExReplace(fname,"i)-full\.pdf$")
+			fnam := path.holterPDF "Archive\" fNamCheck ".pdf"
+			if FileExist(fnam) {
+				FileDelete, % fileIn
+				eventlog("Found complete PDF, deleted -full.pdf")
+				Continue
+			}
+			pdflist.push(fname)																	; Add to pdflist, no need to scan
+			Continue
+		}
 		
 		RegExMatch(fname,"O)_WQ([A-Z0-9]+)(_\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
 		
@@ -5048,7 +5079,7 @@ findFullPdf(wqid:="") {
 			FileDelete, %fnam%.txt
 			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
 			
-			flds := getPdfID(newtxt)
+			flds := getPdfID(newtxt,fnam)
 			
 			if (AllowSavedPDF="true") && InStr(flds.wqid,"00000") {
 				eventlog("Unmatched PDF: " fileIn)
@@ -5065,7 +5096,15 @@ findFullPdf(wqid:="") {
 			}
 			
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
-			FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1						; rename the unprocessed PDF
+			if InStr(newtxt, "Full Disclosure Report") {								; likely Full Disclosure Report
+				dt := ParseDate(flds.date)
+				newFnam := strQ(flds.mrn,"### " flds.nameL " " dt.MM "-" dt.DD "-" dt.YYYY "_WQ" flds.wqid,fnam)
+				FileMove, %fileIn%, % path.holterPDF newFnam "-full.pdf", 1
+				pdfList.push(newFnam "-full.pdf")
+				Continue
+			} else {
+				FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1					; Everything else, rename the unprocessed PDF
+			}
 			If ErrorLevel
 			{
 				MsgBox, 262160, File error, % ""										; Failed to move file
@@ -5100,7 +5139,7 @@ findFullPdf(wqid:="") {
 	return false																		; fell through without a match
 }
 
-getPdfID(txt) {
+getPdfID(txt,fnam:="") {
 /*	Parses txt for demographics
 	returns type=H,E,Z,M and demographics in an array, and wqid if found
 	or error if no match
@@ -5121,6 +5160,16 @@ getPdfID(txt) {
 		res.mrn := trim(stregX(txt,"Secondary ID:?",1,1,"Age:?",1))
 		res.ser := trim(stregX(txt,"Recorder (No|Number):?",1,1,"\R",1))
 		res.wqid := strQ(findWQid(res.date,res.mrn,"Mortara H3+ - " res.ser).id,"###","00000") "_H"
+	} else if instr(txt,"Full Disclosure Report") {										; BG Mini short term
+		res.type := "H"
+		RegExMatch(fnam, "O)GB_SCH_(.*?)_(.*?)_(.*?)_(.*?)_FD",fnid)
+		res.site := fnid.1
+		res.mrn := fnid.2
+		res.nameL := fnid.3
+		res.nameF := fnid.4
+		dt := parseDate(stRegX(txt,"Full Disclosure Report\R+",1,1,"-",1))
+			res.date := dt.YMD
+		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "_H"
 	} else if instr(txt,"BodyGuardian Heart") {											; BG Heart
 		res.type := "E"
 		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Enrollment Info|Patient ID",1)," `t`r`n"))
@@ -5373,6 +5422,37 @@ Holter_BGM_SL_HL7:
 	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
 		eventlog("No OBX data.")
 		gosub processPDF																; need to reprocess from extracted PDF
+		Return
+	}
+	if !FileExist(path.holterPDF "*" fldval.wqid "_H-full.pdf") {
+		eventlog("Full disclosure PDF not found.")
+			
+		msg := cmsgbox("Missing full disclosure PDF"
+			, fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
+			. "Click [Email] to send a message to Preventice,"
+			. "or [Cancel] to return to menu."
+			, "Email|Cancel"
+			, "E", "V")
+		if (msg~="Cancel|Close|xClose") {
+			eventlog("Skipping full disclosure. Return to menu.")
+		}
+		if (msg="Email") {
+			progress,100 ,,Generating email...
+			Eml := ComObjCreate("Outlook.Application").CreateItem(0)					; Create item [0]
+			Eml.BodyFormat := 2															; HTML format
+			
+			Eml.To := "HolterNotificationGroup@preventice.com"
+			Eml.cc := "EkgMaInbox@seattlechildrens.org; terrence.chun@seattlechildrens.org"
+			Eml.Subject := "Missing full disclosure PDF"
+			Eml.Display																	; Display first to get default signature
+			Eml.HTMLBody := "Please upload the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
+				. " MRN#" fldval["dem-MRN"] " study date " fldval["dem-Test_date"]
+				. " to the eCardio FTP site.<br><br>Thank you!<br>"
+				. Eml.HTMLBody															; Prepend to existing default message
+			ObjRelease(Eml)																; or Eml:=""
+			eventlog("Email sent to Preventice.")
+		}
+		fldval.done := ""
 		Return
 	}
 	
