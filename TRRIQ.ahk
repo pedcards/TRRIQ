@@ -3035,8 +3035,10 @@ HolterConnect(phase="")
 		title := pt.Name "`nS/N " bgmData.ser
 
 		bgmStatus := checkBGMstatus(bgmDrive,title)										; Wait to complete import and upload, or quit
-		if !(bgmStatus.upload) {														; Can't confirm BGM was uploaded
-			MsgBox 0x14, BG Mini Transfer, Did BG MINI upload successfully?
+		if (bgmStatus.upload) {
+			MsgBox 0x40040, BG Mini Transfer, File transfer complete!
+		} else {																		; Can't confirm BGM was uploaded
+			MsgBox 0x40014, BG Mini Transfer, Did BG MINI upload successfully?
 			IfMsgBox Yes, {
 				eventlog("Confirmed BGM uploaded successfully.")
 			} Else {
