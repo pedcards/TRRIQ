@@ -2941,6 +2941,8 @@ checkBGMstatus(drive:="D",title:="") {
 		}
 	}
 
+	file := folderCygnus "\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+	FileCopy, % file, .\tempfiles 
 	eventlog("checkBGMstatus: BGM Attached=" driveStat ", BGM Cleared=" dataStat ", Imported=" importStat ", Uploaded=" uploadStat)
 	Return {data:dataStat,import:importStat,upload:uploadStat}
 }
