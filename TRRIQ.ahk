@@ -2935,8 +2935,8 @@ checkBGMstatus(drive:="D",title:="") {
 
 	if (uploadStat=0) {																	; Perchance quit, check Cygnus log
 		eventlog("Break without uploadStat.")
-		uploadStat := 1
-		if (sendDT := scanCygnusLog().sendDT) {											; Scan log for Send Uploa
+		if (sendDT := scanCygnusLog().sendDT) {											; Scan log for Send Upload
+			uploadStat := 1
 			eventlog("Cygnus log SendUploadSuccess [" sendDT "].")
 		}
 	}
