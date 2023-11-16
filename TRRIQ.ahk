@@ -2798,12 +2798,19 @@ getBGMlog(drive:="D") {
 	Return {ser:serNum,tz:bgmTZ,start:bgmStartDT}
 }
 
-scanCygnusLog() {
+scanCygnusLog(base:="") {
 /*	Read the most recent logfile in Cygnus\Logs
+	Base = most recent launch, skip all lines before this
 */
 	; folder := ".\devfiles\Cygnus\Logs"
 	folder := A_AppData "\Cygnus\Logs"
-	file := folder "\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+	; file := folder "\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+	file := ".\devfiles\Cygnus\Logs\Log_2023-11-15.log"
+	if !FileExist(file) {
+		eventlog("No file found at " file)
+		Return
+	}
+
 	FileRead, txt, % file
 	Loop, Parse, txt, `r`n																; Read to end of Log to catch last event
 	{
