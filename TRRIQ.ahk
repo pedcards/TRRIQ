@@ -3042,6 +3042,8 @@ HolterConnect(phase="")
 			MsgBox NO MATCHING REGISTRATIONS
 			eventlog("No matching BGM registrations.")
 			Return
+		} else {
+			eventlog("Enroll matches: " match)
 		}
 		m2 := StrSplit(match, "|")														; Array of matches (including WQIDs)
 		match := RegExReplace(match, "WQ:\[[A-Z0-9]+\]")								; Remove WQIDs (cMsgBox returns max 63 chars)
