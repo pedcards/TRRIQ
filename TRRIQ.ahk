@@ -3003,6 +3003,7 @@ HolterConnect(phase="")
 	} else {
 		Run, .\files\Cygnus.application,,,cygnusApp
 	}
+	bgmCygnusCheck()
 	bgmDrive := findBGMdrive()															; Get drive letter for [BG MINI]
 	bgmData := getBGMlog(bgmDrive) 														; Get TZ, S/N, and Start time from LOG 
 	if (bgmData.ser="") {
@@ -3062,6 +3063,17 @@ HolterConnect(phase="")
 
 	}
 
+	Return
+}
+
+bgmCygnusCheck() {
+/*	Wait until Holter Connect launched and user logged in
+*/
+	; log := A_AppData "\Cygnus\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+	log := ".\devfiles\Cygnus\Logs\Log_2023-11-15.log"
+	if !FileExist(log) {
+
+	}
 	Return
 }
 
