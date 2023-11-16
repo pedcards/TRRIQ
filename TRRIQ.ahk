@@ -2821,33 +2821,35 @@ scanCygnusLog(base:="") {
 			Continue
 		}
 		if InStr(k,"Application is loading") {											; Detect most recent load time
-			launchDT := dt
-			sernum := ""
-			start := ""
-			done := ""
-			sendDT := ""
+			log := {}
+			log.launch := dt
 			Continue
 		}
-		if RegExMatch(k,"Serial:BGMINI-(\d+)",t) {										; Detect most recent attached BGMINI
-			sernum := t1
+		if InStr(k, "Successfully authenticated") {										; Detect user logged in
+			log.auth := dt
+			Continue
+		}
+		if RegExMatch(k,"(\w) Serial:BGMINI-(\d+)",t) {									; Detect most recent attached BGMINI and drive
+			log.drive := t1
+			log.sernum := t2
 			Continue
 		}
 		if RegExMatch(k,"\[UploadTask\].*?" . "starting upload") {						; Detect starting upload
-			start := dt
-			done := ""
-			sendDT := ""
+			log.start := dt
+			log.done := ""
+			log.upload := ""
 			Continue
 		}
 		if RegExMatch(k,"\[UploadTask\].*?" . "successful") {							; Detect upload successful
-			done := dt
+			log.done := dt
 			Continue
 		}
 		if InStr(k, "SendUploadSuccessEvent") {											; Detect mark SuccessEvent
-			sendDT := dt
+			log.upload := dt
 			Continue
 		}
 	}
-	Return {launch:launchDT,sernum:sernum,start:start,done:done,sendDT:sendDT}
+	Return log
 } 
 
 checkBGMstatus(drive:="D",title:="") {
