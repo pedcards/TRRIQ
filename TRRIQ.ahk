@@ -3026,7 +3026,9 @@ HolterConnect(phase="")
 	} else {
 		Run, .\files\Cygnus.application,,,cygnusApp
 	}
-	bgmCygnusCheck()
+	if !(bgmAuth := bgmCygnusCheck()) {													; Wait until user logs in successfully
+		Return
+	}
 	bgmDrive := findBGMdrive()															; Get drive letter for [BG MINI]
 	bgmData := getBGMlog(bgmDrive) 														; Get TZ, S/N, and Start time from LOG 
 	if (bgmData.ser="") {
@@ -3106,12 +3108,43 @@ bgmCygnusCheck() {
 		Return
 	}
 
-	base := scanCygnusLog().launch														; Get DT for most recent launch
+	Gui, hcTm:Font, s18 bold
+	Gui, hcTm:Add, Text, , Log in to Holter Connect
+	Gui, hcTm:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
+	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
+	Gui, hcTM: +AlwaysOnTop
+	Gui, hcTm:Show, AutoSize, BG Mini connect
+
+	base := scanCygnusLog()																; Get DT for most recent launch
 	Loop
 	{
-		log := scanCygnusLog(base)
+		ct ++
+		if (ct>100) {
+			ct := 0
+		}
+		GuiControl, , % HcCt, % ct
+		if !WinExist("Holter Connect ahk_exe Cygnus.exe") {								; User closed Holter Connect
+			eventlog("Holter Connect window closed.")
+			Gui, hcTm:Destroy
+			Return
+		}
+		if !WinExist("BG Mini connect") {
+			eventlog("User closed GUI.")
+			Gui, hcTm:Destroy
+			WinClose, % "Holter Connect ahk_exe Cygnus.exe"
+			Return
+		}
+		log := scanCygnusLog(base.launch)												; Refresh log from launch time
+		if (log.auth) {
+			eventlog("Successful authentication on Holter Connect.")
+			Gui, hcTm:Destroy
+			Return log.auth
+		}
+		Sleep, 500
 	}
 	
+	eventlog("User timed out.")
+	Gui, hcTm:Destroy
 	Return
 }
 
