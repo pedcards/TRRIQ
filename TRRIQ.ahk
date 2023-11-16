@@ -2716,11 +2716,43 @@ findBGMdrive(delay:=5) {
 	match := "BG MINI"																	; Match string
 
 	Gui, hcTm:Font, s18 bold
-	Gui, hcTm:Add, Text, , Log in to Holter Connect and`nAttach BG MINI to cable
+	Gui, hcTm:Add, Text, , Attach BG MINI to cable
 	Gui, hcTm:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
 	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcTM: +AlwaysOnTop
 	Gui, hcTm:Show, AutoSize, BG Mini connect
+
+	base := scanCygnusLog()																; Get DT for most recent launch
+	Loop
+	{
+		ct ++
+		if (ct>100) {
+			ct := 0
+		}
+		GuiControl, , % HcCt, % ct
+		if !WinExist("Holter Connect ahk_exe Cygnus.exe") {								; User closed Holter Connect
+			eventlog("Holter Connect window closed.")
+			Gui, hcTm:Destroy
+			Return
+		}
+		if !WinExist("BG Mini connect") {
+			eventlog("User closed GUI.")
+			Gui, hcTm:Destroy
+			WinClose, % "Holter Connect ahk_exe Cygnus.exe"
+			Return
+		}
+		log := scanCygnusLog(base.launch)												; Refresh log from launch time
+		if (log.drive) {
+			eventlog("Holter Connect recogizes drive " log.drive ": S/N " log.sernum ".")
+			Gui, hcTm:Destroy
+			Return log
+		}
+		Sleep, 500
+	}
+	
+	eventlog("User timed out.")
+	Gui, hcTm:Destroy
+	Return
 
 	Loop, % (loops:=delay*120)															; 60 sec/120 loops
 	{
@@ -3026,10 +3058,10 @@ HolterConnect(phase="")
 	} else {
 		Run, .\files\Cygnus.application,,,cygnusApp
 	}
-	if !(bgmAuth := bgmCygnusCheck()) {													; Wait until user logs in successfully
+	if !(bgmAuth := bgmCygnusCheck()) {													; Wait until user logged in successfully
 		Return
 	}
-	bgmDrive := findBGMdrive()															; Get drive letter for [BG MINI]
+	bgmDrive := findBGMdrive()															; Get drive letter and S/N for [BG MINI]
 	bgmData := getBGMlog(bgmDrive) 														; Get TZ, S/N, and Start time from LOG 
 	if (bgmData.ser="") {
 		eventlog("No valid BG MINI drive detected by timeout.")
