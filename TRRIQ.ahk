@@ -3045,19 +3045,23 @@ HolterConnect(phase="")
 	} else {
 		Run, .\files\Cygnus.application,,,cygnusApp
 	}
+
 	if !(bgmAuth := bgmCygnusCheck()) {													; Wait until user logged in successfully
 		Return
 	}
-	bgmDrive := findBGMdrive()															; Get drive letter and S/N for [BG MINI]
-	bgmData := getBGMlog(bgmDrive) 														; Get TZ, S/N, and Start time from LOG 
-	if (bgmData.ser="") {
+	if !(bgm := findBGMdrive()) {														; Wait for attached drive letter and sernum for [BG MINI]
+		Return
+	}
+	bgmData := getBGMlog(bgm.drive) 													; Get TZ, S/N, and Start time from LOG 
+	if (bgmData.ser) {
+		eventlog("S/N " bgmData.ser ", connected " bgmData.start ".")
+	} else {
 		eventlog("No valid BG MINI drive detected by timeout.")
 		Return 
 	} 
 	; bgmData := {}
 	; bgmData.ser := "2031181"
 	; bgmData.start := "20231019"
-	eventlog("S/N " bgmData.ser ", connected " bgmData.start ".")
 
 	if (phase="Transfer") {
 		match := findBGMenroll(bgmData.ser,bgmData.start) 								; Find enrollments that match S/N an start date
