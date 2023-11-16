@@ -2766,6 +2766,18 @@ getBGMlog(drive:="D") {
 	}
 	FileAppend, % bgmDir, .\tempfiles\%A_Now%-DIR.txt									; Writeout target dir for each upload
 	
+	; logfile := ".\devfiles\BGM\TESTLOG"
+	logfile := drive ":\LOG"
+	loop, 5																				; Have a few swings to find LOG file
+	{
+		if FileExist(logfile) {
+			FileRead, txt, % logfile
+			FileCopy, % logfile, % ".\tempfiles\LOG_" A_Now
+			Break
+		}
+		Sleep, 1000
+	}
+
 	Loop, Parse, txt, `r`n
 	{
 		k := A_LoopField
