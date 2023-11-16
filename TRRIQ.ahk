@@ -2815,10 +2815,11 @@ scanCygnusLog(base:="") {
 	Loop, Parse, txt, `r`n																; Read to end of Log to catch last event
 	{
 		k := A_LoopField
-		if RegExMatch(k,"^(.*?)\..*?" . "\[S\/N: (\d*)\].*?"							; Detect starting upload
-			.  "\[UploadTask\].*?" . "starting upload",t) {
-			start := SubStr(RegExReplace(t1, "[ :\-]"),1,14)
-			sernum := t2
+		RegExMatch(k,"^(.*?)\.",dt)
+		dt := RegExReplace(dt1,"[ :\-]")
+		if (dt<base) {																	; Skip lines before base
+			Continue
+		}
 			done := ""
 			sendDT := ""
 		}
