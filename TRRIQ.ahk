@@ -2753,35 +2753,6 @@ findBGMdrive(delay:=5) {
 	eventlog("User timed out.")
 	Gui, hcTm:Destroy
 	Return
-
-	Loop, % (loops:=delay*120)															; 60 sec/120 loops
-	{
-		GuiControl, , % HcCt, % 100*A_Index/loops
-		DriveGet, drives, List															; Get all attached drive letters
-		drives := RegExReplace(drives,"[COFWZ]")										; Remove letters used for network drives 
-		Loop, parse, drives
-		{
-			DriveGet, label, Label, %A_LoopField%:
-			if (label=match) {
-				hit := A_LoopField
-			}
-		}
-		if (hit) {																		; got a hit
-			Break
-		}
-		if !WinExist("BG Mini connect") {												; user closed progress window
-			Break
-		}
-		sleep 500
-	}
-	Gui, hcTm:Destroy
-
-	if (hit) {
-		eventlog("Found [BG MINI] drive " hit ":.")
-	} else {
-		eventlog("No [BG MINI] drive found.")
-	}
-	Return hit
 }
 
 getBGMlog(drive:="D") {
