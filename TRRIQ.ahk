@@ -2760,8 +2760,12 @@ getBGMlog(drive:="D") {
 	Read start time in D:\LOG (tz=UTC+0)
 	Possibly demographics stored in matching DATA\hh-mm-ss
 */
-	FileRead, txt, % drive ":\LOG"
-	; FileRead, txt, .\devfiles\BGM\TESTLOG
+	Loop, files, % drive ":\*", FD
+	{
+		bgmDir .= A_LoopFileTimeModified "`t" A_LoopFileName "`t[" A_LoopFileSize "]`n"
+	}
+	FileAppend, % bgmDir, .\tempfiles\%A_Now%-DIR.txt									; Writeout target dir for each upload
+	
 	Loop, Parse, txt, `r`n
 	{
 		k := A_LoopField
