@@ -2820,21 +2820,34 @@ scanCygnusLog(base:="") {
 		if (dt<base) {																	; Skip lines before base
 			Continue
 		}
+		if InStr(k,"Application is loading") {											; Detect most recent load time
+			launchDT := dt
+			sernum := ""
+			start := ""
 			done := ""
 			sendDT := ""
+			Continue
 		}
-		if RegExMatch(k,"^(.*?)\..*?" . "\[S\/N: (\d*)\].*?"							; Detect upload successful
-			.  "\[UploadTask\].*?" . "successful",t) {
-			done := SubStr(RegExReplace(t1, "[ :\-]"),1,14)
-			sernum := t2
+		if RegExMatch(k,"Serial:BGMINI-(\d+)",t) {										; Detect most recent attached BGMINI
+			sernum := t1
+			Continue
+		}
+		if RegExMatch(k,"\[UploadTask\].*?" . "starting upload") {						; Detect starting upload
+			start := dt
+			done := ""
+			sendDT := ""
+			Continue
+		}
+		if RegExMatch(k,"\[UploadTask\].*?" . "successful") {							; Detect upload successful
+			done := dt
+			Continue
 		}
 		if InStr(k, "SendUploadSuccessEvent") {											; Detect mark SuccessEvent
-			sendDT := stRegX(k,"",1,0,"[\[\]\.]",1)
-			sendDT := SubStr(RegExReplace(sendDT, "[ :\-]"),1,14)
-			start := done := ""
+			sendDT := dt
+			Continue
 		}
 	}
-	Return {start:start,done:done,sendDT:sendDT}
+	Return {launch:launchDT,sernum:sernum,start:start,done:done,sendDT:sendDT}
 } 
 
 checkBGMstatus(drive:="D",title:="") {
@@ -3077,11 +3090,24 @@ HolterConnect(phase="")
 bgmCygnusCheck() {
 /*	Wait until Holter Connect launched and user logged in
 */
-	; log := A_AppData "\Cygnus\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
-	log := ".\devfiles\Cygnus\Logs\Log_2023-11-15.log"
-	if !FileExist(log) {
-
+	Loop, 50
+	{
+		if (cygWin := WinExist("Holter Connect ahk_exe Cygnus.exe")) {
+			Break
+		}
+		Sleep 250
 	}
+	if !(cygWin) {
+		eventlog("Holter Connect failed to launch.")
+		Return
+	}
+
+	base := scanCygnusLog().launch														; Get DT for most recent launch
+	Loop
+	{
+		log := scanCygnusLog(base)
+	}
+	
 	Return
 }
 
