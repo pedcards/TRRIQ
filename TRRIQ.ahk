@@ -39,7 +39,7 @@ IfInString, fileDir, TEST
 }
 if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
-	FileAppend, % A_now ", " user "|" userinstance "|" A_ComputerName "`n", .\files\legacy.txt
+	FileAppend, % A_Now ", " user "|" userinstance "|" A_ComputerName "`n", .\files\legacy.txt
 	MsgBox 0x30, Shortcut error
 		, % "Obsolete TRRIQ shortcut!`n`n"
 		. "Please notify Igor Gurvits or Jim Gray to update the shortcut on this machine: " A_ComputerName
@@ -439,7 +439,7 @@ lateReport()
 		}
 	}
 	progress, off
-	tmp := path.holterPDF "late-" A_now ".csv"
+	tmp := path.holterPDF "late-" A_Now ".csv"
 	FileAppend, %str%, %tmp%
 	eventlog("Generated missing devices report.")
 	MsgBox, 262208, Missing devices report, Report saved to:`n%tmp%
@@ -700,7 +700,7 @@ setwqupdate() {
 	global wqfileDT
 	FileDelete, .\files\wqupdate
 	FileAppend,,.\files\wqupdate
-	wqfileDT := A_now
+	wqfileDT := A_Now
 	return
 }
 
@@ -864,7 +864,7 @@ WQtask() {
 		return
 	}
 	if instr(choice,"upload") {
-		inputbox(inDT,"Upload log","`n`nEnter date uploaded to Preventice`n",niceDate(A_now))
+		inputbox(inDT,"Upload log","`n`nEnter date uploaded to Preventice`n",niceDate(A_Now))
 		if (ErrorLevel) {
 			return
 		}
@@ -899,11 +899,11 @@ WQtask() {
 					wq.addElement("fedex",idstr)
 				}
 				wq.setText(idstr "/fedex",fedex)
-				wq.setAtt(idstr "/fedex", {user:user, date:substr(A_now,1,8)})
+				wq.setAtt(idstr "/fedex", {user:user, date:substr(A_Now,1,8)})
 				eventlog(pt.MRN "[" pt.Date "] FedEx tracking #" fedex)
 			}
 		}
-		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
+		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_Now,1,8)},note)
 		WriteOut("/root/pending","enroll[@id='" idx "']")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
 		setwqupdate()
@@ -931,7 +931,7 @@ WQtask() {
 		if !IsObject(wq.selectSingleNode(idstr "/notes")) {
 			wq.addElement("notes",idstr)
 		}
-		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},"MOVED: " reason)
+		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_Now,1,8)},"MOVED: " reason)
 		moveWQ(idx)
 		eventlog(idx " Move from WQ: " reason)
 		setwqupdate()
@@ -1869,7 +1869,7 @@ addPrevEnroll(id,res) {
 	wq.addElement("dev",newID,res.dev)
 	wq.addElement("prov",newID,res.prov)
 	wq.addElement("site",newID,res.site)
-	wq.addElement("webgrab",newID,A_now)
+	wq.addElement("webgrab",newID,A_Now)
 	
 	return
 }
@@ -2595,7 +2595,7 @@ checkweb(id) {
 	if (wq.selectSingleNode(en "/webgrab").text) {											; webgrab already exists
 		Return
 	} else {
-		wq.addElement("webgrab",en,A_now)
+		wq.addElement("webgrab",en,A_Now)
 		eventlog("Added webgrab for id " id)
 		Return
 	}
@@ -3106,7 +3106,7 @@ HolterConnect(phase="")
 		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
 			wq.addElement("sent",wqStr)
 		}
-		wq.setText(wqStr "/sent",substr(A_now,1,8))
+		wq.setText(wqStr "/sent",substr(A_Now,1,8))
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[@id='" wqid "']")
 		eventlog(pt.MRN " " pt.Name " study " wqid.Date " uploaded to Preventice.")
@@ -3254,7 +3254,7 @@ MortaraUpload(tabnum="")
 		{
 			wuDir.endDir .= A_LoopFileTimeModified "`t[" A_LoopFileSize "]`t" A_LoopFileName "`n"
 		}
-		FileAppend, % wuDir.endDir, .\tempfiles\%A_now%-DIR.txt							; for now, writeout target dir for each upload
+		FileAppend, % wuDir.endDir, .\tempfiles\%A_Now%-DIR.txt							; for now, writeout target dir for each upload
 
 		FileRead, wuRecord, % wuDir.Full "\RECORD.LOG"
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
@@ -3312,9 +3312,9 @@ MortaraUpload(tabnum="")
 			}
 		}
 		if (wuDir.MRN="")||(wuDir.Ser="") {												; no SN or MRN match, write out dir files
-			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
-			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
-			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
+			FileAppend, % wuConfig, .\tempfiles\%A_Now%-CONFIGSYS.txt
+			FileAppend, % wuDevice, .\tempfiles\%A_Now%-DEVICELOG.txt
+			FileAppend, % wuRecord, .\tempfiles\%A_Now%-RECORDLOG.txt
 			FileCopy, % wuDir.Full "\CONFIG.SYS", .\tempfiles\%A_Now%-CONFIG.SYS.txt
 			FileCopy, % wuDir.Full "\DEVICE.LOG", .\tempfiles\%A_Now%-DEVICE.LOG.txt
 			FileCopy, % wuDir.Full "\RECORD.LOG", .\tempfiles\%A_Now%-RECORD.LOG.txt
@@ -3322,8 +3322,8 @@ MortaraUpload(tabnum="")
 
 		if !(serNum=wuDir.Ser) {														; Attached device does not match device data
 			eventlog("Serial number mismatch.")
-			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt
-			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
+			FileAppend, % wuDir.fullDir, .\tempfiles\%A_Now%-FULLDIR.txt
+			FileAppend, % A_Now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			muPushButton(muWinID,"Back")
 			return
@@ -3356,7 +3356,7 @@ MortaraUpload(tabnum="")
 			MorUIfill(mu_UI.TRct,muWinID)
 		}
 		else {																			; no matching node found
-			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
+			FileAppend, % A_Now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			eventlog("No registration found for " pt.name " " pt.mrn " " pt.date)
 		}
 			
@@ -3371,7 +3371,7 @@ MortaraUpload(tabnum="")
 			if FileExist(wuDir.Full "\Uploaded.txt") {
 				Gui, muTm:Destroy
 				settimer, muTimer, off
-				FileCopy, % wuDir.Full "\Uploaded.txt", .\tempfiles\%A_now%-UPLOADED.txt
+				FileCopy, % wuDir.Full "\Uploaded.txt", .\tempfiles\%A_Now%-UPLOADED.txt
 				break
 			}
 			if (ptDem.timer) {
@@ -3385,7 +3385,7 @@ MortaraUpload(tabnum="")
 		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
 			wq.addElement("sent",wqStr)
 		}
-		wq.setText(wqStr "/sent",substr(A_now,1,8))
+		wq.setText(wqStr "/sent",substr(A_Now,1,8))
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']")
 		eventlog(ptDem.MRN " " ptDem.nameL " study " ptDem.Date " uploaded to Preventice.")
@@ -3541,7 +3541,7 @@ muWqSave(sernum) {
 	if (ptDem.fedex) {
 		wq.addElement("fedex",ptDem.newID,ptDem.fedex)
 	}
-	wq.addElement(ptDem["muphase"],ptDem.newID,{user:A_UserName},A_now)
+	wq.addElement(ptDem["muphase"],ptDem.newID,{user:A_UserName},A_Now)
 	
 	filedelete, .lock
 	writeOut("/root/pending","enroll[@id='" id "']")
@@ -4356,7 +4356,7 @@ bgWqSave(sernum) {
 	if (ptDem.fedex) {
 		wq.addElement("fedex",ptDem.newID,ptDem.fedex)
 	}
-	wq.addElement("register",ptDem.newID,{user:A_UserName},A_now)
+	wq.addElement("register",ptDem.newID,{user:A_UserName},A_Now)
 	
 	writeOut("/root/pending","enroll[@id='" id "']")
 	
@@ -5024,7 +5024,7 @@ makeTestORU() {
 	tmpPrv := parseName(ptDem.provider)
 	buildHL7("PV1"
 		,{7:ptDem.NPI "^" tmpPrv.last "-" ptDem.loc "^" tmpPrv.first
-		, 39:A_now })
+		, 39:A_Now })
 	
 	buildHL7("OBR"
 		,{2:ptDem.wqid
@@ -5035,7 +5035,7 @@ makeTestORU() {
 		, 7:hl7time
 		, 16:ptDem.NPI "^" tmpPrv.last "-" ptDem.loc "^" tmpPrv.first
 		, 20:"OnComplete"
-		, 22:A_now })
+		, 22:A_Now })
 	
 	buildHL7("OBX"
 		,{2:"TX"
@@ -5043,7 +5043,7 @@ makeTestORU() {
 			. strQ(ptDem.model~="Heart" ? 1 : "","CEM^CEM")
 			. strQ(ptDem.model~="Mini" ? 1 : "","Holter^Holter")
 		, 11:"F"
-		, 14:A_now })
+		, 14:A_Now })
 	
 	FileRead, testTXT, % ".\files\test-ED_"
 		. strQ(ptDem.model~="Mortara" ? 1 : "","HOL")
@@ -5053,11 +5053,11 @@ makeTestORU() {
 	buildHL7("OBX"
 		,{2:"ED"
 		, 3:"PDFReport1^PDF Report^^^^"
-		, 4:ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_now ".pdf"
+		, 4:ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_Now ".pdf"
 		, 5:testTXT
 		, 6:8
 		, 11:"F"
-		, 14:A_now })
+		, 14:A_Now })
 	
 	buildHL7("OBX",{2:"NM|Brady_AvgRate^Bradycardia average rate^Preventice^^^||51|bpm|||||" })
 	buildHL7("OBX",{2:"TX|Brady_LongestDur^Bradycardia longest duration^Preventice^^^||01:09:06|time|||||" })
@@ -5075,7 +5075,7 @@ makeTestORU() {
 	
 	FileAppend
 		, % hl7out.msg
-		, % path.PrevHL7in ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_now ".hl7"
+		, % path.PrevHL7in ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_Now ".hl7"
 	
 	return
 }
@@ -5487,7 +5487,7 @@ CheckProc:
 			}
 			newID := "/root/pending/enroll[@id='" id "']"
 			ptDem.date := parseDate(ptDem["EncDate"]).YMD
-			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
+			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_Now,1,8))
 			wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
 			wqSetVal(id,"mrn",ptDem["mrn"])
 			wqSetVal(id,"sex",ptDem["Sex"])
@@ -6733,7 +6733,7 @@ adminWQlvFix(en) {
 	(This might end up being big enough to merit its own function)
 */
 	if (en.webgrab="") {																; Common cause of "noreg error"
-		wqSetVal(en.id,"webgrab",A_now)
+		wqSetVal(en.id,"webgrab",A_Now)
 		WriteOut("/root/pending/enroll[@id='" en.id "']","webgrab")
 		eventlog("adminWQlvFix: Added missing webgrab.")
 		fixChange .= "Missing <webgrab>`n"
@@ -7135,7 +7135,7 @@ WriteSave(z) {
 	}
 	
 	if (valid=true) {
-		FileCopy, worklist.xml, bak\%A_now%.bak
+		FileCopy, worklist.xml, bak\%A_Now%.bak
 		wq := z
 	}
 	
