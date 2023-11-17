@@ -2854,8 +2854,20 @@ scanCygnusLog(base:="") {
 			log.record := convertUTC(RegExReplace(t1,"[\-\\]"))
 			Continue
 		}
+		if InStr(k,"ImportAsync: Starting import") {									; Starting import
+			log.importStart := dt
+			Continue
+		}
 		if InStr(k, "Import status Complete") {											; DATA imported to local PC
 			log.import := dt
+			Continue
+		}
+		if InStr(k, "UploadPrepareAsync") {												; User initiated upload
+			log.uploadAsync := dt
+			Continue
+		}
+		if InStr(k, "Truncating recording data") {										; Compressing data
+			log.uploadTruncate := dt
 			Continue
 		}
 		if RegExMatch(k,"\[UploadTask\].*?" . "starting upload") {						; Detect starting upload
