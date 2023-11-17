@@ -2822,10 +2822,10 @@ scanCygnusLog(base:="") {
 /*	Read the most recent logfile in Cygnus\Logs
 	Base = most recent launch, skip all lines before this
 */
-	; folder := ".\devfiles\Cygnus\Logs"
-	folder := A_AppData "\Cygnus\Logs"
+	folder := ".\devfiles\Cygnus\Logs"
+	; folder := A_AppData "\Cygnus\Logs"
 	; file := folder "\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
-	file := ".\devfiles\Cygnus\Logs\Log_2023-11-15.log"
+	file := folder "\Log_2023-11-15.log"
 	if !FileExist(file) {
 		eventlog("No file found at " file)
 		Return
@@ -2854,6 +2854,7 @@ scanCygnusLog(base:="") {
 			log.sernum := t2
 			Continue
 		}
+
 		if RegExMatch(k,"\[UploadTask\].*?" . "starting upload") {						; Detect starting upload
 			log.start := dt
 			log.done := ""
@@ -3054,7 +3055,7 @@ HolterConnect(phase="")
 		Return
 	}
 	if !(bgmData := getBGMlog(bgm.drive)) {	 											; Get TZ, S/N, and Start time from LOG 
-		eventlog("No valid BG MINI drive detected by timeout.")
+		eventlog("No valid BG MINI LOG file detected.")
 		Return 
 	} 
 	; bgmData := {}
