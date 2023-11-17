@@ -2831,7 +2831,7 @@ scanCygnusLog(base:="") {
 	Loop, Parse, txt, `r`n																; Read to end of Log to catch last event
 	{
 		k := A_LoopField
-		RegExMatch(k,"^(.*?)\.",dt)
+		RegExMatch(k,"^(.*?)\.\d+ \[",dt)
 		dt := RegExReplace(dt1,"[ :\-]")
 		if (dt<base) {																	; Skip lines before base
 			Continue
