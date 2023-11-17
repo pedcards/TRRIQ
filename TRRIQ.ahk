@@ -2850,7 +2850,11 @@ scanCygnusLog(base:="") {
 			log.sernum := t2
 			Continue
 		}
-		if InStr(k, "Import status Complete") {
+		if RegExMatch(k,":\\DATA\\(.*?)\.EDF",t) {										; Found recording date
+			log.record := convertUTC(RegExReplace(t1,"[\-\\]"))
+			Continue
+		}
+		if InStr(k, "Import status Complete") {											; DATA imported to local PC
 			log.import := dt
 			Continue
 		}
