@@ -2802,11 +2802,7 @@ getBGMlog(drive:="D") {
 				min := SubStr(time, 4, 2)
 				sec := SubStr(time, 7, 2)
 			dt := yyyy . mm . dd . hr . min . sec
-			tzNow := A_Now
-			tzUTC := A_NowUTC
-			tzNow -= tzUTC, Hours
-			dt += tzNow, Hours
-			bgmStartDT := dt															; Recording start time (local time)
+			bgmStartDT := convertUTC(dt)												; Recording start time (local time)
 			Continue
 		}
 		if InStr(k, "Measurement stopped") {
@@ -7064,6 +7060,17 @@ divTime(sec,div) {
 	xx := Floor(sec/T[div])
 	rem := sec-xx*T[div]
 	Return {val:xx,rem:rem}
+}
+
+convertUTC(dt) {
+/*	Convert dt string YYYYMMDDHHMMSS from UTC to local time
+*/
+	tzNow := A_Now
+	tzUTC := A_NowUTC
+	tzNow -= tzUTC, Hours
+
+	dt += tzNow, Hours
+	Return
 }
 
 ThousandsSep(x, s=",") {
