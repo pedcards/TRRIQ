@@ -5304,7 +5304,7 @@ getPdfID(txt,fnam:="") {
 		res.wqid := strQ(findWQid(res.date,res.mrn,"Mortara H3+ - " res.ser).id,"###","00000") "_H"
 	} else if instr(txt,"Full Disclosure Report") {										; BG Mini short term
 		res.type := "H"
-		RegExMatch(fnam, "O)GB_SCH_(.*?)_(.*?)_(.*?)_(.*?)_FD",fnid)
+		RegExMatch(fnam, "O)GB_SCH_(.*?)_(\d{6,})_(.*?)_(.*?)_FD",fnid)
 		res.site := fnid.1
 		res.mrn := fnid.2
 		res.nameL := fnid.3
