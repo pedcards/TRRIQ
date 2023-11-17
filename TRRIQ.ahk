@@ -2909,10 +2909,10 @@ checkBGMstatus(drive:="D",title:="") {
 
 	Gui, hcStat:Font, s12 bold
 	Gui, hcStat:Add, Text, Center, % title
-	Gui, hcStat:Add, Checkbox, vAttached , BG MINI attached
-	Gui, hcStat:Add, Checkbox, vCleared  , BG MINI cleared
-	Gui, hcStat:Add, Checkbox, vImported , DATA import
-	Gui, hcStat:Add, Checkbox, vUploaded , DATA upload
+	Gui, hcStat:Add, Checkbox, vAttached , % "BG MINI attached          "
+	Gui, hcStat:Add, Checkbox, vCleared  , % "BG MINI cleared           "
+	Gui, hcStat:Add, Checkbox, vImported , % "DATA import               "
+	Gui, hcStat:Add, Checkbox, vUploaded , % "DATA upload               "
 	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcStat: +AlwaysOnTop
 	Gui, hcStat:Show, AutoSize, BG Mini Status
