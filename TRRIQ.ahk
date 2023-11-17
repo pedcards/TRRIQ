@@ -2911,15 +2911,15 @@ checkBGMstatus(drive:="D",title:="") {
 	Gui, hcStat:Add, Text, Center, % title
 	Gui, hcStat:Add, Checkbox, vAttached , BG MINI attached
 	Gui, hcStat:Add, Checkbox, vCleared  , BG MINI cleared
-	Gui, hcStat:Add, Checkbox, vImported , DATA imported
-	Gui, hcStat:Add, Checkbox, vUploaded , DATA uploaded
+	Gui, hcStat:Add, Checkbox, vImported , DATA import
+	Gui, hcStat:Add, Checkbox, vUploaded , DATA upload
 	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcStat: +AlwaysOnTop
 	Gui, hcStat:Show, AutoSize, BG Mini Status
 
-	now0 := A_Now
-	filelist0 := getfolderlist(folderUnassigned)										; Get baseline .unassigned folder
-	sleep 200
+	base := scanCygnusLog()																; Get most recent start time from Cygnus log
+	import := {}
+	upload := {}
 
 	loop,
 	{
@@ -2951,41 +2951,75 @@ checkBGMstatus(drive:="D",title:="") {
 			}
 		}
 		
-		/*	Check whether new zip appears in .unassigned folder
+		cyg := scanCygnusLog(base.launch)
+
+		/*	Check CygnusLog for Import tasks
 		*/
-		if (importStat=0) {																; Only check folder until it changes
-			filelist1 := getfolderlist(folderUnassigned)								; Check for addition to filelist0
-			sleep 200
-			importStat := (filelist1 = filelist0) ? 0 : 1
-			GuiControl, hcStat: , Imported, % importStat 
-			if (importStat=1) {
-				eventlog("New files in Unassigned.")
+		if (cyg.importStart) {
+			if (import.start=0) {														; only log first change
+				import.start := 1
+				eventlog("Starting import.")
+			}
+			if (importStat=0) {
+				import.dots := !(import.dots)
+				Guicontrol, hcStat:Text, Imported, % "DATA preparing" (import.dots) ? "..." : "   "
+			}
+		}
+		if (cyg.import) {																; Import complete
+			if (importStat=0) {
+				importStat := 1
+				eventlog("Files imported to Unassigned.")
+				GuiControl, hcStat: , Imported, % importStat 
+				Guicontrol, hcStat:Text, Imported, % "DATA import complete"
 			}
 		}
 
-		/*	Check CygnusLog for start and finish upload
+		/*	Check CygnusLog for upload tasks
 		*/
-		if (importStat=1) {
-			cyg := scanCygnusLog()
-			if (cyg.start) {															; Uncleared start
+		if (cyg.uploadAsync) {															; User started upload
+			if (upload.async=0) {
+				eventlog("User started upload.") 
+			}
+			upload.async := 1
+			importStat := 1
+			upload.text := "DATA preparing"
+		}
+		if (cyg.uploadTruncate) {														; Compressing data
+			if (upload.truncate=0) {
+				eventlog("Compressing data.")
+			}
+			upload.truncate := 1
+			importStat := 1
+			upload.text := "DATA compressing"
+		}
+		if (cyg.start) {																; Uncleared start
+			if (upload.start=0) {
 				eventlog("Cygnus start upload " cyg.start)
 			}
-			if (cyg.start)&&(cyg.done) {												; Last done
+			upload.start := 1
+			importStat := 1
+			upload.text := "DATA uploading"
+		}
+		if (upload.async) {
+			upload.dots := !(upload.dots)
+			Guicontrol, hcStat:Text, Uploaded, % "DATA Uploading" (upload.dots) ? "..." : "   "
+		}
+		if (cyg.done) {																	; Last done
+			if (upload.done=0) {
 				eventlog("Cygnus done upload " cyg.done)
 			}
+			upload.done := 1
+			importStat := 1
+			GuiControl, hcStat: , Uploaded, % upload.done
+			Guicontrol, hcStat:Text, Uploaded, % "DATA Upload complete"
 		}
 
-		/*	Check when zip disappears from .unassigned folder, returns to filelist0
+		/*	Check CygnusLog for send success
 		*/
-		if (importStat=1) {																; Only check if import has happened
-			filelist2 := getfolderlist(folderUnassigned)								; Check for return to filelist0
-			sleep 200
-			uploadStat := (filelist2 = filelist0) ? 1 : 0
-			GuiControl, hcStat: , Uploaded, % uploadStat
-			if (uploadStat=1) {
-				eventlog("New files deleted from Unassigned.")
-				Break 																	; Once imported and uploaded we are done
-			}
+		if (cyg.upload) {																; Confirmed upload
+			uploadStat := 1
+			eventlog("Successful upload.")
+			Break 																		; Once imported and uploaded we are done
 		}
 
 		Sleep 200
@@ -2994,10 +3028,6 @@ checkBGMstatus(drive:="D",title:="") {
 
 	if (uploadStat=0) {																	; Perchance quit, check Cygnus log
 		eventlog("Break without uploadStat.")
-		if (sendDT := scanCygnusLog().sendDT) {											; Scan log for Send Upload
-			uploadStat := 1
-			eventlog("Cygnus log SendUploadSuccess [" sendDT "].")
-		}
 	}
 
 	file := folderCygnus "\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
