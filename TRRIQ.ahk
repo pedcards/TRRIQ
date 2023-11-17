@@ -2873,7 +2873,7 @@ scanCygnusLog(base:="") {
 		if RegExMatch(k,"\[UploadTask\].*?" . "starting upload") {						; Detect starting upload
 			log.start := dt
 			log.done := ""
-			log.upload := ""
+			log.confirm := ""
 			Continue
 		}
 		if RegExMatch(k,"\[UploadTask\].*?" . "successful") {							; Detect upload successful
@@ -2881,7 +2881,7 @@ scanCygnusLog(base:="") {
 			Continue
 		}
 		if InStr(k, "SendUploadSuccessEvent") {											; Detect mark SuccessEvent
-			log.upload := dt
+			log.confirm := dt
 			Continue
 		}
 	}
@@ -3016,7 +3016,7 @@ checkBGMstatus(drive:="D",title:="") {
 
 		/*	Check CygnusLog for send success
 		*/
-		if (cyg.upload) {																; Confirmed upload
+		if (cyg.confirm) {																; Confirmed upload
 			uploadStat := 1
 			eventlog("Successful upload.")
 			Break 																		; Once imported and uploaded we are done
