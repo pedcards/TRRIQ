@@ -3030,7 +3030,6 @@ findBGMenroll(serNum,dt) {
 			eventlog("Found registration match: " name " [" mrn "] " enDT)
 		}
 	}
-	match .= "NONE OF THE ABOVE"
 	Return match	
 }
 
@@ -3066,13 +3065,14 @@ HolterConnect(phase="")
 	; bgmData.start := "20231019"
 
 	if (phase="Transfer") {
-		match := findBGMenroll(bgmData.ser,bgmData.start) 								; Find enrollments that match S/N an start date
+		match := findBGMenroll(bgm.sernum,bgm.start) 									; Find enrollments that match S/N an start date
 		if (match="") {
-			MsgBox NO MATCHING REGISTRATIONS
-			eventlog("No matching BGM registrations.")
+			MsgBox NO MATCHING REGISTRATION
+			eventlog("No BGM registration matches S/N " bgm.sernum " on " bgm.start ".")
 			Return
 		} else {
-			eventlog("Enroll matches: " match)
+			eventlog("Enroll matches: " RegExReplace(match,"`n"," - "))
+			match .= "NONE OF THE ABOVE"
 		}
 		m2 := StrSplit(match, "|")														; Array of matches (including WQIDs)
 		match := RegExReplace(match, "WQ:\[[A-Z0-9]+\]")								; Remove WQIDs (cMsgBox returns max 63 chars)
@@ -3087,7 +3087,7 @@ HolterConnect(phase="")
 		num := StrX(tmp,"",0,1,".",0,1)
 		wqid := stRegX(m2[num],"WQ:\[",1,1,"]",1)										; Get wqid from button index number
 		pt := readWQ(wqid)
-		title := pt.Name "`nS/N " bgmData.ser
+		title := pt.Name "`nS/N " bgm.sernum
 
 		bgmStatus := checkBGMstatus(bgmDrive,title)										; Wait to complete import and upload, or quit
 		if (bgmStatus.upload) {
