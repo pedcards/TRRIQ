@@ -2818,10 +2818,10 @@ scanCygnusLog(base:="") {
 /*	Read the most recent logfile in Cygnus\Logs
 	Base = most recent launch, skip all lines before this
 */
-	folder := ".\devfiles\Cygnus\Logs"
-	; folder := A_AppData "\Cygnus\Logs"
-	; file := folder "\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
-	file := folder "\Log_2023-11-15.log"
+	folder := A_AppData "\Cygnus\Logs"
+	file := folder "\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+	; folder := ".\devfiles\Cygnus\Logs"
+	; file := folder "\Log_2023-11-15.log"
 	if !FileExist(file) {
 		eventlog("No file found at " file)
 		Return
@@ -3087,8 +3087,8 @@ HolterConnect(phase="")
 		Return
 	}
 	if !(bgmData := getBGMlog(bgm.drive)) {	 											; Get TZ, S/N, and Start time from LOG 
-		eventlog("No valid BG MINI LOG file detected.")
-		Return 
+		bgm.start := scanCygnusLog(bgmAuth).record
+		eventlog("No " bgm.drive ":\LOG file detected. Found recording start " bgm.start " in Cygnus log.")
 	} 
 	; bgmData := {}
 	; bgmData.ser := "2031181"
@@ -3119,7 +3119,7 @@ HolterConnect(phase="")
 		pt := readWQ(wqid)
 		title := pt.Name "`nS/N " bgm.sernum
 
-		bgmStatus := checkBGMstatus(bgm.drive,title)										; Wait to complete import and upload, or quit
+		bgmStatus := checkBGMstatus(bgm.drive,title)									; Wait to complete import and upload, or quit
 		if (bgmStatus.upload) {
 			MsgBox 0x40040, BG Mini Transfer, File transfer complete!
 		} else {																		; Can't confirm BGM was uploaded
