@@ -3036,18 +3036,6 @@ checkBGMstatus(drive:="D",title:="") {
 	Return {data:dataStat,import:importStat,upload:uploadStat}
 }
 
-getfolderlist(path) {
-	Loop, % path "\*"
-	{
-		file := A_LoopFileName
-		if (file="") {
-			Break
-		}
-		list .= file "`n"
-	}
-	Return list
-}
-
 findBGMenroll(serNum,dt) {
 /*	Find best enrollment that matches S/N and recording date/time for BGM SL
 */
