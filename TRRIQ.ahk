@@ -3119,7 +3119,7 @@ HolterConnect(phase="")
 		pt := readWQ(wqid)
 		title := pt.Name "`nS/N " bgm.sernum
 
-		bgmStatus := checkBGMstatus(bgmDrive,title)										; Wait to complete import and upload, or quit
+		bgmStatus := checkBGMstatus(bgm.drive,title)										; Wait to complete import and upload, or quit
 		if (bgmStatus.upload) {
 			MsgBox 0x40040, BG Mini Transfer, File transfer complete!
 		} else {																		; Can't confirm BGM was uploaded
