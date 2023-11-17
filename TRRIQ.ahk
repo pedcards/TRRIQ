@@ -2771,6 +2771,7 @@ getBGMlog(drive:="D") {
 	loop, 5																				; Have a few swings to find LOG file
 	{
 		if FileExist(logfile) {
+			eventlog("Found LOG on pass " A_Index)
 			FileRead, txt, % logfile
 			FileCopy, % logfile, % ".\tempfiles\LOG_" A_Now
 			Break
@@ -3052,10 +3053,7 @@ HolterConnect(phase="")
 	if !(bgm := findBGMdrive()) {														; Wait for attached drive letter and sernum for [BG MINI]
 		Return
 	}
-	bgmData := getBGMlog(bgm.drive) 													; Get TZ, S/N, and Start time from LOG 
-	if (bgmData.ser) {
-		eventlog("S/N " bgmData.ser ", connected " bgmData.start ".")
-	} else {
+	if !(bgmData := getBGMlog(bgm.drive)) {	 											; Get TZ, S/N, and Start time from LOG 
 		eventlog("No valid BG MINI drive detected by timeout.")
 		Return 
 	} 
