@@ -2962,15 +2962,15 @@ checkBGMstatus(drive:="D",title:="") {
 			}
 			if (importStat=0) {
 				import.dots := !(import.dots)
-				Guicontrol, hcStat:Text, Imported, % "DATA preparing" (import.dots) ? "..." : "   "
+				Guicontrol, hcStat:Text, Imported, % "DATA preparing" ((import.dots) ? "..." : "   ")
 			}
 		}
 		if (cyg.import) {																; Import complete
 			if (importStat=0) {
 				importStat := 1
 				eventlog("Files imported to Unassigned.")
-				GuiControl, hcStat: , Imported, % importStat 
-				Guicontrol, hcStat:Text, Imported, % "DATA import complete"
+				Guicontrol, hcStat:Text, Imported, % "DATA Import complete"
+				GuiControl, hcStat: , Imported, % importStat
 			}
 		}
 
@@ -2982,7 +2982,7 @@ checkBGMstatus(drive:="D",title:="") {
 			}
 			upload.async := 1
 			importStat := 1
-			upload.text := "DATA preparing"
+			upload.text := "Preparing"
 		}
 		if (cyg.uploadTruncate) {														; Compressing data
 			if (upload.truncate=0) {
@@ -2990,7 +2990,7 @@ checkBGMstatus(drive:="D",title:="") {
 			}
 			upload.truncate := 1
 			importStat := 1
-			upload.text := "DATA compressing"
+			upload.text := "Compressing"
 		}
 		if (cyg.start) {																; Uncleared start
 			if (upload.start=0) {
@@ -2998,11 +2998,11 @@ checkBGMstatus(drive:="D",title:="") {
 			}
 			upload.start := 1
 			importStat := 1
-			upload.text := "DATA uploading"
+			upload.text := "Uploading"
 		}
 		if (upload.async) {
 			upload.dots := !(upload.dots)
-			Guicontrol, hcStat:Text, Uploaded, % "DATA Uploading" (upload.dots) ? "..." : "   "
+			Guicontrol, hcStat:Text, Uploaded, % upload.text ((upload.dots) ? "..." : "   ")
 		}
 		if (cyg.done) {																	; Last done
 			if (upload.done=0) {
