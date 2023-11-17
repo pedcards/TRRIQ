@@ -2854,7 +2854,10 @@ scanCygnusLog(base:="") {
 			log.sernum := t2
 			Continue
 		}
-
+		if InStr(k, "Import status Complete") {
+			log.import := dt
+			Continue
+		}
 		if RegExMatch(k,"\[UploadTask\].*?" . "starting upload") {						; Detect starting upload
 			log.start := dt
 			log.done := ""
