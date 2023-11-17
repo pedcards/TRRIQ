@@ -7074,7 +7074,7 @@ convertUTC(dt) {
 	tzNow -= tzUTC, Hours
 
 	dt += tzNow, Hours
-	Return
+	Return dt
 }
 
 ThousandsSep(x, s=",") {
