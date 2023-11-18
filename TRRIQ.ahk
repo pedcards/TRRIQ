@@ -3156,6 +3156,10 @@ bgmCygnusCheck() {
 		if (cygWin := WinExist("Holter Connect ahk_exe Cygnus.exe")) {
 			Break
 		}
+		if (secWin := WinExist("Security Warning", "Cygnus.exe")) {
+			Control, Uncheck, , Al&ways ask, % "ahk_id " secWin
+			ControlClick, &Run, % "ahk_id " secWin
+		}
 		Sleep 250
 	}
 	if !(cygWin) {
