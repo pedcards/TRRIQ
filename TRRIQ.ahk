@@ -3174,10 +3174,11 @@ bgmCygnusCheck() {
 	Gui, hcTM: +AlwaysOnTop
 	Gui, hcTm:Show, AutoSize, BG Mini connect
 
+	ct := 0
 	base := scanCygnusLog()																; Get DT for most recent launch
 	Loop
 	{
-		ct ++
+		ct := ct + 5
 		if (ct>100) {
 			ct := 0
 		}
