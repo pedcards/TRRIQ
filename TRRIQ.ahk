@@ -3151,7 +3151,7 @@ HolterConnect(phase="")
 bgmCygnusCheck() {
 /*	Wait until Holter Connect launched and user logged in
 */
-	Loop, 50
+	Loop, 250																			; 50 loops ~= 12 sec
 	{
 		if (cygWin := WinExist("Holter Connect ahk_exe Cygnus.exe")) {
 			Break
