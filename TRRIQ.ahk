@@ -3186,19 +3186,28 @@ bgmCygnusCheck() {
 			Control, Uncheck, , Al&ways ask, % "ahk_id " secWin
 			ControlClick, &Run, % "ahk_id " secWin
 		}
+		if (installWin := WinExist("Application Install","Holter Connect")) {
+			ControlClick, &Install, % "ahk_id " installWin
+			if !(installing) {
+				installing := True
+				eventlog("Holter Connect not on this machine, installing.")
+				sleep 10000
+			}
+		}
 		Sleep 250
 	}
 	if !(cygWin) {
 		eventlog("Holter Connect failed to launch.")
 		Return
 	}
+	WinActivate, % "ahk_id " cygWin
 
 	Gui, hcTm:Font, s18 bold
 	Gui, hcTm:Add, Text, , Log in to Holter Connect
 	Gui, hcTm:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
 	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcTM: +AlwaysOnTop
-	Gui, hcTm:Show, AutoSize, BG Mini connect
+	Gui, hcTm:Show, AutoSize, TRRIQ BG Mini connect
 
 	ct := 0
 	base := scanCygnusLog()																; Get DT for most recent launch
