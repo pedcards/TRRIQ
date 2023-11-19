@@ -24,6 +24,7 @@ userinstance := substr(tobase(A_TickCount,36),-3)
 IfInString, fileDir, AhkProjects					; Change enviroment if run from development vs production directory
 {
 	isDevt := true
+	FileDelete, .lock
 	path:=readIni("devtpaths")
 	eventlog(">>>>> Started in DEVT mode.")
 } else {
@@ -38,7 +39,7 @@ IfInString, fileDir, TEST
 }
 if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
-	FileAppend, % A_now ", " user "|" userinstance "|" A_ComputerName "`n", .\files\legacy.txt
+	FileAppend, % A_Now ", " user "|" userinstance "|" A_ComputerName "`n", .\files\legacy.txt
 	MsgBox 0x30, Shortcut error
 		, % "Obsolete TRRIQ shortcut!`n`n"
 		. "Please notify Igor Gurvits or Jim Gray to update the shortcut on this machine: " A_ComputerName
@@ -127,6 +128,8 @@ for key in epList																					; option string epStr
 	epStr .= key "|"
 }
 epStr := Trim(epStr,"|")
+
+saveCygnusLogs("all")
 	
 Progress, , % " ", Cleaning old .bak files
 Loop, files, bak\*.bak
@@ -326,6 +329,7 @@ PhaseGUI:
 	Menu, menuAdmin, Add, Find pending leftovers, cleanPending
 	Menu, menuAdmin, Add, Fix WQ device durations, fixDuration							; position for test menu
 	Menu, menuAdmin, Add, Recover DONE record, recoverDone
+	Menu, menuAdmin, Add, Check running users/versions, runningUsers
 	Menu, menuAdmin, Add, Create test order, makeEpicORM
 		
 	Menu, menuBar, Add, System, :menuSys
@@ -437,7 +441,7 @@ lateReport()
 		}
 	}
 	progress, off
-	tmp := path.holterPDF "late-" A_now ".csv"
+	tmp := path.holterPDF "late-" A_Now ".csv"
 	FileAppend, %str%, %tmp%
 	eventlog("Generated missing devices report.")
 	MsgBox, 262208, Missing devices report, Report saved to:`n%tmp%
@@ -489,6 +493,65 @@ cleanPending()
 	progress, off
 
 	Return
+}
+
+runningUsers() {
+/*	Scan log for running user versions
+*/
+	Gui, Hide
+	Loop, Files, % ".\logs\*.log" 
+	{
+		k := A_LoopFileName
+		flist .= k "`n"
+	}
+	Sort, flist, R
+
+	Loop, parse, flist, `r`n
+	{
+		fnam := A_LoopField
+		FileRead, log, % ".\logs\" fnam
+		open := ignored := ""
+
+		Loop, parse, log, `n`r
+		{
+			k := A_LoopField
+			RegExMatch(k,"^(.*?) \[(.*?)/(.*?)/(.*?)\] (.*?)$",fld)
+			kDate := fld1
+			kUser := fld2
+			kWKS := fld3
+			kSess := fld4
+			kTxt := fld5
+			if InStr(ignored, kSess) {
+				Continue
+			}
+			if InStr(kTxt, "<<<<< Session end") {
+				ignored .= kSess "|"
+			}
+			if InStr(kTxt, ">>>>> Started") {
+				RegExMatch(kTxt,"(DEVT|PROD).*?(ver \d{12})",m)
+				if InStr(kTxt,"DEVT") {
+					Continue
+				}
+				open .= RegExReplace(kDate,"\|\|","-") " [" kUser "] " m1 " " m2 "|"
+			}
+		}
+
+		Gui, RU:Destroy
+		Gui, RU:Default
+		Gui, RU:Add, ListBox, w400 r20 , % open
+		Gui, RU:Add, Button, Default gButtonQuit, Quit
+		Gui, RU:Show, , % "Open users - " fnam
+		WinWaitClose, Open users
+		if (RUquit) {
+			Break
+		}
+	}
+	Return
+
+	ButtonQuit:
+		Gui, RU:Destroy
+		RUquit := true
+		Return
 }
 
 recoverDone(uid:="")
@@ -639,7 +702,7 @@ setwqupdate() {
 	global wqfileDT
 	FileDelete, .\files\wqupdate
 	FileAppend,,.\files\wqupdate
-	wqfileDT := A_now
+	wqfileDT := A_Now
 	return
 }
 
@@ -803,7 +866,7 @@ WQtask() {
 		return
 	}
 	if instr(choice,"upload") {
-		inputbox(inDT,"Upload log","`n`nEnter date uploaded to Preventice`n",niceDate(A_now))
+		inputbox(inDT,"Upload log","`n`nEnter date uploaded to Preventice`n",niceDate(A_Now))
 		if (ErrorLevel) {
 			return
 		}
@@ -838,11 +901,11 @@ WQtask() {
 					wq.addElement("fedex",idstr)
 				}
 				wq.setText(idstr "/fedex",fedex)
-				wq.setAtt(idstr "/fedex", {user:user, date:substr(A_now,1,8)})
+				wq.setAtt(idstr "/fedex", {user:user, date:substr(A_Now,1,8)})
 				eventlog(pt.MRN "[" pt.Date "] FedEx tracking #" fedex)
 			}
 		}
-		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},note)
+		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_Now,1,8)},note)
 		WriteOut("/root/pending","enroll[@id='" idx "']")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
 		setwqupdate()
@@ -870,7 +933,7 @@ WQtask() {
 		if !IsObject(wq.selectSingleNode(idstr "/notes")) {
 			wq.addElement("notes",idstr)
 		}
-		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_now,1,8)},"MOVED: " reason)
+		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_Now,1,8)},"MOVED: " reason)
 		moveWQ(idx)
 		eventlog(idx " Move from WQ: " reason)
 		setwqupdate()
@@ -1145,7 +1208,10 @@ WQepicOrdersPrevious() {
 			, e0.name																	; name
 			, e0.mrn																	; mrn
 			, e0.provname																; prov
-			, monOrderType[e0.mon] " " e0.mon											; monitor type
+			, monOrderType[e0.mon] " "													; monitor type
+				. (e0.mon="BGH"															; relabel BGH=>CEM
+				? "CEM"
+				: e0.mon)
 			, "")																		; fulldisc present, make blank
 		GuiControl, Enable, Register
 		GuiControl, Text, Register, Go to ORDERS tab
@@ -1273,12 +1339,16 @@ WQscanHolterPDFs(ByRef wqfiles) {
 	findfullPDF()																		; read Holter PDF dir into pdfList
 	for key,val in pdfList
 	{
-		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])\.pdf",fnID)							; get filename WQID if PDF has already been renamed (fnid.1 = wqid, fnid.2 = type)
+		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])(-full)?\.pdf",fnID)					; get filename WQID if PDF has been renamed (fnid.1 = wqid, fnid.2 = type, fnid.3=full)
 		id := fnID.1
 		ftype := strQ(monPdfStrings[fnID.2],"###","???")
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
 			LV_Modify(k,"Col9","")														; clear the "X" in the FullDisc column
 			continue																	; skip rest of processing
+		}
+		if (fnID.3) {																	; Do not add PDF file if not in WQLV
+			eventlog(val " does not match ID in WQLV.")
+			Continue
 		}
 		res := readwq(id)																; get values for wqid if valid, else null
 		
@@ -1801,7 +1871,7 @@ addPrevEnroll(id,res) {
 	wq.addElement("dev",newID,res.dev)
 	wq.addElement("prov",newID,res.prov)
 	wq.addElement("site",newID,res.site)
-	wq.addElement("webgrab",newID,A_now)
+	wq.addElement("webgrab",newID,A_Now)
 	
 	return
 }
@@ -1958,11 +2028,13 @@ readWQlv:
 	fldval.wqid := wqid																	; or findFullPdf scan of extra PDFs
 	
 	if (fldval.node = "done") {															; task has been done already by another user
+		eventlog("WQlv " fldval.Name " clicked, but already DONE.")
 		MsgBox, 262208, Completed, File has already been processed!
 		WQlist()																		; refresh list and return
 		return
 	}
 	if (fldval.webgrab="") {
+		eventlog("WQlv " fldval.Name " not found in webgrab.")
 		MsgBox 0x40030
 			, Registration issue
 			, % "No registration found on Preventice site.`n"
@@ -2525,7 +2597,7 @@ checkweb(id) {
 	if (wq.selectSingleNode(en "/webgrab").text) {											; webgrab already exists
 		Return
 	} else {
-		wq.addElement("webgrab",en,A_now)
+		wq.addElement("webgrab",en,A_Now)
 		eventlog("Added webgrab for id " id)
 		Return
 	}
@@ -2533,18 +2605,6 @@ checkweb(id) {
 
 ftpGrab() {
 	global path
-/*	Added this due to problems with FTP downloads
-*/
-	Gui, phase:Hide
-	MsgBox 0x40030
-		, FTP issue
-		, % "TRRIQ is currently having issues downloading from the FTP site.`n`n"
-		. "Go to the https://ftp.preventice.com website to manually download the files.`n`n"
-		. "Sorry for the inconvenience!`n`n-The Management"
-	Gui, phase:Show
-	Return
-/*
-*/
 	Gui, phase:Hide
 	RunWait, PrevGrab.exe "ftp" 
 	FileMove, .\pdfTemp\*.pdf, % path.holterPDF "*.*"
@@ -2557,8 +2617,11 @@ ftpGrab() {
 cleanTempFiles() {
 	thresh:=180
 	
+	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(".\tempfiles").Files.Count
+	
 	Loop, files, tempfiles\*
 	{
+		Progress, % 100*A_Index/fileCount, % A_Index "/" fileCount, Cleaning tempfiles > %thresh% days
 		filenm := A_LoopFileName
 		FileGetTime, fileCDT, % "tempfiles\" filenm, C
 		dtDiff := dateDiff(fileCDT)
@@ -2658,40 +2721,46 @@ findBGMdrive(delay:=5) {
 	match := "BG MINI"																	; Match string
 
 	Gui, hcTm:Font, s18 bold
-	Gui, hcTm:Add, Text, , Log in to Holter Connect and`nAttach BG MINI to cable
+	Gui, hcTm:Add, Text, , Attach BG MINI to cable
 	Gui, hcTm:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
 	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcTM: +AlwaysOnTop
-	Gui, hcTm:Show, AutoSize, BG Mini connect
+	Gui, hcTm:Show, AutoSize, TRRIQ BG Mini connect
 
-	Loop, % (loops:=delay*120)															; 60 sec/120 loops
+	base := scanCygnusLog()																; Get DT for most recent launch
+	Loop
 	{
-		GuiControl, , % HcCt, % 100*A_Index/loops
-		DriveGet, drives, List															; Get all attached drive letters
-		drives := RegExReplace(drives,"[COFWZ]")										; Remove letters used for network drives 
-		Loop, parse, drives
-		{
-			DriveGet, label, Label, %A_LoopField%:
-			if (label=match) {
-				hit := A_LoopField
-			}
+		ct ++
+		if (ct>100) {
+			ct := 0
 		}
-		if (hit) {																		; got a hit
-			Break
+		GuiControl, , % HcCt, % ct
+		if !WinExist("Holter Connect ahk_exe Cygnus.exe") {								; User closed Holter Connect
+			eventlog("Holter Connect window closed.")
+			Gui, hcTm:Destroy
+			saveCygnusLogs()
+			Return
 		}
-		if !WinExist("BG Mini connect") {												; user closed progress window
-			Break
+		if !WinExist("BG Mini connect") {
+			eventlog("User closed GUI.")
+			Gui, hcTm:Destroy
+			WinClose, % "Holter Connect ahk_exe Cygnus.exe"
+			saveCygnusLogs()
+			Return
 		}
-		sleep 500
+		log := scanCygnusLog(base.launch)												; Refresh log from launch time
+		if (log.drive) {
+			eventlog("Holter Connect recogizes drive " log.drive ": S/N " log.sernum ".")
+			Gui, hcTm:Destroy
+			saveCygnusLogs()
+			Return log
+		}
+		Sleep, 500
 	}
+	
+	eventlog("User timed out.")
 	Gui, hcTm:Destroy
-
-	if (hit) {
-		eventlog("Found [BG MINI] drive " hit ":.")
-	} else {
-		eventlog("No [BG MINI] drive found.")
-	}
-	Return hit
+	Return
 }
 
 getBGMlog(drive:="D") {
@@ -2699,8 +2768,25 @@ getBGMlog(drive:="D") {
 	Read start time in D:\LOG (tz=UTC+0)
 	Possibly demographics stored in matching DATA\hh-mm-ss
 */
-	FileRead, txt, % drive ":\LOG"
-	; FileRead, txt, .\devfiles\BGM\TESTLOG
+	Loop, files, % drive ":\*", FD
+	{
+		bgmDir .= A_LoopFileTimeModified "`t" A_LoopFileName "`t[" A_LoopFileSize "]`n"
+	}
+	FileAppend, % bgmDir, .\tempfiles\%A_Now%-DIR.txt									; Writeout target dir for each upload
+	
+	; logfile := ".\devfiles\BGM\TESTLOG"
+	logfile := drive ":\LOG"
+	loop, 5																				; Have a few swings to find LOG file
+	{
+		if FileExist(logfile) {
+			eventlog("Found LOG on pass " A_Index)
+			FileRead, txt, % logfile
+			FileCopy, % logfile, % ".\tempfiles\LOG_" A_Now
+			Break
+		}
+		Sleep, 1000
+	}
+
 	Loop, Parse, txt, `r`n
 	{
 		k := A_LoopField
@@ -2724,11 +2810,7 @@ getBGMlog(drive:="D") {
 				min := SubStr(time, 4, 2)
 				sec := SubStr(time, 7, 2)
 			dt := yyyy . mm . dd . hr . min . sec
-			tzNow := A_Now
-			tzUTC := A_NowUTC
-			tzNow -= tzUTC, Hours
-			dt += tzNow, Hours
-			bgmStartDT := dt															; Recording start time (local time)
+			bgmStartDT := convertUTC(dt)												; Recording start time (local time)
 			Continue
 		}
 		if InStr(k, "Measurement stopped") {
@@ -2740,35 +2822,78 @@ getBGMlog(drive:="D") {
 	Return {ser:serNum,tz:bgmTZ,start:bgmStartDT}
 }
 
-scanCygnusLog() {
+scanCygnusLog(base:="") {
 /*	Read the most recent logfile in Cygnus\Logs
+	Base = most recent launch, skip all lines before this
 */
-	; folder := ".\devfiles\Cygnus\Logs"
 	folder := A_AppData "\Cygnus\Logs"
 	file := folder "\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+	; folder := ".\devfiles\Cygnus\Logs"
+	; file := folder "\Log_2023-11-15.log"
+	if !FileExist(file) {
+		eventlog("No file found at " file)
+		Return
+	}
+
 	FileRead, txt, % file
 	Loop, Parse, txt, `r`n																; Read to end of Log to catch last event
 	{
 		k := A_LoopField
-		if RegExMatch(k,"^(.*?)\..*?" . "\[S\/N: (\d*)\].*?"							; Detect starting upload
-			.  "\[UploadTask\].*?" . "starting upload",t) {
-			start := SubStr(RegExReplace(t1, "[ :\-]"),1,14)
-			sernum := t2
-			done := ""
-			sendDT := ""
+		RegExMatch(k,"^(.*?)\.\d+ \[",dt)
+		dt := RegExReplace(dt1,"[ :\-]")
+		if (dt<base) {																	; Skip lines before base
+			Continue
 		}
-		if RegExMatch(k,"^(.*?)\..*?" . "\[S\/N: (\d*)\].*?"							; Detect upload successful
-			.  "\[UploadTask\].*?" . "successful",t) {
-			done := SubStr(RegExReplace(t1, "[ :\-]"),1,14)
-			sernum := t2
+		if InStr(k,"Application is loading") {											; Detect most recent load time
+			log := {}
+			log.launch := dt
+			Continue
+		}
+		if InStr(k, "Successfully authenticated") {										; Detect user logged in
+			log.auth := dt
+			Continue
+		}
+		if RegExMatch(k,"(\w) Serial:BGMINI-(\d+)",t) {									; Detect most recent attached BGMINI and drive
+			log.drive := t1
+			log.sernum := t2
+			Continue
+		}
+		if RegExMatch(k,":\\DATA\\(.*?)\.EDF",t) {										; Found recording date
+			log.record := convertUTC(RegExReplace(t1,"[\-\\]"))
+			Continue
+		}
+		if InStr(k,"ImportAsync: Starting import") {									; Starting import
+			log.importStart := dt
+			Continue
+		}
+		if InStr(k, "Import status Complete") {											; DATA imported to local PC
+			log.import := dt
+			Continue
+		}
+		if InStr(k, "UploadPrepareAsync") {												; User initiated upload
+			log.uploadAsync := dt
+			Continue
+		}
+		if InStr(k, "Truncating recording data") {										; Compressing data
+			log.uploadTruncate := dt
+			Continue
+		}
+		if RegExMatch(k,"\[UploadTask\].*?" . "starting upload") {						; Detect starting upload
+			log.start := dt
+			log.done := ""
+			log.confirm := ""
+			Continue
+		}
+		if RegExMatch(k,"\[UploadTask\].*?" . "successful") {							; Detect upload successful
+			log.done := dt
+			Continue
 		}
 		if InStr(k, "SendUploadSuccessEvent") {											; Detect mark SuccessEvent
-			sendDT := stRegX(k,"",1,0,"[\[\]\.]",1)
-			sendDT := SubStr(RegExReplace(sendDT, "[ :\-]"),1,14)
-			start := done := ""
+			log.confirm := dt
+			Continue
 		}
 	}
-	Return {start:start,done:done,sendDT:sendDT}
+	Return log
 } 
 
 checkBGMstatus(drive:="D",title:="") {
@@ -2786,23 +2911,23 @@ checkBGMstatus(drive:="D",title:="") {
 	; folderCygnus := ".\devfiles\Cygnus"
 	folderBGM := drive ":\DATA"															; Data folder in BG MINI drive
 	folderCygnus := A_AppData "\Cygnus"													; Cygnus folder
-	folderUnassigned := folderCygnus "\.unassigned"
+	folderUnassigned := folderCygnus "\Acquired\.unassigned"
 	eventlog("BGM=" folderBGM ", Cygnus=" folderCygnus ", Unassigned=" folderUnassigned)
 	driveStat:=dataStat:=importStat:=uploadStat:=0										; assume all false
 
 	Gui, hcStat:Font, s12 bold
 	Gui, hcStat:Add, Text, Center, % title
-	Gui, hcStat:Add, Checkbox, vAttached , BG MINI attached
-	Gui, hcStat:Add, Checkbox, vCleared  , BG MINI cleared
-	Gui, hcStat:Add, Checkbox, vImported , DATA imported
-	Gui, hcStat:Add, Checkbox, vUploaded , DATA uploaded
+	Gui, hcStat:Add, Checkbox, vAttached , % "BG MINI attached          "
+	Gui, hcStat:Add, Checkbox, vCleared  , % "BG MINI cleared           "
+	Gui, hcStat:Add, Checkbox, vImported , % "DATA import               "
+	Gui, hcStat:Add, Checkbox, vUploaded , % "DATA upload               "
 	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcStat: +AlwaysOnTop
-	Gui, hcStat:Show, AutoSize, BG Mini Status
+	Gui, hcStat:Show, AutoSize, TRRIQ BG Mini Status
 
-	now0 := A_Now
-	filelist0 := getfolderlist(folderUnassigned)										; Get baseline .unassigned folder
-	sleep 200
+	base := scanCygnusLog()																; Get most recent start time from Cygnus log
+	import := {}
+	upload := {}
 
 	loop,
 	{
@@ -2810,6 +2935,7 @@ checkBGMstatus(drive:="D",title:="") {
 		*/
 		if !WinExist("BG Mini Status") {
 			eventlog("User closed BG Mini Status window")
+			saveCygnusLogs()
 			Break
 		}
 
@@ -2820,6 +2946,7 @@ checkBGMstatus(drive:="D",title:="") {
 		GuiControl, hcStat: , Attached , % driveStat
 		if (driveStat=0) {
 			eventlog("Drive " drive " disconnected.")
+			saveCygnusLogs()
 			Break
 		}
 		
@@ -2834,41 +2961,76 @@ checkBGMstatus(drive:="D",title:="") {
 			}
 		}
 		
-		/*	Check whether new zip appears in .unassigned folder
+		cyg := scanCygnusLog(base.launch)
+
+		/*	Check CygnusLog for Import tasks
 		*/
-		if (importStat=0) {																; Only check folder until it changes
-			filelist1 := getfolderlist(folderUnassigned)								; Check for addition to filelist0
-			sleep 200
-			importStat := (filelist1 = filelist0) ? 0 : 1
-			GuiControl, hcStat: , Imported, % importStat 
-			if (importStat=1) {
-				eventlog("New files in Unassigned.")
+		if (cyg.importStart) {
+			if (import.start=0) {														; only log first change
+				import.start := 1
+				eventlog("Starting import.")
+			}
+			if (importStat=0) {
+				import.dots := !(import.dots)
+				Guicontrol, hcStat:Text, Imported, % "DATA preparing" ((import.dots) ? "..." : "   ")
+			}
+		}
+		if (cyg.import) {																; Import complete
+			if (importStat=0) {
+				importStat := 1
+				eventlog("Files imported to Unassigned.")
+				Guicontrol, hcStat:Text, Imported, % "DATA Import complete"
+				GuiControl, hcStat: , Imported, % importStat
 			}
 		}
 
-		/*	Check CygnusLog for start and finish upload
+		/*	Check CygnusLog for upload tasks
 		*/
-		if (importStat=1) {
-			cyg := scanCygnusLog()
-			if (cyg.start) {															; Uncleared start
+		if (cyg.uploadAsync) {															; User started upload
+			if (upload.async=0) {
+				eventlog("User started upload.") 
+			}
+			upload.async := 1
+			importStat := 1
+			upload.text := "Preparing"
+		}
+		if (cyg.uploadTruncate) {														; Compressing data
+			if (upload.truncate=0) {
+				eventlog("Compressing data.")
+			}
+			upload.truncate := 1
+			importStat := 1
+			upload.text := "Compressing"
+		}
+		if (cyg.start) {																; Uncleared start
+			if (upload.start=0) {
 				eventlog("Cygnus start upload " cyg.start)
 			}
-			if (cyg.start)&&(cyg.done) {												; Last done
+			upload.start := 1
+			importStat := 1
+			upload.text := "Uploading"
+		}
+		if (upload.async) {
+			upload.dots := !(upload.dots)
+			Guicontrol, hcStat:Text, Uploaded, % upload.text ((upload.dots) ? "..." : "   ")
+		}
+		if (cyg.done) {																	; Last done
+			if (upload.done=0) {
 				eventlog("Cygnus done upload " cyg.done)
 			}
+			upload.done := 1
+			importStat := 1
+			GuiControl, hcStat: , Uploaded, % upload.done
+			Guicontrol, hcStat:Text, Uploaded, % "DATA Upload complete"
 		}
 
-		/*	Check when zip disappears from .unassigned folder, returns to filelist0
+		/*	Check CygnusLog for send success
 		*/
-		if (importStat=1) {																; Only check if import has happened
-			filelist2 := getfolderlist(folderUnassigned)								; Check for return to filelist0
-			sleep 200
-			uploadStat := (filelist2 = filelist0) ? 1 : 0
-			GuiControl, hcStat: , Uploaded, % uploadStat
-			if (uploadStat=1) {
-				eventlog("New files deleted from Unassigned.")
-				Break 																	; Once imported and uploaded we are done
-			}
+		if (cyg.confirm) {																; Confirmed upload
+			uploadStat := 1
+			eventlog("Successful upload.")
+			saveCygnusLogs()
+			Break 																		; Once imported and uploaded we are done
 		}
 
 		Sleep 200
@@ -2877,26 +3039,33 @@ checkBGMstatus(drive:="D",title:="") {
 
 	if (uploadStat=0) {																	; Perchance quit, check Cygnus log
 		eventlog("Break without uploadStat.")
-		uploadStat := 1
-		if (sendDT := scanCygnusLog().sendDT) {											; Scan log for Send Uploa
-			eventlog("Cygnus log SendUploadSuccess [" sendDT "].")
-		}
 	}
 
+	file := folderCygnus "\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+	FileCopy, % file, .\tempfiles 
+	saveCygnusLogs()
 	eventlog("checkBGMstatus: BGM Attached=" driveStat ", BGM Cleared=" dataStat ", Imported=" importStat ", Uploaded=" uploadStat)
 	Return {data:dataStat,import:importStat,upload:uploadStat}
 }
 
-getfolderlist(path) {
-	Loop, % path "\*"
-	{
-		file := A_LoopFileName
-		if (file="") {
-			Break
-		}
-		list .= file "`n"
+saveCygnusLogs(all="") {
+/*	Save copy of Cygnus logs per machine per user
+	"all" creates new mirror
+	Toggle in trriq.ini
+*/
+	folder := A_AppData "\Cygnus\Logs"
+	logpath := ".\logs\Cygnus\" A_ComputerName "\" A_UserName
+	today := "Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+	if (all) {																			; any value will copy entire folder 
+		FileCopyDir, % folder, % logpath "\", 1											; trailing \ copies folder to logpath
+		FileSetTime, , % ".\logs\Cygnus\" A_ComputerName "\" A_UserName
+		FileSetTime, , % ".\logs\Cygnus\" A_ComputerName
+	} else {
+		FileCopy, % folder "\" today, % logpath "\" today, 1
+		FileSetTime, , % ".\logs\Cygnus\" A_ComputerName "\" A_UserName
+		FileSetTime, , % ".\logs\Cygnus\" A_ComputerName
 	}
-	Return list
+	Return
 }
 
 findBGMenroll(serNum,dt) {
@@ -2923,7 +3092,6 @@ findBGMenroll(serNum,dt) {
 			eventlog("Found registration match: " name " [" mrn "] " enDT)
 		}
 	}
-	match .= "NONE OF THE ABOVE"
 	Return match	
 }
 
@@ -2943,23 +3111,30 @@ HolterConnect(phase="")
 	} else {
 		Run, .\files\Cygnus.application,,,cygnusApp
 	}
-	bgmDrive := findBGMdrive()															; Get drive letter for [BG MINI]
-	bgmData := getBGMlog(bgmDrive) 														; Get TZ, S/N, and Start time from LOG 
-	if (bgmData.ser="") {
-		eventlog("No valid BG MINI drive detected by timeout.")
-		Return 
+
+	if !(bgmAuth := bgmCygnusCheck()) {													; Wait until user logged in successfully
+		Return
+	}
+	if !(bgm := findBGMdrive()) {														; Wait for attached drive letter and sernum for [BG MINI]
+		Return
+	}
+	if !(bgmData := getBGMlog(bgm.drive)) {	 											; Get TZ, S/N, and Start time from LOG 
+		bgm.start := scanCygnusLog(bgmAuth).record
+		eventlog("No " bgm.drive ":\LOG file detected. Found recording start " bgm.start " in Cygnus log.")
 	} 
 	; bgmData := {}
 	; bgmData.ser := "2031181"
 	; bgmData.start := "20231019"
-	eventlog("S/N " bgmData.ser ", connected " bgmData.start ".")
 
 	if (phase="Transfer") {
-		match := findBGMenroll(bgmData.ser,bgmData.start) 								; Find enrollments that match S/N an start date
+		match := findBGMenroll(bgm.sernum,bgm.start) 									; Find enrollments that match S/N an start date
 		if (match="") {
-			MsgBox NO MATCHING REGISTRATIONS
-			eventlog("No matching BGM registrations.")
+			MsgBox NO MATCHING REGISTRATION
+			eventlog("No BGM registration matches S/N " bgm.sernum " on " bgm.start ".")
 			Return
+		} else {
+			eventlog("Enroll matches: " RegExReplace(match,"`n"," - "))
+			match .= "NONE OF THE ABOVE"
 		}
 		m2 := StrSplit(match, "|")														; Array of matches (including WQIDs)
 		match := RegExReplace(match, "WQ:\[[A-Z0-9]+\]")								; Remove WQIDs (cMsgBox returns max 63 chars)
@@ -2974,11 +3149,13 @@ HolterConnect(phase="")
 		num := StrX(tmp,"",0,1,".",0,1)
 		wqid := stRegX(m2[num],"WQ:\[",1,1,"]",1)										; Get wqid from button index number
 		pt := readWQ(wqid)
-		title := pt.Name "`nS/N " bgmData.ser
+		title := pt.Name "`nS/N " bgm.sernum
 
-		bgmStatus := checkBGMstatus(bgmDrive,title)										; Wait to complete import and upload, or quit
-		if !(bgmStatus.upload) {														; Can't confirm BGM was uploaded
-			MsgBox 0x14, BG Mini Transfer, Did BG MINI upload successfully?
+		bgmStatus := checkBGMstatus(bgm.drive,title)									; Wait to complete import and upload, or quit
+		if (bgmStatus.upload) {
+			MsgBox 0x40040, BG Mini Transfer, File transfer complete!
+		} else {																		; Can't confirm BGM was uploaded
+			MsgBox 0x40014, BG Mini Transfer, Did BG MINI upload successfully?
 			IfMsgBox Yes, {
 				eventlog("Confirmed BGM uploaded successfully.")
 			} Else {
@@ -2993,13 +3170,85 @@ HolterConnect(phase="")
 		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
 			wq.addElement("sent",wqStr)
 		}
-		wq.setText(wqStr "/sent",substr(A_now,1,8))
+		wq.setText(wqStr "/sent",substr(A_Now,1,8))
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[@id='" wqid "']")
 		eventlog(pt.MRN " " pt.Name " study " wqid.Date " uploaded to Preventice.")
 
 	}
 
+	saveCygnusLogs()
+	Return
+}
+
+bgmCygnusCheck() {
+/*	Wait until Holter Connect launched and user logged in
+*/
+	Loop, 250																			; 50 loops ~= 12 sec
+	{
+		if (cygWin := WinExist("Holter Connect ahk_exe Cygnus.exe")) {
+			Break
+		}
+		if (secWin := WinExist("Security Warning", "Cygnus.exe")) {
+			Control, Uncheck, , Al&ways ask, % "ahk_id " secWin
+			ControlClick, &Run, % "ahk_id " secWin
+		}
+		if (installWin := WinExist("Application Install","Holter Connect")) {
+			ControlClick, &Install, % "ahk_id " installWin
+			if !(installing) {
+				installing := True
+				eventlog("Holter Connect not on this machine, installing.")
+				sleep 10000
+			}
+		}
+		Sleep 250
+	}
+	if !(cygWin) {
+		eventlog("Holter Connect failed to launch.")
+		Return
+	}
+
+	Gui, hcTm:Font, s18 bold
+	Gui, hcTm:Add, Text, , Log in to Holter Connect
+	Gui, hcTm:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
+	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
+	Gui, hcTM: +AlwaysOnTop
+	Gui, hcTm:Show, AutoSize, TRRIQ BG Mini connect
+	WinActivate, % "ahk_id " cygWin
+
+	ct := 0
+	base := scanCygnusLog()																; Get DT for most recent launch
+	Loop
+	{
+		ct := ct + 5
+		if (ct>100) {
+			ct := 0
+		}
+		GuiControl, , % HcCt, % ct
+		if !WinExist("Holter Connect ahk_exe Cygnus.exe") {								; User closed Holter Connect
+			eventlog("Holter Connect window closed.")
+			Gui, hcTm:Destroy
+			saveCygnusLogs()
+			Return
+		}
+		if !WinExist("BG Mini connect") {
+			eventlog("User closed GUI.")
+			Gui, hcTm:Destroy
+			WinClose, % "Holter Connect ahk_exe Cygnus.exe"
+			saveCygnusLogs()
+			Return
+		}
+		log := scanCygnusLog(base.launch)												; Refresh log from launch time
+		if (log.auth) {
+			eventlog("Successful authentication on Holter Connect.")
+			Gui, hcTm:Destroy
+			Return log.auth
+		}
+		Sleep, 500
+	}
+	
+	eventlog("User timed out.")
+	Gui, hcTm:Destroy
 	Return
 }
 
@@ -3086,7 +3335,7 @@ MortaraUpload(tabnum="")
 		{
 			wuDir.endDir .= A_LoopFileTimeModified "`t[" A_LoopFileSize "]`t" A_LoopFileName "`n"
 		}
-		FileAppend, % wuDir.endDir, .\tempfiles\%A_now%-DIR.txt							; for now, writeout target dir for each upload
+		FileAppend, % wuDir.endDir, .\tempfiles\%A_Now%-DIR.txt							; for now, writeout target dir for each upload
 
 		FileRead, wuRecord, % wuDir.Full "\RECORD.LOG"
 		FileReadLine, wuDevice, % wuDir.Full "\DEVICE.LOG", 1
@@ -3144,9 +3393,9 @@ MortaraUpload(tabnum="")
 			}
 		}
 		if (wuDir.MRN="")||(wuDir.Ser="") {												; no SN or MRN match, write out dir files
-			FileAppend, % wuConfig, .\tempfiles\%A_now%-CONFIGSYS.txt
-			FileAppend, % wuDevice, .\tempfiles\%A_now%-DEVICELOG.txt
-			FileAppend, % wuRecord, .\tempfiles\%A_now%-RECORDLOG.txt
+			FileAppend, % wuConfig, .\tempfiles\%A_Now%-CONFIGSYS.txt
+			FileAppend, % wuDevice, .\tempfiles\%A_Now%-DEVICELOG.txt
+			FileAppend, % wuRecord, .\tempfiles\%A_Now%-RECORDLOG.txt
 			FileCopy, % wuDir.Full "\CONFIG.SYS", .\tempfiles\%A_Now%-CONFIG.SYS.txt
 			FileCopy, % wuDir.Full "\DEVICE.LOG", .\tempfiles\%A_Now%-DEVICE.LOG.txt
 			FileCopy, % wuDir.Full "\RECORD.LOG", .\tempfiles\%A_Now%-RECORD.LOG.txt
@@ -3154,8 +3403,8 @@ MortaraUpload(tabnum="")
 
 		if !(serNum=wuDir.Ser) {														; Attached device does not match device data
 			eventlog("Serial number mismatch.")
-			FileAppend, % wuDir.fullDir, .\tempfiles\%A_now%-FULLDIR.txt
-			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
+			FileAppend, % wuDir.fullDir, .\tempfiles\%A_Now%-FULLDIR.txt
+			FileAppend, % A_Now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			MsgBox, 262160, Device error, Device mismatch!`n`nTry again.
 			muPushButton(muWinID,"Back")
 			return
@@ -3188,7 +3437,7 @@ MortaraUpload(tabnum="")
 			MorUIfill(mu_UI.TRct,muWinID)
 		}
 		else {																			; no matching node found
-			FileAppend, % A_now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
+			FileAppend, % A_Now "|" A_UserName "|" A_ComputerName "|" serNum "`n", badSerNum.txt
 			eventlog("No registration found for " pt.name " " pt.mrn " " pt.date)
 		}
 			
@@ -3203,7 +3452,7 @@ MortaraUpload(tabnum="")
 			if FileExist(wuDir.Full "\Uploaded.txt") {
 				Gui, muTm:Destroy
 				settimer, muTimer, off
-				FileCopy, % wuDir.Full "\Uploaded.txt", .\tempfiles\%A_now%-UPLOADED.txt
+				FileCopy, % wuDir.Full "\Uploaded.txt", .\tempfiles\%A_Now%-UPLOADED.txt
 				break
 			}
 			if (ptDem.timer) {
@@ -3217,7 +3466,7 @@ MortaraUpload(tabnum="")
 		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
 			wq.addElement("sent",wqStr)
 		}
-		wq.setText(wqStr "/sent",substr(A_now,1,8))
+		wq.setText(wqStr "/sent",substr(A_Now,1,8))
 		wq.setAtt(wqStr "/sent",{user:user})
 		WriteOut("/root/pending","enroll[dev='Mortara H3+ - " SerNum "'][mrn='" ptDem["mrn"] "']")
 		eventlog(ptDem.MRN " " ptDem.nameL " study " ptDem.Date " uploaded to Preventice.")
@@ -3373,7 +3622,7 @@ muWqSave(sernum) {
 	if (ptDem.fedex) {
 		wq.addElement("fedex",ptDem.newID,ptDem.fedex)
 	}
-	wq.addElement(ptDem["muphase"],ptDem.newID,{user:A_UserName},A_now)
+	wq.addElement(ptDem["muphase"],ptDem.newID,{user:A_UserName},A_Now)
 	
 	filedelete, .lock
 	writeOut("/root/pending","enroll[@id='" id "']")
@@ -3761,21 +4010,37 @@ BGregister(type) {
 	
 	Switch type
 	{
-		case "BGH":
+		case "BGH":																		; Keep "BGH" type for 30-day CEM
 		{
-			typeLong := "BodyGuardian Mini Plus Lite"
+		/*	This section will be necessary until all clinics
+			have completely transitioned to BGMPL
+		*/
+			tmp:=CMsgBox("30-day Event Recorder"
+				, "Which monitor is available in clinic?"
+				, "BodyGuardian Heart|BodyGuardian Mini PLUS Lite|Quit"
+				, "Q")
+			if (tmp~="Body") {
+				typeLong := tmp
+				eventlog("Selected type " tmp)
+			} else {
+				Return
+			}
+		/*
+		*/
+			; typeLong := "BodyGuardian Mini Plus Lite"
+			; typeLong := "BodyGuardian Heart"
 			typeDesc := "30-day Event Recorder"
 			typeImg := ".\files\BGHeart.png"
 			ptDem.MonDuration := "30"
 		}
-		case "BGM":
+		case "BGM":																		; Use "BGM" type for extended Holter
 		{
 			typeLong := "BodyGuardian Mini EL"
 			typeDesc := "Extended Holter (3-14 day)"
 			typeDur := "3 days|7 days|14 days"
-			typeImg := ".\files\BGMini.png"
+			typeImg := ".\files\BGMini-orig.png"
 		}
-		case "HOL":
+		case "HOL":																		; Use "HOL" type for 24h Holter
 		{
 			typeLong := "BodyGuardian Mini"
 			typeDesc := "Short-term Holter (1-2 day)"
@@ -3803,6 +4068,19 @@ BGregister(type) {
 		}
 		ptDem.MonDuration := strX(tmp,"",1,0," ",1,1)
 	}
+	i := cMsgBox("Hook-up","Delivery type", type="HOL" ? "Office" : "Office|Home")
+	if (i="xClose") {
+		eventlog("Cancelled delivery type.")
+		return
+	}
+	if (i="Home") {
+		ptDem.hookup := "Home"
+		ptDem.model := typeLong
+		eventlog("Selected HOME hookup.")
+	} else {
+		ptDem.hookup := "Office"
+		eventlog("Selected OFFICE hookup.")
+	}
 	
 	fetchQuit := false
 	gosub getDem																		; need to grab CIS demographics
@@ -3816,18 +4094,7 @@ BGregister(type) {
 		return
 	}
 	
-	i := cMsgBox("Hook-up","Delivery type","Office|Home")
-	if (i="xClose") {
-		eventlog("Cancelled delivery type.")
-		return
-	}
-	if (i="Home") {
-		ptDem["hookup"] := "Home"
-		ptDem["model"] := typeLong
-		eventlog(type " home registration for " ptDem["mrn"] " " ptDem["nameL"] ".") 
-	} 
-	else {																				; either Office or [X]
-		ptDem["hookup"] := "Office"
+	if (ptDem.hookup="Office") {
 		ptDem.ser := selectDev(typeLong)												; need to grab a ser num from inventory
 		if (ptDem.ser="") {
 			eventlog("Cancelled selectDev.")
@@ -3868,6 +4135,15 @@ BGregister(type) {
 				return
 			}
 		}
+		if (type="HOL") {
+			InputBox(note, "Fedex", "`n`n`n`n Enter FedEx return sticker number","")
+			if (note) {
+				ptDem.fedex := note
+				eventlog("Fedex number " note " entered.")
+			} else {
+				eventlog("Fedex ignored.")
+			}
+		}
 		
 		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
 		writeOut("/root","inventory")
@@ -3875,7 +4151,8 @@ BGregister(type) {
 	}
 	wq := new XML("worklist.xml")														; refresh WQ
 	bgWqSave(ptDem.ser)																	; write to worklist.xml
-	eventlog(type " " ptDem.ser " registered to " ptDem.mrn " " ptDem.nameL ".")
+	eventlog(type " " ptDem.ser " [" ptDem.MonDuration " days] "
+		. "registered to " ptDem.mrn " " ptDem.nameL ".")
 	
 	removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
 	writeOut("root","orders")
@@ -3969,8 +4246,8 @@ selectDev(model="") {
 	{
 		GuiControlGet, boxed, , selBox													; get values from box and edit
 		GuiControlGet, typed, , selEdit
-		choice := (boxed) ? boxed : "BG" RegExReplace(typed,"[[:alpha:]]")
-		if !(choice~="^(BG)?\d{7}$") {													; ignore if doesn't match full ser num
+		choice := (boxed) ? boxed : "BGMLITE" RegExReplace(typed,"[[:alpha:]]")
+		if !(choice~="^(BGMLITE)?\d{7}$") {												; ignore if doesn't match full ser num
 			return
 		}
 		Gui, dev:Destroy
@@ -4080,7 +4357,18 @@ getPatInfo() {
 			ptDem[addr] := trim(i)
 		}
 	}
-	if (ptDem.addr1="") {
+	if (ptDem.addr1~="PO BOX")&&(ptDem.hookup="Home") {
+		MsgBox 0x40031
+			, ADDRESS CORRECTION
+			, Cannot HOME register to PO BOX address`n`nEnter street address for patient?
+		IfMsgBox OK, {
+			ptDem.addr1 := ""
+		} Else {
+			fetchQuit := true
+			return
+		}
+	}
+	if (ptDem.addr1~="PO BOX")||(ptDem.addr1="") {
 		InputBox(addr1, "Registration requires mailing address","`n`nEnter mailing address","")
 		InputBox(addr2, "Registration requires mailing address","`n`nEnter city", ptDem.city)
 		if (addr1) {
@@ -4149,7 +4437,7 @@ bgWqSave(sernum) {
 	if (ptDem.fedex) {
 		wq.addElement("fedex",ptDem.newID,ptDem.fedex)
 	}
-	wq.addElement("register",ptDem.newID,{user:A_UserName},A_now)
+	wq.addElement("register",ptDem.newID,{user:A_UserName},A_Now)
 	
 	writeOut("/root/pending","enroll[@id='" id "']")
 	
@@ -4213,7 +4501,7 @@ ProcessHl7PDF:
 		gosub Event_BGH_Hl7
 	} else if (fldVal.dev~="Mini EL") {
 		gosub Holter_BGM_EL_HL7
-	} else if (fldVal.dev~="Mini(?!\sEL|Plus)") {										; May be able to consolidate EL and SL
+	} else if (fldVal.dev~="Mini(?!\sEL|\sPlus)") {										; May be able to consolidate EL and SL
 		gosub Holter_BGM_SL_Hl7															; as the reports will be essentiall identical
 	} else if (fldVal.dev~="Mortara") {
 		gosub Holter_Pr_Hl7
@@ -4281,6 +4569,7 @@ outputfiles:
 		. fldval["dem-Name_L"] "_" 
 		. tmpDate.YMD "_"
 		. "@" fldval["wqid"] ".hl7"
+	progress, 20, % tmpFile, Moving output files
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile														; copy ORU hl7 to tempfiles
 	FileCopy, % tmpFile, % path.EpicHL7out													; create copy in RawHL7
@@ -4290,6 +4579,7 @@ outputfiles:
 	
 	/*	Save CSV in tempfiles, and copy to Import folder
 	*/
+	progress, 40, Save CSV in Import folder
 	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
 	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
 	
@@ -4313,6 +4603,7 @@ outputfiles:
 	
 	/*	Copy PDF to HolterPDF folder and archive
 	*/
+	progress, 60, Copy PDF to HolterPDF and Archive
 	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
 	FileCopy, % fileHIM, % path.holterPDF filenameOut "-short.pdf", 1						; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
@@ -4320,9 +4611,24 @@ outputfiles:
 	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
 	FileMove, % path.PrevHL7in fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
+
+	/*	Create short+full FrankenHolter
+	*/
+	progress, 95, Concatenate full PDF
+	Loop, Files, % path.holterPDF filenameOut "*-full.pdf", F
+	{
+		fn1 := path.holterPDF filenameOut "-short.pdf"
+		fn2 := A_LoopFileFullPath
+		fn3 := path.holterPDF filenameOut ".pdf"
+		RunWait, % ".\files\pdftk.exe """ fn1 """ """ fn2 """ output """ fn3 """" ,,min
+		Sleep, 1000
+		FileMove, % fn3, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the concatenated PDF to holterDir Archive
+		FileDelete, % fn2																	; Delete the full PDF
+	}
 	
 	/*	Append info to fileWQ (probably obsolete in Epic)
 	*/
+	progress, 100, Clean up
 	fileWQ := ma_date "," user "," 															; date processed and MA user
 			. """" fldval["dem-Ordering"] """" ","											; extracted provider
 			. """" fldval["dem-Name_L"] ", " fldval["dem-Name_F"] """" ","					; CIS name
@@ -4799,7 +5105,7 @@ makeTestORU() {
 	tmpPrv := parseName(ptDem.provider)
 	buildHL7("PV1"
 		,{7:ptDem.NPI "^" tmpPrv.last "-" ptDem.loc "^" tmpPrv.first
-		, 39:A_now })
+		, 39:A_Now })
 	
 	buildHL7("OBR"
 		,{2:ptDem.wqid
@@ -4810,7 +5116,7 @@ makeTestORU() {
 		, 7:hl7time
 		, 16:ptDem.NPI "^" tmpPrv.last "-" ptDem.loc "^" tmpPrv.first
 		, 20:"OnComplete"
-		, 22:A_now })
+		, 22:A_Now })
 	
 	buildHL7("OBX"
 		,{2:"TX"
@@ -4818,7 +5124,7 @@ makeTestORU() {
 			. strQ(ptDem.model~="Heart" ? 1 : "","CEM^CEM")
 			. strQ(ptDem.model~="Mini" ? 1 : "","Holter^Holter")
 		, 11:"F"
-		, 14:A_now })
+		, 14:A_Now })
 	
 	FileRead, testTXT, % ".\files\test-ED_"
 		. strQ(ptDem.model~="Mortara" ? 1 : "","HOL")
@@ -4828,11 +5134,11 @@ makeTestORU() {
 	buildHL7("OBX"
 		,{2:"ED"
 		, 3:"PDFReport1^PDF Report^^^^"
-		, 4:ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_now ".pdf"
+		, 4:ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_Now ".pdf"
 		, 5:testTXT
 		, 6:8
 		, 11:"F"
-		, 14:A_now })
+		, 14:A_Now })
 	
 	buildHL7("OBX",{2:"NM|Brady_AvgRate^Bradycardia average rate^Preventice^^^||51|bpm|||||" })
 	buildHL7("OBX",{2:"TX|Brady_LongestDur^Bradycardia longest duration^Preventice^^^||01:09:06|time|||||" })
@@ -4850,7 +5156,7 @@ makeTestORU() {
 	
 	FileAppend
 		, % hl7out.msg
-		, % path.PrevHL7in ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_now ".hl7"
+		, % path.PrevHL7in ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_Now ".hl7"
 	
 	return
 }
@@ -4938,6 +5244,17 @@ findFullPdf(wqid:="") {
 		; 	continue
 		; if FileExist(fnam "-short.pdf") 
 		; 	continue
+		if (fname~="i)-full\.pdf") {
+			fNamCheck := RegExReplace(fname,"i)-full\.pdf$")
+			fnam := path.holterPDF "Archive\" fNamCheck ".pdf"
+			if FileExist(fnam) {
+				FileDelete, % fileIn
+				eventlog("Found complete PDF, deleted -full.pdf")
+				Continue
+			}
+			pdflist.push(fname)																	; Add to pdflist, no need to scan
+			Continue
+		}
 		
 		RegExMatch(fname,"O)_WQ([A-Z0-9]+)(_\w)?\.pdf",fnID)									; get filename WQID if PDF has already been renamed
 		
@@ -4953,7 +5270,7 @@ findFullPdf(wqid:="") {
 			FileDelete, %fnam%.txt
 			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
 			
-			flds := getPdfID(newtxt)
+			flds := getPdfID(newtxt,fnam)
 			
 			if (AllowSavedPDF="true") && InStr(flds.wqid,"00000") {
 				eventlog("Unmatched PDF: " fileIn)
@@ -4970,7 +5287,15 @@ findFullPdf(wqid:="") {
 			}
 			
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
-			FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1						; rename the unprocessed PDF
+			if InStr(newtxt, "Full Disclosure Report") {								; likely Full Disclosure Report
+				dt := ParseDate(flds.date)
+				newFnam := strQ(flds.mrn,"### " flds.nameL " " dt.MM "-" dt.DD "-" dt.YYYY "_WQ" flds.wqid,fnam)
+				FileMove, %fileIn%, % path.holterPDF newFnam "-full.pdf", 1
+				pdfList.push(newFnam "-full.pdf")
+				Continue
+			} else {
+				FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1					; Everything else, rename the unprocessed PDF
+			}
 			If ErrorLevel
 			{
 				MsgBox, 262160, File error, % ""										; Failed to move file
@@ -5005,7 +5330,7 @@ findFullPdf(wqid:="") {
 	return false																		; fell through without a match
 }
 
-getPdfID(txt) {
+getPdfID(txt,fnam:="") {
 /*	Parses txt for demographics
 	returns type=H,E,Z,M and demographics in an array, and wqid if found
 	or error if no match
@@ -5026,6 +5351,16 @@ getPdfID(txt) {
 		res.mrn := trim(stregX(txt,"Secondary ID:?",1,1,"Age:?",1))
 		res.ser := trim(stregX(txt,"Recorder (No|Number):?",1,1,"\R",1))
 		res.wqid := strQ(findWQid(res.date,res.mrn,"Mortara H3+ - " res.ser).id,"###","00000") "_H"
+	} else if instr(txt,"Full Disclosure Report") {										; BG Mini short term
+		res.type := "H"
+		RegExMatch(fnam, "O)GB_SCH_(.*?)_(\d{6,})_(.*?)_(.*?)_FD",fnid)
+		res.site := fnid.1
+		res.mrn := fnid.2
+		res.nameL := fnid.3
+		res.nameF := fnid.4
+		dt := parseDate(stRegX(txt,"Full Disclosure Report\R+",1,1,"-",1))
+			res.date := dt.YMD
+		res.wqid := strQ(findWQid(res.date,res.mrn).id,"###","00000") "_H"
 	} else if instr(txt,"BodyGuardian Heart") {											; BG Heart
 		res.type := "E"
 		name := parseName(res.name := trim(stregX(txt,"Patient:",1,1,"Enrollment Info|Patient ID",1)," `t`r`n"))
@@ -5233,7 +5568,7 @@ CheckProc:
 			}
 			newID := "/root/pending/enroll[@id='" id "']"
 			ptDem.date := parseDate(ptDem["EncDate"]).YMD
-			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_now,1,8))
+			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_Now,1,8))
 			wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
 			wqSetVal(id,"mrn",ptDem["mrn"])
 			wqSetVal(id,"sex",ptDem["Sex"])
@@ -5276,7 +5611,39 @@ Holter_BGM_SL_HL7:
 	monType := "HOL"
 
 	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
+		eventlog("No OBX data.")
 		gosub processPDF																; need to reprocess from extracted PDF
+		Return
+	}
+	if !FileExist(path.holterPDF "*" fldval.wqid "_H-full.pdf") {
+		eventlog("Full disclosure PDF not found.")
+			
+		msg := cmsgbox("Missing full disclosure PDF"
+			, fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
+			. "Click [Email] to send a message to Preventice,"
+			. "or [Cancel] to return to menu."
+			, "Email|Cancel"
+			, "E", "V")
+		if (msg~="Cancel|Close|xClose") {
+			eventlog("Skipping full disclosure. Return to menu.")
+		}
+		if (msg="Email") {
+			progress,100 ,,Generating email...
+			Eml := ComObjCreate("Outlook.Application").CreateItem(0)					; Create item [0]
+			Eml.BodyFormat := 2															; HTML format
+			
+			Eml.To := "HolterNotificationGroup@preventice.com"
+			Eml.cc := "EkgMaInbox@seattlechildrens.org; terrence.chun@seattlechildrens.org"
+			Eml.Subject := "Missing full disclosure PDF"
+			Eml.Display																	; Display first to get default signature
+			Eml.HTMLBody := "Please upload the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
+				. " MRN#" fldval["dem-MRN"] " study date " fldval["dem-Test_date"]
+				. " to the eCardio FTP site.<br><br>Thank you!<br>"
+				. Eml.HTMLBody															; Prepend to existing default message
+			ObjRelease(Eml)																; or Eml:=""
+			eventlog("Email sent to Preventice.")
+		}
+		fldval.done := ""
 		Return
 	}
 	
@@ -5309,6 +5676,7 @@ Holter_BGM_EL_HL7:
 	monType := "BGM"
 
 	if (fldval["Enroll_Start_Dt"]="") {													; missing Start_Dt means no DDE
+		eventlog("No OBX data.")
 		gosub processPDF																; need to reprocess from extracted PDF
 		Return
 	}
@@ -6149,7 +6517,7 @@ formatField(pre, lab, txt) {
 	}
 	
 ;	Mortara Holter specific fixes
-	if (ptDem.model~="Mortara") {
+	if (fldval.dev~="Mortara") {
 		if (lab="Name") {																; Break name into Last and First
 			fieldColAdd(pre,"Name_L",trim(strX(txt,"",1,0,",",1,1)))
 			fieldColAdd(pre,"Name_F",trim(strX(txt,",",1,1,"",0)))
@@ -6188,7 +6556,7 @@ formatField(pre, lab, txt) {
 	}
 
 ;	Body Guardian Heart specific fixes, possibly apply to BGM Plus Lite as well?
-	if (ptDem.model~="Heart|Lite") {
+	if (fldval.dev~="Heart|Lite") {
 		if (lab="Name") {
 			ptDem["nameL"] := strX(txt," ",0,1,"",0)
 			ptDem["nameF"] := strX(txt,"",1,0," ",1,1)
@@ -6199,7 +6567,7 @@ formatField(pre, lab, txt) {
 	}
 
 ;	Body Guardian Mini specific fixes, possibly applies to both EL and SL?
-	if (ptDem.model~="Mini") {
+	if (fldval.dev~="Mini") {
 		; convert dates to MDY format
 		if (lab ~= "Test_(date|end)") {
 			txt := parseDate(txt).mdy
@@ -6216,6 +6584,10 @@ formatField(pre, lab, txt) {
 			fieldColAdd(pre,lab,res1)
 			fieldColAdd(pre,lab "_time",res2)
 			return
+		}
+		; convert Max/Min_time to readable format
+		if (lab ~= "(Max|Min)_time") {
+			txt := ParseDate(txt).DT
 		}
 		; split value times for "32 12/15 08:23:17"
 		if RegExMatch(txt
@@ -6346,6 +6718,7 @@ filterProv(x) {
 	x := RegExReplace(x,"i)\s*-\s*(" allsites ")\s*,",",")								; remove "SCHMER(-YAKIMA), VERONICA"
 	x := RegExReplace(x,"i) (MD|DO)$")													; remove trailing "( MD)"
 	x := RegExReplace(x,"i) (MD|DO),",",")												; replace "Ruggerie MD, Dennis" with "Ruggerie, Dennis"
+	x := RegExReplace(x," NPI: \d{6,}$")												; remove trailing " NPI: xxxxxxxxxx"
 	StringUpper,x,x,T																	; convert "RUGGERIE, DENNIS" to "Ruggerie, Dennis"
 	if !instr(x,", ") {
 		x := strX(x," ",1,1,"",1,0) ", " strX(x,"",1,1," ",1,1)							; convert "DENNIS RUGGERIE" to "RUGGERIE, DENNIS"
@@ -6441,7 +6814,7 @@ adminWQlvFix(en) {
 	(This might end up being big enough to merit its own function)
 */
 	if (en.webgrab="") {																; Common cause of "noreg error"
-		wqSetVal(en.id,"webgrab",A_now)
+		wqSetVal(en.id,"webgrab",A_Now)
 		WriteOut("/root/pending/enroll[@id='" en.id "']","webgrab")
 		eventlog("adminWQlvFix: Added missing webgrab.")
 		fixChange .= "Missing <webgrab>`n"
@@ -6772,6 +7145,17 @@ divTime(sec,div) {
 	Return {val:xx,rem:rem}
 }
 
+convertUTC(dt) {
+/*	Convert dt string YYYYMMDDHHMMSS from UTC to local time
+*/
+	tzNow := A_Now
+	tzUTC := A_NowUTC
+	tzNow -= tzUTC, Hours
+
+	dt += tzNow, Hours
+	Return dt
+}
+
 ThousandsSep(x, s=",") {
 ; from https://autohotkey.com/board/topic/50019-add-thousands-separator/
 	return RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
@@ -6843,7 +7227,7 @@ WriteSave(z) {
 	}
 	
 	if (valid=true) {
-		FileCopy, worklist.xml, bak\%A_now%.bak
+		FileCopy, worklist.xml, bak\%A_Now%.bak
 		wq := z
 	}
 	
