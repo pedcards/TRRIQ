@@ -3055,8 +3055,12 @@ saveCygnusLogs(all="") {
 	today := "Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 	if (all) {																			; any value will copy entire folder 
 		FileCopyDir, % folder, % logpath "\", 1											; trailing \ copies folder to logpath
+		FileSetTime, , % ".\logs\Cygnus\" A_ComputerName "\" A_UserName
+		FileSetTime, , % ".\logs\Cygnus\" A_ComputerName
 	} else {
 		FileCopy, % folder "\" today, % logpath "\" today, 1
+		FileSetTime, , % ".\logs\Cygnus\" A_ComputerName "\" A_UserName
+		FileSetTime, , % ".\logs\Cygnus\" A_ComputerName
 	}
 	Return
 }
