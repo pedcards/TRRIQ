@@ -2722,7 +2722,7 @@ findBGMdrive(delay:=5) {
 	Gui, hcTm:Add, Progress, h6 -smooth hwndHcCt, 0										; Start progress bar at 0
 	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcTM: +AlwaysOnTop
-	Gui, hcTm:Show, AutoSize, BG Mini connect
+	Gui, hcTm:Show, AutoSize, TRRIQ BG Mini connect
 
 	base := scanCygnusLog()																; Get DT for most recent launch
 	Loop
@@ -2920,7 +2920,7 @@ checkBGMstatus(drive:="D",title:="") {
 	Gui, hcStat:Add, Checkbox, vUploaded , % "DATA upload               "
 	Gui, hcStat: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcStat: +AlwaysOnTop
-	Gui, hcStat:Show, AutoSize, BG Mini Status
+	Gui, hcStat:Show, AutoSize, TRRIQ BG Mini Status
 
 	base := scanCygnusLog()																; Get most recent start time from Cygnus log
 	import := {}
