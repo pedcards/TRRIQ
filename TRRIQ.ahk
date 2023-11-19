@@ -129,7 +129,7 @@ for key in epList																					; option string epStr
 }
 epStr := Trim(epStr,"|")
 
-saveCygnusLogs()
+saveCygnusLogs("all")
 	
 Progress, , % " ", Cleaning old .bak files
 Loop, files, bak\*.bak
@@ -3038,8 +3038,9 @@ checkBGMstatus(drive:="D",title:="") {
 	Return {data:dataStat,import:importStat,upload:uploadStat}
 }
 
-saveCygnusLogs() {
+saveCygnusLogs(all="") {
 /*	Save copy of Cygnus logs per machine per user
+	"all" creates new mirror
 	Toggle in trriq.ini
 */
 	folder := A_AppData "\Cygnus\Logs"
