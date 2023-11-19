@@ -128,6 +128,8 @@ for key in epList																					; option string epStr
 	epStr .= key "|"
 }
 epStr := Trim(epStr,"|")
+
+saveCygnusLogs()
 	
 Progress, , % " ", Cleaning old .bak files
 Loop, files, bak\*.bak
@@ -3034,6 +3036,16 @@ checkBGMstatus(drive:="D",title:="") {
 	FileCopy, % file, .\tempfiles 
 	eventlog("checkBGMstatus: BGM Attached=" driveStat ", BGM Cleared=" dataStat ", Imported=" importStat ", Uploaded=" uploadStat)
 	Return {data:dataStat,import:importStat,upload:uploadStat}
+}
+
+saveCygnusLogs() {
+/*	Save copy of Cygnus logs per machine per user
+	Toggle in trriq.ini
+*/
+	folder := A_AppData "\Cygnus\Logs"
+	logpath := ".\logs\Cygnus\" A_ComputerName "\" A_UserName "\"						; trailing \ to copy to this folder
+	FileCopyDir, % folder, % logpath, 1
+	Return
 }
 
 findBGMenroll(serNum,dt) {
