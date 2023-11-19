@@ -2617,8 +2617,11 @@ ftpGrab() {
 cleanTempFiles() {
 	thresh:=180
 	
+	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(".\tempfiles").Files.Count
+	
 	Loop, files, tempfiles\*
 	{
+		Progress, % 100*A_Index/fileCount, % A_Index "/" fileCount, Cleaning tempfiles > %thresh% days
 		filenm := A_LoopFileName
 		FileGetTime, fileCDT, % "tempfiles\" filenm, C
 		dtDiff := dateDiff(fileCDT)
