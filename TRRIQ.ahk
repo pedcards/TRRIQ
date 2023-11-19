@@ -3200,7 +3200,6 @@ bgmCygnusCheck() {
 		eventlog("Holter Connect failed to launch.")
 		Return
 	}
-	WinActivate, % "ahk_id " cygWin
 
 	Gui, hcTm:Font, s18 bold
 	Gui, hcTm:Add, Text, , Log in to Holter Connect
@@ -3208,6 +3207,7 @@ bgmCygnusCheck() {
 	Gui, hcTm: -MaximizeBox -MinimizeBox 												; Remove resizing buttons
 	Gui, hcTM: +AlwaysOnTop
 	Gui, hcTm:Show, AutoSize, TRRIQ BG Mini connect
+	WinActivate, % "ahk_id " cygWin
 
 	ct := 0
 	base := scanCygnusLog()																; Get DT for most recent launch
