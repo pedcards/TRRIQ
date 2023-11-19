@@ -2735,18 +2735,21 @@ findBGMdrive(delay:=5) {
 		if !WinExist("Holter Connect ahk_exe Cygnus.exe") {								; User closed Holter Connect
 			eventlog("Holter Connect window closed.")
 			Gui, hcTm:Destroy
+			saveCygnusLogs()
 			Return
 		}
 		if !WinExist("BG Mini connect") {
 			eventlog("User closed GUI.")
 			Gui, hcTm:Destroy
 			WinClose, % "Holter Connect ahk_exe Cygnus.exe"
+			saveCygnusLogs()
 			Return
 		}
 		log := scanCygnusLog(base.launch)												; Refresh log from launch time
 		if (log.drive) {
 			eventlog("Holter Connect recogizes drive " log.drive ": S/N " log.sernum ".")
 			Gui, hcTm:Destroy
+			saveCygnusLogs()
 			Return log
 		}
 		Sleep, 500
@@ -2929,6 +2932,7 @@ checkBGMstatus(drive:="D",title:="") {
 		*/
 		if !WinExist("BG Mini Status") {
 			eventlog("User closed BG Mini Status window")
+			saveCygnusLogs()
 			Break
 		}
 
@@ -2939,6 +2943,7 @@ checkBGMstatus(drive:="D",title:="") {
 		GuiControl, hcStat: , Attached , % driveStat
 		if (driveStat=0) {
 			eventlog("Drive " drive " disconnected.")
+			saveCygnusLogs()
 			Break
 		}
 		
@@ -3021,6 +3026,7 @@ checkBGMstatus(drive:="D",title:="") {
 		if (cyg.confirm) {																; Confirmed upload
 			uploadStat := 1
 			eventlog("Successful upload.")
+			saveCygnusLogs()
 			Break 																		; Once imported and uploaded we are done
 		}
 
@@ -3034,6 +3040,7 @@ checkBGMstatus(drive:="D",title:="") {
 
 	file := folderCygnus "\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 	FileCopy, % file, .\tempfiles 
+	saveCygnusLogs()
 	eventlog("checkBGMstatus: BGM Attached=" driveStat ", BGM Cleared=" dataStat ", Imported=" importStat ", Uploaded=" uploadStat)
 	Return {data:dataStat,import:importStat,upload:uploadStat}
 }
@@ -3163,6 +3170,7 @@ HolterConnect(phase="")
 
 	}
 
+	saveCygnusLogs()
 	Return
 }
 
@@ -3204,12 +3212,14 @@ bgmCygnusCheck() {
 		if !WinExist("Holter Connect ahk_exe Cygnus.exe") {								; User closed Holter Connect
 			eventlog("Holter Connect window closed.")
 			Gui, hcTm:Destroy
+			saveCygnusLogs()
 			Return
 		}
 		if !WinExist("BG Mini connect") {
 			eventlog("User closed GUI.")
 			Gui, hcTm:Destroy
 			WinClose, % "Holter Connect ahk_exe Cygnus.exe"
+			saveCygnusLogs()
 			Return
 		}
 		log := scanCygnusLog(base.launch)												; Refresh log from launch time
