@@ -3044,8 +3044,13 @@ saveCygnusLogs(all="") {
 	Toggle in trriq.ini
 */
 	folder := A_AppData "\Cygnus\Logs"
-	logpath := ".\logs\Cygnus\" A_ComputerName "\" A_UserName "\"						; trailing \ to copy to this folder
-	FileCopyDir, % folder, % logpath, 1
+	logpath := ".\logs\Cygnus\" A_ComputerName "\" A_UserName
+	today := "Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+	if (all) {																			; any value will copy entire folder 
+		FileCopyDir, % folder, % logpath "\", 1											; trailing \ copies folder to logpath
+	} else {
+		FileCopy, % folder "\" today, % logpath "\" today, 1
+	}
 	Return
 }
 
