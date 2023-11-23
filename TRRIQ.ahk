@@ -5290,7 +5290,7 @@ findFullPdf(wqid:="") {
 			FileDelete, %fnam%.txt
 			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
 			
-			flds := getPdfID(newtxt,fnam)
+			flds := getPdfID(newtxt)
 			
 			if (AllowSavedPDF="true") && InStr(flds.wqid,"00000") {
 				eventlog("Unmatched PDF: " fileIn)
@@ -5341,12 +5341,11 @@ findFullPdf(wqid:="") {
 	return false																		; fell through without a match
 }
 
-getPdfID(txt,fnam:="") {
+getPdfID(txt) {
 /*	Parses txt for demographics
 	returns type=H,E,Z,M and demographics in an array, and wqid if found
 	or error if no match
 */
-	global fldval
 	res := Object()
 	
 	if instr(txt,"MORTARA") {															; Mortara Holter
