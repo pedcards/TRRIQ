@@ -2849,6 +2849,11 @@ scanCygnusLog(base:="") {
 			log.launch := dt
 			Continue
 		}
+		if InStr(k,"EventType Success") {												; Most recent successful upload also resets log and base
+			log := {}
+			log.launch := dt
+			Continue
+		}
 		if InStr(k, "Successfully authenticated") {										; Detect user logged in
 			log.auth := dt
 			Continue
@@ -2926,6 +2931,7 @@ checkBGMstatus(drive:="D",title:="") {
 	Gui, hcStat:Show, AutoSize, TRRIQ BG Mini Status
 
 	base := scanCygnusLog()																; Get most recent start time from Cygnus log
+	eventlog("Most recent application launch " base.launch)
 	import := {}
 	upload := {}
 
