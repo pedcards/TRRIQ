@@ -1404,6 +1404,9 @@ WQlistBadPDFs() {
 	loop, files, % ".\pdftemp\*"
 	{
 		fName := A_LoopFileFullPath
+		if InStr(fName, "crdownload") {													; skip chrome download tempfiles
+			Continue
+		}
 		FileGetTime, fNameDate, % fName
 		d2 := SubStr(fNameDate, 1, 8)
 		if (d1 = d2) {																	; downloaded file on same date as wsftp.txt
