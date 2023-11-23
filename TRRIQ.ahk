@@ -2867,6 +2867,9 @@ scanCygnusLog(base:="") {
 			log.record := convertUTC(RegExReplace(t1,"[\-\\]"))
 			Continue
 		}
+		if InStr(k,"The media is write protected") {									; Media write protected
+			log.writeprotected := k
+		}
 		if InStr(k,"ImportAsync: Starting import") {									; Starting import
 			log.importStart := dt
 			Continue
@@ -2968,6 +2971,15 @@ checkBGMstatus(drive:="D",title:="") {
 		}
 		
 		cyg := scanCygnusLog(base.launch)
+
+		/*	Check CygnusLog for errors
+		*/
+		if (cyg.writeprotected) {
+			if !(import.writeprotected) {
+				import.writeprotected := 1
+				eventlog(cyg.writeprotected)
+			}
+		}
 
 		/*	Check CygnusLog for Import tasks
 		*/
