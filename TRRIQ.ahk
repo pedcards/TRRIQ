@@ -5296,15 +5296,6 @@ findFullPdf(wqid:="") {
 				eventlog("Unmatched PDF: " fileIn)
 				continue
 			}
-			if (AllowSavedPDF!="true") && (flds.type = "E") {
-				MsgBox, 262160, File error
-					, % path.holterPDF "`n" fName "`n"
-					. "saved from email.`n`n"
-					. "DO NOT SAVE FROM EMAIL!`n`n"
-					. "(delete the file to stop getting this message)"
-				eventlog("CEM saved from email: " fileIn)
-				continue
-			}
 			
 			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
 			if InStr(newtxt, "Full Disclosure Report") {								; likely Full Disclosure Report
