@@ -2966,7 +2966,7 @@ checkBGMstatus(drive:="D",title:="") {
 		/*	Check CygnusLog for Import tasks
 		*/
 		if (cyg.importStart) {
-			if (import.start=0) {														; only log first change
+			if !(import.start) {														; only log first change
 				import.start := 1
 				eventlog("Starting import.")
 			}
@@ -2987,11 +2987,11 @@ checkBGMstatus(drive:="D",title:="") {
 		/*	Check CygnusLog for upload tasks
 		*/
 		if (cyg.uploadAsync) {															; User started upload
-			if (upload.async=0) {
+			if !(upload.async) {
 				eventlog("User started upload.") 
 			}
-			upload.async := 1
 			importStat := 1
+			upload.async := 1
 			upload.text := "Preparing"
 		}
 		if (cyg.truncateProgress) {														; Compressing data
@@ -3003,11 +3003,11 @@ checkBGMstatus(drive:="D",title:="") {
 			upload.text := "Compressing " cyg.truncateProgress
 		}
 		if (cyg.start) {																; Uncleared start
-			if (upload.start=0) {
+			if !(upload.start) {
 				eventlog("Cygnus start upload " cyg.start)
 			}
-			upload.start := 1
 			importStat := 1
+			upload.start := 1
 			upload.text := "Uploading"
 		}
 		if (upload.async) {
@@ -3015,11 +3015,11 @@ checkBGMstatus(drive:="D",title:="") {
 			Guicontrol, hcStat:Text, Uploaded, % upload.text ((upload.dots) ? "..." : "   ")
 		}
 		if (cyg.done) {																	; Last done
-			if (upload.done=0) {
+			if !(upload.done) {
 				eventlog("Cygnus done upload " cyg.done)
 			}
-			upload.done := 1
 			importStat := 1
+			upload.done := 1
 			GuiControl, hcStat: , Uploaded, % upload.done
 			Guicontrol, hcStat:Text, Uploaded, % "DATA Upload complete"
 		}
