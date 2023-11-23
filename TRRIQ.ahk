@@ -2874,8 +2874,8 @@ scanCygnusLog(base:="") {
 			log.uploadAsync := dt
 			Continue
 		}
-		if InStr(k, "Truncating recording data") {										; Compressing data
-			log.uploadTruncate := dt
+		if RegExMatch(k,"TruncateEcgToDuration.*?(\d+%)$",t) {							; Data compression progress
+			log.truncateProgress := t1
 			Continue
 		}
 		if RegExMatch(k,"\[UploadTask\].*?" . "starting upload") {						; Detect starting upload
@@ -2994,13 +2994,13 @@ checkBGMstatus(drive:="D",title:="") {
 			importStat := 1
 			upload.text := "Preparing"
 		}
-		if (cyg.uploadTruncate) {														; Compressing data
-			if (upload.truncate=0) {
+		if (cyg.truncateProgress) {														; Compressing data
+			if !(upload.truncate) {
 				eventlog("Compressing data.")
 			}
-			upload.truncate := 1
 			importStat := 1
-			upload.text := "Compressing"
+			upload.truncate := 1
+			upload.text := "Compressing " cyg.truncateProgress
 		}
 		if (cyg.start) {																; Uncleared start
 			if (upload.start=0) {
