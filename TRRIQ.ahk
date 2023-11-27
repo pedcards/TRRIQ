@@ -712,10 +712,11 @@ setwqupdate() {
 checkCygnus() {
 	global cygnusDT
 	FileGetTime, tmpdt, % A_AppData "\Cygnus\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
-	if (tmpdt > cygnusDT) {
-		cygnusDT := tmpdt
-		base := scanCygnusLog()
+	if !(tmpdt > cygnusDT) {
+		Return
 	}
+	cygnusDT := tmpdt
+	base := scanCygnusLog()
 	Return
 }
 
