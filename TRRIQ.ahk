@@ -2784,7 +2784,6 @@ getBGMlog(drive:="D") {
 		if FileExist(logfile) {
 			eventlog("Found LOG on pass " A_Index)
 			FileRead, txt, % logfile
-			FileCopy, % logfile, % ".\tempfiles\LOG_" A_Now
 			Break
 		}
 		Sleep, 1000
@@ -2821,6 +2820,7 @@ getBGMlog(drive:="D") {
 		}
 	}
 
+	FileAppend, % txt, % ".\tempfiles\LOG_" A_Now "_" serNum "-" bgmStartDT
 	eventlog("BGM LOG: S/N=" serNum ", TZ=" bgmTZ ", Start Time=" bgmStartDT " (local).")
 	Return {ser:serNum,tz:bgmTZ,start:bgmStartDT}
 }
