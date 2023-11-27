@@ -2852,11 +2852,11 @@ scanCygnusLog(base:="") {
 			log.launch := dt
 			Continue
 		}
-		if InStr(k,"EventType Success") {												; Most recent successful upload also resets log and base
-			log := {}
-			log.launch := dt
-			Continue
-		}
+		; if InStr(k,"EventType Success") {												; Most recent successful upload also resets log and base
+		; 	log := {}
+		; 	log.launch := dt
+		; 	Continue
+		; }
 		if InStr(k, "Successfully authenticated") {										; Detect user logged in
 			log.auth := dt
 			Continue
