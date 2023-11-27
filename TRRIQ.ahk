@@ -684,7 +684,7 @@ idleTimer() {
 */
 	checkWQfile()
 	x:=checkMUwin()
-	checkHCwin()
+	checkCygnus()
 	;~ progress,,,% x
 	;~ sleep 50
 	;~ progress, off
@@ -709,7 +709,7 @@ setwqupdate() {
 	return
 }
 
-checkHCwin() {
+checkCygnus() {
 	global cygnusDT
 	FileGetTime, tmpdt, % A_AppData "\Cygnus\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 	if (tmpdt > cygnusDT) {
