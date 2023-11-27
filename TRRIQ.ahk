@@ -710,6 +710,8 @@ setwqupdate() {
 }
 
 checkCygnus() {
+/*	If not in HolterConnect, change in Cygnus log means HC is doing something
+*/
 	global cygnusDT
 	FileGetTime, tmpdt, % A_AppData "\Cygnus\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 	if !(tmpdt > cygnusDT) {
