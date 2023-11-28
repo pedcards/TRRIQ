@@ -2984,6 +2984,9 @@ checkBGMstatus(drive:="D",title:="") {
 			if !(import.writeprotected) {
 				import.writeprotected := 1
 				eventlog(cyg.writeprotected)
+				MsgBox 0x10, Drive error
+					, % "Drive D is write protected.`n`n"
+					. "Please ensure that BitLocker is not enabled for this drive and try again."
 			}
 		}
 
