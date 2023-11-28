@@ -2877,6 +2877,10 @@ scanCygnusLog(base:="") {
 			log.importStart := dt
 			Continue
 		}
+		if RegExMatch(k, "i)WriteMetadataAsync.*? to (C:.*?.zip)",t) {
+			log.zipfile := t1
+			Continue
+		}
 		if InStr(k, "Import status Complete") {											; DATA imported to local PC
 			log.import := dt
 			Continue
@@ -3061,6 +3065,9 @@ checkBGMstatus(drive:="D",title:="") {
 		eventlog("Break without uploadStat.")
 	}
 
+	FileCopy, % cyg.zipfile, .\tempfiles\Cygnus
+	eventlog("Archived " cyg.zipfile)
+	
 	file := folderCygnus "\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 	FileCopy, % file, .\tempfiles 
 	saveCygnusLogs()
