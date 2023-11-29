@@ -160,6 +160,7 @@ MainLoop: ; ===================== This is the main part ========================
 		}
 	}
 	
+	saveCygnusLogs("all")
 	checkPreventiceOrdersOut()
 	cleanDone()
 	
