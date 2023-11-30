@@ -5271,11 +5271,11 @@ findFullPdf(wqid:="") {
 		; if FileExist(fnam "-short.pdf") 
 		; 	continue
 		if (fname~="i)-full\.pdf") {
-			fNamCheck := RegExReplace(fname,"i)-full\.pdf$")
-			fnam := path.holterPDF "Archive\" fNamCheck ".pdf"
-			if FileExist(fnam) {
+			fnamID := stregX(fname,"_WQ",1,1,"_H",1)
+			fnamMRN := readWQ(fnamID).mrn
+			if FileExist(path.holterPDF "FullDisclosure\" fnamMRN " *.pdf") {
 				FileDelete, % fileIn
-				eventlog("Found complete PDF, deleted -full.pdf")
+				eventlog("Found complete PDF, deleted " fname)
 				Continue
 			}
 			pdflist.push(fname)																	; Add to pdflist, no need to scan
