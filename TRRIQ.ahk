@@ -1405,7 +1405,7 @@ WQlistBadPDFs() {
 	loop, files, % ".\pdftemp\*"
 	{
 		fName := A_LoopFileFullPath
-		if InStr(fName, "crdownload") {													; skip chrome download tempfiles
+		if InStr(fName, "download") {													; skip chrome download tempfiles
 			Continue
 		}
 		FileGetTime, fNameDate, % fName
