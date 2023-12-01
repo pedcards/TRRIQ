@@ -1410,8 +1410,12 @@ WQlistBadPDFs() {
 		}
 		FileGetTime, fNameDate, % fName
 		d2 := SubStr(fNameDate, 1, 8)
-		if (d1 = d2) {																	; downloaded file on same date as wsftp.txt
+		if (d1 = d2) {																	; check if file has same date as wsftp.txt
 			foundit := true
+		} else {
+			Continue
+		}
+		if !InStr(fName,".pdf") {														; rename remaining files with .PDF
 			FileMove, % fName, % path.HolterPDF A_LoopFileName ".PDF"
 			eventlog("WQlistBadPDFs moved loose file '" A_LoopFileName "'.")
 		}
