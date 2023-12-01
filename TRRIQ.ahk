@@ -161,6 +161,7 @@ MainLoop: ; ===================== This is the main part ========================
 		}
 	}
 	
+	saveCygnusLogs("all")
 	checkPreventiceOrdersOut()
 	cleanDone()
 	
@@ -1420,13 +1421,17 @@ WQlistBadPDFs() {
 	loop, files, % ".\pdftemp\*"
 	{
 		fName := A_LoopFileFullPath
-		if InStr(fName, "crdownload") {													; skip chrome download tempfiles
+		if InStr(fName, "download") {													; skip chrome download tempfiles
 			Continue
 		}
 		FileGetTime, fNameDate, % fName
 		d2 := SubStr(fNameDate, 1, 8)
-		if (d1 = d2) {																	; downloaded file on same date as wsftp.txt
+		if (d1 = d2) {																	; check if file has same date as wsftp.txt
 			foundit := true
+		} else {
+			Continue
+		}
+		if !InStr(fName,".pdf") {														; rename remaining files with .PDF
 			FileMove, % fName, % path.HolterPDF A_LoopFileName ".PDF"
 			eventlog("WQlistBadPDFs moved loose file '" A_LoopFileName "'.")
 		}
@@ -5286,11 +5291,11 @@ findFullPdf(wqid:="") {
 		; if FileExist(fnam "-short.pdf") 
 		; 	continue
 		if (fname~="i)-full\.pdf") {
-			fNamCheck := RegExReplace(fname,"i)-full\.pdf$")
-			fnam := path.holterPDF "Archive\" fNamCheck ".pdf"
-			if FileExist(fnam) {
+			fnamID := stregX(fname,"_WQ",1,1,"_H",1)
+			fnamMRN := readWQ(fnamID).mrn
+			if FileExist(path.holterPDF "FullDisclosure\" fnamMRN " *.pdf") {
 				FileDelete, % fileIn
-				eventlog("Found complete PDF, deleted -full.pdf")
+				eventlog("Found complete PDF, deleted " fname)
 				Continue
 			}
 			pdflist.push(fname)																	; Add to pdflist, no need to scan
