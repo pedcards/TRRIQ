@@ -2797,12 +2797,12 @@ getBGMlog(drive:="D") {
 	Loop, Parse, txt, `r`n
 	{
 		k := A_LoopField
-		if InStr(k, "S/N") {
-			serNum := stRegX(k "<<<","S/N:\s+",1,1,"<<<",1)
-			serNum := RegExReplace(serNum,"BGMINI-")
+		if InStr(k, "LOGHDR:") {
+			RegExMatch(k,"BGMINI-(\d+)",x)
+			serNum := x1
 			Continue
 		}
-		if InStr(k, "TIMEZONE") {
+		if InStr(k, "TIMEZONE:") {
 			bgmTZ := stRegX(k "<<<","TIMEZONE:",1,1,";|<<<",1)
 			Continue
 		}
