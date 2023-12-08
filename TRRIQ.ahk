@@ -1043,6 +1043,8 @@ WQscanEpicOrders() {
 
 	WQepicOrdersCleanup()																; Remove extraneous orders
 
+	LV_ModifyCol(2,"SortDesc")															; Sort orders LV by date
+
 	Return
 }
 
