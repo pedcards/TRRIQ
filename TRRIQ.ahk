@@ -1653,7 +1653,6 @@ readPrevTxt() {
 	if (filedt=lastInvDT) {
 		Return
 	}
-	eventlog("Preventice Inventory " fileDT " updated.")
 	Progress,, Reading inventory updates...
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
@@ -1686,6 +1685,7 @@ readPrevTxt() {
 		}
 	}
 	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set pending[@update] attr
+	eventlog("Preventice Inventory " fileDT " updated.")
 	
 return	
 }
