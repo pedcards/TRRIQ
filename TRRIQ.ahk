@@ -3155,10 +3155,12 @@ HolterConnect(phase="")
 	if !(bgm := findBGMdrive()) {														; Wait for attached drive letter and sernum for [BG MINI]
 		Return
 	}
-	if !(bgmData := getBGMlog(bgm.drive)) {	 											; Get TZ, S/N, and Start time from LOG 
+	if (bgmData := getBGMlog(bgm.drive)) {	 											; Get TZ, S/N, and Start time from LOG 
+		bgm.record := bgmData.start
+	} else {
 		bgm.record := scanCygnusLog(bgmAuth).record
 		eventlog("No " bgm.drive ":\LOG file detected. Found recording start " bgm.record " in Cygnus log.")
-	} 
+	}
 	; bgmData := {}
 	; bgmData.ser := "2031181"
 	; bgmData.start := "20231019"
