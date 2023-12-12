@@ -1847,7 +1847,7 @@ parsePrevEnroll(det) {
 
 			id := k.getAttribute("id")
 			kdate := k.selectSingleNode("date").text
-			dt := (res.date,kdate)
+			dt := (res.date-kdate)
 			if abs(dt) between 1 and 5													; if Preventice registration (res.date) off from 1-5 days
 			{
 				wqSetVal(id,"date",res.date)
