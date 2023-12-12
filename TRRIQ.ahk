@@ -1059,6 +1059,8 @@ WQscanEpicOrders() {
 
 	WQepicOrdersCleanup()																; Remove extraneous orders
 
+	LV_ModifyCol(2,"SortDesc")															; Sort orders LV by date
+
 	Return
 }
 
@@ -1667,7 +1669,6 @@ readPrevTxt() {
 	if (filedt=lastInvDT) {
 		Return
 	}
-	eventlog("Preventice Inventory " fileDT " updated.")
 	Progress,, Reading inventory updates...
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
@@ -1700,6 +1701,7 @@ readPrevTxt() {
 		}
 	}
 	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set pending[@update] attr
+	eventlog("Preventice Inventory " fileDT " updated.")
 	
 return	
 }
@@ -1861,7 +1863,7 @@ parsePrevEnroll(det) {
 
 			id := k.getAttribute("id")
 			kdate := k.selectSingleNode("date").text
-			dt := (res.date,kdate)
+			dt := (res.date-kdate)
 			if abs(dt) between 1 and 5													; if Preventice registration (res.date) off from 1-5 days
 			{
 				wqSetVal(id,"date",res.date)
@@ -2813,12 +2815,12 @@ getBGMlog(drive:="D") {
 	Loop, Parse, txt, `r`n
 	{
 		k := A_LoopField
-		if InStr(k, "S/N") {
-			serNum := stRegX(k "<<<","S/N:\s+",1,1,"<<<",1)
-			serNum := RegExReplace(serNum,"BGMINI-")
+		if InStr(k, "LOGHDR:") {
+			RegExMatch(k,"BGMINI-(\d+)",x)
+			serNum := x1
 			Continue
 		}
-		if InStr(k, "TIMEZONE") {
+		if InStr(k, "TIMEZONE:") {
 			bgmTZ := stRegX(k "<<<","TIMEZONE:",1,1,";|<<<",1)
 			Continue
 		}
@@ -3169,19 +3171,21 @@ HolterConnect(phase="")
 	if !(bgm := findBGMdrive()) {														; Wait for attached drive letter and sernum for [BG MINI]
 		Return
 	}
-	if !(bgmData := getBGMlog(bgm.drive)) {	 											; Get TZ, S/N, and Start time from LOG 
-		bgm.start := scanCygnusLog(bgmAuth).record
-		eventlog("No " bgm.drive ":\LOG file detected. Found recording start " bgm.start " in Cygnus log.")
-	} 
+	if (bgmData := getBGMlog(bgm.drive)) {	 											; Get TZ, S/N, and Start time from LOG 
+		bgm.record := bgmData.start
+	} else {
+		bgm.record := scanCygnusLog(bgmAuth).record
+		eventlog("No " bgm.drive ":\LOG file detected. Found recording start " bgm.record " in Cygnus log.")
+	}
 	; bgmData := {}
 	; bgmData.ser := "2031181"
 	; bgmData.start := "20231019"
 
 	if (phase="Transfer") {
-		match := findBGMenroll(bgm.sernum,bgm.start) 									; Find enrollments that match S/N an start date
+		match := findBGMenroll(bgm.sernum,bgm.record) 									; Find enrollments that match S/N an start date
 		if (match="") {
 			MsgBox NO MATCHING REGISTRATION
-			eventlog("No BGM registration matches S/N " bgm.sernum " on " bgm.start ".")
+			eventlog("No BGM registration matches S/N " bgm.sernum " on " bgm.record ".")
 			Return
 		} else {
 			eventlog("Enroll matches: " RegExReplace(match,"`n"," - "))
