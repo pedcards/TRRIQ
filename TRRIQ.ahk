@@ -1401,25 +1401,23 @@ WQlistBadPDFs() {
 */
 	global path
 
-	FileGetTime, wsftpDate, .\files\wsftp.txt
-	d1 := SubStr(wsftpDate, 1, 8)
-
 	loop, files, % ".\pdftemp\*"
 	{
 		fName := A_LoopFileFullPath
 		if InStr(fName, "download") {													; skip chrome download tempfiles
 			Continue
 		}
-		FileGetTime, fNameDate, % fName
-		d2 := SubStr(fNameDate, 1, 8)
-		if (d1 = d2) {																	; check if file has same date as wsftp.txt
-			foundit := true
-		} else {
+		if (fname~="i)\.pdf") {															; leftover PDF file
+			FileMove, % fName, % path.HolterPDF A_LoopFileName, 1
+			eventlog("WQlistBadPDFs moved leftover file '" A_LoopFileName "'." )
+			foundit:=True
 			Continue
 		}
 		if !InStr(fName,".pdf") {														; rename remaining files with .PDF
-			FileMove, % fName, % path.HolterPDF A_LoopFileName ".PDF"
+			FileMove, % fName, % path.HolterPDF A_LoopFileName ".PDF", 1
 			eventlog("WQlistBadPDFs moved loose file '" A_LoopFileName "'.")
+			foundit:=True
+			Continue
 		}
 	}
 	if (foundit) {
