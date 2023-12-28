@@ -2615,7 +2615,7 @@ ftpGrab() {
 	global path
 	Gui, phase:Hide
 	RunWait, PrevGrab.exe "ftp" 
-	FileMove, .\pdfTemp\*.pdf, % path.holterPDF "*.*"
+	FileMove, .\pdfTemp\*.pdf, % path.holterPDF "*.*", 1
 	Gui, phase:Show
 	WQlist()
 
