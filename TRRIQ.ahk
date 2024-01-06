@@ -1286,6 +1286,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			obr_site := strX(obr_prov,"-",0,1,"",0)
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
 			pv1_dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
+			obx1:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")						; true if this is Full Disclosure ORU
 			
 			if (obr_site="") {															; no "-site" in OBR.17 name
 				obr_site:="MAIN"
