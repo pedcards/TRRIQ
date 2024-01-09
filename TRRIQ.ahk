@@ -1271,7 +1271,7 @@ WQpreventiceResults(ByRef wqfiles) {
 	Add line to WQlv_in
 	Add line to wqfiles
 */
-	global wq, path, sites0, hl7DirMap, monSerialStrings
+	global wq, path, sites0, hl7DirMap, monSerialStrings, fldval
 	
 	tmpHolters := ""
 	loop, Files, % path.PrevHL7in "*.hl7"
@@ -1286,6 +1286,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			obr_site := strX(obr_prov,"-",0,1,"",0)
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
 			pv1_dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
+			obx1:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")						; true if this is Full Disclosure ORU
 			
 			if (obr_site="") {															; no "-site" in OBR.17 name
 				obr_site:="MAIN"
@@ -1309,6 +1310,16 @@ WQpreventiceResults(ByRef wqfiles) {
 			}
 		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
+		if (obx1) {
+			processHL7(path.PrevHL7in . fileIn)											; extract DDE to fldVal, and PDF into hl7Dir
+			dt := ParseDate(res.date)
+			newFnam := strQ(res.mrn
+				, "### " ParseName(res.name).last " " dt.MM "-" dt.DD "-" dt.YYYY "_WQ" id "_H-full.pdf"
+				, fldval.filename)
+			FileMove, % path.PrevHL7in fldval.filename, % path.holterPDF newFnam , 1
+			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
+			Continue
+	}
 		if (res.node="done") {															; skip if DONE, might be currently in process 
 			eventlog("Report already done (" id ": " res.name " - " res.mrn ", " res.date ")")
 			eventlog("WQlist removing " fileIn)
