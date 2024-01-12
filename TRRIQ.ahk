@@ -1316,6 +1316,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			newFnam := strQ(res.mrn
 				, "### " ParseName(res.name).last " " dt.MM "-" dt.DD "-" dt.YYYY "_WQ" id "_H-full.pdf"
 				, fldval.filename)
+			eventlog("Extracted full disclosure PDF from " fileIn " to " newFnam)
 			FileMove, % path.PrevHL7in fldval.filename, % path.holterPDF newFnam , 1
 			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			Continue
