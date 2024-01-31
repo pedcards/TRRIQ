@@ -4944,16 +4944,9 @@ Holter_Pr_Hl7:
 			
 			msg := cmsgbox("Missing full disclosure PDF"
 				, fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
-				. "Download from ftp.eCardio.com site`n"
-				. "then click [Retry].`n`n"
-				. "If full disclosure PDF not available,`n"
-				. "click [Email] to send a message to Preventice."
-				, "Retry|Email|Cancel"
+				. "Click [Email] to send a message to Preventice."
+				, "Email|Cancel"
 				, "E", "V")
-			if (msg="Retry") {
-				findFullPDF()
-				continue
-			}
 			if (msg~="Cancel|Close|xClose") {
 				FileDelete, % fileIn
 				eventlog("Refused to get full disclosure. Extracted PDF deleted.")
@@ -4968,9 +4961,9 @@ Holter_Pr_Hl7:
 				Eml.cc := "EkgMaInbox@seattlechildrens.org; terrence.chun@seattlechildrens.org"
 				Eml.Subject := "Missing full disclosure PDF"
 				Eml.Display																; Display first to get default signature
-				Eml.HTMLBody := "Please upload the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
+				Eml.HTMLBody := "Please release the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
 					. " MRN#" fldval["dem-MRN"] " study date " fldval["dem-Test_date"]
-					. " to the eCardio FTP site.<br><br>Thank you!<br>"
+					. " to the server.<br><br>Thank you!<br>"
 					. Eml.HTMLBody														; Prepend to existing default message
 				progress, off
 				ObjRelease(Eml)															; or Eml:=""
