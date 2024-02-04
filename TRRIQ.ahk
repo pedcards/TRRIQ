@@ -187,10 +187,7 @@ PhaseGUI:
 	Gui, Add, Button
 		, Y+10 wp h40 gPrevGrab Disabled
 		, Check Preventice inventory
-	Gui, Add, Button
-		, Y+10 wp h40 gFtpGrab Disabled
-		, Grab FTP full disclosure 
-	Gui, Add, Text, wp h20																; space between top buttons and lower buttons
+	Gui, Add, Text, wp h50																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
 		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
