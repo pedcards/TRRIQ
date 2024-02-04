@@ -3085,9 +3085,6 @@ checkBGMstatus(drive:="D",title:="") {
 		eventlog("Break without uploadStat.")
 	}
 
-	FileCopy, % cyg.zipfile, .\tempfiles\Cygnus
-	eventlog("Archived " cyg.zipfile)
-	
 	file := folderCygnus "\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 	FileCopy, % file, .\tempfiles 
 	saveCygnusLogs()
