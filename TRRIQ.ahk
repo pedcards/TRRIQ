@@ -193,24 +193,17 @@ PhaseGUI:
 		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
 		, No active orders
 	Gui, Add, Text, wp h30
-	Gui, Add, Text, Y+10 wp Center, Transmit	     Transmit
-	Gui, Add, Text, Y+1 wp Center H100, MORTARA	     BG MINI
+	Gui, Add, Text, Y+10 wp Center		, Transmit
+	Gui, Add, Text, Y+1 wp Center H100	, BG MINI
 	Gui, Font, Normal
 
-	GuiControlGet, btn1, Pos, MORTARA
 	GuiControlGet, btn2, Pos, BG MINI
 
 	btnW := 79
 	btnH := 61
 
 	Gui, Add, Picture
-		, % "Y" btn1Y+20 " X" btn1X+16
-		. " w" btnW " h" btnH " "
-		. " +0x1000 vMortaraUpload gPhaseTask"
-		, .\files\H3.png
-	
-	Gui, Add, Picture
-	, % "Y" btn2Y+20 " X" btn2X+130
+	, % "Y" btn2Y+20 " X" btn2X+70
 	. " w" btnW " h" btnH " "
 	. " +0x1000 vHolterUpload gPhaseTask"
 	, .\files\BGMini.png
