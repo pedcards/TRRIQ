@@ -5264,10 +5264,7 @@ findFullPdf(wqid:="") {
 		}
 		if (fname~="i)-sh\.pdf")
 			continue
-		; if FileExist(fname "-sh.pdf") 
-		; 	continue
-		; if FileExist(fnam "-short.pdf") 
-		; 	continue
+
 		if (fname~="i)-full\.pdf") {
 			fnamID := stregX(fname,"_WQ",1,1,"_H",1)
 			fnamMRN := readWQ(fnamID).mrn
@@ -5288,40 +5285,44 @@ findFullPdf(wqid:="") {
 			continue
 		}
 		
-		if (fnID.0 = "") {																; Unmatched full disclosure PDF
-			RunWait, .\files\pdftotext.exe -l %pdfScanPages% "%fileIn%" "%fnam%.txt",,min		; convert PDF pages with no tabular structure
-			FileRead, newtxt, %fnam%.txt												; load into newtxt
-			FileDelete, %fnam%.txt
-			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
+		if (fnID.0 = "") {				
+			eventlog("Unmatched PDF: " fileIn)													; unmatched PDF
+			continue
+		
+			; ; Unmatched full disclosure PDF
+			; RunWait, .\files\pdftotext.exe -l %pdfScanPages% "%fileIn%" "%fnam%.txt",,min		; convert PDF pages with no tabular structure
+			; FileRead, newtxt, %fnam%.txt												; load into newtxt
+			; FileDelete, %fnam%.txt
+			; StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
 			
-			flds := getPdfID(newtxt)
+			; flds := getPdfID(newtxt)
 			
-			if (AllowSavedPDF="true") && InStr(flds.wqid,"00000") {
-				eventlog("Unmatched PDF: " fileIn)
-				continue
-			}
+			; if (AllowSavedPDF="true") && InStr(flds.wqid,"00000") {
+			; 	eventlog("Unmatched PDF: " fileIn)
+			; 	continue
+			; }
 			
-			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
-			if InStr(newtxt, "Full Disclosure Report") {								; likely Full Disclosure Report
-				dt := ParseDate(flds.date)
-				newFnam := strQ(flds.mrn,"### " flds.nameL " " dt.MM "-" dt.DD "-" dt.YYYY "_WQ" flds.wqid,fnam)
-				FileMove, %fileIn%, % path.holterPDF newFnam "-full.pdf", 1
-				pdfList.push(newFnam "-full.pdf")
-				Continue
-			} else {
-				FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1					; Everything else, rename the unprocessed PDF
-			}
-			If ErrorLevel
-			{
-				MsgBox, 262160, File error, % ""										; Failed to move file
-					. "Could not rename PDF file.`n`n"
-					. "Make sure file is not open in Acrobat Reader!"
-				eventlog("Holter PDF: " fname " file open error.")
-				Continue
-			} else {
-				fName := newFnam ".pdf"													; successful move
-				eventlog("Holter PDF: " fNam " renamed to " fName)
-			}
+			; newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
+			; if InStr(newtxt, "Full Disclosure Report") {								; likely Full Disclosure Report
+			; 	dt := ParseDate(flds.date)
+			; 	newFnam := strQ(flds.mrn,"### " flds.nameL " " dt.MM "-" dt.DD "-" dt.YYYY "_WQ" flds.wqid,fnam)
+			; 	FileMove, %fileIn%, % path.holterPDF newFnam "-full.pdf", 1
+			; 	pdfList.push(newFnam "-full.pdf")
+			; 	Continue
+			; } else {
+			; 	FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1					; Everything else, rename the unprocessed PDF
+			; }
+			; If ErrorLevel
+			; {
+			; 	MsgBox, 262160, File error, % ""										; Failed to move file
+			; 		. "Could not rename PDF file.`n`n"
+			; 		. "Make sure file is not open in Acrobat Reader!"
+			; 	eventlog("Holter PDF: " fname " file open error.")
+			; 	Continue
+			; } else {
+			; 	fName := newFnam ".pdf"													; successful move
+			; 	eventlog("Holter PDF: " fNam " renamed to " fName)
+			; }
 		} 
 		if !objhasvalue(pdfList,fName) {
 			pdfList.push(fName)
