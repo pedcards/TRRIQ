@@ -7,7 +7,7 @@
 #Requires AutoHotkey v1.1
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force  ; only allow one running instance per user
-#MaxMem 128
+#MaxMem 256
 #Include %A_ScriptDir%\includes
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 
@@ -67,9 +67,9 @@ sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
 /*	Get valid WebUploadDir
 */
-webUploadDir := checkH3registry()														; Find the location of Holter data files
-check_h3(path.webupload,webUploadStr)													; Find the H3 data folders on C:
-checkPCwks()
+; webUploadDir := checkH3registry()														; Find the location of Holter data files
+; check_h3(path.webupload,webUploadStr)													; Find the H3 data folders on C:
+; checkPCwks()
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -187,33 +187,23 @@ PhaseGUI:
 	Gui, Add, Button
 		, Y+10 wp h40 gPrevGrab Disabled
 		, Check Preventice inventory
-	Gui, Add, Button
-		, Y+10 wp h40 gFtpGrab Disabled
-		, Grab FTP full disclosure 
-	Gui, Add, Text, wp h20																; space between top buttons and lower buttons
+	Gui, Add, Text, wp h50																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
 		, Y+10 wp h40 vRegister gPhaseOrder DISABLED
 		, No active orders
 	Gui, Add, Text, wp h30
-	Gui, Add, Text, Y+10 wp Center, Transmit	     Transmit
-	Gui, Add, Text, Y+1 wp Center H100, MORTARA	     BG MINI
+	Gui, Add, Text, Y+10 wp Center		, Transmit
+	Gui, Add, Text, Y+1 wp Center H100	, BG MINI
 	Gui, Font, Normal
 
-	GuiControlGet, btn1, Pos, MORTARA
 	GuiControlGet, btn2, Pos, BG MINI
 
 	btnW := 79
 	btnH := 61
 
 	Gui, Add, Picture
-		, % "Y" btn1Y+20 " X" btn1X+16
-		. " w" btnW " h" btnH " "
-		. " +0x1000 vMortaraUpload gPhaseTask"
-		, .\files\H3.png
-	
-	Gui, Add, Picture
-	, % "Y" btn2Y+20 " X" btn2X+130
+	, % "Y" btn2Y+20 " X" btn2X+70
 	. " w" btnW " h" btnH " "
 	. " +0x1000 vHolterUpload gPhaseTask"
 	, .\files\BGMini.png
@@ -1316,6 +1306,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			newFnam := strQ(res.mrn
 				, "### " ParseName(res.name).last " " dt.MM "-" dt.DD "-" dt.YYYY "_WQ" id "_H-full.pdf"
 				, fldval.filename)
+			eventlog("Extracted full disclosure PDF from " fileIn " to " newFnam)
 			FileMove, % path.PrevHL7in fldval.filename, % path.holterPDF newFnam , 1
 			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			Continue
@@ -3084,9 +3075,6 @@ checkBGMstatus(drive:="D",title:="") {
 		eventlog("Break without uploadStat.")
 	}
 
-	FileCopy, % cyg.zipfile, .\tempfiles\Cygnus
-	eventlog("Archived " cyg.zipfile)
-	
 	file := folderCygnus "\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 	FileCopy, % file, .\tempfiles 
 	saveCygnusLogs()
@@ -4943,16 +4931,9 @@ Holter_Pr_Hl7:
 			
 			msg := cmsgbox("Missing full disclosure PDF"
 				, fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
-				. "Download from ftp.eCardio.com site`n"
-				. "then click [Retry].`n`n"
-				. "If full disclosure PDF not available,`n"
-				. "click [Email] to send a message to Preventice."
-				, "Retry|Email|Cancel"
+				. "Click [Email] to send a message to Preventice."
+				, "Email|Cancel"
 				, "E", "V")
-			if (msg="Retry") {
-				findFullPDF()
-				continue
-			}
 			if (msg~="Cancel|Close|xClose") {
 				FileDelete, % fileIn
 				eventlog("Refused to get full disclosure. Extracted PDF deleted.")
@@ -4967,9 +4948,9 @@ Holter_Pr_Hl7:
 				Eml.cc := "EkgMaInbox@seattlechildrens.org; terrence.chun@seattlechildrens.org"
 				Eml.Subject := "Missing full disclosure PDF"
 				Eml.Display																; Display first to get default signature
-				Eml.HTMLBody := "Please upload the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
+				Eml.HTMLBody := "Please release the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
 					. " MRN#" fldval["dem-MRN"] " study date " fldval["dem-Test_date"]
-					. " to the eCardio FTP site.<br><br>Thank you!<br>"
+					. " to the server.<br><br>Thank you!<br>"
 					. Eml.HTMLBody														; Prepend to existing default message
 				progress, off
 				ObjRelease(Eml)															; or Eml:=""
@@ -5283,10 +5264,7 @@ findFullPdf(wqid:="") {
 		}
 		if (fname~="i)-sh\.pdf")
 			continue
-		; if FileExist(fname "-sh.pdf") 
-		; 	continue
-		; if FileExist(fnam "-short.pdf") 
-		; 	continue
+
 		if (fname~="i)-full\.pdf") {
 			fnamID := stregX(fname,"_WQ",1,1,"_H",1)
 			fnamMRN := readWQ(fnamID).mrn
@@ -5307,40 +5285,44 @@ findFullPdf(wqid:="") {
 			continue
 		}
 		
-		if (fnID.0 = "") {																; Unmatched full disclosure PDF
-			RunWait, .\files\pdftotext.exe -l %pdfScanPages% "%fileIn%" "%fnam%.txt",,min		; convert PDF pages with no tabular structure
-			FileRead, newtxt, %fnam%.txt												; load into newtxt
-			FileDelete, %fnam%.txt
-			StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
+		if (fnID.0 = "") {				
+			eventlog("Unmatched PDF: " fileIn)													; unmatched PDF
+			continue
+		
+			; ; Unmatched full disclosure PDF
+			; RunWait, .\files\pdftotext.exe -l %pdfScanPages% "%fileIn%" "%fnam%.txt",,min		; convert PDF pages with no tabular structure
+			; FileRead, newtxt, %fnam%.txt												; load into newtxt
+			; FileDelete, %fnam%.txt
+			; StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All							; remove double CRLF
 			
-			flds := getPdfID(newtxt)
+			; flds := getPdfID(newtxt)
 			
-			if (AllowSavedPDF="true") && InStr(flds.wqid,"00000") {
-				eventlog("Unmatched PDF: " fileIn)
-				continue
-			}
+			; if (AllowSavedPDF="true") && InStr(flds.wqid,"00000") {
+			; 	eventlog("Unmatched PDF: " fileIn)
+			; 	continue
+			; }
 			
-			newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
-			if InStr(newtxt, "Full Disclosure Report") {								; likely Full Disclosure Report
-				dt := ParseDate(flds.date)
-				newFnam := strQ(flds.mrn,"### " flds.nameL " " dt.MM "-" dt.DD "-" dt.YYYY "_WQ" flds.wqid,fnam)
-				FileMove, %fileIn%, % path.holterPDF newFnam "-full.pdf", 1
-				pdfList.push(newFnam "-full.pdf")
-				Continue
-			} else {
-				FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1					; Everything else, rename the unprocessed PDF
-			}
-			If ErrorLevel
-			{
-				MsgBox, 262160, File error, % ""										; Failed to move file
-					. "Could not rename PDF file.`n`n"
-					. "Make sure file is not open in Acrobat Reader!"
-				eventlog("Holter PDF: " fname " file open error.")
-				Continue
-			} else {
-				fName := newFnam ".pdf"													; successful move
-				eventlog("Holter PDF: " fNam " renamed to " fName)
-			}
+			; newFnam := strQ(flds.nameL,"###_" flds.mrn,fnam) strQ(flds.wqid,"_WQ###")
+			; if InStr(newtxt, "Full Disclosure Report") {								; likely Full Disclosure Report
+			; 	dt := ParseDate(flds.date)
+			; 	newFnam := strQ(flds.mrn,"### " flds.nameL " " dt.MM "-" dt.DD "-" dt.YYYY "_WQ" flds.wqid,fnam)
+			; 	FileMove, %fileIn%, % path.holterPDF newFnam "-full.pdf", 1
+			; 	pdfList.push(newFnam "-full.pdf")
+			; 	Continue
+			; } else {
+			; 	FileMove, %fileIn%, % path.holterPDF newFnam ".pdf", 1					; Everything else, rename the unprocessed PDF
+			; }
+			; If ErrorLevel
+			; {
+			; 	MsgBox, 262160, File error, % ""										; Failed to move file
+			; 		. "Could not rename PDF file.`n`n"
+			; 		. "Make sure file is not open in Acrobat Reader!"
+			; 	eventlog("Holter PDF: " fname " file open error.")
+			; 	Continue
+			; } else {
+			; 	fName := newFnam ".pdf"													; successful move
+			; 	eventlog("Holter PDF: " fNam " renamed to " fName)
+			; }
 		} 
 		if !objhasvalue(pdfList,fName) {
 			pdfList.push(fName)
