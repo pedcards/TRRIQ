@@ -5656,9 +5656,9 @@ Holter_BGM_SL_HL7:
 			Eml.cc := "EkgMaInbox@seattlechildrens.org; terrence.chun@seattlechildrens.org"
 			Eml.Subject := "Missing full disclosure PDF"
 			Eml.Display																	; Display first to get default signature
-			Eml.HTMLBody := "Please upload the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
+			Eml.HTMLBody := "Please release the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
 				. " MRN#" fldval["dem-MRN"] " study date " fldval["dem-Test_date"]
-				. " to the eCardio FTP site.<br><br>Thank you!<br>"
+				. " to the server.<br><br>Thank you!<br>"
 				. Eml.HTMLBody															; Prepend to existing default message
 			ObjRelease(Eml)																; or Eml:=""
 			eventlog("Email sent to Preventice.")
