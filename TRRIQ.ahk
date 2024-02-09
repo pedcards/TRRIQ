@@ -2682,9 +2682,9 @@ fixDuration() {
 		id	:= k.getAttribute("id")
 		kDevNode := k.selectSingleNode("dev")
 		kDev := kDevNode.Text
-		kDur := (kDev~="Mortara" ? "1"
+		kDur := (kDev~="Mortara|Mini -" ? "1"
 			: kDev~="Mini EL" ? "14"
-			: kDev~="Heart" ? "30"
+			: kDev~="Heart|PLUS Lite" ? "30"
 			: "")
 		wq.InsertElement("duration",kDevNode.NextSibling,kDur)
 		eventlog(id " Inserted duration '" kDur "'")
