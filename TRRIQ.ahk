@@ -1706,7 +1706,8 @@ parsePrevEnroll(det) {
 			, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
 			, prov:filterProv(det.getAttribute("Ordering_Physician")).name
 			, site:filterProv(det.getAttribute("Ordering_Physician")).site
-			, id:det.getAttribute("CSN_SecondaryID1") }
+			, id:det.getAttribute("CSN_SecondaryID1") 
+			, duration:det.getAttribute("Study_Duration") }
 
 	if (res.dev~=" - $") {																; e.g. "Body Guardian Mini -"
 		res.dev .= res.name																; append string so will not match in enrollcheck
@@ -1731,6 +1732,7 @@ parsePrevEnroll(det) {
 			parsePrevElement(id,en,res,"dev")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
@@ -1740,6 +1742,7 @@ parsePrevEnroll(det) {
 			. "[dev='" res.dev "']"
 			. "[prov=""" res.prov """]"
 			. "[site='" res.site "']" )) {
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
@@ -1754,6 +1757,7 @@ parsePrevEnroll(det) {
 			eventlog("parsePrevEnroll " id "." en.node " changed PROV+SITE - matched NAME+MRN+DATE+DEV.")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
@@ -1768,6 +1772,7 @@ parsePrevEnroll(det) {
 			parsePrevElement(id,en,res,"name")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
@@ -1790,6 +1795,7 @@ parsePrevEnroll(det) {
 			}
 			eventlog("parsePrevEnroll " id "." en.node " added DEV - only matched MRN+DATE.")
 			parsePrevElement(id,en,res,"dev")
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
@@ -1800,6 +1806,7 @@ parsePrevEnroll(det) {
 			}
 			eventlog("parsePrevEnroll " id "." en.node " added MRN - only matched DATE+DEV.")
 			parsePrevElement(id,en,res,"mrn")
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		} 
@@ -1811,6 +1818,7 @@ parsePrevEnroll(det) {
 			dt0:= dateDiff(en.date,res.date)
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
 				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
+				parsePrevElement(id,en,res,"duration")
 				eventlog("parsePrevEnroll " id "." en.node " adjusted date - only matched MRN+DEV.")
 			}
 			checkweb(id)
