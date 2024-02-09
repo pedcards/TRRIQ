@@ -1722,7 +1722,8 @@ parsePrevEnroll(det) {
 			, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
 			, prov:filterProv(det.getAttribute("Ordering_Physician")).name
 			, site:filterProv(det.getAttribute("Ordering_Physician")).site
-			, id:det.getAttribute("CSN_SecondaryID1") }
+			, id:det.getAttribute("CSN_SecondaryID1") 
+			, duration:det.getAttribute("Study_Duration") }
 
 	if (res.dev~=" - $") {																; e.g. "Body Guardian Mini -"
 		res.dev .= res.name																; append string so will not match in enrollcheck
@@ -1747,6 +1748,7 @@ parsePrevEnroll(det) {
 			parsePrevElement(id,en,res,"dev")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
@@ -1756,6 +1758,7 @@ parsePrevEnroll(det) {
 			. "[dev='" res.dev "']"
 			. "[prov=""" res.prov """]"
 			. "[site='" res.site "']" )) {
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
@@ -1770,6 +1773,7 @@ parsePrevEnroll(det) {
 			eventlog("parsePrevEnroll " id "." en.node " changed PROV+SITE - matched NAME+MRN+DATE+DEV.")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
@@ -1784,6 +1788,7 @@ parsePrevEnroll(det) {
 			parsePrevElement(id,en,res,"name")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
@@ -1806,6 +1811,7 @@ parsePrevEnroll(det) {
 			}
 			eventlog("parsePrevEnroll " id "." en.node " added DEV - only matched MRN+DATE.")
 			parsePrevElement(id,en,res,"dev")
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
@@ -1816,6 +1822,7 @@ parsePrevEnroll(det) {
 			}
 			eventlog("parsePrevEnroll " id "." en.node " added MRN - only matched DATE+DEV.")
 			parsePrevElement(id,en,res,"mrn")
+			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		} 
@@ -1827,6 +1834,7 @@ parsePrevEnroll(det) {
 			dt0:= dateDiff(en.date,res.date)
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
 				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
+				parsePrevElement(id,en,res,"duration")
 				eventlog("parsePrevEnroll " id "." en.node " adjusted date - only matched MRN+DEV.")
 			}
 			checkweb(id)
@@ -2698,9 +2706,9 @@ fixDuration() {
 		id	:= k.getAttribute("id")
 		kDevNode := k.selectSingleNode("dev")
 		kDev := kDevNode.Text
-		kDur := (kDev~="Mortara" ? "1"
+		kDur := (kDev~="Mortara|Mini -" ? "1"
 			: kDev~="Mini EL" ? "14"
-			: kDev~="Heart" ? "30"
+			: kDev~="Heart|PLUS Lite" ? "30"
 			: "")
 		wq.InsertElement("duration",kDevNode.NextSibling,kDur)
 		eventlog(id " Inserted duration '" kDur "'")
@@ -5672,9 +5680,9 @@ Holter_BGM_SL_HL7:
 			Eml.cc := "EkgMaInbox@seattlechildrens.org; terrence.chun@seattlechildrens.org"
 			Eml.Subject := "Missing full disclosure PDF"
 			Eml.Display																	; Display first to get default signature
-			Eml.HTMLBody := "Please upload the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
+			Eml.HTMLBody := "Please release the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
 				. " MRN#" fldval["dem-MRN"] " study date " fldval["dem-Test_date"]
-				. " to the eCardio FTP site.<br><br>Thank you!<br>"
+				. " to the server.<br><br>Thank you!<br>"
 				. Eml.HTMLBody															; Prepend to existing default message
 			ObjRelease(Eml)																; or Eml:=""
 			eventlog("Email sent to Preventice.")
