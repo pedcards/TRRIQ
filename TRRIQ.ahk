@@ -975,7 +975,6 @@ WQlist() {
 		
 		WQpreventiceResults(wqfiles)													; Process incoming Preventice results
 		WQscanHolterPDFs(wqfiles)														; Scan Holter PDFs folder for additional files
-		WQlistPDFdownloads()															; generate wsftp.txt
 		WQlistBadPDFs()																	; find loose PDFs that Chrome couldn't rename 
 		WQfindMissingWebgrab()															; find <pending> missing <webgrab>
 	}
@@ -1373,25 +1372,6 @@ WQscanHolterPDFs(ByRef wqfiles) {
 	}
 
 	LV_ModifyCol(6,"Sort")																; date
-
-	Return
-}
-
-WQlistPDFdownloads() {
-/*	Generate wsftp.txt list for those that still require PDF download
-*/
-	GuiControl, Disabled, Grab FTP full disclosure
-	loop % LV_GetCount() {
-		LV_GetText(x,A_Index,9)															; FTP
-		LV_GetText(y,A_Index,2)															; Name
-
-		if (x) {
-			tmpHolters .= RegExReplace(y,",\s+",",") "`n"
-			GuiControl, Enable, Grab FTP full disclosure
-		}
-	}
-	FileDelete, .\files\wsftp.txt
-	FileAppend, % tmpHolters, .\files\wsftp.txt
 
 	Return
 }
