@@ -975,7 +975,6 @@ WQlist() {
 		
 		WQpreventiceResults(wqfiles)													; Process incoming Preventice results
 		WQscanHolterPDFs(wqfiles)														; Scan Holter PDFs folder for additional files
-		WQlistBadPDFs()																	; find loose PDFs that Chrome couldn't rename 
 		WQfindMissingWebgrab()															; find <pending> missing <webgrab>
 	}
 	
@@ -1373,38 +1372,6 @@ WQscanHolterPDFs(ByRef wqfiles) {
 
 	LV_ModifyCol(6,"Sort")																; date
 
-	Return
-}
-
-WQlistBadPDFs() {
-/*	Chrome (or wsftp) fails to download files with "," in filename
-	Ends up saving bad filename, e.g. "SMITH, JEROME.PDF" ==> "SMITH"
-	Copy all files completed by ftpgrab() to HolterPDFs
-*/
-	global path
-
-	loop, files, % ".\pdftemp\*"
-	{
-		fName := A_LoopFileFullPath
-		if InStr(fName, "download") {													; skip chrome download tempfiles
-			Continue
-		}
-		if (fname~="i)\.pdf") {															; leftover PDF file
-			FileMove, % fName, % path.HolterPDF A_LoopFileName, 1
-			eventlog("WQlistBadPDFs moved leftover file '" A_LoopFileName "'." )
-			foundit:=True
-			Continue
-		}
-		if !InStr(fName,".pdf") {														; rename remaining files with .PDF
-			FileMove, % fName, % path.HolterPDF A_LoopFileName ".PDF", 1
-			eventlog("WQlistBadPDFs moved loose file '" A_LoopFileName "'.")
-			foundit:=True
-			Continue
-		}
-	}
-	if (foundit) {
-		Gosub phaseGUI																	; any file moves, regenerate phaseGUI
-	}
 	Return
 }
 
