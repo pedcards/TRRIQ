@@ -4526,13 +4526,13 @@ ProcessPDF:
 		
 	if (InStr(newtxt,"zio xt")) {														; Processing loop based on identifying string in newtxt
 		gosub Zio
-	} else if (InStr(newtxt,"Preventice") && InStr(newtxt,"HScribe")) 	{				; New Preventice Holter 2017
+	} else if (InStr(newtxt,"CDx.Boston") && InStr(newtxt,"HScribe")) 	{				; New Preventice Holter 2017
 		gosub Holter_Pr2
-	} else if (InStr(newtxt,"Preventice") && InStr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
+	} else if (InStr(newtxt,"CDx.Boston") && InStr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
 		gosub Event_BGH
 	} else if (InStr(newtxt,"Global Instrumentation LLC")) {							; BG Mini extended Holter
 		gosub Holter_BGM
-	} else if (InStr(newtxt,"Preventice") && InStr(newtxt,"Long-Term Holter Report")) {		; New BG Mini EL Holter 2023
+	} else if (InStr(newtxt,"CDx.Boston") && InStr(newtxt,"Long-Term Holter Report")) {		; New BG Mini EL Holter 2023
 		Holter_BGM2(newtxt)
 	} else {
 		eventlog(fileNam " bad file.")
