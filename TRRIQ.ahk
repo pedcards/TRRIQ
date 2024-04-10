@@ -1505,7 +1505,7 @@ WQpendingReads() {
 }
 
 cleanDone() {
-	global wq, sites0
+	global wq, sites0, path
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
@@ -1558,6 +1558,17 @@ cleanDone() {
 	writeSave(wq)
 	wq := new XML("worklist.xml")
 	FileDelete, .lock
+
+	progress,,% " ",Purging OnBase files												; scan OnBase\PROCESSED\Import files
+	loop, files, % path.Onbase "..\PROCESSED\Import\*.pdf"
+	{
+		fnam := A_LoopFileName
+		fdate := A_LoopFileTimeModified
+		dtDiff := dateDiff(fdate)
+		if (dtDiff>180) {																; delete files older than this many days
+			filedelete, % A_LoopFileLongPath
+		}
+	}
 	
 	return
 }
