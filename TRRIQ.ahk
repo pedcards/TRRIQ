@@ -5226,7 +5226,8 @@ findFullPdf(wqid:="") {
 		if (fname~="i)-full\.pdf") {
 			fnamID := stregX(fname,"_WQ",1,1,"_H",1)
 			fnamMRN := readWQ(fnamID).mrn
-			if FileExist(path.holterPDF "FullDisclosure\" fnamMRN " *.pdf") {
+			fnamDate := strX(fname," ",0,1,"_WQ",0,3)
+			if FileExist(path.holterPDF "FullDisclosure\" fnamMRN "*" fnamDate "*.pdf") {
 				FileDelete, % fileIn
 				eventlog("Found complete PDF, deleted " fname)
 				Continue
