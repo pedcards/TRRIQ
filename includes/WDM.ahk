@@ -59,7 +59,7 @@ Class RunDriver
 		This.Target := Location " " chr(34) this.param chr(34)
 		if !FileExist(Location)
 		{
-			Msgbox,64,Rufaydium WebDriver Support,Unable to download driver`nRufaydium exiting
+			MsgBox 0x40040, ,Rufaydium WebDriver Support,Unable to download driver`nRufaydium exiting
 			ExitApp
 		}
 
@@ -67,7 +67,7 @@ Class RunDriver
 			This.Port := Port1
 		else
 		{
-			Msgbox,64,"Rufaydium WebDriver Support,Unable to download driver from`nURL :" this.DriverUrl "`nRufaydium exiting"
+			MsgBox 0x40040, ,"Rufaydium WebDriver Support,Unable to download driver from`nURL :" this.DriverUrl "`nRufaydium exiting"
 			ExitApp
 		}
 	
@@ -149,7 +149,7 @@ Class RunDriver
 				RegExMatch(Version,"Chrome version ([\d.]+).*\n.*browser version is (\d+)",Dver)
 				if RegExMatch(Version,"Chrome version ([\d.]+).*\n.*browser version is (\d+.\d+.\d+)",bver)
 				{
-					if Dver < 115 ; 
+					if Dver1 > 115 ; 
 					{
 						uri := "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json"
 						for k, obj in json.load(this.GetVersion(uri)).versions
@@ -179,7 +179,8 @@ Class RunDriver
 				{
 					uri := "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json"
 					DriverVersion := json.load(this.GetVersion(uri)).channels.Stable.version
-					this.DriverUrl := "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/" DriverVersion "/win32/chromedriver-win32.zip"
+					this.DriverUrl := "https://storage.googleapis.com/chrome-for-testing-public/" DriverVersion "/win64/chromedriver-win64.zip"
+					; this.DriverUrl := "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/" DriverVersion "/win32/chromedriver-win32.zip"
 				}
 			case "BraveDriver" :
 				this.zip := "chromedriver_win32.zip"
@@ -253,7 +254,7 @@ Class RunDriver
 		} 
 
 		if InStr(this.DriverVersion, "NoSuchKey"){
-			MsgBox,16,Testing,Error`nDriverVersion
+			MsgBox 0x40010,Testing,Error`nDriverVersion
 			return false
 		}
 		

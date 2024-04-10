@@ -991,8 +991,6 @@ WQlist() {
 		
 		WQpreventiceResults(wqfiles)													; Process incoming Preventice results
 		WQscanHolterPDFs(wqfiles)														; Scan Holter PDFs folder for additional files
-		WQlistPDFdownloads()															; generate wsftp.txt
-		WQlistBadPDFs()																	; find loose PDFs that Chrome couldn't rename 
 		WQfindMissingWebgrab()															; find <pending> missing <webgrab>
 	}
 	
@@ -1393,57 +1391,6 @@ WQscanHolterPDFs(ByRef wqfiles) {
 	Return
 }
 
-WQlistPDFdownloads() {
-/*	Generate wsftp.txt list for those that still require PDF download
-*/
-	GuiControl, Disabled, Grab FTP full disclosure
-	loop % LV_GetCount() {
-		LV_GetText(x,A_Index,9)															; FTP
-		LV_GetText(y,A_Index,2)															; Name
-
-		if (x) {
-			tmpHolters .= RegExReplace(y,",\s+",",") "`n"
-			GuiControl, Enable, Grab FTP full disclosure
-		}
-	}
-	FileDelete, .\files\wsftp.txt
-	FileAppend, % tmpHolters, .\files\wsftp.txt
-
-	Return
-}
-
-WQlistBadPDFs() {
-/*	Chrome (or wsftp) fails to download files with "," in filename
-	Ends up saving bad filename, e.g. "SMITH, JEROME.PDF" ==> "SMITH"
-	Copy all files completed by ftpgrab() to HolterPDFs
-*/
-	global path
-
-	loop, files, % ".\pdftemp\*"
-	{
-		fName := A_LoopFileFullPath
-		if InStr(fName, "download") {													; skip chrome download tempfiles
-			Continue
-		}
-		if (fname~="i)\.pdf") {															; leftover PDF file
-			FileMove, % fName, % path.HolterPDF A_LoopFileName, 1
-			eventlog("WQlistBadPDFs moved leftover file '" A_LoopFileName "'." )
-			foundit:=True
-			Continue
-		}
-		if !InStr(fName,".pdf") {														; rename remaining files with .PDF
-			FileMove, % fName, % path.HolterPDF A_LoopFileName ".PDF", 1
-			eventlog("WQlistBadPDFs moved loose file '" A_LoopFileName "'.")
-			foundit:=True
-			Continue
-		}
-	}
-	if (foundit) {
-		Gosub phaseGUI																	; any file moves, regenerate phaseGUI
-	}
-	Return
-}
-
 WQfindMissingWebgrab() {
 /*	Scan <pending> for missing webgrab
 	no webgrab means no registration received at Preventice for some reason
@@ -1725,6 +1672,9 @@ parsePrevEnroll(det) {
 			, id:det.getAttribute("CSN_SecondaryID1") 
 			, duration:det.getAttribute("Study_Duration") }
 
+	if InStr(res.name,"""") {
+		res.name := trim(RegExReplace(res.name,"\"".*?\"""))							; delete "quoted" nicknames
+	}
 	if (res.dev~=" - $") {																; e.g. "Body Guardian Mini -"
 		res.dev .= res.name																; append string so will not match in enrollcheck
 	}
@@ -4592,13 +4542,13 @@ ProcessPDF:
 		
 	if (InStr(newtxt,"zio xt")) {														; Processing loop based on identifying string in newtxt
 		gosub Zio
-	} else if (InStr(newtxt,"Preventice") && InStr(newtxt,"HScribe")) 	{				; New Preventice Holter 2017
+	} else if (InStr(newtxt,"CDx.Boston") && InStr(newtxt,"HScribe")) 	{				; New Preventice Holter 2017
 		gosub Holter_Pr2
-	} else if (InStr(newtxt,"Preventice") && InStr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
+	} else if (InStr(newtxt,"CDx.Boston") && InStr(newtxt,"End of Service Report")) {	; Body Guardian Heart CEM
 		gosub Event_BGH
 	} else if (InStr(newtxt,"Global Instrumentation LLC")) {							; BG Mini extended Holter
 		gosub Holter_BGM
-	} else if (InStr(newtxt,"Preventice") && InStr(newtxt,"Long-Term Holter Report")) {		; New BG Mini EL Holter 2023
+	} else if (InStr(newtxt,"CDx.Boston") && InStr(newtxt,"Long-Term Holter Report")) {		; New BG Mini EL Holter 2023
 		Holter_BGM2(newtxt)
 	} else {
 		eventlog(fileNam " bad file.")
@@ -5292,7 +5242,8 @@ findFullPdf(wqid:="") {
 		if (fname~="i)-full\.pdf") {
 			fnamID := stregX(fname,"_WQ",1,1,"_H",1)
 			fnamMRN := readWQ(fnamID).mrn
-			if FileExist(path.holterPDF "FullDisclosure\" fnamMRN " *.pdf") {
+			fnamDate := strX(fname," ",0,1,"_WQ",0,3)
+			if FileExist(path.holterPDF "FullDisclosure\" fnamMRN "*" fnamDate "*.pdf") {
 				FileDelete, % fileIn
 				eventlog("Found complete PDF, deleted " fname)
 				Continue
