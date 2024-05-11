@@ -4620,7 +4620,7 @@ outputfiles:
 	/*	Move full disclosure to FullDisclosure folder
 	*/
 	progress, 95, Concatenate full PDF
-	Loop, Files, % path.holterPDF filenameOut "*-full.pdf", F
+	Loop, Files, % path.holterPDF "*WQ" fldval.wqid "_H-full.pdf", F
 	{
 		fnfull := A_LoopFileFullPath
 		FileMove, % fnfull, % path.holterPDF "FullDisclosure\" filenameOut "-full.pdf", 1	; Copy the concatenated PDF to holterDir Archive
