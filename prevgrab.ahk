@@ -73,11 +73,13 @@ MainLoop:
 		PreventiceWebGrab("ftp")
 		gl.FAIL := gl.wbFail
 	} else {
-		; webStr.Enrollment := readIni("str_Enrollment")
-		webStr.Inventory := readIni("str_Inventory")
 		gl.login := readIni("str_Login")
 
-		; PreventiceWebGrab("Enrollment")
+		if (A_Args[1]="enroll") {
+			webStr.Enrollment := readIni("str_Enrollment")
+			PreventiceWebGrab("Enrollment")
+		}
+		webStr.Inventory := readIni("str_Inventory")
 		PreventiceWebGrab("Inventory")
 		if (gl.inv_ct < gl.inv_tot) {
 			gl.FAIL := true
