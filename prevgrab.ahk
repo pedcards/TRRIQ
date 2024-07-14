@@ -365,12 +365,7 @@ ftpDateDiff(row) {
 parsePreventiceEnrollment(tbl) {
 	global prevtxt, gl, wq
 	
-	lbl_rx := {"demo":"MRN:","dev":"Location:","prov":"GB-SCH-"}						; regex to find blocks
-	lbl_pre := {"demo":"NAME:","dev":"SERIAL:","prov":"PROVIDER:"}						; prefix to attach to strings
-	
-	lbl_demo := {"name":"NAME:","mrn":"MRN:","date":"Created Date:"}					; regex for necessary fields
-	lbl_dev := {"dev":"SERIAL:"}
-	lbl_prov := {"prov":"PROVIDER:"}
+	lbl_hdr := {"Patient Name":"name","MRN":"mrn","Created Date":"date","Device":"dev","Physician":"prov"}
 	
 	done := 0
 	checkdays := gl.settings.checkdays
