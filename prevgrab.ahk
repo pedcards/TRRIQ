@@ -96,7 +96,6 @@ MainLoop:
 	}
 	
 	wbClose()
-	gl.Page.Exit()
 	wb.driver.Exit()
 
 	ExitApp
@@ -136,7 +135,6 @@ PreventiceWebGrab(phase) {
 		PreventiceWebPager(phase,web.changed,web.btn)
 	}
 	
-	gl.Page.Close()																		; release Session object
 	return
 }
 
