@@ -28,6 +28,7 @@ Config:
 	}
 
 	; A_Args[1] := "ftp"				;*******************************
+	; A_Args[1] := "enroll"				;*******************************
 
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
