@@ -370,29 +370,32 @@ parsePreventiceEnrollment(tbl) {
 	done := 0
 	checkdays := gl.settings.checkdays
 	
-	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
+	trows := tbl.getElementsByTagName("tr")
+	loop % trows.length()+1							; loop through rows
 	{
+		Progress, % A_Index*10
 		r_idx := A_index-1
 		trow := trows[r_idx]
 		if (trow.getAttribute("id")="") {												; skip the buffer rows
 			continue
 		}
+		if (thdr := trow.getElementsByTagName("th")) {
+			hdr := {}
+			loop % thdr.length()						; loop through hdr cols
+			{
+				hdr[A_Index] := lbl_hdr[trim(thdr[A_Index-1].innertext)]
+			}
+			continue		
+		}
 		res := []
-		loop % (tcols := trow.getElementsByTagName("td")).length						; loop through cols
+		loop % (tcols := trow.getElementsByTagName("td")).length()+1					; loop through cols
 		{
 			c_idx := A_Index-1
 			txt := tcols[c_idx].innertext
-			type := ObjHasValue(lbl_rx,txt,1)											; get type of cell based on regex object
-			txt := lbl_pre[type] " " txt "`n"										
-			
-			for key,val in lbl_%type%													; loop through expected fields in lbl_type
-			{
-				i := stregX(txt,val,1,1,"\R",1)											; string between lbl and \R
-				res[key] := trim(i,": `r`n")
-			}
+			res[hdr[A_Index]] := trim(txt)
 		}
 		
-		res.name := format("{:U}",parsename(res.name).lastfirst)
+		res.name := format("{:U}",res.name)
 		date := parseDate(res.date).YMD
 		
 		if (dateDiff(date)>checkdays) {													; if days > threshold, break loop
