@@ -3981,6 +3981,8 @@ makePreventiceORM() {
 		, 17:"206-987-2015" })
 	
 	tmpInd := ptDem.indication
+	tmpInd := RegExReplace(tmpInd, "PVC.s", "PVCs")
+	tmpInd := RegExReplace(tmpInd, "PAC.s", "PACs")
 	loop, parse, tmpInd, |
 	{
 		indIdx := ""
