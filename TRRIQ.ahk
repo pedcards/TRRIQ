@@ -1578,7 +1578,7 @@ readPrevTxt() {
 /*	Read data files from Preventice:
 		* Patient Status Report_v2.xml sent by email every M-F 6 AM
 		* prev.txt grabbed from prevgrab.exe
-			- Enrollments (inactive, as taken from PSR_v2)
+			- Enrollments (if not taken from PSR_v2)
 			- Inventory
 */
 	global wq
@@ -1611,7 +1611,7 @@ readPrevTxt() {
 	if (filedt=lastInvDT) {
 		Return
 	}
-	Progress,, Reading inventory updates...
+	Progress,, Reading website updates...
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
 	n := ErrorLevel
@@ -1621,6 +1621,10 @@ readPrevTxt() {
 		Progress, % 100*A_Index/n
 		
 		k := A_LoopReadLine
+		if (k~="^enroll\|") {
+			parsePrevEnroll(k)
+			enrollct := true
+		}
 		if (k~="^dev\|") {
 			if !(devct) {
 				inv := wq.selectSingleNode("/root/inventory")							; create fresh inventory node
@@ -1642,7 +1646,12 @@ readPrevTxt() {
 			eventlog("Removed inventory ser " ser)
 		}
 	}
-	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set pending[@update] attr
+
+	if (enrollct) {
+		wq.selectSingleNode("/root/pending").setAttribute("update",filedt)				; set pending[@update] attr
+		eventlog("Preventice enrollemnts updated from prev.txt " fileDT)
+	}
+	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set inventory[@update] attr
 	eventlog("Preventice Inventory " fileDT " updated.")
 	
 return	
