@@ -2535,7 +2535,12 @@ getDem:
 
 PrevGrab:
 {
-	Run, PrevGrab.exe
+	tmpDT := wq.selectSingleNode("/root/pending").getAttribute("update")
+	if (ParseDate(A_Now).YMD>ParseDate(tmpDT).YMD) {									; check if PSR updated today 
+		Run, PrevGrab.exe "enroll"
+	} else {
+		Run, PrevGrab.exe
+	}
 	return
 }
 
