@@ -97,7 +97,7 @@ MainLoop:
 		MsgBox,262160,, Preventice update complete!
 	}
 	
-	wbClose()
+	wb.QuitAllSessions()
 	wb.driver.Exit()
 
 	ExitApp
