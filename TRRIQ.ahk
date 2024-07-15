@@ -1578,7 +1578,7 @@ readPrevTxt() {
 /*	Read data files from Preventice:
 		* Patient Status Report_v2.xml sent by email every M-F 6 AM
 		* prev.txt grabbed from prevgrab.exe
-			- Enrollments (inactive, as taken from PSR_v2)
+			- Enrollments (if not taken from PSR_v2)
 			- Inventory
 */
 	global wq
@@ -1611,7 +1611,7 @@ readPrevTxt() {
 	if (filedt=lastInvDT) {
 		Return
 	}
-	Progress,, Reading inventory updates...
+	Progress,, Reading website updates...
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
 	n := ErrorLevel
@@ -1621,6 +1621,10 @@ readPrevTxt() {
 		Progress, % 100*A_Index/n
 		
 		k := A_LoopReadLine
+		if (k~="^enroll\|") {
+			parsePrevEnroll(k)
+			enrollct := true
+		}
 		if (k~="^dev\|") {
 			if !(devct) {
 				inv := wq.selectSingleNode("/root/inventory")							; create fresh inventory node
@@ -1642,30 +1646,46 @@ readPrevTxt() {
 			eventlog("Removed inventory ser " ser)
 		}
 	}
-	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set pending[@update] attr
+
+	if (enrollct) {
+		wq.selectSingleNode("/root/pending").setAttribute("update",filedt)				; set pending[@update] attr
+		eventlog("Preventice enrollemnts updated from prev.txt " fileDT)
+	}
+	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set inventory[@update] attr
 	eventlog("Preventice Inventory " fileDT " updated.")
 	
 return	
 }
 
 parsePrevEnroll(det) {
-/*	Parse line from Patient Status Report_v2
+/*	Parse line from Patient Status Report_v2 or from prev.txt
 	"enroll"|date|name|mrn|dev - s/n|prov|site
 	Match to existing/likely enroll nodes
 	Update enroll node with new info if missing
 */
 	global wq, sites0
 
-	res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
-			, name:RegExReplace(format("{:U}"
-					,det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
-					,"\'","^")
-			, mrn:det.getAttribute("MRN1")
-			, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
-			, prov:filterProv(det.getAttribute("Ordering_Physician")).name
-			, site:filterProv(det.getAttribute("Ordering_Physician")).site
-			, id:det.getAttribute("CSN_SecondaryID1") 
-			, duration:det.getAttribute("Study_Duration") }
+	if IsObject(det) {
+		res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
+				, name:RegExReplace(format("{:U}"
+						,det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
+						,"\'","^")
+				, mrn:det.getAttribute("MRN1")
+				, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
+				, prov:filterProv(det.getAttribute("Ordering_Physician")).name
+				, site:filterProv(det.getAttribute("Ordering_Physician")).site
+				, id:det.getAttribute("CSN_SecondaryID1") 
+				, duration:det.getAttribute("Study_Duration") }
+	}
+	if (det~="^enroll\|") {
+		tmp := StrSplit(det, "|")
+		res := {  date:tmp.2
+				, name:tmp.3
+				, mrn:tmp.4
+				, dev:tmp.5
+				, prov:filterProv(tmp.6).name
+				, site:filterProv(tmp.6).site }
+	}
 
 	if InStr(res.name,"""") {
 		res.name := trim(RegExReplace(res.name,"\"".*?\"""))							; delete "quoted" nicknames
@@ -1687,8 +1707,12 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			parsePrevElement(id,en,res,"name")											; update elements if necessary
-			parsePrevElement(id,en,res,"mrn")
+			if InStr(res.name,en.name) {
+
+			} else {
+				parsePrevElement(id,en,res,"name")
+			}
+			parsePrevElement(id,en,res,"mrn")											; update elements if necessary
 			parsePrevElement(id,en,res,"date")
 			parsePrevElement(id,en,res,"dev")
 			parsePrevElement(id,en,res,"prov")
@@ -1729,8 +1753,12 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed NAME+PROV+SITE - matched MRN+DEV+DATE.")
-			parsePrevElement(id,en,res,"name")
+			if InStr(res.name,en.name) {
+				eventlog("parsePrevEnroll " id "." en.node " changed PROV+SITE - matched MRN+DEV+DATE.")
+			} else {
+				parsePrevElement(id,en,res,"name")
+				eventlog("parsePrevEnroll " id "." en.node " changed NAME+PROV+SITE - matched MRN+DEV+DATE.")
+			}
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
 			parsePrevElement(id,en,res,"duration")
@@ -3953,6 +3981,8 @@ makePreventiceORM() {
 		, 17:"206-987-2015" })
 	
 	tmpInd := ptDem.indication
+	tmpInd := RegExReplace(tmpInd, "PVC.s", "PVCs")
+	tmpInd := RegExReplace(tmpInd, "PAC.s", "PACs")
 	loop, parse, tmpInd, |
 	{
 		indIdx := ""
