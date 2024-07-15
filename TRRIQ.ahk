@@ -186,7 +186,7 @@ PhaseGUI:
 		, Refresh lists
 	Gui, Add, Button
 		, Y+10 wp h40 gPrevGrab Disabled
-		, Check Preventice inventory
+		, Check Preventice updates
 	Gui, Add, Text, wp h50																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
@@ -221,7 +221,7 @@ PhaseGUI:
 	if (wksloc="Main Campus") {
 		GuiControl 
 			, Enable
-			, Check Preventice inventory
+			, Check Preventice updates
 
 		Gui, Tab, INBOX
 		Gui, Add, Listview
@@ -2535,7 +2535,12 @@ getDem:
 
 PrevGrab:
 {
-	Run, PrevGrab.exe
+	tmpDT := wq.selectSingleNode("/root/pending").getAttribute("update")
+	if (ParseDate(A_Now).YMD>ParseDate(tmpDT).YMD) {									; check if PSR updated today 
+		Run, PrevGrab.exe "enroll"
+	} else {
+		Run, PrevGrab.exe
+	}
 	return
 }
 
