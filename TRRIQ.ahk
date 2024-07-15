@@ -1749,8 +1749,12 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed NAME+PROV+SITE - matched MRN+DEV+DATE.")
-			parsePrevElement(id,en,res,"name")
+			if InStr(res.name,en.name) {
+				eventlog("parsePrevEnroll " id "." en.node " changed PROV+SITE - matched MRN+DEV+DATE.")
+			} else {
+				parsePrevElement(id,en,res,"name")
+				eventlog("parsePrevEnroll " id "." en.node " changed NAME+PROV+SITE - matched MRN+DEV+DATE.")
+			}
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
 			parsePrevElement(id,en,res,"duration")
