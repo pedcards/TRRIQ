@@ -1707,8 +1707,12 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			parsePrevElement(id,en,res,"name")											; update elements if necessary
-			parsePrevElement(id,en,res,"mrn")
+			if InStr(res.name,en.name) {
+
+			} else {
+				parsePrevElement(id,en,res,"name")
+			}
+			parsePrevElement(id,en,res,"mrn")											; update elements if necessary
 			parsePrevElement(id,en,res,"date")
 			parsePrevElement(id,en,res,"dev")
 			parsePrevElement(id,en,res,"prov")
