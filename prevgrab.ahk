@@ -370,31 +370,24 @@ parsePreventiceEnrollment(tbl) {
 	done := 0
 	checkdays := gl.settings.checkdays
 	
-	trows := tbl.getElementsByTagName("tr")
-	loop % trows.length()+1							; loop through rows
+	ttbl := tbl.innertext "`n"
+	ttbl := RegExReplace(ttbl, "^.*?Action\n")
+	n := 1
+	While n
 	{
-		Progress, % A_Index*10
-		r_idx := A_index-1
-		trow := trows[r_idx]
-		if (trow.getAttribute("id")="") {												; skip the buffer rows
-			continue
-		}
-		if (thdr := trow.getElementsByTagName("th")) {
-			hdr := {}
-			loop % thdr.length()						; loop through hdr cols
-			{
-				hdr[A_Index] := lbl_hdr[trim(thdr[A_Index-1].innertext)]
-			}
-			continue		
+		Progress, % 10*A_Index
+		trow := stregX(ttbl,"",n,0,"Print\n",0,n)
+		if (trow="") {
+			break
 		}
 		res := []
-		loop % (tcols := trow.getElementsByTagName("td")).length()+1					; loop through cols
-		{
-			c_idx := A_Index-1
-			txt := tcols[c_idx].innertext
-			res[hdr[A_Index]] := trim(txt)
-		}
-		
+		RowReg := RegExMatch(trow, "(.*?)\n(\d{6,}) (\d+\/\d+\/\d+) (.*?) Dr. (.*?)\n", rr)
+			res.name := trim(rr1)
+			res.mrn := rr2
+			res.date := rr3
+			res.dev := rr4
+			res.prov := rr5
+
 		res.name := format("{:U}",res.name)
 		date := parseDate(res.date).YMD
 		
@@ -412,9 +405,54 @@ parsePreventiceEnrollment(tbl) {
 			. res.prov "|"
 			. A_now "`n"
 			. prevtxt
-		
+
 		gl.enroll_ct ++
 	}
+
+	; loop % (trows := tbl.getElementsByTagName("tr")).length()+1							; loop through rows
+	; {
+	; 	Progress, % A_Index*10
+	; 	r_idx := A_index-1
+	; 	trow := trows[r_idx]
+	; 	if (trow.getAttribute("id")="") {												; skip the buffer rows
+	; 		continue
+	; 	}
+	; 	if (thdr := trow.getElementsByTagName("th")) {
+	; 		hdr := {}
+	; 		loop % thdr.length()														; loop through hdr cols
+	; 		{
+	; 			hdr[A_Index] := lbl_hdr[trim(thdr[A_Index-1].innertext)]
+	; 		}
+	; 		continue		
+	; 	}
+	; 	res := []
+	; 	loop % (tcols := trow.getElementsByTagName("td")).length()+1					; loop through cols
+	; 	{
+	; 		c_idx := A_Index-1
+	; 		txt := tcols[c_idx].innertext
+	; 		res[hdr[A_Index]] := trim(txt)
+	; 	}
+		
+	; 	res.name := format("{:U}",res.name)
+	; 	date := parseDate(res.date).YMD
+		
+	; 	if (dateDiff(date)>checkdays) {													; if days > threshold, break loop
+	; 		break
+	; 	} else {																		; otherwise done+1 == keep paging
+	; 		done ++
+	; 	}
+		
+	; 	prevtxt := "enroll|" 															; prepends enroll item so will be read in chronologic
+	; 		. date "|"																	; rather than reverse chronologic order
+	; 		. res.name "|"
+	; 		. res.mrn "|"
+	; 		. res.dev "|"
+	; 		. res.prov "|"
+	; 		. A_now "`n"
+	; 		. prevtxt
+		
+	; 	gl.enroll_ct ++
+	; }
 	
 	return done																			; returns number of matches, or 0 (error) if no matches
 }
