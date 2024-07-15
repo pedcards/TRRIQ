@@ -1658,23 +1658,34 @@ return
 }
 
 parsePrevEnroll(det) {
-/*	Parse line from Patient Status Report_v2
+/*	Parse line from Patient Status Report_v2 or from prev.txt
 	"enroll"|date|name|mrn|dev - s/n|prov|site
 	Match to existing/likely enroll nodes
 	Update enroll node with new info if missing
 */
 	global wq, sites0
 
-	res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
-			, name:RegExReplace(format("{:U}"
-					,det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
-					,"\'","^")
-			, mrn:det.getAttribute("MRN1")
-			, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
-			, prov:filterProv(det.getAttribute("Ordering_Physician")).name
-			, site:filterProv(det.getAttribute("Ordering_Physician")).site
-			, id:det.getAttribute("CSN_SecondaryID1") 
-			, duration:det.getAttribute("Study_Duration") }
+	if IsObject(det) {
+		res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
+				, name:RegExReplace(format("{:U}"
+						,det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
+						,"\'","^")
+				, mrn:det.getAttribute("MRN1")
+				, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
+				, prov:filterProv(det.getAttribute("Ordering_Physician")).name
+				, site:filterProv(det.getAttribute("Ordering_Physician")).site
+				, id:det.getAttribute("CSN_SecondaryID1") 
+				, duration:det.getAttribute("Study_Duration") }
+	}
+	if (det~="^enroll\|") {
+		tmp := StrSplit(det, "|")
+		res := {  date:tmp.2
+				, name:tmp.3
+				, mrn:tmp.4
+				, dev:tmp.5
+				, prov:filterProv(tmp.6).name
+				, site:filterProv(tmp.6).site }
+	}
 
 	if InStr(res.name,"""") {
 		res.name := trim(RegExReplace(res.name,"\"".*?\"""))							; delete "quoted" nicknames
