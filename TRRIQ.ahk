@@ -1600,7 +1600,7 @@ readPrevTxt() {
 			parsePrevEnroll(k)
 		}
 		wq.selectSingleNode("/root/pending").setAttribute("update",psrDT)				; set pending[@update] attr
-		eventlog("Patient Status Report " pstDT " updated.")
+		eventlog("Patient Status Report " psrDT " updated.")
 
 		lateReportNotify()
 	}
