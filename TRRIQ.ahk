@@ -7106,6 +7106,9 @@ ParseDate(x) {
 		time.sec := trim(t.value[3+hasDays]," :")
 		time.ampm := trim(t.value[5])
 		time.time := trim(t.value)
+		if (time.ampm="PM")&&(time.hr<12) {
+			time.hr := time.hr+12
+		}
 	}
 
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
