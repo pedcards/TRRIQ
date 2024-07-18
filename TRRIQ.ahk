@@ -1735,7 +1735,7 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed PROV+SITE - matched NAME+MRN+DATE+DEV.")
+			; eventlog("parsePrevEnroll " id "." en.node " - matched NAME+MRN+DATE+DEV.")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
 			parsePrevElement(id,en,res,"duration")
@@ -1749,11 +1749,8 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			if InStr(res.name,en.name) {
+			; eventlog("parsePrevEnroll " id "." en.node " - matched MRN+DEV+DATE.") 
 			parsePrevElement(id,en,res,"name")
-			} else {
-				eventlog("parsePrevEnroll " id "." en.node " changed NAME+PROV+SITE - matched MRN+DEV+DATE.")
-			}
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
 			parsePrevElement(id,en,res,"duration")
@@ -1777,7 +1774,7 @@ parsePrevEnroll(det) {
 				eventlog("addPrevEnroll moved Order ID " id " for " en.name " to Pending.")
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " added DEV - only matched MRN+DATE.")
+			; eventlog("parsePrevEnroll " id "." en.node " - only matched MRN+DATE.")
 			parsePrevElement(id,en,res,"dev")
 			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
@@ -1788,7 +1785,7 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " added MRN - only matched DATE+DEV.")
+			; eventlog("parsePrevEnroll " id "." en.node " - only matched DATE+DEV.")
 			parsePrevElement(id,en,res,"mrn")
 			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
@@ -1801,9 +1798,9 @@ parsePrevEnroll(det) {
 			}
 			dt0:= dateDiff(en.date,res.date)
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
+				; eventlog("parsePrevEnroll " id "." en.node " - only matched MRN+DEV.")
 				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
 				parsePrevElement(id,en,res,"duration")
-				eventlog("parsePrevEnroll " id "." en.node " adjusted date - only matched MRN+DEV.")
 			}
 			checkweb(id)
 			return
