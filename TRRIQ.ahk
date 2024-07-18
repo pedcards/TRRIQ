@@ -1600,7 +1600,7 @@ readPrevTxt() {
 			parsePrevEnroll(k)
 		}
 		wq.selectSingleNode("/root/pending").setAttribute("update",psrDT)				; set pending[@update] attr
-		eventlog("Patient Status Report " pstDT " updated.")
+		eventlog("Patient Status Report " psrDT " updated.")
 
 		lateReportNotify()
 	}
@@ -1707,12 +1707,8 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			if InStr(res.name,en.name) {
-
-			} else {
-				parsePrevElement(id,en,res,"name")
-			}
-			parsePrevElement(id,en,res,"mrn")											; update elements if necessary
+			parsePrevElement(id,en,res,"name")											; update elements if necessary
+			parsePrevElement(id,en,res,"mrn")
 			parsePrevElement(id,en,res,"date")
 			parsePrevElement(id,en,res,"dev")
 			parsePrevElement(id,en,res,"prov")
@@ -1739,7 +1735,7 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed PROV+SITE - matched NAME+MRN+DATE+DEV.")
+			; eventlog("parsePrevEnroll " id "." en.node " - matched NAME+MRN+DATE+DEV.")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
 			parsePrevElement(id,en,res,"duration")
@@ -1753,12 +1749,8 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			if InStr(res.name,en.name) {
-				eventlog("parsePrevEnroll " id "." en.node " changed PROV+SITE - matched MRN+DEV+DATE.")
-			} else {
-				parsePrevElement(id,en,res,"name")
-				eventlog("parsePrevEnroll " id "." en.node " changed NAME+PROV+SITE - matched MRN+DEV+DATE.")
-			}
+			; eventlog("parsePrevEnroll " id "." en.node " - matched MRN+DEV+DATE.") 
+			parsePrevElement(id,en,res,"name")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
 			parsePrevElement(id,en,res,"duration")
@@ -1782,7 +1774,7 @@ parsePrevEnroll(det) {
 				eventlog("addPrevEnroll moved Order ID " id " for " en.name " to Pending.")
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " added DEV - only matched MRN+DATE.")
+			; eventlog("parsePrevEnroll " id "." en.node " - only matched MRN+DATE.")
 			parsePrevElement(id,en,res,"dev")
 			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
@@ -1793,7 +1785,7 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " added MRN - only matched DATE+DEV.")
+			; eventlog("parsePrevEnroll " id "." en.node " - only matched DATE+DEV.")
 			parsePrevElement(id,en,res,"mrn")
 			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
@@ -1806,9 +1798,9 @@ parsePrevEnroll(det) {
 			}
 			dt0:= dateDiff(en.date,res.date)
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
+				; eventlog("parsePrevEnroll " id "." en.node " - only matched MRN+DEV.")
 				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
 				parsePrevElement(id,en,res,"duration")
-				eventlog("parsePrevEnroll " id "." en.node " adjusted date - only matched MRN+DEV.")
 			}
 			checkweb(id)
 			return
@@ -1895,6 +1887,9 @@ parsePrevElement(id,en,res,el) {
 	
 	if (res[el]==en[el]) {																; Attr[el] is same in EN (wq) as RES (txt)
 		return																			; don't do anything
+	}
+	if InStr(res[el],en[el]) {															; Attr[el] in RES is substr of EN
+		return
 	}
 	if (en[el]) and (res[el]="") {														; Never overwrite a node with NULL
 		return
@@ -7106,6 +7101,9 @@ ParseDate(x) {
 		time.sec := trim(t.value[3+hasDays]," :")
 		time.ampm := trim(t.value[5])
 		time.time := trim(t.value)
+		if (time.ampm="PM")&&(time.hr<12) {
+			time.hr := time.hr+12
+		}
 	}
 
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
