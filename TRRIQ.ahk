@@ -186,7 +186,7 @@ PhaseGUI:
 		, Refresh lists
 	Gui, Add, Button
 		, Y+10 wp h40 gPrevGrab Disabled
-		, Check Preventice inventory
+		, Check Preventice updates
 	Gui, Add, Text, wp h50																; space between top buttons and lower buttons
 	Gui, Add, Text, Y+10 wp h24 Center, Register/Prepare a`nHOLTER or EVENT MONITOR
 	Gui, Add, Button
@@ -221,7 +221,7 @@ PhaseGUI:
 	if (wksloc="Main Campus") {
 		GuiControl 
 			, Enable
-			, Check Preventice inventory
+			, Check Preventice updates
 
 		Gui, Tab, INBOX
 		Gui, Add, Listview
@@ -1505,7 +1505,7 @@ WQpendingReads() {
 }
 
 cleanDone() {
-	global wq, sites0
+	global wq, sites0, path
 	
 	fileCheck()
 	FileOpen(".lock", "W")																; Create lock file.
@@ -1558,6 +1558,17 @@ cleanDone() {
 	writeSave(wq)
 	wq := new XML("worklist.xml")
 	FileDelete, .lock
+
+	progress,,% " ",Purging OnBase files												; scan OnBase\PROCESSED\Import files
+	loop, files, % path.Onbase "..\PROCESSED\Import\*.pdf"
+	{
+		fnam := A_LoopFileName
+		fdate := A_LoopFileTimeModified
+		dtDiff := dateDiff(fdate)
+		if (dtDiff>180) {																; delete files older than this many days
+			filedelete, % A_LoopFileLongPath
+		}
+	}
 	
 	return
 }
@@ -1567,7 +1578,7 @@ readPrevTxt() {
 /*	Read data files from Preventice:
 		* Patient Status Report_v2.xml sent by email every M-F 6 AM
 		* prev.txt grabbed from prevgrab.exe
-			- Enrollments (inactive, as taken from PSR_v2)
+			- Enrollments (if not taken from PSR_v2)
 			- Inventory
 */
 	global wq
@@ -1589,7 +1600,7 @@ readPrevTxt() {
 			parsePrevEnroll(k)
 		}
 		wq.selectSingleNode("/root/pending").setAttribute("update",psrDT)				; set pending[@update] attr
-		eventlog("Patient Status Report " pstDT " updated.")
+		eventlog("Patient Status Report " psrDT " updated.")
 
 		lateReportNotify()
 	}
@@ -1600,7 +1611,7 @@ readPrevTxt() {
 	if (filedt=lastInvDT) {
 		Return
 	}
-	Progress,, Reading inventory updates...
+	Progress,, Reading website updates...
 	FileRead, txt, % filenm
 	StringReplace txt, txt, `n, `n, All UseErrorLevel 									; count number of lines
 	n := ErrorLevel
@@ -1610,6 +1621,10 @@ readPrevTxt() {
 		Progress, % 100*A_Index/n
 		
 		k := A_LoopReadLine
+		if (k~="^enroll\|") {
+			parsePrevEnroll(k)
+			enrollct := true
+		}
 		if (k~="^dev\|") {
 			if !(devct) {
 				inv := wq.selectSingleNode("/root/inventory")							; create fresh inventory node
@@ -1631,30 +1646,46 @@ readPrevTxt() {
 			eventlog("Removed inventory ser " ser)
 		}
 	}
-	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set pending[@update] attr
+
+	if (enrollct) {
+		wq.selectSingleNode("/root/pending").setAttribute("update",filedt)				; set pending[@update] attr
+		eventlog("Preventice enrollemnts updated from prev.txt " fileDT)
+	}
+	wq.selectSingleNode("/root/inventory").setAttribute("update",filedt)				; set inventory[@update] attr
 	eventlog("Preventice Inventory " fileDT " updated.")
 	
 return	
 }
 
 parsePrevEnroll(det) {
-/*	Parse line from Patient Status Report_v2
+/*	Parse line from Patient Status Report_v2 or from prev.txt
 	"enroll"|date|name|mrn|dev - s/n|prov|site
 	Match to existing/likely enroll nodes
 	Update enroll node with new info if missing
 */
 	global wq, sites0
 
-	res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
-			, name:RegExReplace(format("{:U}"
-					,det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
-					,"\'","^")
-			, mrn:det.getAttribute("MRN1")
-			, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
-			, prov:filterProv(det.getAttribute("Ordering_Physician")).name
-			, site:filterProv(det.getAttribute("Ordering_Physician")).site
-			, id:det.getAttribute("CSN_SecondaryID1") 
-			, duration:det.getAttribute("Study_Duration") }
+	if IsObject(det) {
+		res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
+				, name:RegExReplace(format("{:U}"
+						,det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
+						,"\'","^")
+				, mrn:det.getAttribute("MRN1")
+				, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
+				, prov:filterProv(det.getAttribute("Ordering_Physician")).name
+				, site:filterProv(det.getAttribute("Ordering_Physician")).site
+				, id:det.getAttribute("CSN_SecondaryID1") 
+				, duration:det.getAttribute("Study_Duration") }
+	}
+	if (det~="^enroll\|") {
+		tmp := StrSplit(det, "|")
+		res := {  date:tmp.2
+				, name:tmp.3
+				, mrn:tmp.4
+				, dev:tmp.5
+				, prov:filterProv(tmp.6).name
+				, site:filterProv(tmp.6).site }
+	}
 
 	if InStr(res.name,"""") {
 		res.name := trim(RegExReplace(res.name,"\"".*?\"""))							; delete "quoted" nicknames
@@ -1704,7 +1735,7 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed PROV+SITE - matched NAME+MRN+DATE+DEV.")
+			; eventlog("parsePrevEnroll " id "." en.node " - matched NAME+MRN+DATE+DEV.")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
 			parsePrevElement(id,en,res,"duration")
@@ -1718,7 +1749,7 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " changed NAME+PROV+SITE - matched MRN+DEV+DATE.")
+			; eventlog("parsePrevEnroll " id "." en.node " - matched MRN+DEV+DATE.") 
 			parsePrevElement(id,en,res,"name")
 			parsePrevElement(id,en,res,"prov")
 			parsePrevElement(id,en,res,"site")
@@ -1743,7 +1774,7 @@ parsePrevEnroll(det) {
 				eventlog("addPrevEnroll moved Order ID " id " for " en.name " to Pending.")
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " added DEV - only matched MRN+DATE.")
+			; eventlog("parsePrevEnroll " id "." en.node " - only matched MRN+DATE.")
 			parsePrevElement(id,en,res,"dev")
 			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
@@ -1754,7 +1785,7 @@ parsePrevEnroll(det) {
 			if (en.node="done") {
 				return
 			}
-			eventlog("parsePrevEnroll " id "." en.node " added MRN - only matched DATE+DEV.")
+			; eventlog("parsePrevEnroll " id "." en.node " - only matched DATE+DEV.")
 			parsePrevElement(id,en,res,"mrn")
 			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
@@ -1767,9 +1798,9 @@ parsePrevEnroll(det) {
 			}
 			dt0:= dateDiff(en.date,res.date)
 			if abs(dt0) < 5 {															; res.date less than 5d from en.date
+				; eventlog("parsePrevEnroll " id "." en.node " - only matched MRN+DEV.")
 				parsePrevElement(id,en,res,"date")										; prob just needs a date adjustment
 				parsePrevElement(id,en,res,"duration")
-				eventlog("parsePrevEnroll " id "." en.node " adjusted date - only matched MRN+DEV.")
 			}
 			checkweb(id)
 			return
@@ -1856,6 +1887,9 @@ parsePrevElement(id,en,res,el) {
 	
 	if (res[el]==en[el]) {																; Attr[el] is same in EN (wq) as RES (txt)
 		return																			; don't do anything
+	}
+	if InStr(res[el],en[el]) {															; Attr[el] in RES is substr of EN
+		return
 	}
 	if (en[el]) and (res[el]="") {														; Never overwrite a node with NULL
 		return
@@ -2524,7 +2558,12 @@ getDem:
 
 PrevGrab:
 {
-	Run, PrevGrab.exe
+	tmpDT := wq.selectSingleNode("/root/pending").getAttribute("update")
+	if (ParseDate(A_Now).YMD>ParseDate(tmpDT).YMD) {									; check if PSR updated today 
+		Run, PrevGrab.exe "enroll"
+	} else {
+		Run, PrevGrab.exe
+	}
 	return
 }
 
@@ -3937,6 +3976,8 @@ makePreventiceORM() {
 		, 17:"206-987-2015" })
 	
 	tmpInd := ptDem.indication
+	tmpInd := RegExReplace(tmpInd, "PVC.s", "PVCs")
+	tmpInd := RegExReplace(tmpInd, "PAC.s", "PACs")
 	loop, parse, tmpInd, |
 	{
 		indIdx := ""
@@ -4609,7 +4650,7 @@ outputfiles:
 	/*	Move full disclosure to FullDisclosure folder
 	*/
 	progress, 95, Concatenate full PDF
-	Loop, Files, % path.holterPDF filenameOut "*-full.pdf", F
+	Loop, Files, % path.holterPDF "*WQ" fldval.wqid "_H-full.pdf", F
 	{
 		fnfull := A_LoopFileFullPath
 		FileMove, % fnfull, % path.holterPDF "FullDisclosure\" filenameOut "-full.pdf", 1	; Copy the concatenated PDF to holterDir Archive
@@ -7060,6 +7101,9 @@ ParseDate(x) {
 		time.sec := trim(t.value[3+hasDays]," :")
 		time.ampm := trim(t.value[5])
 		time.time := trim(t.value)
+		if (time.ampm="PM")&&(time.hr<12) {
+			time.hr := time.hr+12
+		}
 	}
 
 	return {yyyy:date.yyyy, mm:date.mm, mmm:date.mmm, dd:date.dd, date:date.date
