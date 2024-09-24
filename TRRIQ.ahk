@@ -468,7 +468,7 @@ cleanPending()
 
 	eventlog("Menu cleanPending")
 	archiveHL7 := path.EpicHL7out "..\ArchiveHL7\"
-	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(archiveHL7).Files.Count
+	fileCount := countFiles(archiveHL7)
 	Loop, files, % archiveHL7 "*@*.hl7"
 	{
 		progress, % (A_Index/fileCount)*100
@@ -1310,7 +1310,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			FileMove, % path.PrevHL7in fldval.filename, % path.holterPDF newFnam , 1
 			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			Continue
-	}
+		}
 		if (res.node="done") {															; skip if DONE, might be currently in process 
 			eventlog("Report already done (" id ": " res.name " - " res.mrn ", " res.date ")")
 			eventlog("WQlist removing " fileIn)
@@ -2007,7 +2007,7 @@ readWQlv:
 	LV_GetText(ftype,x,8)																; filetype
 	SplitPath,fileIn,fnam,,fExt,fileNam
 	if (adminMode) {
-		adminWQlv(wqid)																		; Troubleshoot result
+		adminWQlv(wqid)																	; Troubleshoot result
 		Gosub PhaseGUI
 		Return
 	}
@@ -2626,7 +2626,7 @@ ftpGrab() {
 cleanTempFiles() {
 	thresh:=180
 	
-	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(".\tempfiles").Files.Count
+	fileCount := countFiles(".\tempfiles")
 	
 	Loop, files, tempfiles\*
 	{
@@ -5244,7 +5244,7 @@ findFullPdf(wqid:="") {
 	pdfList := Object()																	; clear list to add to WQlist
 	pdfScanPages := 3
 	
-	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(path.holterPDF).Files.Count
+	fileCount := countFiles(path.holterPDF)
 	
 	Loop, files, % path.holterPDF "*.pdf"
 	{
@@ -6967,6 +6967,11 @@ FilePrepend( Text, Filename ) {
     file.pos:=0
     File.Write(text)
     File.Close()
+}
+
+countFiles(path) {
+	count := ComObjCreate("Scripting.FileSystemObject").GetFolder(path).Files.Count
+	return count
 }
 
 ParseName(x) {
