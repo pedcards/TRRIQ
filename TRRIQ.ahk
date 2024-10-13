@@ -1690,6 +1690,9 @@ parsePrevEnroll(det) {
 				, prov:filterProv(tmp.6).name
 				, site:filterProv(tmp.6).site }
 	}
+	if (res.site="SEATTLE") {
+		res.site := "MAIN"
+	}
 
 	if InStr(res.name,"""") {
 		res.name := trim(RegExReplace(res.name,"\"".*?\"""))							; delete "quoted" nicknames
