@@ -1668,14 +1668,16 @@ parsePrevEnroll(det) {
 	global wq, sites0
 
 	if IsObject(det) {
+		detprov := filterProv(det.getAttribute("Ordering_Physician"))
+		psrsite := RegExReplace(det.getAttribute("Practice_Name"),"GB-SCH-") 
 		res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
 				, name:RegExReplace(format("{:U}"
 						,det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
 						,"\'","^")
 				, mrn:det.getAttribute("MRN1")
 				, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
-				, prov:filterProv(det.getAttribute("Ordering_Physician")).name
-				, site:filterProv(det.getAttribute("Ordering_Physician")).site
+				, prov:detprov.name
+				, site:(detprov.site ? detprov.site : psrsite)
 				, id:det.getAttribute("CSN_SecondaryID1") 
 				, duration:det.getAttribute("Study_Duration") }
 	}
