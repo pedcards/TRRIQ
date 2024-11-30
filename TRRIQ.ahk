@@ -469,7 +469,7 @@ cleanPending()
 
 	eventlog("Menu cleanPending")
 	archiveHL7 := path.EpicHL7out "..\ArchiveHL7\"
-	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(archiveHL7).Files.Count
+	fileCount := countFiles(archiveHL7)
 	Loop, files, % archiveHL7 "*@*.hl7"
 	{
 		progress, % (A_Index/fileCount)*100
@@ -1282,31 +1282,33 @@ WQpreventiceResults(ByRef wqfiles) {
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
+		obr := {}
+		pv1 := {}
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % path.PrevHL7in fileIn
 			obr:= strsplit(stregX(tmptxt,"\R+OBR",1,0,"\R+",0),"|")						; get OBR segment
-			obr_req := trim(obr.3," ^")													; wqid from Preventice registration (PV1_19)
-			obr_prov := strX(obr.17,"^",1,1,"^",1)
-			obr_site := strX(obr_prov,"-",0,1,"",0)
+			obr.req := trim(obr.3," ^")													; wqid from Preventice registration (PV1_19)
+			obr.prov := strX(obr.17,"^",1,1,"^",1)
+			obr.site := strX(obr.prov,"-",0,1,"",0)
 			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
-			pv1_dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
-			obx1:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")						; true if this is Full Disclosure ORU
+			pv1.dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
+			obr.full:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
 			
-			if (obr_site="") {															; no "-site" in OBR.17 name
-				obr_site:="MAIN"
-				eventlog(fileIn " - " obr_prov 
+			if (obr.site="") {															; no "-site" in OBR.17 name
+				obr.site:="MAIN"
+				eventlog(fileIn " - " obr.prov 
 					. ". No site associated with provider, substituting MAIN. Check ORM and Preventice users.")
 			}
-			if InStr(sites0,obr_site) {
-				eventlog("Unregistered Sites0 report (" fileIn " - " obr_site ")")
+			if InStr(sites0,obr.site) {
+				eventlog("Unregistered Sites0 report (" fileIn " - " obr.site ")")
 				FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 				continue
 			}
-			if (readWQ(obr_req).mrn) {													; check if obr_req is valid wqid
-				id := obr_req
+			if (readWQ(obr.req).mrn) {													; check if obr.req is valid wqid
+				id := obr.req
 				hl7dirMap[fileIn] := id
 			} 
-			else if (id := findWQid(pv1_dt,x.3).id) { 									; try to find wqid based on date in PV1.40 and mrn
+			else if (id := findWQid(pv1.dt,x.3).id) { 									; try to find wqid based on date in PV1.40 and mrn
 				hl7dirMap[fileIn] := id
 			}
 			else {																		; can't find wqid, just admit defeat
@@ -1314,7 +1316,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			}
 		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
-		if (obx1) {
+		if (obr.full) {
 			processHL7(path.PrevHL7in . fileIn)											; extract DDE to fldVal, and PDF into hl7Dir
 			dt := ParseDate(res.date)
 			newFnam := strQ(res.mrn
@@ -1324,7 +1326,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			FileMove, % path.PrevHL7in fldval.filename, % path.holterPDF newFnam , 1
 			FileMove, % path.PrevHL7in fileIn, .\tempfiles\%fileIn%, 1
 			Continue
-	}
+		}
 		if (res.node="done") {															; skip if DONE, might be currently in process 
 			eventlog("Report already done (" id ": " res.name " - " res.mrn ", " res.date ")")
 			eventlog("WQlist removing " fileIn)
@@ -1340,7 +1342,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			, strQ(res.Name,"###", x.1 ", " x.2)										; last, first
 			, strQ(res.mrn,"###",x.3)													; mrn
 			, strQ(niceDate(res.dob),"###",niceDate(x.4))								; dob
-			, strQ(res.site,"###",obr_site)												; site
+			, strQ(res.site,"###",obr.site)												; site
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, dev																		; device type
@@ -1682,14 +1684,16 @@ parsePrevEnroll(det) {
 	global wq, sites0
 
 	if IsObject(det) {
+		detprov := filterProv(det.getAttribute("Ordering_Physician"))
+		psrsite := RegExReplace(det.getAttribute("Practice_Name"),"GB-SCH-") 
 		res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
 				, name:RegExReplace(format("{:U}"
 						,det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
 						,"\'","^")
 				, mrn:det.getAttribute("MRN1")
 				, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
-				, prov:filterProv(det.getAttribute("Ordering_Physician")).name
-				, site:filterProv(det.getAttribute("Ordering_Physician")).site
+				, prov:detprov.name
+				, site:(detprov.site ? detprov.site : psrsite)
 				, id:det.getAttribute("CSN_SecondaryID1") 
 				, duration:det.getAttribute("Study_Duration") }
 	}
@@ -1701,6 +1705,9 @@ parsePrevEnroll(det) {
 				, dev:tmp.5
 				, prov:filterProv(tmp.6).name
 				, site:filterProv(tmp.6).site }
+	}
+	if (res.site="SEATTLE") {
+		res.site := "MAIN"
 	}
 
 	if InStr(res.name,"""") {
@@ -2021,7 +2028,7 @@ readWQlv:
 	LV_GetText(ftype,x,8)																; filetype
 	SplitPath,fileIn,fnam,,fExt,fileNam
 	if (adminMode) {
-		adminWQlv(wqid)																		; Troubleshoot result
+		adminWQlv(wqid)																	; Troubleshoot result
 		Gosub PhaseGUI
 		Return
 	}
@@ -2096,15 +2103,6 @@ readWQlv:
 		epRead()																		; find out which EP is reading today
 		makeORU(wqid)
 		gosub outputfiles																; generate and save output CSV, rename and move PDFs
-		
-		if (fldval.oldUID) {
-			MsgBox, 262192
-				, Cutover study
-				, % "Successfully processed Epic cutover report.`n`n"
-				. "1) Return to Epic Tech Work List.`n"
-				. "2) End Study for """ fldval["dem-name"] """.`n`n"
-				. "3) Complete tech biller for """ strX(fldval.obr4,"^",1,1,"^",1,1) "`n"
-		}
 	}
 	
 	return
@@ -2640,7 +2638,7 @@ ftpGrab() {
 cleanTempFiles() {
 	thresh:=180
 	
-	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(".\tempfiles").Files.Count
+	fileCount := countFiles(".\tempfiles")
 	
 	Loop, files, tempfiles\*
 	{
@@ -5258,7 +5256,7 @@ findFullPdf(wqid:="") {
 	pdfList := Object()																	; clear list to add to WQlist
 	pdfScanPages := 3
 	
-	fileCount := ComObjCreate("Scripting.FileSystemObject").GetFolder(path.holterPDF).Files.Count
+	fileCount := countFiles(path.holterPDF)
 	
 	Loop, files, % path.holterPDF "*.pdf"
 	{
@@ -6981,6 +6979,11 @@ FilePrepend( Text, Filename ) {
     file.pos:=0
     File.Write(text)
     File.Close()
+}
+
+countFiles(path) {
+	count := ComObjCreate("Scripting.FileSystemObject").GetFolder(path).Files.Count
+	return count
 }
 
 ParseName(x) {
