@@ -142,11 +142,6 @@ MainLoop: ; ===================== This is the main part ========================
 		Gosub PhaseGUI
 		WinWaitClose, TRRIQ Dashboard
 		
-		if (phase="MortaraUpload") {
-			eventlog("Start Mortara upload.")
-			mwuPhase := "Transfer"
-			MortaraUpload(mwuPhase)
-		}
 		if (phase="HolterUpload") {
 			eventlog("Start Holter Connect.")
 			hcPhase := "Transfer"
@@ -305,7 +300,6 @@ PhaseGUI:
 	Menu, menuSys, Add, Generate late returns report, lateReport
 	Menu, menuSys, Add, Generate registration locations report, regReport
 	Menu, menuSys, Add, Update call schedules, updateCall
-	Menu, menuSys, Add, CheckMWU, checkMWUapp											; position for test menu
 	Menu, menuHelp, Add, About TRRIQ, menuTrriq
 	Menu, menuHelp, Add, Instructions..., menuInstr
 	Menu, menuAdmin, Add, Toggle admin mode, toggleAdmin
@@ -666,10 +660,7 @@ idleTimer() {
 	2. checkMUwin - if MUwin tab text changes, reload MortaraUpload with that function
 */
 	checkWQfile()
-	x:=checkMUwin()
-	;~ progress,,,% x
-	;~ sleep 50
-	;~ progress, off
+
 	return
 }
 
@@ -689,28 +680,6 @@ setwqupdate() {
 	FileAppend,,.\files\wqupdate
 	wqfileDT := A_Now
 	return
-}
-
-checkMUwin() {
-	global muwin
-	static wintxt, tabtxt
-	t0 := A_TickCount
-	ui := MorUIgrab()																	; returns .tab, .txt, .TRct, .PRct
-	
-	if (ui.vis = wintxt) {																; form text unchanged
-		t1 := A_TickCount-t0
-		return t1
-	}
-	wintxt := ui.vis																	; reset text for wintxt comparison
-	if !InStr(ui.vis,"Second ID") {														; not on a form tab
-		t1 := A_TickCount-t0
-		return t1
-	}
-	RegExMatch(wintxt,"i)(Transfer|Prepare)",match)										; first string that matches will be in "match1"
-	Gui, phase:Hide
-	MortaraUpload(match1)
-	
-	return 
 }
 
 checkVersion(ver) {
