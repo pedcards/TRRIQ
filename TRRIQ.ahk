@@ -735,60 +735,10 @@ checkPCwks() {
 			, Environment Error, % ""
 			. (is_VM ? "Mortara Web Upload software not available on VDI/Citrix." : "Mortara Web Upload software not found!")
 			. "`n`n"
-			. "Switch to another computer if you will need to register/upload Mortara 24-hour Holter."
+			. "Switch to another computer if you will need to register/upload 24-hour Holter."
 	}
 
 	Return
-}
-
-checkH3registry() {
-/*	Check registry location for H3/HS6 install
-	Get DirectoryPath value
-*/
-	global has_HS6
-
-	keymatch := "i)Preventice|Mortara"
-	target := "DirectoryPath"
-	appname := "WebUploadApplication.application"
-	hit := []
-
-	SetRegView, 64
-	loop, reg, HKLM\Software, K															; find .\Software\Mortara*
-	{
-		key := A_LoopRegKey
-		subkey := A_LoopRegSubkey
-		name := A_LoopRegName
-		if (name~=keymatch) {
-			keyname := key "\" subkey "\" name
-			Break
-		}
-	}
-
-	loop, reg, % keyname, KVR															; recurse through subkeys
-	{
-		if !(A_LoopRegName=target) {													; skip if not "DirectoryPath"
-			Continue
-		}
-		key := A_LoopRegKey "\" A_LoopRegSubkey
-		RegExMatch(key, "\\\w+$", subkey)
-
-		RegRead, var, % key, % A_LoopRegName
-		RegExMatch(var, "[^\\]*" appname, last)											; last path before WebUploadApplication.application
-
-		if (last~="i)hs6") {															; contains "hs6"
-			has_HS6:=true
-			hit.InsertAt(1,var)															; insert at [1]
-		} else {
-			hit.Push(var)																; insert at end
-		}
-		eventlog("Reg " subkey " = " var)
-	}
-	if (var) {																			; any var found returns hit
-		return hit
-	} else {
-		eventlog("Reg DirPath not found.")
-		return error
-	}
 }
 
 checkVersion(ver) {
@@ -2689,35 +2639,6 @@ fixDuration() {
 	WriteSave(wq)
 
 	Return
-}
-
-checkMWUapp()
-{
-	global isDevt, has_HS6
-	
-	if (isDevt=true) {																	; In DEVT environment, skip loading MWU
-		eventlog("isDevt=true, skip MWU load.")
-		return
-	}
-	app := (has_HS6=true) ? "MWU3110.hs6.application" : "MWU3110.h3.application"
-	
-	if !WinExist("ahk_exe WebUploadApplication.exe") {									; launch Mortara Upload app from site if not running
-		eventlog("Starting " app)
-		run .\files\%app%
-
-		progress, y150,,Loading Mortara program...
-		loop, 100																		; loop up to 50 seconds for window to appear
-		{
-			progress, % A_Index
-			if WinExist("Mortara Web Upload") {
-				break
-			}
-			sleep 500
-		}
-		progress, off
-	}
-	
-	return																	
 }
 
 findBGMdrive(delay:=5) {
