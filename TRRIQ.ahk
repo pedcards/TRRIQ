@@ -65,12 +65,6 @@ sitesLong := site.long																	; {CIS:TAB}
 sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
 sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
 
-/*	Get valid WebUploadDir
-*/
-; webUploadDir := checkH3registry()														; Find the location of Holter data files
-; check_h3(path.webupload,webUploadStr)													; Find the H3 data folders on C:
-; checkPCwks()
-
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
 Docs := readDocs()
@@ -717,28 +711,6 @@ checkMUwin() {
 	MortaraUpload(match1)
 	
 	return 
-}
-
-checkPCwks() {
-/*	Check if current machine has H3 software installed
-	local machine names begin with EWCSS and Citrix machines start with PPWC,VMWIN10
-*/
-	global webUploadDir, wksPC, wksVoid
-	is_VM := ObjHasValue(wksVoid,A_ComputerName,1)
-	is_PC := (A_ComputerName~=wksPC)
-
-	if (A_UserName="tchun1") {
-		; return
-	}
-	if (is_VM)|(webUploadDir="") {
-		MsgBox 0x40030
-			, Environment Error, % ""
-			. (is_VM ? "Mortara Web Upload software not available on VDI/Citrix." : "Mortara Web Upload software not found!")
-			. "`n`n"
-			. "Switch to another computer if you will need to register/upload 24-hour Holter."
-	}
-
-	Return
 }
 
 checkVersion(ver) {
