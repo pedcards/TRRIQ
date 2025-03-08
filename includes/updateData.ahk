@@ -335,13 +335,21 @@ readQgenda() {
 	IniRead, q_com, .\files\qgenda.ppk, api, com
 	IniRead, q_eml, .\files\qgenda.ppk, api, eml
 	
-	qg_fc := {"CALL":"PM_We_A"
-			, "fCall":"PM_We_F"
-			, "EP Call":"EP"
-			, "ICU":"ICU_A"
-			, "TXP Inpt CICU":"Txp_CICU"
-			, "TXP Inpt Floor":"Txp_Floor"
-			, "IW":"Ward_A"}
+	qg_fc := {"HC - Attending":"PM_We_A"
+			, "HC - Fellow Call":"PM_We_F"
+			, "EP Service":"EP"
+			, "HC - ICU Attending":"ICU_A"
+			, "HC - ICU Fellow":"ICU_F"
+			, "HC - Transplant ICU Attending":"Txp_CICU"
+			, "HC - Transplant Ward Attending":"Txp_Floor"
+			, "HC - Transplant Attending":"Txp_Consult"
+			, "HC - Ward Attending":"Ward_A"
+			, "HC - Ward Fellow":"Ward_F"}
+	for key in qg_fc
+	{
+		url_fc .= "TaskName eq '" key "' or "
+	}
+	url_fc := RegExReplace(url_fc," or $")
 	
 	progress, , Updating schedules, Auth Qgenda...
 	url := "https://api.qgenda.com/v2/login"
