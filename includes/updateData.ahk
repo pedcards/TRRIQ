@@ -389,9 +389,6 @@ readQgenda() {
 		if (qNameL~="Mallenahalli|Chikkabyrappa") {										; Special fix for Sathish and his extra long name
 			qNameL:="Mallenahalli Chikkabyrappa"
 		}
-		if (qnameF qNameL = "JoshFriedland") {											; Special fix for Josh who is registered incorrectly on Qgenda
-			qnameL:="Friedland-Little"
-		}
 		
 		if !IsObject(y.selectSingleNode("/root/forecast/call[@date='" qDate.YMD "']")) {
 			y.addElement("call","/root/forecast", {date:qDate.YMD})						; create node if doesn't exist
