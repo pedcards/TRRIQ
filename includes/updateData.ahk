@@ -372,6 +372,11 @@ readQgenda() {
 		,"Authorization= bearer " qAuth.access_token
 		,"Content-Type=application/json")
 	
+	if (str="") {
+		eventlog("*** readQgenda URL auth failed.")
+		return
+	}
+	
 	progress, , Updating schedules, Parsing JSON...
 	qOut := parseJSON(str)
 	
