@@ -691,7 +691,7 @@ checkCygnus() {
 	global cygnusDT
 	FileGetTime, tmpdt, % A_AppData "\Cygnus\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
 		Return
-	}
+	
 	cygnusDT := tmpdt
 	base := scanCygnusLog()
 	Return
