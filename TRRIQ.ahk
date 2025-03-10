@@ -124,7 +124,8 @@ for key in epList																					; option string epStr
 epStr := Trim(epStr,"|")
 
 saveCygnusLogs("all")
-	
+FileGetTime, cygnusDT, % A_AppData "\Cygnus\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+
 Progress, , % " ", Cleaning old .bak files
 Loop, files, bak\*.bak
 {
@@ -656,8 +657,9 @@ PhaseRefresh:
 
 idleTimer() {
 /*	Perform automatic tasks on timer
-	1. CheckWQfile - checks if wqfile has been been updated, reload WQlist()
+	1. checkWQfile - checks if wqfile has been been updated, reload WQlist()
 	2. checkMUwin - if MUwin tab text changes, reload MortaraUpload with that function
+	3. checkHCwin - if Cygnus log updated, 
 */
 	checkWQfile()
 
@@ -680,6 +682,19 @@ setwqupdate() {
 	FileAppend,,.\files\wqupdate
 	wqfileDT := A_Now
 	return
+}
+
+checkCygnus() {
+/*	If not in HolterConnect, change in Cygnus log means HC is doing something
+	if !(tmpdt > cygnusDT) {
+*/
+	global cygnusDT
+	FileGetTime, tmpdt, % A_AppData "\Cygnus\Logs\Log_" A_YYYY "-" A_MM "-" A_DD ".log"
+		Return
+	}
+	cygnusDT := tmpdt
+	base := scanCygnusLog()
+	Return
 }
 
 checkVersion(ver) {
