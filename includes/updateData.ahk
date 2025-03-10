@@ -335,13 +335,21 @@ readQgenda() {
 	IniRead, q_com, .\files\qgenda.ppk, api, com
 	IniRead, q_eml, .\files\qgenda.ppk, api, eml
 	
-	qg_fc := {"CALL":"PM_We_A"
-			, "fCall":"PM_We_F"
-			, "EP Call":"EP"
-			, "ICU":"ICU_A"
-			, "TXP Inpt CICU":"Txp_CICU"
-			, "TXP Inpt Floor":"Txp_Floor"
-			, "IW":"Ward_A"}
+	qg_fc := {"HC - Attending":"PM_We_A"
+			, "HC - Fellow Call":"PM_We_F"
+			, "EP Service":"EP"
+			, "HC - ICU Attending":"ICU_A"
+			, "HC - ICU Fellow":"ICU_F"
+			, "HC - Transplant ICU Attending":"Txp_CICU"
+			, "HC - Transplant Ward Attending":"Txp_Floor"
+			, "HC - Transplant Attending":"Txp_Consult"
+			, "HC - Ward Attending":"Ward_A"
+			, "HC - Ward Fellow":"Ward_F"}
+	for key in qg_fc
+	{
+		url_fc .= "TaskName eq '" key "' or "
+	}
+	url_fc := RegExReplace(url_fc," or $")
 	
 	progress, , Updating schedules, Auth Qgenda...
 	url := "https://api.qgenda.com/v2/login"
@@ -356,27 +364,18 @@ readQgenda() {
 		. "&endDate=" t1
 		. "&$select=Date,TaskName,StaffLName,StaffFName"
 		. "&$filter="
-		.	"("
-		.		"TaskName eq 'CALL'"
-		.		" or TaskName eq 'fCall'"
-	;	.		" or TaskName eq 'CATH LAB'"
-	;	.		" or TaskName eq 'CATH RES'"
-		.		" or TaskName eq 'EP Call'"
-	;	.		" or TaskName eq 'Fetal Call'"
-		.		" or TaskName eq 'ICU'"
-	;	.		" or TaskName eq 'TEE/ECHO'"
-	;	.		" or TaskName eq 'TEE Call'"
-		.		" or TaskName eq 'TXP Inpt CICU'"
-		.		" or TaskName eq 'TXP Inpt Floor'"
-	;	.		" or TaskName eq 'TXP Res'"
-		.		" or TaskName eq 'IW'"
-		.	")"
+		.	"(" url_fc ")"
 		.	" and IsPublished"
 		.	" and not IsStruck"
 		. "&$orderby=Date,TaskName"
 	str := httpGetter("GET",url,
 		,"Authorization= bearer " qAuth.access_token
 		,"Content-Type=application/json")
+	
+	if (str="") {
+		eventlog("*** readQgenda URL auth failed.")
+		return
+	}
 	
 	progress, , Updating schedules, Parsing JSON...
 	qOut := parseJSON(str)
@@ -394,9 +393,6 @@ readQgenda() {
 		}
 		if (qNameL~="Mallenahalli|Chikkabyrappa") {										; Special fix for Sathish and his extra long name
 			qNameL:="Mallenahalli Chikkabyrappa"
-		}
-		if (qnameF qNameL = "JoshFriedland") {											; Special fix for Josh who is registered incorrectly on Qgenda
-			qnameL:="Friedland-Little"
 		}
 		
 		if !IsObject(y.selectSingleNode("/root/forecast/call[@date='" qDate.YMD "']")) {
