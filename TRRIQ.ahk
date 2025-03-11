@@ -1176,13 +1176,17 @@ WQpreventiceResults(ByRef wqfiles) {
 		pv1 := {}
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % path.PrevHL7in fileIn
-			obr:= strsplit(stregX(tmptxt,"\R+OBR",1,0,"\R+",0),"|")						; get OBR segment
-			obr.req := trim(obr.3," ^")													; wqid from Preventice registration (PV1_19)
-			obr.prov := strX(obr.17,"^",1,1,"^",1)
+			obr:= splitSeg("OBR",tmptxt)
+			obr.req := trim(obr.2," ^")													; wqid from Preventice registration (PV1_19)
+			obr.prov := strX(obr.16,"^",1,1,"^",1)
 			obr.site := strX(obr.prov,"-",0,1,"",0)
-			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
-			pv1.dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
+			pv1:= splitSeg("PV1",tmptxt)
+			pv1.dt := SubStr(pv1.39,1,8)												; pull out date of entry/registration (will not match for send out)
 			obr.full:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
+			pid:= splitSeg("PID",tmptxt)
+			pid.nameL := strX(pid.5,"",1,1,"^",1)
+			pid.nameF := stRegX(pid.5,"\^",1,1,"\^",1)
+			pid.mrn := pid.3
 			
 			if (obr.site="") {															; no "-site" in OBR.17 name
 				obr.site:="MAIN"
@@ -1240,6 +1244,13 @@ WQpreventiceResults(ByRef wqfiles) {
 		wqfiles.push(id)
 	}
 	Return
+}
+
+splitSeg(segname,txt) {
+	seg:= strsplit(stregX(txt,"\R+" segname,1,0,"\R+",0),"|")							; get segment
+	seg.RemoveAt(1)																		; remove segment name
+
+	return seg
 }
 
 WQscanHolterPDFs(ByRef wqfiles) {
