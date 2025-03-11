@@ -1189,6 +1189,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			pid.mrn := pid.3
 			
 			if (obr.site="") {															; no "-site" in OBR.17 name
+				checkPSR(pid,obr,pv1)
 				obr.site:="MAIN"
 				eventlog(fileIn " - " obr.prov 
 					. ". No site associated with provider, substituting MAIN. Check ORM and Preventice users.")
@@ -1207,6 +1208,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			}
 			else {																		; can't find wqid, just admit defeat
 				id :=
+				checkPSR(pid,obr,pv1)
 			}
 		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
@@ -1421,6 +1423,17 @@ WQpendingReads() {
 	}
 	
 	Return
+}
+
+checkPSR(pid,obr,pv1) {
+	psr := new XML(".\files\Patient Status Report_v2.xml")
+	if (x := psr.selectSingleNode("//Details_Collection/Details[@MRN1='" pid.mrn "']"	; matches MRN
+				. "[@PatientLastName='" pid.nameL "']"									; and nameL
+				. "[@PatientFirstName='" pid.nameF "']")) {								; and nameF
+		clinic := RegExReplace(x.getAttribute("Practice_Name"),"GB-SCH-")
+	}
+
+	return {clinic:clinic}
 }
 
 cleanDone() {
