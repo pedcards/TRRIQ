@@ -82,6 +82,8 @@ if fileexist("worklist.xml") {
 
 /*	Read call schedule (Electronic Forecast and Qgenda)
 */
+psr := new XML(".\files\Patient Status Report_v2.xml")
+
 fcVals := readIni("Forecast")
 updateCall()
 
@@ -1426,7 +1428,8 @@ WQpendingReads() {
 }
 
 checkPSR(pid,obr,pv1) {
-	psr := new XML(".\files\Patient Status Report_v2.xml")
+	global psr
+
 	if (x := psr.selectSingleNode("//Details_Collection/Details[@MRN1='" pid.mrn "']"	; matches MRN
 				. "[@PatientLastName='" pid.nameL "']"									; and nameL
 				. "[@PatientFirstName='" pid.nameF "']")) {								; and nameF
@@ -1513,14 +1516,14 @@ readPrevTxt() {
 			- Enrollments (if not taken from PSR_v2)
 			- Inventory
 */
-	global wq
+	global wq, psr
 	
 	Progress,,% " ",Updating Preventice data
 
-	psr := new XML(".\files\Patient Status Report_v2.xml")
-		psrdate := parseDate(psr.selectSingleNode("Report").getAttribute("ReportTitle"))	; report date is in Central Time
-		psrDT := psrdate.YMDHMS
+	psrdate := parseDate(psr.selectSingleNode("Report").getAttribute("ReportTitle"))	; report date is in Central Time
+	psrDT := psrdate.YMDHMS
 	psrlastDT := wq.selectSingleNode("/root/pending").getAttribute("update")
+	
 	if (psrDT>psrlastDT) {																; check if psrDT more recent
 		Progress,, Reading registration updates...
 		dets := psr.selectNodes("//Details_Collection/Details")
