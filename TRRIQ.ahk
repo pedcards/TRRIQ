@@ -1215,7 +1215,6 @@ WQpreventiceResults(ByRef wqfiles) {
 			}
 			else {																		; can't find wqid, just admit defeat
 				id :=
-				checkPSR(pid,obr,pv1)
 			}
 		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
