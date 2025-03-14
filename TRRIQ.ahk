@@ -1179,15 +1179,15 @@ WQpreventiceResults(ByRef wqfiles) {
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % path.PrevHL7in fileIn
 			obr:= splitSeg("OBR",tmptxt)
-			obr.req := trim(obr.2," ^")													; wqid from Preventice registration (PV1_19)
-			obr.prov := strX(obr.16,"^",1,1,"^",1)
-			obr.site := strX(obr.prov,"-",0,1,"",0)
+				obr.req := trim(obr.2," ^")												; wqid from Preventice registration (PV1_19)
+				obr.prov := strX(obr.16,"^",1,1,"^",1)
+				obr.site := strX(obr.prov,"-",0,1,"",0)
 			pv1:= splitSeg("PV1",tmptxt)
-			pv1.dt := SubStr(pv1.39,1,8)												; pull out date of entry/registration (will not match for send out)
+				pv1.dt := SubStr(pv1.39,1,8)											; pull out date of entry/registration (will not match for send out)
 			pid:= splitSeg("PID",tmptxt)
-			pid.nameL := strX(pid.5,"",1,1,"^",1)
-			pid.nameF := stRegX(pid.5,"\^",1,1,"\^",1)
-			pid.mrn := pid.3
+				pid.nameL := strX(pid.5,"",1,1,"^",1)
+				pid.nameF := stRegX(pid.5,"\^",1,1,"\^",1)
+				pid.mrn := pid.3
 			obxFull:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
 			
 			if (obr.site="") {															; no "-site" in OBR.17 name
