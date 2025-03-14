@@ -1184,11 +1184,11 @@ WQpreventiceResults(ByRef wqfiles) {
 			obr.site := strX(obr.prov,"-",0,1,"",0)
 			pv1:= splitSeg("PV1",tmptxt)
 			pv1.dt := SubStr(pv1.39,1,8)												; pull out date of entry/registration (will not match for send out)
-			obr.full:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
 			pid:= splitSeg("PID",tmptxt)
 			pid.nameL := strX(pid.5,"",1,1,"^",1)
 			pid.nameF := stRegX(pid.5,"\^",1,1,"\^",1)
 			pid.mrn := pid.3
+			obxFull:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
 			
 			if (obr.site="") {															; no "-site" in OBR.17 name
 				checkPSR(pid,obr,pv1)
@@ -1214,7 +1214,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			}
 		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
-		if (obr.full) {
+		if (obxFull) {
 			processHL7(path.PrevHL7in . fileIn)											; extract DDE to fldVal, and PDF into hl7Dir
 			dt := ParseDate(res.date)
 			newFnam := strQ(res.mrn
