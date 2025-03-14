@@ -1191,10 +1191,15 @@ WQpreventiceResults(ByRef wqfiles) {
 			obxFull:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
 			
 			if (obr.site="") {															; no "-site" in OBR.17 name
-				checkPSR(pid,obr,pv1)
-				obr.site:="MAIN"
-				eventlog(fileIn " - " obr.prov 
-					. ". No site associated with provider, substituting MAIN. Check ORM and Preventice users.")
+				if (site:=checkPSR(pid,obr,pv1)) {
+					obr.site:=site
+					eventlog(fileIn " - " obr.prov 
+					. ". No site found in ORU. Pulled from Patient Status Report.")
+				} else {
+					obr.site:="MAIN"
+					eventlog(fileIn " - " obr.prov 
+					. ". No site found in ORU or PSR, substituting MAIN. Check ORM and Preventice users.")
+				}
 			}
 			if InStr(sites0,obr.site) {
 				eventlog("Unregistered Sites0 report (" fileIn " - " obr.site ")")
