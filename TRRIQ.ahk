@@ -82,6 +82,8 @@ if fileexist("worklist.xml") {
 
 /*	Read call schedule (Electronic Forecast and Qgenda)
 */
+psr := new XML(".\files\Patient Status Report_v2.xml")
+
 fcVals := readIni("Forecast")
 updateCall()
 
@@ -1176,18 +1178,28 @@ WQpreventiceResults(ByRef wqfiles) {
 		pv1 := {}
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % path.PrevHL7in fileIn
-			obr:= strsplit(stregX(tmptxt,"\R+OBR",1,0,"\R+",0),"|")						; get OBR segment
-			obr.req := trim(obr.3," ^")													; wqid from Preventice registration (PV1_19)
-			obr.prov := strX(obr.17,"^",1,1,"^",1)
-			obr.site := strX(obr.prov,"-",0,1,"",0)
-			pv1:= strsplit(stregX(tmptxt,"\R+PV1",1,0,"\R+",0),"|")						; get PV1 segment
-			pv1.dt := SubStr(pv1.40,1,8)												; pull out date of entry/registration (will not match for send out)
-			obr.full:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
+			obr:= splitSeg("OBR",tmptxt)
+				obr.req := trim(obr.2," ^")												; wqid from Preventice registration (PV1_19)
+				obr.prov := strX(obr.16,"^",1,1,"^",1)
+				obr.site := strX(obr.prov,"-",0,1,"",0)
+			pv1:= splitSeg("PV1",tmptxt)
+				pv1.dt := SubStr(pv1.39,1,8)											; pull out date of entry/registration (will not match for send out)
+			pid:= splitSeg("PID",tmptxt)
+				pid.nameL := strX(pid.5,"",1,1,"^",1)
+				pid.nameF := stRegX(pid.5,"\^",1,1,"\^",1)
+				pid.mrn := pid.3
+			obxFull:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
 			
 			if (obr.site="") {															; no "-site" in OBR.17 name
-				obr.site:="MAIN"
-				eventlog(fileIn " - " obr.prov 
-					. ". No site associated with provider, substituting MAIN. Check ORM and Preventice users.")
+				if (site:=checkPSR(pid,obr,pv1).clinic) {
+					obr.site:=site
+					eventlog(fileIn " - " obr.prov 
+					. ". No site found in ORU. Pulled from Patient Status Report.")
+				} else {
+					obr.site:="MAIN"
+					eventlog(fileIn " - " obr.prov 
+					. ". No site found in ORU or PSR, substituting MAIN. Check ORM and Preventice users.")
+				}
 			}
 			if InStr(sites0,obr.site) {
 				eventlog("Unregistered Sites0 report (" fileIn " - " obr.site ")")
@@ -1206,7 +1218,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			}
 		}
 		res := readWQ(id)																; wqid should always be present in hl7 downloads
-		if (obr.full) {
+		if (obxFull) {
 			processHL7(path.PrevHL7in . fileIn)											; extract DDE to fldVal, and PDF into hl7Dir
 			dt := ParseDate(res.date)
 			newFnam := strQ(res.mrn
@@ -1240,6 +1252,13 @@ WQpreventiceResults(ByRef wqfiles) {
 		wqfiles.push(id)
 	}
 	Return
+}
+
+splitSeg(segname,txt) {
+	seg:= strsplit(stregX(txt,"\R+" segname,1,0,"\R+",0),"|")							; get segment
+	seg.RemoveAt(1)																		; remove segment name
+
+	return seg
 }
 
 WQscanHolterPDFs(ByRef wqfiles) {
@@ -1412,6 +1431,18 @@ WQpendingReads() {
 	Return
 }
 
+checkPSR(pid,obr,pv1) {
+	global psr
+
+	if (x := psr.selectSingleNode("//Details_Collection/Details[@MRN1='" pid.mrn "']"	; matches MRN
+				. "[@PatientLastName='" pid.nameL "']"									; and nameL
+				. "[@PatientFirstName='" pid.nameF "']")) {								; and nameF
+		clinic := RegExReplace(x.getAttribute("Practice_Name"),"GB-SCH-")
+	}
+
+	return {clinic:clinic}
+}
+
 cleanDone() {
 	global wq, sites0, path
 	
@@ -1489,14 +1520,14 @@ readPrevTxt() {
 			- Enrollments (if not taken from PSR_v2)
 			- Inventory
 */
-	global wq
+	global wq, psr
 	
 	Progress,,% " ",Updating Preventice data
 
-	psr := new XML(".\files\Patient Status Report_v2.xml")
-		psrdate := parseDate(psr.selectSingleNode("Report").getAttribute("ReportTitle"))	; report date is in Central Time
-		psrDT := psrdate.YMDHMS
+	psrdate := parseDate(psr.selectSingleNode("Report").getAttribute("ReportTitle"))	; report date is in Central Time
+	psrDT := psrdate.YMDHMS
 	psrlastDT := wq.selectSingleNode("/root/pending").getAttribute("update")
+	
 	if (psrDT>psrlastDT) {																; check if psrDT more recent
 		Progress,, Reading registration updates...
 		dets := psr.selectNodes("//Details_Collection/Details")
