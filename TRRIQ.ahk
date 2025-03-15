@@ -1191,7 +1191,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			obxFull:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
 			
 			if (obr.site="") {															; no "-site" in OBR.17 name
-				if (site:=checkPSR(pid,obr,pv1)) {
+				if (site:=checkPSR(pid,obr,pv1).clinic) {
 					obr.site:=site
 					eventlog(fileIn " - " obr.prov 
 					. ". No site found in ORU. Pulled from Patient Status Report.")
