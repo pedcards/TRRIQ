@@ -1057,7 +1057,7 @@ WQepicOrdersNew() {
 			wq.addElement("ind",newID,e0.ind)
 		eventlog("Added order ID " e0.UID ". " e0.name)
 		
-		fileOut := (e0.mon="CUTOVER" ? "done\" : "")
+		fileOut := ""
 			. e0.MRN "_" 
 			. fldval["PID_nameL"] "^" fldval["PID_nameF"] "_"
 			. e0.date "_"
@@ -2156,9 +2156,6 @@ checkEpicOrder() {
 		}
 	}
 	
-	/*	Can't find an order, use Cutover order method
-		This is the last resort, as it creates a lot of confusion with results
-	*/
 	progress, hide
 	eventlog("No Epic order found.")
 	MsgBox, 262193, No EPIC order found.`nOrder & Accession number needed to process report.
@@ -2227,7 +2224,6 @@ parseORM() {
 		: tmp~="i)24 HOUR" ? "HOL"														; for short report (includes full disclosure)
 		: tmp~="i)48 HOUR" ? "HOL"
 		: tmp~="i)RECORDER|EVENT" ? "BGH"
-		: tmp~="i)CUTOVER" ? "CUTOVER"
 		: ""
 	
 	switch fldval.PV1_PtClass
@@ -4412,8 +4408,8 @@ makeORU(wqid) {
 		, 50:wqid})
 	
 
-/*	Insert fake RTF and reading EP
-	and monType in OBR_4 in cutover condition
+/*	Insert fake RTF 
+	with reading EP	and monType in OBR_4
 */
 	if (isDevt=true) {
 		MsgBox, 36, Testing, Create ORU with fake RTF and reading EP?
