@@ -4191,6 +4191,7 @@ epRead() {
 		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?",epStr,"Q")
 		if (ep="xClose") {
 			eventlog("Elec Forecast not complete. Quit EP selection.")
+			ep:=""
 		}
 		eventlog("Reading EP assigned to " ep ".")
 	}
