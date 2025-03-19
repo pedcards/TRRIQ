@@ -4,6 +4,12 @@
 	Sends report to HIM
 */
 
+/*	TODO clear_old_orders
+	* Add loop in cleanDone() upon closure
+	* ReadPrevTxt or parsePrevEnroll scans each node in PSR
+
+*/
+
 #Requires AutoHotkey v1.1
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force  ; only allow one running instance per user
