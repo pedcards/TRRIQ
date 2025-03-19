@@ -1498,6 +1498,18 @@ cleanDone() {
 	wq := new XML("worklist.xml")
 	FileDelete, .lock
 
+	progress,,% " ",Check for abandoned orders											; scan Epic orders
+	loop, files, % path.EpicHL7in "*.hl7"
+	{
+		dtDiff := dateDiff(A_LoopFileTimeModified)
+		if (dtDiff > 60) {																; older than this many days
+			FileMove, % A_LoopFileLongPath, .\tempfiles, 1
+			eventlog("Removed old order " A_LoopFileName)
+			Continue
+		}
+		
+	}
+
 	progress,,% " ",Purging OnBase files												; scan OnBase\PROCESSED\Import files
 	loop, files, % path.Onbase "..\PROCESSED\Import\*.pdf"
 	{
