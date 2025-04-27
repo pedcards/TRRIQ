@@ -1279,9 +1279,8 @@ WQscanHolterPDFs(ByRef wqfiles) {
 			LV_Modify(k,"Col9","")														; clear the "X" in the FullDisc column
 			continue																	; skip rest of processing
 		}
-		if (fnID.3) {																	; Do not add PDF file if not in WQLV
-			eventlog(val " does not match ID in WQLV.")
-			Continue
+		if (fnID.3) {
+			Continue																	; Skip "-full" PDFs
 		}
 		res := readwq(id)																; get values for wqid if valid, else null
 		
