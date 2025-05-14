@@ -1169,13 +1169,14 @@ WQpreventiceResults(ByRef wqfiles) {
 */
 	global wq, path, sites0, hl7DirMap, monSerialStrings, fldval
 	
-	tmpHolters := ""
 	loop, Files, % path.PrevHL7in "*.hl7"
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
 		obr := {}
 		pv1 := {}
+		pid := {}
+		obxFull := ""
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % path.PrevHL7in fileIn
 			obr:= splitSeg("OBR",tmptxt)
