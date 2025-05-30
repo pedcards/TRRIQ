@@ -1175,13 +1175,14 @@ WQpreventiceResults(ByRef wqfiles) {
 */
 	global wq, path, sites0, hl7DirMap, monSerialStrings, fldval
 	
-	tmpHolters := ""
 	loop, Files, % path.PrevHL7in "*.hl7"
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
 		obr := {}
 		pv1 := {}
+		pid := {}
+		obxFull := ""
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % path.PrevHL7in fileIn
 			obr:= splitSeg("OBR",tmptxt)
@@ -1276,15 +1277,17 @@ WQscanHolterPDFs(ByRef wqfiles) {
 	for key,val in pdfList
 	{
 		RegExMatch(val,"O)_WQ([A-Z0-9]+)_([A-Z])(-full)?\.pdf",fnID)					; get filename WQID if PDF has been renamed (fnid.1 = wqid, fnid.2 = type, fnid.3=full)
-		id := fnID.1
+		if !(id := fnID.1) {
+			eventlog(val " does not match ID in WQLV.")
+			Continue																	; Do not add PDF file if not in WQLV
+		}
 		ftype := strQ(monPdfStrings[fnID.2],"###","???")
 		if (k:=ObjHasValue(wqfiles,id)) {												; found a PDF file whose wqid matches an hl7 in wqfiles
 			LV_Modify(k,"Col9","")														; clear the "X" in the FullDisc column
 			continue																	; skip rest of processing
 		}
-		if (fnID.3) {																	; Do not add PDF file if not in WQLV
-			eventlog(val " does not match ID in WQLV.")
-			Continue
+		if (fnID.3) {
+			Continue																	; Skip "-full" PDFs
 		}
 		res := readwq(id)																; get values for wqid if valid, else null
 		
@@ -4205,6 +4208,7 @@ epRead() {
 		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?",epStr,"Q")
 		if (ep="xClose") {
 			eventlog("Elec Forecast not complete. Quit EP selection.")
+			ep:=""
 		}
 		eventlog("Reading EP assigned to " ep ".")
 	}
