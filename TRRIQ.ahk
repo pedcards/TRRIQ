@@ -4189,7 +4189,9 @@ epRead() {
 
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
 
-	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)" epStr, ymatch)
+	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)" epStr, epSVC)
+	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP_dx").text, "Oi)" epStr, epDX)
+	ep := strQ(epDX.value(),"###",epSVC.value())
 	if !(ep := ymatch.value()) {
 		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?",epStr,"Q")
 		if (ep="xClose") {
