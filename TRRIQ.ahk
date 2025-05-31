@@ -4,6 +4,12 @@
 	Sends report to HIM
 */
 
+/*	TODO clear_old_orders
+	* Add loop in cleanDone() upon closure
+	* ReadPrevTxt or parsePrevEnroll scans each node in PSR
+
+*/
+
 #Requires AutoHotkey v1.1
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force  ; only allow one running instance per user
@@ -1057,7 +1063,7 @@ WQepicOrdersNew() {
 			wq.addElement("ind",newID,e0.ind)
 		eventlog("Added order ID " e0.UID ". " e0.name)
 		
-		fileOut := (e0.mon="CUTOVER" ? "done\" : "")
+		fileOut := ""
 			. e0.MRN "_" 
 			. fldval["PID_nameL"] "^" fldval["PID_nameF"] "_"
 			. e0.date "_"
@@ -1500,6 +1506,18 @@ cleanDone() {
 	writeSave(wq)
 	wq := new XML("worklist.xml")
 	FileDelete, .lock
+
+	progress,,% " ",Check for abandoned orders											; scan Epic orders
+	loop, files, % path.EpicHL7in "*.hl7"
+	{
+		dtDiff := dateDiff(A_LoopFileTimeModified)
+		if (dtDiff > 60) {																; older than this many days
+			FileMove, % A_LoopFileLongPath, .\tempfiles, 1
+			eventlog("Removed old order " A_LoopFileName)
+			Continue
+		}
+		
+	}
 
 	progress,,% " ",Purging OnBase files												; scan OnBase\PROCESSED\Import files
 	loop, files, % path.Onbase "..\PROCESSED\Import\*.pdf"
@@ -2159,9 +2177,6 @@ checkEpicOrder() {
 		}
 	}
 	
-	/*	Can't find an order, use Cutover order method
-		This is the last resort, as it creates a lot of confusion with results
-	*/
 	progress, hide
 	eventlog("No Epic order found.")
 	MsgBox, 262193, No EPIC order found.`nOrder & Accession number needed to process report.
@@ -2230,7 +2245,6 @@ parseORM() {
 		: tmp~="i)24 HOUR" ? "HOL"														; for short report (includes full disclosure)
 		: tmp~="i)48 HOUR" ? "HOL"
 		: tmp~="i)RECORDER|EVENT" ? "BGH"
-		: tmp~="i)CUTOVER" ? "CUTOVER"
 		: ""
 	
 	switch fldval.PV1_PtClass
@@ -4416,8 +4430,8 @@ makeORU(wqid) {
 		, 50:wqid})
 	
 
-/*	Insert fake RTF and reading EP
-	and monType in OBR_4 in cutover condition
+/*	Insert fake RTF 
+	with reading EP	and monType in OBR_4
 */
 	if (isDevt=true) {
 		MsgBox, 36, Testing, Create ORU with fake RTF and reading EP?
