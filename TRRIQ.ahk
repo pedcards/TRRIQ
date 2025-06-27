@@ -392,7 +392,7 @@ changeLoc()
 	{
 		locationData := new xml(m_strXmlFilename)                               	  ; load xml file
 		wksList := locationData.SelectSingleNode(m_strXmlWorkstationsPath)            ; retreive list of all workstations
-		wksNode := wksList.selectSingleNode(m_strXmlWksNodeName "[" m_strXmlWksName "='" A_ComputerName "']")
+		wksNode := wksList.selectSingleNode(m_strXmlWksNodeName "[" m_strXmlWksName "=""" A_ComputerName """]")
 		wksNode.parentNode.removeChild(wksNode)
 		locationData.TransformXML()
 		locationData.saveXML()
@@ -473,7 +473,7 @@ cleanPending()
 		if !(id1) {
 			Continue
 		}
-		if IsObject(wq.selectSingleNode("/root/pending/enroll[@id='" id1 "']")) {
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[@id=""" id1 """]")) {
 			eventlog("Found leftover id " id1)
 			moveWQ(id1)
 		}
@@ -573,7 +573,7 @@ recoverDone(uid:="")
 		uid := val
 	}
 	else if (numbers) {																	; contains numbers only, is MRN 1249045
-		nodes := wq.selectNodes("/root/done/enroll[mrn='" val "']")
+		nodes := wq.selectNodes("/root/done/enroll[mrn=""" val """]")
 		if !(nodes.length()) {
 			MsgBox No matching MRN
 			Gui, phase:Show
@@ -628,7 +628,7 @@ recoverDone(uid:="")
 	filecheck()
 	FileOpen(".lock", "W")
 
-	x := wq.selectSingleNode("/root/done/enroll[@id='" uid "']")					; reload x node
+	x := wq.selectSingleNode("/root/done/enroll[@id=""" uid """]")					; reload x node
 	clone := x.cloneNode(true)
 	wq.selectSingleNode("/root/pending").appendChild(clone)							; copy x.clone to PENDING
 	x.parentNode.removeChild(x)														; remove x
@@ -748,7 +748,7 @@ WQtask() {
 	;~ Gui, phase:Hide
 	pt := readWQ(idx)
 
-	idstr := "/root/pending/enroll[@id='" idx "']"
+	idstr := "/root/pending/enroll[@id=""" idx """]"
 	
 	list :=
 	Loop, % (notes:=wq.selectNodes(idstr "/notes/note")).length 
@@ -811,7 +811,7 @@ WQtask() {
 			}
 		}
 		wq.addElement("note",idstr "/notes",{user:user, date:substr(A_Now,1,8)},note)
-		WriteOut("/root/pending","enroll[@id='" idx "']")
+		WriteOut("/root/pending","enroll[@id=""" idx """]")
 		eventlog(pt.MRN "[" pt.Date "] Note from " user ": " note)
 		setwqupdate()
 		WQlist()
@@ -917,7 +917,7 @@ WQclearSites0() {
 	loop, parse, sites0, |
 	{
 		site := A_LoopField
-		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
+		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site=""" site """]")).length
 		{
 			k := ens.item(A_Index-1)
 			clone := k.cloneNode(true)
@@ -1016,7 +1016,7 @@ WQepicOrdersNew() {
 			continue
 		}
 		
-		e0.orderNode := "/root/orders/enroll[order='" e0.order "']"
+		e0.orderNode := "/root/orders/enroll[order=""" e0.order """]"
 		if IsObject(k:=wq.selectSingleNode(e0.orderNode)) {								; ordernum node exists
 			e0.nodeCtrlID := k.selectSingleNode("ctrlID").text
 			if (e0.CtrlID < e0.nodeCtrlID) {											; order CtrlID is older than existing, somehow
@@ -1036,7 +1036,7 @@ WQepicOrdersNew() {
 			eventlog("Cleared order " e0.order " node. " e0.name)
 		}
 		if (e0.orderCtrl="XO") {														; change an order
-			e0.orderNode := "/root/orders/enroll[accession='" e0.accession "']"
+			e0.orderNode := "/root/orders/enroll[accession=""" e0.accession """]"
 			k := wq.selectSingleNode(e0.orderNode)
 			e0.nodeUID := k.getAttribute("id")
 			FileDelete, % path.EpicHL7in "*_" e0.nodeUID "Z.hl7"
@@ -1044,7 +1044,7 @@ WQepicOrdersNew() {
 			eventlog("Removed node id " e0.nodeUID " for replacement. " e0.name)
 		}
 		
-		newID := "/root/orders/enroll[@id='" e0.UID "']"								; otherwise create a new node
+		newID := "/root/orders/enroll[@id=""" e0.UID """]"								; otherwise create a new node
 			wq.addElement("enroll","/root/orders",{id:e0.UID})
 			wq.addElement("order",newID,e0.order)
 			wq.addElement("accession",newID,e0.accession)
@@ -1097,7 +1097,7 @@ WQepicOrdersPrevious() {
 		
 		if InStr(sites0,e0.site) {														; sites0 location
 			FileMove, %A_LoopFileFullPath%, .\tempfiles, 1
-			removeNode("/root/orders/enroll[@id='" i1 "']")
+			removeNode("/root/orders/enroll[@id=""" i1 """]")
 			eventlog("Non-tracked order " fileIn " moved to tempfiles.")
 			continue
 		}
@@ -1139,13 +1139,13 @@ WQepicOrdersCleanup() {
 		e0.accession := k.selectSingleNode("accession").text
 		e0.name := k.selectSingleNode("name").text
 		
-		if IsObject(wq.selectSingleNode("/root/pending/enroll[order='" e0.order "'][accession='" e0.accession "']")) {
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[order=""" e0.order """][accession=""" e0.accession """]")) {
 			eventlog("Order node " e0.uid " " e0.name " already found in pending.")
-			removenode("/root/orders/enroll[@id='" e0.uid "']")
+			removenode("/root/orders/enroll[@id=""" e0.uid """]")
 		}
-		if IsObject(wq.selectSingleNode("/root/done/enroll[order='" e0.order "'][accession='" e0.accession "']")) {
+		if IsObject(wq.selectSingleNode("/root/done/enroll[order=""" e0.order """][accession=""" e0.accession """]")) {
 			eventlog("Order node " e0.uid " " e0.name " already found in done.")
-			removenode("/root/orders/enroll[@id='" e0.uid "']")
+			removenode("/root/orders/enroll[@id=""" e0.uid """]")
 		}
 	}
 	Return
@@ -1361,7 +1361,7 @@ WQpendingTabs() {
 		site := A_LoopField
 		Gui, ListView, WQlv%i%
 		LV_Delete()																		; refresh each respective LV
-		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site='" site "']")).length
+		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site=""" site """]")).length
 		{
 			k := ens.item(A_Index-1)
 			id	:= k.getAttribute("id")
@@ -1426,7 +1426,7 @@ WQpendingReads() {
 		fileIn := A_LoopFileName
 		wqid := strX(StrSplit(fileIn, "_").5,"@",1,1,".",1,1)
 		e0 := readWQ(wqid)
-		e0.reading := wq.selectSingleNode("//enroll[@id='" wqid "']/done").getAttribute("read")
+		e0.reading := wq.selectSingleNode("//enroll[@id=""" wqid """]/done").getAttribute("read")
 		LV_Add(""
 			, e0.Name
 			, e0.MRN
@@ -1443,9 +1443,9 @@ WQpendingReads() {
 checkPSR(pid,obr,pv1) {
 	global psr
 
-	if (x := psr.selectSingleNode("//Details_Collection/Details[@MRN1='" pid.mrn "']"	; matches MRN
-				. "[@PatientLastName='" pid.nameL "']"									; and nameL
-				. "[@PatientFirstName='" pid.nameF "']")) {								; and nameF
+	if (x := psr.selectSingleNode("//Details_Collection/Details[@MRN1=""" pid.mrn """]"	; matches MRN
+				. "[@PatientLastName=""" pid.nameL """]"								; and nameL
+				. "[@PatientFirstName=""" pid.nameF """]")) {							; and nameF
 		clinic := RegExReplace(x.getAttribute("Practice_Name"),"GB-SCH-")
 	}
 
@@ -1601,7 +1601,7 @@ readPrevTxt() {
 		k := devs.item(A_Index-1)
 		dev := k.getAttribute("model")
 		ser := k.getAttribute("ser")
-		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev='" dev " - " ser "']")) {	; exists in Pending
+		if IsObject(wq.selectSingleNode("/root/pending/enroll[dev=""" dev " - " ser """]")) {	; exists in Pending
 			k.parentNode.removeChild(k)
 			eventlog("Removed inventory ser " ser)
 		}
@@ -1629,9 +1629,8 @@ parsePrevEnroll(det) {
 		detprov := filterProv(det.getAttribute("Ordering_Physician"))
 		psrsite := RegExReplace(det.getAttribute("Practice_Name"),"GB-SCH-") 
 		res := {  date:parseDate(det.getAttribute("Date_Enrolled")).YMD
-				, name:RegExReplace(format("{:U}"
+				, name:format("{:U}"
 						,det.getAttribute("PatientLastName") ", " det.getAttribute("PatientFirstName"))
-						,"\'","^")
 				, mrn:det.getAttribute("MRN1")
 				, dev:det.getAttribute("Device_Type") " - " det.getAttribute("Device_Serial")
 				, prov:detprov.name
@@ -1667,7 +1666,7 @@ parsePrevEnroll(det) {
 
 	/*	Check whether any params match this device
 	*/
-		if (id:=enrollcheck("[@id='" res.id "']")) {									; id returned in Preventice ORU
+		if (id:=enrollcheck("[@id=""" res.id """]")) {									; id returned in Preventice ORU
 			en := readWQ(id)
 			if (en.node="done") {
 				return
@@ -1683,19 +1682,19 @@ parsePrevEnroll(det) {
 			return
 		}
 		if (id:=enrollcheck("[name=""" res.name """]"									; 6/6 perfect match
-			. "[mrn='" res.mrn "']"
-			. "[date='" res.date "']"
-			. "[dev='" res.dev "']"
+			. "[mrn=""" res.mrn """]"
+			. "[date=""" res.date """]"
+			. "[dev=""" res.dev """]"
 			. "[prov=""" res.prov """]"
-			. "[site='" res.site "']" )) {
+			. "[site=""" res.site """]" )) {
 			parsePrevElement(id,en,res,"duration")
 			checkweb(id)
 			return
 		}
 		if (id:=enrollcheck("[name=""" res.name """]"									; 4/6 perfect match
-			. "[mrn='" res.mrn "']"														; everything but PROV or SITE
-			. "[date='" res.date "']"
-			. "[dev='" res.dev "']" )) {
+			. "[mrn=""" res.mrn """]"														; everything but PROV or SITE
+			. "[date=""" res.date """]"
+			. "[dev=""" res.dev """]" )) {
 			en:=readWQ(id)
 			if (en.node="done") {
 				return
@@ -1707,9 +1706,9 @@ parsePrevEnroll(det) {
 			checkweb(id)
 			return
 		}
-		if (id:=enrollcheck("[mrn='" res.mrn "']"										; Probably perfect MRN+S/N+DATE
-			. "[date='" res.date "']"
-			. "[dev='" res.dev "']" )) {
+		if (id:=enrollcheck("[mrn=""" res.mrn """]"										; Probably perfect MRN+S/N+DATE
+			. "[date=""" res.date """]"
+			. "[dev=""" res.dev """]" )) {
 			en:=readWQ(id)
 			if (en.node="done") {
 				return
@@ -1722,7 +1721,7 @@ parsePrevEnroll(det) {
 			checkweb(id)
 			return
 		}
-		if (id:=enrollcheck("[mrn='" res.mrn "'][date='" res.date "']")) {				; MRN+DATE, no S/N
+		if (id:=enrollcheck("[mrn=""" res.mrn """][date=""" res.date """]")) {				; MRN+DATE, no S/N
 			en:=readWQ(id)
 			if (en.node="done") {
 				return
@@ -1735,7 +1734,7 @@ parsePrevEnroll(det) {
 				wqSetVal(id,"accountnum",en.acctnum)
 				wqSetVal(id,"encnum",en.encnum)
 				wqSetVal(id,"ind",en.ind)
-				removeNode("/root/orders/enroll[@id='" id "']")
+				removeNode("/root/orders/enroll[@id=""" id """]")
 				eventlog("addPrevEnroll moved Order ID " id " for " en.name " to Pending.")
 				return
 			}
@@ -1745,7 +1744,7 @@ parsePrevEnroll(det) {
 			checkweb(id)
 			return
 		}
-		if (id:=enrollcheck("[date='" res.date "'][dev='" res.dev "']")) {				; DATE+S/N, no MRN
+		if (id:=enrollcheck("[date=""" res.date """][dev=""" res.dev """]")) {				; DATE+S/N, no MRN
 			en:=readWQ(id)
 			if (en.node="done") {
 				return
@@ -1756,7 +1755,7 @@ parsePrevEnroll(det) {
 			checkweb(id)
 			return
 		} 
-		if (id:=enrollcheck("[mrn='" res.mrn "'][dev='" res.dev "']")) {				; MRN+S/N, no DATE match
+		if (id:=enrollcheck("[mrn=""" res.mrn """][dev=""" res.dev """]")) {				; MRN+S/N, no DATE match
 			en:=readWQ(id)
 			if (en.node="done") {
 				return
@@ -1770,7 +1769,7 @@ parsePrevEnroll(det) {
 			checkweb(id)
 			return
 		}
-		if (id:=wq.selectSingleNode("/root/orders/enroll[mrn='" res.mrn "']").getAttribute("id")) {
+		if (id:=wq.selectSingleNode("/root/orders/enroll[mrn=""" res.mrn """]").getAttribute("id")) {
 			en:=readWQ(id)																; MRN found in Orders
 			dt0:=dateDiff(en.date,res.date)
 			
@@ -1784,12 +1783,12 @@ parsePrevEnroll(det) {
 				wqSetVal(id,"dev",res.dev)
 				wqSetVal(id,"date",res.date)
 				wqSetVal(id,"ind",en.ind)
-				removeNode("/root/orders/enroll[@id='" id "']")
+				removeNode("/root/orders/enroll[@id=""" id """]")
 				eventlog("addPrevEnroll order ID " id " for " en.name " " en.mrn " matched MRN only, moved to Pending.")
 				return
 			}
 		}
-		loop, % (allpend:=wq.selectNodes("/root/pending/enroll[mrn='" res.mrn "']")).Length
+		loop, % (allpend:=wq.selectNodes("/root/pending/enroll[mrn=""" res.mrn """]")).Length
 		{
 			k := allpend.item(A_index-1)
 			kser := k.selectSingleNode("dev").text
@@ -1827,7 +1826,7 @@ addPrevEnroll(id,res) {
 */
 	global wq
 	
-	newID := "/root/pending/enroll[@id='" id "']"
+	newID := "/root/pending/enroll[@id=""" id """]"
 	wq.addElement("enroll","/root/pending",{id:id})
 	wq.addElement("date",newID,res.date)
 	wq.addElement("name",newID,res.name)
@@ -1873,7 +1872,7 @@ parsePrevDev(txt) {
 	ser := el.3
 	res := dev " - " ser
 
-	if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser='" ser "']")) {			; already exists in Inventory
+	if IsObject(wq.selectSingleNode("/root/inventory/dev[@ser=""" ser """]")) {			; already exists in Inventory
 		return
 	}
 	
@@ -1895,7 +1894,7 @@ lateReportNotify() {
 	Loop, files, % path.EpicHL7out "*.hl7"
 	{
 		uid := strX(A_LoopFileName,"@",0,1,".hl7",1,4)
-		e0 := wq.selectSingleNode("/root/done/enroll[@id='" uid "']/done")
+		e0 := wq.selectSingleNode("/root/done/enroll[@id=""" uid """]/done")
 		if (abs(dateDiff(e0.text)) > 2) {
 			read := e0.getAttribute("read")
 			epStr := epList[read]
@@ -1917,7 +1916,7 @@ makeUID() {
 		Random, num3, 10000, 99999
 		num := num1 . num2 . num3
 		id := toBase(num,36)
-		if IsObject(wq.selectSingleNode("//enroll[id='" id "']")) {
+		if IsObject(wq.selectSingleNode("//enroll[id=""" id """]")) {
 			eventlog("UID " id " already in use.")
 			continue
 		} 
@@ -1932,7 +1931,7 @@ readWQ(idx) {
 	global wq
 	
 	res := []
-	k := wq.selectSingleNode("//enroll[@id='" idx "']")
+	k := wq.selectSingleNode("//enroll[@id=""" idx """]")
 	Loop, % (ch:=k.selectNodes("*")).Length
 	{
 		i := ch.item(A_Index-1)
@@ -2140,7 +2139,7 @@ checkEpicOrder() {
 				fldval.accession := en.selectSingleNode("accession").text
 				wqsetval(fldval.wqid,"order",fldval.order)
 				wqsetval(fldval.wqid,"accession",fldval.accession)
-				writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
+				writeOut("/root/pending","enroll[@id=""" fldval.wqid """]")
 				eventlog("Used order.")
 				return
 			} else {
@@ -2228,7 +2227,7 @@ checkEpicClip() {
 					eventlog("dem-Name changed '" fldval["dem-Name"] "' ==> '" name "'")
 				}
 			}
-			writeOut("/root/pending","enroll[@id='" fldval.wqid "']")
+			writeOut("/root/pending","enroll[@id=""" fldval.wqid """]")
 		}
 	}
 	return
@@ -2537,11 +2536,11 @@ findWQid(DT:="",MRN:="",ser:="") {
 	global wq
 	
 	if IsObject(x := wq.selectSingleNode("//enroll"
-		. "[date='" DT "'][mrn='" MRN "']")) {												; Perfect match DT and MRN
+		. "[date=""" DT """][mrn=""" MRN """]")) {												; Perfect match DT and MRN
 	} else if IsObject(x := wq.selectSingleNode("//enroll"
-		. "[dev='" ser "'][mrn='" MRN "']")) {												; or matches S/N and MRN
+		. "[dev=""" ser """][mrn=""" MRN """]")) {												; or matches S/N and MRN
 	} else if IsObject(x := wq.selectSingleNode("//enroll"
-		. "[date='" DT "'][dev='" ser "']")) {												; or matches DT and S/N
+		. "[date=""" DT """][dev=""" ser """]")) {												; or matches DT and S/N
 	} else {
 		x :=																				; anything else is null
 	}
@@ -2552,7 +2551,7 @@ findWQid(DT:="",MRN:="",ser:="") {
 checkweb(id) {
 	global wq
 
-	en := "//enroll[@id='" id "']"
+	en := "//enroll[@id=""" id """]"
 	if (wq.selectSingleNode(en "/webgrab").text) {											; webgrab already exists
 		Return
 	} else {
@@ -3029,7 +3028,7 @@ findBGMenroll(serNum,dt) {
 
 	DaysOut := 7																		; How many days after registration to match
 
-	ens := wq.selectNodes("//pending/enroll[dev='BodyGuardian Mini - " serNum "']")		; all nodes that match S/N
+	ens := wq.selectNodes("//pending/enroll[dev=""BodyGuardian Mini - " serNum """]")		; all nodes that match S/N
 	Loop, % ens.Length()
 	{
 		en := ens.item(A_Index-1)
@@ -3121,14 +3120,14 @@ HolterConnect(phase="")
 		}
 
 		wq := new XML("worklist.xml")													; refresh WQ
-		wqStr := "/root/pending/enroll[@id='" wqid "']"
+		wqStr := "/root/pending/enroll[@id=""" wqid """]"
 		
 		if !IsObject(wq.selectSingleNode(wqStr "/sent")) {
 			wq.addElement("sent",wqStr)
 		}
 		wq.setText(wqStr "/sent",substr(A_Now,1,8))
 		wq.setAtt(wqStr "/sent",{user:user})
-		WriteOut("/root/pending","enroll[@id='" wqid "']")
+		WriteOut("/root/pending","enroll[@id=""" wqid """]")
 		eventlog(pt.MRN " " pt.Name " study " wqid.Date " uploaded to Preventice.")
 
 	}
@@ -3523,7 +3522,7 @@ BGregister(type) {
 			eventlog("Cancelled selectDev.")
 			return
 		}
-		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser='" ptDem.ser "']").getAttribute("model")
+		ptDem.model := wq.selectSingleNode("/root/inventory/dev[@ser=""" ptDem.ser """]").getAttribute("model")
 		
 		if !(ptDem.model) {																; Types in an ad hoc number
 			ptDem.model := typeLong
@@ -3568,7 +3567,7 @@ BGregister(type) {
 			}
 		}
 		
-		removeNode("/root/inventory/dev[@ser='" ptDem.ser "']")							; take out of inventory
+		removeNode("/root/inventory/dev[@ser=""" ptDem.ser """]")							; take out of inventory
 		writeOut("/root","inventory")
 		eventlog(ptDem.ser " registered to " ptDem["mrn"] " " ptDem["nameL"] ".") 
 	}
@@ -3577,7 +3576,7 @@ BGregister(type) {
 	eventlog(type " " ptDem.ser " [" ptDem.MonDuration " days] "
 		. "registered to " ptDem.mrn " " ptDem.nameL ".")
 	
-	removeNode("/root/orders/enroll[@id='" ptDem.uid "']")
+	removeNode("/root/orders/enroll[@id=""" ptDem.uid """]")
 	writeOut("root","orders")
 	FileMove, % ptDem.filename, .\tempfiles, 1
 		
@@ -3588,7 +3587,7 @@ BGregister(type) {
 	if (isDevt=true) {
 		makeTestORU()
 		wqSetVal(ptDem.uid,"webgrab",A_Now)
-		WriteOut("/root/pending/enroll[@id='" ptDem.uid "']","webgrab")
+		WriteOut("/root/pending/enroll[@id=""" ptDem.uid """]","webgrab")
 	}
 	/*
 	*/
@@ -3604,7 +3603,7 @@ selectDev(model="") {
 	static typed, devs, ser
 	typed := devs := ser :=
 	
-	loop, % (k:=wq.selectNodes("/root/inventory/dev[@model='" model "']")).length		; Add all ser nums to devs string
+	loop, % (k:=wq.selectNodes("/root/inventory/dev[@model=""" model """]")).length		; Add all ser nums to devs string
 	{
 		i := k.item(A_Index-1).getAttribute("ser")
 		if !(i) {
@@ -3702,8 +3701,8 @@ getPatInfo() {
 		rel[i].name := name
 		rel[i].relation := fldval[pre "Relation"]
 		tmp := segField(fldval[pre "Phone"],"num^type^equipment")
-		rel[i].phoneHome := formatPhone(tmp.selectSingleNode("//idx[equipment/text()='HOME']/num").text)
-		rel[i].phoneMobile := formatPhone(tmp.selectSingleNode("//idx[equipment/text()='MOBILE']/num").text)
+		rel[i].phoneHome := formatPhone(tmp.selectSingleNode("//idx[equipment/text()=""HOME""]/num").text)
+		rel[i].phoneMobile := formatPhone(tmp.selectSingleNode("//idx[equipment/text()=""MOBILE""]/num").text)
 		tmp := fldval[pre "Role"]
 		rel[i].lives := InStr(tmp,"Y^LW") ? true : false
 		rel[i].legal := InStr(tmp,"Y^LG") ? true : false
@@ -3839,7 +3838,7 @@ bgWqSave(sernum) {
 	ptDem["date"] := parsedate(ptDem["EncDate"]).YMD									; make sure ptDem.date in proper format
 	
 	wq.addElement("enroll","/root/pending",{id:id})
-	ptDem.newID := "/root/pending/enroll[@id='" id "']"
+	ptDem.newID := "/root/pending/enroll[@id=""" id """]"
 	wq.addElement("date",ptDem.newID,ptDem.date)
 	wq.addElement("name",ptDem.newID,ptDem.name)
 	wq.addElement("mrn",ptDem.newID,ptDem.mrn)
@@ -3862,7 +3861,7 @@ bgWqSave(sernum) {
 	}
 	wq.addElement("register",ptDem.newID,{user:A_UserName},A_Now)
 	
-	writeOut("/root/pending","enroll[@id='" id "']")
+	writeOut("/root/pending","enroll[@id=""" id """]")
 	
 	return
 }
@@ -4079,7 +4078,7 @@ moveWQ(id) {
 	filecheck()
 	FileOpen(".lock", "W")																; Create lock file.
 	
-	wqStr := "/root/pending/enroll[@id='" id "']"
+	wqStr := "/root/pending/enroll[@id=""" id """]"
 	x := wq.selectSingleNode(wqStr)
 	date := x.selectSingleNode("date").text
 	mrn := x.selectSingleNode("mrn").text
@@ -4087,7 +4086,7 @@ moveWQ(id) {
 	if (mrn) {																			; record exists
 		wq.addElement("done",wqStr,{user:A_UserName},A_Now)								; set as done
 		wq.selectSingleNode(wqStr "/done").setAttribute("read",fldval["dem-Reading"])
-		x := wq.selectSingleNode("/root/pending/enroll[@id='" id "']")					; reload x node
+		x := wq.selectSingleNode("/root/pending/enroll[@id=""" id """]")					; reload x node
 		clone := x.cloneNode(true)
 		wq.selectSingleNode("/root/done").appendChild(clone)							; copy x.clone to DONE
 		x.parentNode.removeChild(x)														; remove x
@@ -4095,7 +4094,7 @@ moveWQ(id) {
 	} else {																			; no record exists (enrollment never captured, or Zio)
 		id := makeUID()																	; create an id
 		wq.addElement("enroll","/root/done",{id:id})									; in </root/done>
-		newID := "/root/done/enroll[@id='" id "']"
+		newID := "/root/done/enroll[@id=""" id """]"
 		wq.addElement("date",newID,parseDate(fldval["dem-Test_date"]).YMD)				; add these to the new done node
 		wq.addElement("name",newID,fldval["dem-Name"])
 		wq.addElement("mrn",newID,fldval["dem-MRN"])
@@ -4113,7 +4112,7 @@ moveWQ(id) {
 wqSetVal(id,node,val) {
 	global wq
 	
-	newID := "/root/pending/enroll[@id='" id "']"
+	newID := "/root/pending/enroll[@id=""" id """]"
 	k := wq.selectSingleNode(newID "/" node)
 	if (k.text) and (val="") {															; don't overwrite an existing value with null
 		return
@@ -4163,7 +4162,7 @@ assignMD:
 	}
 	
 	y := new XML(".\files\call.xml")													; get most recent schedule
-	yNode := "//call[@date='" ptDem.date "']"
+	yNode := "//call[@date=""" ptDem.date """]"
 	ymatch := (ptDem.loc~="ICU") 
 		? y.selectSingleNode(yNode "/ICU_A").text										; if order came from ICU
 		: y.selectSingleNode(yNode "/Ward_A").text										; everything else
@@ -4203,8 +4202,8 @@ epRead() {
 
 	FormatTime, dlDate, %dlDate%, yyyyMMdd
 
-	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP").text, "Oi)" epStr, epSVC)
-	RegExMatch(y.selectSingleNode("//call[@date='" dlDate "']/EP_dx").text, "Oi)" epStr, epDX)
+	RegExMatch(y.selectSingleNode("//call[@date=""" dlDate """]/EP").text, "Oi)" epStr, epSVC)
+	RegExMatch(y.selectSingleNode("//call[@date=""" dlDate """]/EP_dx").text, "Oi)" epStr, epDX)
 	ep := strQ(epDX.value(),"###",epSVC.value())
 	if !(ep := ymatch.value()) {
 		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?",epStr,"Q")
@@ -4977,7 +4976,7 @@ CheckProc:
 				wq.addElement("enroll","/root/pending",{id:id})
 				fldval.wqid := id
 			}
-			newID := "/root/pending/enroll[@id='" id "']"
+			newID := "/root/pending/enroll[@id=""" id """]"
 			ptDem.date := parseDate(ptDem["EncDate"]).YMD
 			wqSetVal(id,"date",(ptDem["date"]) ? ptDem["date"] : substr(A_Now,1,8))
 			wqSetVal(id,"name",ptDem["nameL"] ", " ptDem["nameF"])
@@ -4995,7 +4994,7 @@ CheckProc:
 			wqSetVal(id,"site",sitesLong[ptDem["loc"]])										; need to transform site abbrevs
 			wqSetVal(id,"ind",ptDem["Indication"])
 		filedelete, .lock
-		writeOut("/root/pending","enroll[@id='" id "']")
+		writeOut("/root/pending","enroll[@id=""" id """]")
 		
 		eventlog("Demographics updated for WQID " fldval.wqid ".") 
 	}
@@ -6202,7 +6201,7 @@ adminWQlv(id) {
 				. "This will overwrite worklist.xml!"
 		IfMsgBox Yes, {																	; update WQ, save worklist, reload UI
 			wqSetVal(id,fld,butval)
-			WriteOut("/root/pending/enroll[@id='" id "']",fld)
+			WriteOut("/root/pending/enroll[@id=""" id """]",fld)
 			adminWQlv(id)
 			Return
 		} Else IfMsgBox No, {															; unchanged, back to UI
@@ -6226,7 +6225,7 @@ adminWQlvFix(en) {
 */
 	if (en.webgrab="") {																; Common cause of "noreg error"
 		wqSetVal(en.id,"webgrab",A_Now)
-		WriteOut("/root/pending/enroll[@id='" en.id "']","webgrab")
+		WriteOut("/root/pending/enroll[@id=""" en.id """]","webgrab")
 		eventlog("adminWQlvFix: Added missing webgrab.")
 		fixChange .= "Missing <webgrab>`n"
 	}
@@ -6243,7 +6242,7 @@ adminWQlvFix(en) {
 		}
 		if (lvDuration) {																; Any lvDuration, writeout
 			wqSetVal(en.id,"duration",lvDuration)
-			WriteOut("/root/pending/enroll[@id='" en.id "']","duration")
+			WriteOut("/root/pending/enroll[@id=""" en.id """]","duration")
 			eventlog("adminWQlvFix: Added missing duration.")
 			fixChange .= "Missing <duration>`n"
 		}
