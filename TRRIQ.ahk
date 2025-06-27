@@ -3872,8 +3872,8 @@ moveHL7dem() {
 	global fldVal, obxVal
 	
 	name := parseName(fldval.name)
-	fldVal["dem-Name_L"] := strQ(obxVal["PID_NameL"],"###",RegExReplace(name.last,"\^","'"))		; replace [^] with [']
-	fldVal["dem-Name_F"] := strQ(obxVal["PID_NameF"],"###",RegExReplace(name.first,"\^","'"))
+	fldVal["dem-Name_L"] := strQ(obxVal["PID_NameL"],"###",name.last)
+	fldVal["dem-Name_F"] := strQ(obxVal["PID_NameF"],"###",name.first)
 	fldVal["dem-Name"] := fldVal["dem-Name_L"] strQ(fldVal["dem-Name_F"],", ###")
 	fldVal["dem-MRN"] := strQ(obxVal["PID_PatMRN"],"###",fldval.MRN)
 	fldVal["dem-DOB"] := strQ(obxVal["PID_DOB"],niceDate(obxVal["PID_DOB"]),fldval.DOB)
@@ -3982,7 +3982,6 @@ outputfiles:
 	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["dem-Test_Date"])											; get the study date from PDF result
 	filenameOut := fldval["dem-MRN"] " " fldval["dem-Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
-	filenameOut := RegExReplace(filenameOut,"\^","'")										; convert [^] back to [']
 	
 	/*	Save hl7Out result
 	*/
@@ -4956,8 +4955,8 @@ CheckProc:
 		 *	replace fldVal with newly acquired values
 		 */
 		fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
-		fldVal["dem-Name_L"] := fldval["Name_L"] := RegExReplace(ptDem["nameL"],"\^","'")
-		fldVal["dem-Name_F"] := fldval["Name_F"] := RegExReplace(ptDem["nameF"],"\^","'")
+		fldVal["dem-Name_L"] := fldval["Name_L"] := ptDem["nameL"]
+		fldVal["dem-Name_F"] := fldval["Name_F"] := ptDem["nameF"]
 		fldVal["dem-MRN"] := ptDem["mrn"] 
 		fldVal["dem-DOB"] := ptDem["DOB"] 
 		fldVal["dem-Sex"] := ptDem["Sex"]
@@ -5001,8 +5000,8 @@ CheckProc:
 	
 	;---Copy ptDem back to fldVal, whether fetched or not
 	fldVal.Name := ptDem["nameL"] ", " ptDem["nameF"]
-	fldVal["dem-Name_L"] := fldval["Name_L"] := RegExReplace(ptDem["nameL"],"\^","'")
-	fldVal["dem-Name_F"] := fldval["Name_F"] := RegExReplace(ptDem["nameF"],"\^","'")
+	fldVal["dem-Name_L"] := fldval["Name_L"] := ptDem["nameL"]
+	fldVal["dem-Name_F"] := fldval["Name_F"] := ptDem["nameF"]
 	fldVal["dem-MRN"] := fldval["MRN"] := ptDem["mrn"] 
 	fldVal["dem-DOB"] := ptDem["DOB"] 
 	fldVal["dem-Sex"] := ptDem["Sex"]
