@@ -6335,6 +6335,12 @@ countlines(hay,n) {
 	return max
 }
 
+exitError(txt) {
+	eventlog(txt)
+	MsgBox,,ERROR, % txt, 5
+	ExitApp
+}
+
 eventlog(event) {
 	global user, userinstance
 	comp := A_ComputerName
