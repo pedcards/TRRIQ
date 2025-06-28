@@ -6346,14 +6346,36 @@ eventlog(event) {
 ;	FileAppend, % timenow " ["  user "/" comp "] " event "`n", % "logs/" . sessdate . ".log"
 }
 
-FilePrepend( Text, Filename ) { 
-/*	from haichen http://www.autohotkey.com/board/topic/80342-fileprependa-insert-text-at-begin-of-file-ansi-text/?p=510640
+FilePrepend( Text, Filename ) {
+/*	Add text to start of file
+	Detect if text matches consecutive entries, return error 
 */
-    file:= FileOpen(Filename, "rw")
-    text .= File.Read()
-    file.pos:=0
-    File.Write(text)
-    File.Close()
+	tomatch := 5
+	matches := 0
+	RegExMatch(trim(Text,"`r`n"),"^.*\W(\w{4}\] .*)",test)
+
+	file := FileOpen(Filename, "rw")
+	Text .= file.Read()
+	file.pos := 0
+	file.Write(Text)
+	file.Close()
+
+	loop, parse, text, `n
+	{
+		textline := A_LoopField
+		if InStr(textline,test1) {
+			matches ++
+		} else {
+			break
+		}
+		if (A_Index=tomatch) {
+			break
+		}
+	}
+
+	if (matches=tomatch) {
+		throw true
+	}
 }
 
 countFiles(path) {
