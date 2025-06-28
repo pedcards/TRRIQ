@@ -6342,8 +6342,12 @@ eventlog(event) {
 	FormatTime, now, A_Now, yyyy.MM.dd||HH:mm:ss
 	name := "logs/" . sessdate . ".log"
 	txt := now " [" user "/" comp "/" userinstance "] " event "`n"
-	filePrepend(txt,name)
-;	FileAppend, % timenow " ["  user "/" comp "] " event "`n", % "logs/" . sessdate . ".log"
+	try filePrepend(txt,name)
+	catch e
+	
+	if (e) {
+		exitError("*** Runaway error.")
+	}
 }
 
 FilePrepend( Text, Filename ) {
