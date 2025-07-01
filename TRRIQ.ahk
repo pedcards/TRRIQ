@@ -4204,7 +4204,7 @@ epRead() {
 	RegExMatch(y.selectSingleNode("//call[@date=""" dlDate """]/EP").text, "Oi)" epStr, epSVC)
 	RegExMatch(y.selectSingleNode("//call[@date=""" dlDate """]/EP_dx").text, "Oi)" epStr, epDX)
 	ep := strQ(epDX.value(),"###",epSVC.value())
-	if !(ep := ymatch.value()) {
+	if !(ep) {																			; No EP or EP_dx in call.xml
 		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?",epStr,"Q")
 		if (ep="xClose") {
 			eventlog("Elec Forecast not complete. Quit EP selection.")
@@ -4213,7 +4213,7 @@ epRead() {
 		eventlog("Reading EP assigned to " ep ".")
 	}
 	
-	if (RegExMatch(fldval["dem-Ordering"], "Oi)" epStr, epOrder))  {
+	if (RegExMatch(fldval["dem-Ordering"], "Oi)" epStr, epOrder))  {					; Check if belongs to any EP
 		ep := epOrder.value()
 		fldval.MyPatient := ep
 	}
