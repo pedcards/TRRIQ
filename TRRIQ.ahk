@@ -4192,7 +4192,7 @@ epRead() {
 	RegExMatch(y.selectSingleNode("//call[@date=""" dlDate """]/EP_dx").text, "Oi)" epStr, epDX)
 	ep := strQ(epDX.value(),"###",epSVC.value())
 	if !(ep) {																			; No EP or EP_dx in call.xml
-		ep := cmsgbox("Electronic Forecast not complete","Which EP on Monday?",epStr,"Q")
+		ep := cmsgbox("Electronic Forecast not complete","Who is EP Diagnostic for today?",epStr,"Q")
 		if (ep="xClose") {
 			eventlog("Elec Forecast not complete. Quit EP selection.")
 			ep:=""
