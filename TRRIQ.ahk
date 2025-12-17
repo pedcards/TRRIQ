@@ -1503,6 +1503,33 @@ cleanDone() {
 	}
 	
 	arc.save("archive.xml")
+
+	progress,,% " ",Clean archives
+	ens := arc.selectNodes("/root/done/enroll")
+	t := ens.length
+	loop, % t
+	{
+		progress, % (A_Index/t)*100
+		en := ens.item(A_Index-1)
+		dt := en.selectSingleNode("date").text
+		if (dateDiff(dt,A_now)<365) {													; skip if within 1 year
+			Continue
+		}
+		yr := ParseDate(dt).yyyy
+		arcFn := "arch" yr ".xml"
+		if fileexist(arcFn) {
+			arc0 := new XML(arcFn)
+		} else {
+			arc0 := new XML("<root/>")
+			arc0.addElement("done","/root")
+			arc0.save(arcFn)
+		}
+		clone := en.cloneNode(true)
+		arc0.selectSingleNode("/root/done").appendChild(clone)
+		en.parentNode.removeChild(en)
+		arc0.save(arcFn)
+	}
+
 	writeSave(wq)
 	wq := new XML("worklist.xml")
 	FileDelete, .lock
