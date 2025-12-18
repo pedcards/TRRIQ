@@ -1516,13 +1516,17 @@ cleanDone() {
 			Continue
 		}
 		yr := ParseDate(dt).yyyy
-		arcFn := "arch" yr ".xml"
-		if fileexist(arcFn) {
-			arc0 := new XML(arcFn)
-		} else {
-			arc0 := new XML("<root/>")
-			arc0.addElement("done","/root")
-			arc0.save(arcFn)
+		progress, % (A_Index/t)*100, % A_Index "/" t, % "Clean archives " yr
+		if (yr!=yrLast) {
+			yrLast := yr
+			arcFn := "arch" yr ".xml"
+			if fileexist(arcFn) {
+				arc0 := new XML(arcFn)
+			} else {
+				arc0 := new XML("<root/>")
+				arc0.addElement("done","/root")
+				arc0.save(arcFn)
+			}
 		}
 		clone := en.cloneNode(true)
 		arc0.selectSingleNode("/root/done").appendChild(clone)
