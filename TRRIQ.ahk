@@ -1509,9 +1509,9 @@ cleanDone() {
 	t := ens.length
 	loop, % t
 	{
-		progress, % (A_Index/t)*100
 		en := ens.item(A_Index-1)
 		dt := en.selectSingleNode("date").text
+		uid := en.getAttribute("id")
 		if (dateDiff(dt,A_now)<365) {													; skip if within 1 year
 			Continue
 		}
@@ -1529,11 +1529,14 @@ cleanDone() {
 			}
 		}
 		clone := en.cloneNode(true)
-		arc0.selectSingleNode("/root/done").appendChild(clone)
+		if !IsObject(arc0.selectSingleNode("/root/done/enroll[@id='" uid "']")) {
+			arc0.selectSingleNode("/root/done").appendChild(clone)
+			arc0.save(arcFn)
+		}
 		en.parentNode.removeChild(en)
-		arc0.save(arcFn)
 	}
-
+	arc.save("archive.xml")
+	
 	writeSave(wq)
 	wq := new XML("worklist.xml")
 	FileDelete, .lock
