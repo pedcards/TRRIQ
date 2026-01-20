@@ -313,6 +313,7 @@ PhaseGUI:
 	Menu, menuHelp, Add, Instructions..., menuInstr
 	Menu, menuAdmin, Add, Toggle admin mode, toggleAdmin
 	Menu, menuAdmin, Add, Clean tempfiles, CleanTempFiles
+	Menu, menuAdmin, Add, Update physician list, physicianGrab
 	Menu, menuAdmin, Add, Send notification email, sendEmail
 	Menu, menuAdmin, Add, Find pending leftovers, cleanPending
 	Menu, menuAdmin, Add, Fix WQ device durations, fixDuration							; position for test menu
@@ -2604,6 +2605,14 @@ ftpGrab() {
 	WQlist()
 
 	return
+}
+
+physicianGrab() {
+	global path
+	Gui, phase:Hide
+	RunWait, PrevGrab.exe "Physicians"
+	Gui, phase:Show
+	WQlist()
 }
 
 cleanTempFiles() {
