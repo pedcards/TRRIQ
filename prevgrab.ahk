@@ -29,6 +29,7 @@ Config:
 
 	; A_Args[1] := "ftp"				;*******************************
 	; A_Args[1] := "enroll"				;*******************************
+	A_Args[1] := "physicians"			;*******************************
 
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
@@ -75,7 +76,15 @@ MainLoop:
 	} else {
 		gl.login := readIni("str_Login")
 
-		if (A_Args[1]="enroll") {
+		if (A_Args[1]="physicians") {
+			webStr.Physicians := readIni("str_Physicians")
+			PreventiceWebGrab("Physicians")
+
+			wb.QuitAllSessions()
+			wb.driver.Exit()
+			ExitApp
+		}
+ 		if (A_Args[1]="enroll") {
 			webStr.Enrollment := readIni("str_Enrollment")
 			PreventiceWebGrab("Enrollment")
 		}
@@ -114,6 +123,7 @@ PreventiceWebGrab(phase) {
 	}
 	wbWaitBusy(gl.settings.webwait)
 	prvFunc := web.fx
+	gl.docs := ""
 	loop
 	{
 		progress,,% "Page " A_index,
@@ -158,6 +168,10 @@ PreventiceWebPager(phase,chgStr,btnStr) {
 			return
 		}
 		gl.Page.getElementsByClassName(btnStr)[0].click() 								; click when class=btnstr
+	}
+	if (phase="Physicians") {
+		pg1 := gl.Page.getElementById(chgStr).value
+		gl.Page.getElementByID(btnStr).click()
 	}
 	
 	t0 := A_TickCount
@@ -465,6 +479,42 @@ enrollcheck(params) {
 	
 ; 	returns id if finds a match, else null
 	return id																			
+}
+
+parsePreventicePhysicians(tbl) {
+	global prevtxt, gl, wq
+	
+	done := 0
+	
+	ttbl := tbl.innertext "`n"
+	ttbl := RegExReplace(ttbl, "^.*?Deactivate Physician\n")
+	Clipboard:=ttbl
+	; n := 1
+	; While n
+	; {
+	; 	Progress, % 10*A_Index
+	; 	trow := stregX(ttbl,"",n,0,"\n",0,n)
+	; 	if (trow="") {
+	; 		break
+	; 	}
+	; 	res := []
+	; 	RowPhys := RegExMatch(trow, "(.*?)\s+(\d{8,})\s+(\d{3}-\d{3}-\d{4})?", rr)
+	; 		res.name := trim(rr1)
+	; 		res.npi := rr2
+	; 		res.ofc := rr3
+
+	; 	res.name := format("{:U}",res.name)
+	; 	date := parseDate(res.date).YMD
+	; 	done ++
+		
+	; 	docstxt .= "docs|" 															; prepends enroll item so will be read in chronologic
+	; 		. res.name "|"																	; rather than reverse chronologic order
+	; 		. res.npi "|"
+	; 		. res.ofc "`n"
+
+	; 	gl.enroll_ct ++
+	; }
+	gl.docs .= ttbl
 }
 
 parsePreventiceInventory(tbl) {
