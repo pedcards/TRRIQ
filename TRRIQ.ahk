@@ -2052,7 +2052,8 @@ readWQlv:
 		Gui, phase:Hide
 		
 		progress, 25 , % fnam, Extracting data
-		processHL7(path.PrevHL7in . fnam)												; extract DDE to fldVal, and PDF into hl7Dir
+		FileMove, % path.PrevHL7in fnam, % path.PrevHL7in "processing\" fnam 
+		processHL7(path.PrevHL7in "processing\" fnam)									; extract DDE to fldVal, and PDF into hl7Dir
 		moveHL7dem()																	; prepopulate the fldval["dem-"] values
 		
 		checkEpicOrder()																; check for presence of valid Epic order
