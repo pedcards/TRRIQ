@@ -2046,6 +2046,12 @@ readWQlv:
 		WQlist()
 		return
 	}
+	if FileExist(path.PrevHL7in "processing\" fnam) {
+		eventlog("WQlv " fnam " being processed.")
+		MsgBox, 262208, File handling, File being processed.
+		WQlist()
+		return
+	}
 	
 	if (fExt="hl7") {																	; hl7 file (could still be Holter or CEM)
 		eventlog("===> " fnam )
