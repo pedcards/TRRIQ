@@ -2046,13 +2046,20 @@ readWQlv:
 		WQlist()
 		return
 	}
+	if FileExist(path.PrevHL7in "processing\" fnam) {
+		eventlog("WQlv " fnam " being processed.")
+		MsgBox, 262208, File handling, File being processed.
+		WQlist()
+		return
+	}
 	
 	if (fExt="hl7") {																	; hl7 file (could still be Holter or CEM)
 		eventlog("===> " fnam )
 		Gui, phase:Hide
 		
 		progress, 25 , % fnam, Extracting data
-		processHL7(path.PrevHL7in . fnam)												; extract DDE to fldVal, and PDF into hl7Dir
+		FileMove, % path.PrevHL7in fnam, % path.PrevHL7in "processing\" fnam 
+		processHL7(path.PrevHL7in "processing\" fnam)									; extract DDE to fldVal, and PDF into hl7Dir
 		moveHL7dem()																	; prepopulate the fldval["dem-"] values
 		
 		checkEpicOrder()																; check for presence of valid Epic order
@@ -4048,7 +4055,7 @@ outputfiles:
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
 	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
-	FileMove, % path.PrevHL7in fileNam ".hl7", .\tempfiles\%fileNam%.hl7
+	FileMove, % path.PrevHL7in "processing\" fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 
 	/*	Move full disclosure to FullDisclosure folder
