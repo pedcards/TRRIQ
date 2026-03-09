@@ -2080,6 +2080,10 @@ readWQlv:
 		MsgBox, 16, , Unrecognized filetype (somehow)
 		Return
 	}
+
+	if !(fldval.done)||(fetchQuit) {													; either returns not done or is fetchQuit
+		FileMove, % path.PrevHL7in "processing\" fnam, % path.PrevHL7in fnam			; move hl7 file back from processing to active 
+	}
 	
 	if (fldval.done) {
 		epRead()																		; find out which EP is reading today
