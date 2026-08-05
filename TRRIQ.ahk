@@ -3466,7 +3466,7 @@ BGregister(type) {
 	Create <pending/enroll> based on <orders/enroll> node
 	Generate and Preventice ORM
 */
-	global wq, ptDem, fetchQuit, isDevt
+	global wq, ptDem, fetchQuit, isDevt, site
 	SetTimer, idleTimer, Off
 	
 	Switch type
@@ -3525,6 +3525,11 @@ BGregister(type) {
 	} else {
 		ptDem.hookup := "Office"
 		eventlog("Selected OFFICE hookup.")
+	}
+	if (site != ptDem.loc) {
+		i := cMsgBox("Location mismatch"
+			, "Order placed for " ptDem.loc " but current user located at " site ".`n`nRegister to which clinic?"
+			, "*1: " ptDem.loc "|2: " site)
 	}
 	
 	fetchQuit := false
