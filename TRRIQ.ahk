@@ -40,7 +40,7 @@ IfInString, fileDir, TEST
 if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
 	FileAppend, % A_Now ", " user "|" userinstance "|" A_ComputerName "`n", .\files\legacy.txt
-	MsgBox 0x30, Shortcut error
+	MsgBox 0x1030, Shortcut error
 		, % "Obsolete TRRIQ shortcut!`n`n"
 		. "Please notify Igor Gurvits or Jim Gray to update the shortcut on this machine: " A_ComputerName
 }
