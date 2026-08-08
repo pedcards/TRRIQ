@@ -3531,7 +3531,10 @@ BGregister(type) {
 		i := cMsgBox("Location mismatch"
 			, "Order placed for " ptDem.loc " but current user located at " site ".`n`nRegister to which clinic?"
 			, "*1: " ptDem.loc "|2: " site)
-		ptDem.loc := SubStr(i,4)
+		if (InStr(i, "2: ")) {
+			eventlog("Order placed in " ptDem.loc "; user changed loc to " site ".")
+			ptDem.loc := site
+		}
 	}
 
 	fetchQuit := false
