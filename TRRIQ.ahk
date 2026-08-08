@@ -3526,14 +3526,16 @@ BGregister(type) {
 		ptDem.hookup := "Office"
 		eventlog("Selected OFFICE hookup.")
 	}
+
 	if (site != ptDem.loc) {
 		i := cMsgBox("Location mismatch"
 			, "Order placed for " ptDem.loc " but current user located at " site ".`n`nRegister to which clinic?"
 			, "*1: " ptDem.loc "|2: " site)
+		ptDem.loc := SubStr(i,4)
 	}
-	
+
 	fetchQuit := false
-	gosub getDem																		; need to grab CIS demographics
+	gosub getDem																		; need to grab EHR demographics
 	if (fetchQuit=true) {
 		eventlog("Cancelled getDem.")
 		return
