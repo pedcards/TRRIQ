@@ -64,6 +64,7 @@ sites0 := site.ignored																	; sites we are not tracking <tracked>N</t
 sitesLong := site.long																	; {CIS:TAB}
 sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
 sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
+sitesData := site.data																	; keep wkslocation data for future searches
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */

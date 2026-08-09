@@ -216,5 +216,6 @@ getSites(wksName) {
 			, long:locationLong
 			, code:codeNum
 			, facility:codeName
-			, tab:tabname}
+			, tab:tabname
+			, data:locationData}
 }	
