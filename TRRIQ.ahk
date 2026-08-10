@@ -40,7 +40,7 @@ IfInString, fileDir, TEST
 if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
 	FileAppend, % A_Now ", " user "|" userinstance "|" A_ComputerName "`n", .\files\legacy.txt
-	MsgBox 0x30, Shortcut error
+	MsgBox 0x1030, Shortcut error
 		, % "Obsolete TRRIQ shortcut!`n`n"
 		. "Please notify Igor Gurvits or Jim Gray to update the shortcut on this machine: " A_ComputerName
 }
@@ -64,6 +64,7 @@ sites0 := site.ignored																	; sites we are not tracking <tracked>N</t
 sitesLong := site.long																	; {CIS:TAB}
 sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
 sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
+sitesData := site.data																	; keep wkslocation data for future searches
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -1167,22 +1168,24 @@ WQpreventiceResults(ByRef wqfiles) {
 	Add line to WQlv_in
 	Add line to wqfiles
 */
-	global wq, path, sites0, hl7DirMap, monSerialStrings, fldval
+	global wq, path, sites0, hl7DirMap, monSerialStrings, fldval, sitesData
 	
 	loop, Files, % path.PrevHL7in "*.hl7"
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
+		msh := {}
 		obr := {}
 		pv1 := {}
 		pid := {}
 		obxFull := ""
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % path.PrevHL7in fileIn
+			msh:= strSplit(strX(tmptxt,"MSH",1,4,"`r",1),"|")
 			obr:= splitSeg("OBR",tmptxt)
 				obr.req := trim(obr.2," ^")												; wqid from Preventice registration (PV1_19)
 				obr.prov := strX(obr.16,"^",1,1,"^",1)
-				obr.site := strX(obr.prov,"-",0,1,"",0)
+				obr.site := sitesData.selectSingleNode("//locations/location[hl7num='" msh.5 "']/tabname").text
 			pv1:= splitSeg("PV1",tmptxt)
 				pv1.dt := SubStr(pv1.39,1,8)											; pull out date of entry/registration (will not match for send out)
 			pid:= splitSeg("PID",tmptxt)
@@ -3466,7 +3469,7 @@ BGregister(type) {
 	Create <pending/enroll> based on <orders/enroll> node
 	Generate and Preventice ORM
 */
-	global wq, ptDem, fetchQuit, isDevt
+	global wq, ptDem, fetchQuit, isDevt, site
 	SetTimer, idleTimer, Off
 	
 	Switch type
@@ -3526,9 +3529,19 @@ BGregister(type) {
 		ptDem.hookup := "Office"
 		eventlog("Selected OFFICE hookup.")
 	}
-	
+
+	if (site != ptDem.loc) {
+		i := cMsgBox("Location mismatch"
+			, "Order placed for " ptDem.loc " but current user located at " site ".`n`nRegister to which clinic?"
+			, "*1: " ptDem.loc "|2: " site)
+		if (InStr(i, "2: ")) {
+			eventlog("Order placed in " ptDem.loc "; user changed loc to " site ".")
+			ptDem.loc := site
+		}
+	}
+
 	fetchQuit := false
-	gosub getDem																		; need to grab CIS demographics
+	gosub getDem																		; need to grab EHR demographics
 	if (fetchQuit=true) {
 		eventlog("Cancelled getDem.")
 		return
