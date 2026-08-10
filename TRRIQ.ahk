@@ -1168,22 +1168,24 @@ WQpreventiceResults(ByRef wqfiles) {
 	Add line to WQlv_in
 	Add line to wqfiles
 */
-	global wq, path, sites0, hl7DirMap, monSerialStrings, fldval
+	global wq, path, sites0, hl7DirMap, monSerialStrings, fldval, sitesData
 	
 	loop, Files, % path.PrevHL7in "*.hl7"
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
+		msh := {}
 		obr := {}
 		pv1 := {}
 		pid := {}
 		obxFull := ""
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % path.PrevHL7in fileIn
+			msh:= strSplit(strX(tmptxt,"MSH",1,4,"`r",1),"|")
 			obr:= splitSeg("OBR",tmptxt)
 				obr.req := trim(obr.2," ^")												; wqid from Preventice registration (PV1_19)
 				obr.prov := strX(obr.16,"^",1,1,"^",1)
-				obr.site := strX(obr.prov,"-",0,1,"",0)
+				obr.site := sitesData.selectSingleNode("//locations/location[hl7num='" msh.5 "']/tabname").text
 			pv1:= splitSeg("PV1",tmptxt)
 				pv1.dt := SubStr(pv1.39,1,8)											; pull out date of entry/registration (will not match for send out)
 			pid:= splitSeg("PID",tmptxt)
