@@ -280,8 +280,8 @@ PhaseGUI:
 	Loop, parse, sites, |
 	{
 		i := A_Index
-		site := A_LoopField
-		Gui, Tab, % site
+		siteLoc := A_LoopField
+		Gui, Tab, % siteLoc
 		Gui, Add, Listview
 			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
 			, ID|Enrolled|FedEx|Uploaded|Notes|MRN|Enrolled Name|Device|Provider
@@ -911,14 +911,14 @@ WQclearSites0() {
 
 	loop, parse, sites0, |
 	{
-		site := A_LoopField
-		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site=""" site """]")).length
+		siteLoc := A_LoopField
+		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site=""" siteLoc """]")).length
 		{
 			k := ens.item(A_Index-1)
 			clone := k.cloneNode(true)
 			wq.selectSingleNode("/root/done").appendChild(clone)						; copy k.clone to DONE
 			k.parentNode.removeChild(k)													; remove k node
-			eventlog("Moved " site " record " k.selectSingleNode("mrn").text " " k.selectSingleNode("name").text)
+			eventlog("Moved " siteLoc " record " k.selectSingleNode("mrn").text " " k.selectSingleNode("name").text)
 		}
 	}
 	Return
@@ -1195,8 +1195,8 @@ WQpreventiceResults(ByRef wqfiles) {
 			obxFull:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
 			
 			if (obr.site="") {															; no "-site" in OBR.17 name
-				if (site:=checkPSR(pid,obr,pv1).clinic) {
-					obr.site:=site
+				if (siteLoc=checkPSR(pid,obr,pv1).clinic) {
+					obr.site:=siteLoc
 					eventlog(fileIn " - " obr.prov 
 					. ". No site found in ORU. Pulled from Patient Status Report.")
 				} else {
@@ -1355,10 +1355,10 @@ WQpendingTabs() {
 	Loop, parse, sites, |
 	{
 		i := A_Index
-		site := A_LoopField
+		siteLoc := A_LoopField
 		Gui, ListView, WQlv%i%
 		LV_Delete()																		; refresh each respective LV
-		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site=""" site """]")).length
+		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site=""" siteLoc """]")).length
 		{
 			k := ens.item(A_Index-1)
 			id	:= k.getAttribute("id")
@@ -1473,18 +1473,18 @@ cleanDone() {
 		en := ens.item(A_Index-1)
 		dt := en.selectSingleNode("date").text
 		name := en.selectSingleNode("name").text
-		site := en.selectSingleNode("site").text
+		siteLoc := en.selectSingleNode("site").text
 		uid := en.getAttribute("id")
 
-		if (name="" && site="") {
+		if (name="" && siteLoc="") {
 			en.parentNode.removeChild(en)
 			eventlog("Removed blank UID " uid)
 			Continue
 		}
 
-		if (sites0~=site) {
+		if (sites0~=siteLoc) {
 			en.parentNode.removeChild(en)
-			eventlog("Removed " site " record " uid " - " name)
+			eventlog("Removed " siteLoc " record " uid " - " name)
 			Continue
 		}
 
@@ -3530,13 +3530,14 @@ BGregister(type) {
 		eventlog("Selected OFFICE hookup.")
 	}
 
-	if (site != ptDem.loc) {
+	if (site.tab != ptDem.loc) {
+		eventlog("Order placed in " ptDem.loc ", user located at " site.tab ".")
 		i := cMsgBox("Location mismatch"
-			, "Order placed for " ptDem.loc " but current user located at " site ".`n`nRegister to which clinic?"
-			, "*1: " ptDem.loc "|2: " site)
+			, "Order placed for " ptDem.loc " but current user located at " site.tab ".`n`nRegister to which clinic?"
+			, "*1: " ptDem.loc "|2: " site.tab)
 		if (InStr(i, "2: ")) {
-			eventlog("Order placed in " ptDem.loc "; user changed loc to " site ".")
-			ptDem.loc := site
+			eventlog("User changed loc to " site.tab ".")
+			ptDem.loc := site.tab
 		}
 	}
 
