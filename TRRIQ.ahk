@@ -4,12 +4,6 @@
 	Sends report to HIM
 */
 
-/*	TODO clear_old_orders
-	* Add loop in cleanDone() upon closure
-	* ReadPrevTxt or parsePrevEnroll scans each node in PSR
-
-*/
-
 #Requires AutoHotkey v1.1
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force  ; only allow one running instance per user
@@ -46,7 +40,7 @@ IfInString, fileDir, TEST
 if (A_Args[1]~="launch") {
 	eventlog("***** launched from legacy shortcut.")
 	FileAppend, % A_Now ", " user "|" userinstance "|" A_ComputerName "`n", .\files\legacy.txt
-	MsgBox 0x30, Shortcut error
+	MsgBox 0x1030, Shortcut error
 		, % "Obsolete TRRIQ shortcut!`n`n"
 		. "Please notify Igor Gurvits or Jim Gray to update the shortcut on this machine: " A_ComputerName
 }
@@ -70,6 +64,7 @@ sites0 := site.ignored																	; sites we are not tracking <tracked>N</t
 sitesLong := site.long																	; {CIS:TAB}
 sitesCode := site.code																	; {"MAIN":7343} 4 digit code for sending facility
 sitesFacility := site.facility															; {"MAIN":"GB-SCH-SEATTLE"}
+sitesData := site.data																	; keep wkslocation data for future searches
 
 /*	Read outdocs.csv for Cardiologist and Fellow names 
 */
@@ -285,8 +280,8 @@ PhaseGUI:
 	Loop, parse, sites, |
 	{
 		i := A_Index
-		site := A_LoopField
-		Gui, Tab, % site
+		siteLoc := A_LoopField
+		Gui, Tab, % siteLoc
 		Gui, Add, Listview
 			, % "-Multi Grid BackgroundSilver " lvDim " gWQtask vWQlv"i " hwndHLV"i
 			, ID|Enrolled|FedEx|Uploaded|Notes|MRN|Enrolled Name|Device|Provider
@@ -917,14 +912,14 @@ WQclearSites0() {
 
 	loop, parse, sites0, |
 	{
-		site := A_LoopField
-		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site=""" site """]")).length
+		siteLoc := A_LoopField
+		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site=""" siteLoc """]")).length
 		{
 			k := ens.item(A_Index-1)
 			clone := k.cloneNode(true)
 			wq.selectSingleNode("/root/done").appendChild(clone)						; copy k.clone to DONE
 			k.parentNode.removeChild(k)													; remove k node
-			eventlog("Moved " site " record " k.selectSingleNode("mrn").text " " k.selectSingleNode("name").text)
+			eventlog("Moved " siteLoc " record " k.selectSingleNode("mrn").text " " k.selectSingleNode("name").text)
 		}
 	}
 	Return
@@ -1174,22 +1169,24 @@ WQpreventiceResults(ByRef wqfiles) {
 	Add line to WQlv_in
 	Add line to wqfiles
 */
-	global wq, path, sites0, hl7DirMap, monSerialStrings, fldval
+	global wq, path, sites0, hl7DirMap, monSerialStrings, fldval, sitesData
 	
 	loop, Files, % path.PrevHL7in "*.hl7"
 	{
 		fileIn := A_LoopFileName
 		x := StrSplit(fileIn,"_")
+		msh := {}
 		obr := {}
 		pv1 := {}
 		pid := {}
 		obxFull := ""
 		if !(id := hl7dirMap[fileIn]) {													; will be true if have found this wqid in this instance, else null
 			fileread, tmptxt, % path.PrevHL7in fileIn
+			msh:= strSplit(strX(tmptxt,"MSH",1,4,"`r",1),"|")
 			obr:= splitSeg("OBR",tmptxt)
 				obr.req := trim(obr.2," ^")												; wqid from Preventice registration (PV1_19)
 				obr.prov := strX(obr.16,"^",1,1,"^",1)
-				obr.site := strX(obr.prov,"-",0,1,"",0)
+				obr.site := sitesData.selectSingleNode("//locations/location[hl7num='" msh.5 "']/tabname").text
 			pv1:= splitSeg("PV1",tmptxt)
 				pv1.dt := SubStr(pv1.39,1,8)											; pull out date of entry/registration (will not match for send out)
 			pid:= splitSeg("PID",tmptxt)
@@ -1199,8 +1196,8 @@ WQpreventiceResults(ByRef wqfiles) {
 			obxFull:= InStr(tmptxt,"OBX|1|TX|HOLTER^Full Disclosure")					; true if this is Full Disclosure ORU
 			
 			if (obr.site="") {															; no "-site" in OBR.17 name
-				if (site:=checkPSR(pid,obr,pv1).clinic) {
-					obr.site:=site
+				if (siteLoc=checkPSR(pid,obr,pv1).clinic) {
+					obr.site:=siteLoc
 					eventlog(fileIn " - " obr.prov 
 					. ". No site found in ORU. Pulled from Patient Status Report.")
 				} else {
@@ -1359,10 +1356,10 @@ WQpendingTabs() {
 	Loop, parse, sites, |
 	{
 		i := A_Index
-		site := A_LoopField
+		siteLoc := A_LoopField
 		Gui, ListView, WQlv%i%
 		LV_Delete()																		; refresh each respective LV
-		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site=""" site """]")).length
+		Loop, % (ens:=wq.selectNodes("/root/pending/enroll[site=""" siteLoc """]")).length
 		{
 			k := ens.item(A_Index-1)
 			id	:= k.getAttribute("id")
@@ -1477,18 +1474,18 @@ cleanDone() {
 		en := ens.item(A_Index-1)
 		dt := en.selectSingleNode("date").text
 		name := en.selectSingleNode("name").text
-		site := en.selectSingleNode("site").text
+		siteLoc := en.selectSingleNode("site").text
 		uid := en.getAttribute("id")
 
-		if (name="" && site="") {
+		if (name="" && siteLoc="") {
 			en.parentNode.removeChild(en)
 			eventlog("Removed blank UID " uid)
 			Continue
 		}
 
-		if (sites0~=site) {
+		if (sites0~=siteLoc) {
 			en.parentNode.removeChild(en)
-			eventlog("Removed " site " record " uid " - " name)
+			eventlog("Removed " siteLoc " record " uid " - " name)
 			Continue
 		}
 
@@ -1934,8 +1931,11 @@ lateReportNotify() {
 			read := e0.getAttribute("read")
 			epStr := epList[read]
 			name := ParseName(epStr).init
-			tmp := httpComm("late&to=" name)
-			eventlog("Notification email " tmp " to " name)
+			if !InStr(thisrun, name) {
+				thisrun .= name "|"
+				tmp := httpComm("late&to=" name)
+				eventlog("Notification email " tmp " to " name)
+			}
 		}
 	}
 	Return
@@ -2047,13 +2047,20 @@ readWQlv:
 		WQlist()
 		return
 	}
+	if FileExist(path.PrevHL7in "processing\" fnam) {
+		eventlog("WQlv " fnam " being processed.")
+		MsgBox, 262208, File handling, File being processed.
+		WQlist()
+		return
+	}
 	
 	if (fExt="hl7") {																	; hl7 file (could still be Holter or CEM)
 		eventlog("===> " fnam )
 		Gui, phase:Hide
 		
 		progress, 25 , % fnam, Extracting data
-		processHL7(path.PrevHL7in . fnam)												; extract DDE to fldVal, and PDF into hl7Dir
+		FileMove, % path.PrevHL7in fnam, % path.PrevHL7in "processing\" fnam 
+		processHL7(path.PrevHL7in "processing\" fnam)									; extract DDE to fldVal, and PDF into hl7Dir
 		moveHL7dem()																	; prepopulate the fldval["dem-"] values
 		
 		checkEpicOrder()																; check for presence of valid Epic order
@@ -2073,6 +2080,10 @@ readWQlv:
 		
 		MsgBox, 16, , Unrecognized filetype (somehow)
 		Return
+	}
+
+	if !(fldval.done)||(fetchQuit) {													; either returns not done or is fetchQuit
+		FileMove, % path.PrevHL7in "processing\" fnam, % path.PrevHL7in fnam			; move hl7 file back from processing to active 
 	}
 	
 	if (fldval.done) {
@@ -3470,7 +3481,7 @@ BGregister(type) {
 	Create <pending/enroll> based on <orders/enroll> node
 	Generate and Preventice ORM
 */
-	global wq, ptDem, fetchQuit, isDevt
+	global wq, ptDem, fetchQuit, isDevt, site
 	SetTimer, idleTimer, Off
 	
 	Switch type
@@ -3530,9 +3541,20 @@ BGregister(type) {
 		ptDem.hookup := "Office"
 		eventlog("Selected OFFICE hookup.")
 	}
-	
+
+	if (site.tab != ptDem.loc) {
+		eventlog("Order placed in " ptDem.loc ", user located at " site.tab ".")
+		i := cMsgBox("Location mismatch"
+			, "Order placed for " ptDem.loc " but current user located at " site.tab ".`n`nRegister to which clinic?"
+			, "*1: " ptDem.loc "|2: " site.tab)
+		if (InStr(i, "2: ")) {
+			eventlog("User changed loc to " site.tab ".")
+			ptDem.loc := site.tab
+		}
+	}
+
 	fetchQuit := false
-	gosub getDem																		; need to grab CIS demographics
+	gosub getDem																		; need to grab EHR demographics
 	if (fetchQuit=true) {
 		eventlog("Cancelled getDem.")
 		return
@@ -4057,7 +4079,7 @@ outputfiles:
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
 	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
-	FileMove, % path.PrevHL7in fileNam ".hl7", .\tempfiles\%fileNam%.hl7
+	FileMove, % path.PrevHL7in "processing\" fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 
 	/*	Move full disclosure to FullDisclosure folder
