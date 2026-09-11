@@ -1930,8 +1930,11 @@ lateReportNotify() {
 			read := e0.getAttribute("read")
 			epStr := epList[read]
 			name := ParseName(epStr).init
-			tmp := httpComm("late&to=" name)
-			eventlog("Notification email " tmp " to " name)
+			if !InStr(thisrun, name) {
+				thisrun .= name "|"
+				tmp := httpComm("late&to=" name)
+				eventlog("Notification email " tmp " to " name)
+			}
 		}
 	}
 	Return
