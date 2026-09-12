@@ -4471,8 +4471,8 @@ makeORU(wqid) {
 	} 
 	else
 	{
-		rtf := "###"
-		EPdoc := "###"
+		rtf := buildRTF()
+		EPdoc := epList[fldval["dem-Reading"]]
 	}
 	fldval.obr4 := monEpicEAP[montype]
 	obrProv := fldvalProv()
