@@ -4600,6 +4600,30 @@ makeTestORU() {
 	return
 }
 
+BuildRTF() {
+	global fldval
+
+	rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
+	rtf .= "\E\pard\E\cf1\E\b\E\f0\E\fs22\E\lang1033 "
+	rtf .= "TEST INFORMATION\E\b0\E\line "
+	rtf .= "Test Date(s): " fldval["dem-Test_date"] strQ(fldval["dem-Test_end"]," - ###") "\E\line "
+	rtf .= "Ordering Provider: "  "\E\line "
+	rtf .= "Interpreting Provider: "  "\E\line "
+	rtf .= "Indication(s) for Holter Monitoring\E\line "  "\E\line\E\line "
+	
+	rtf .= "\E\b HOLTER INTERPRETATION\E\b0\E\line "
+	rtf .= "***\E\line\E\line "
+
+	rtf .= "\E\b HOLTER DATA\E\b0\E\line "
+	rtf .= "\E\pard\E\tx1500\E\tx3750\E\tx5700 "
+	rtf .= "\E\trowd\E\cellx1500\E\cellx3000\E\cellx4500\E\cellx6000 "
+	rtf .= "\E\intbl Value 1\E\cell\E\intbl Value 2\E\cell \E\row "
+
+	rtf .= " }"
+
+	return rtf
+}
+
 fldvalProv() {
 	global fldval, Docs
 	attg := fldval.OBR_ProviderCode "^"
