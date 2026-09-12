@@ -4483,7 +4483,7 @@ makeORU(wqid) {
 		, 4:fldval.obr4
 		, 7:fldval.date
 		, 16:obrProv.attg
-		, 25:"F"
+		, 25:"P"
 		, 28:obrProv.cc																	; for inpatient or fellow ordered
 		, 32:EPdoc })																	; Epic test: Substitute reading EP string "NPI^LAST^FIRST"
 	
@@ -4491,7 +4491,7 @@ makeORU(wqid) {
 		,{2:"FT"
 		, 3:"&GDT^HOLTER/EVENT RECORDER REPORT"
 		, 5:rtf																			; Epic test: Substitute test rtf
-		, 11:"F"
+		, 11:"P"
 		, 14:hl7time})
 	
 	if (montype~="BGH") {																; no DDE for CEM
