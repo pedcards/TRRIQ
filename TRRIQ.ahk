@@ -4466,12 +4466,12 @@ makeORU(wqid) {
 		, 16:obrProv.attg
 		, 25:"P"
 		, 28:obrProv.cc																	; for inpatient or fellow ordered
-		, 32:EPdoc })																	; Epic test: Substitute reading EP string "NPI^LAST^FIRST"
+		, 32:EPdoc })
 	
 	buildHL7("OBX"
 		,{2:"FT"
 		, 3:"&GDT^HOLTER/EVENT RECORDER REPORT"
-		, 5:rtf																			; Epic test: Substitute test rtf
+		, 5:fldval.rtf
 		, 11:"P"
 		, 14:hl7time})
 	
