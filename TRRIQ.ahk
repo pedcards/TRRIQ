@@ -4456,24 +4456,8 @@ makeORU(wqid) {
 		,{19:fldval.encnum
 		, 50:wqid})
 	
-
-/*	Insert fake RTF 
-	with reading EP	and monType in OBR_4
-*/
-	if (isDevt=true) {
-		MsgBox, 36, Testing, Create ORU with fake RTF and reading EP?
-	}
-	IfMsgBox, Yes
-	{
-	;~ if (fldval.MSH_ctrlID~="EPIC") {
-		FileRead, rtf, .\files\test-RTF.txt
-		EPdoc := epList[fldval["dem-Reading"]]
-	} 
-	else
-	{
-		rtf := buildRTF()
-		EPdoc := epList[fldval["dem-Reading"]]
-	}
+	rtf := buildRTF()
+	EPdoc := epList[fldval["dem-Reading"]]
 	fldval.obr4 := monEpicEAP[montype]
 	obrProv := fldvalProv()
 
