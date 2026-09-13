@@ -4454,7 +4454,6 @@ makeORU(wqid) {
 		,{19:fldval.encnum
 		, 50:wqid})
 	
-	rtf := buildRTF()
 	EPdoc := epList[fldval["dem-Reading"]]
 	fldval.obr4 := monEpicEAP[montype]
 	obrProv := fldvalProv()
@@ -5128,6 +5127,7 @@ Holter_BGM_SL_HL7:
 		return																			; fetchGUI was quit, so skip processing
 	}
 	
+	fldval.rtf := BuildRTF()
 	fieldsToCSV()
 	fieldcoladd("","INTERP","")															; fldval["Narrative"]
 	fieldcoladd("","Mon_type","Holter")
@@ -5162,6 +5162,7 @@ Holter_BGM_EL_HL7:
 		return																			; fetchGUI was quit, so skip processing
 	}
 	
+	fldval.rtf := BuildRTF()
 	fieldsToCSV()
 	fieldcoladd("","INTERP","")															; fldval["Narrative"]
 	fieldcoladd("","Mon_type","Holter")
@@ -5542,6 +5543,7 @@ Event_BGH_Hl7:
 		return													; fetchGUI was quit, so skip processing
 	}
 	
+	fldval.rtf := BuildRTF()
 	fieldstoCSV()
 	
 	fieldcoladd("","Mon_type","Event")
