@@ -4582,9 +4582,10 @@ makeTestORU() {
 }
 
 BuildRTF() {
-	global fldval
+	global fldval, monType
 
-	rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
+	if (monType~="PR|HOL|Zio|Mini|BGM") {
+		rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
 		 . "\E\pard\E\cf1\E\f0\E\fs22\E\lang1033 "
 		 . "Test Date(s): " fldval["dem-Test_date"] strQ(fldval["dem-Test_end"]," - ###") "\E\par\E\par "
 		 . "\E\ul Indication(s) for Holter Monitoring:\E\ul0\E\par "
@@ -4650,9 +4651,20 @@ BuildRTF() {
 			. "\E\intbl Bi/Trigeminy\E\cell" . "\E\intbl " rtfVal("sve-Bigem") "/" rtfVal("sve-Trigem") "\E\cell"
 		 . "\E\row }"
 		 . " }"
+	} else if (monType="BGH") {
+		rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
+		 . "\E\pard\E\cf1\E\f0\E\fs22\E\lang1033 "
+		 . "Test Date(s): " fldval["dem-Test_date"] strQ(fldval["dem-Test_end"]," - ###") "\E\par\E\par "
+		 . "\E\ul Indication(s) for Event Monitoring:\E\ul0\E\par "
+		 . fldval["dem-Indication"] "\E\par\E\par "
+	
+		 . "\E\b INTERPRETATION\E\b0\E\par "
+		 . "***\E\par\E\par "
+
+		 . " }"
+	}
 
 	return rtf
-
 }
 rtfVal(val) {
 	global fldval
