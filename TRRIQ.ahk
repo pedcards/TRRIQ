@@ -3965,8 +3965,6 @@ ProcessHl7PDF:
 		gosub Holter_BGM_EL_HL7
 	} else if (fldVal.dev~="Mini(?!\sEL|\sPlus)") {										; May be able to consolidate EL and SL
 		gosub Holter_BGM_SL_Hl7															; as the reports will be essentiall identical
-	} else if (fldVal.dev~="Mortara") {
-		gosub Holter_Pr_Hl7
 	} else {
 		eventlog("No match. OBR_TestCode=" type ", ftype=" ftype ".")
 		MsgBox % "No filetype match!"
