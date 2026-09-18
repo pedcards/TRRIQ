@@ -4584,88 +4584,90 @@ makeTestORU() {
 BuildRTF() {
 	global fldval, monType
 
+	sp := " "
+	par := "\E\par "
+	cell := "\E\intbl\E\cell "
+	row := "\E\row "
+
 	if (monType~="PR|HOL|Zio|Mini|BGM") {
 		rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
-		 . "\E\pard\E\cf1\E\f0\E\fs22\E\lang1033 "
-		 . "Test Date(s): " fldval["dem-Test_date"] strQ(fldval["dem-Test_end"]," - ###") "\E\par\E\par "
-		 . "\E\ul Indication(s) for Holter Monitoring:\E\ul0\E\par "
-		 . fldval["dem-Indication"] "\E\par\E\par "
-	
-		 . "\E\b HOLTER INTERPRETATION\E\b0\E\par "
-		 . "***\E\par\E\par "
-
-		 . "\E\b HOLTER DATA\E\b0\E\par "
-		 . "{\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000"
-			. "\E\intbl Min HR\E\cell"
-			. "\E\intbl " rtfVal("hrd-Min") strQ(fldval["hrd-Min_time"],"   (###)") "\E\cell"
-			. "\E\intbl Recording Time\E\cell"
-			. "\E\intbl " fldval["dem-Recording_time"] "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Max HR\E\cell" 
-			. "\E\intbl " rtfVal("hrd-Max") strQ(fldval["hrd-Max_time"],"   (###)") "\E\cell"
-			. "\E\intbl Analysis Time\E\cell"
-			. "\E\intbl " fldval["dem-Analysis_time"] "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Avg HR\E\cell" . "\E\intbl " rtfVal("hrd-Avg") "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Total QRS\E\cell" . "\E\intbl " rtfVal("hrd-Total_beats") "\E\cell"
-		 . "\E\row }"
-		 . "\E\par "
-		 . "{\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000"
-			. "\E\intbl Total VE Beats\E\cell" . "\E\intbl " rtfVal("ve-Total") "\E\cell"
-			. "\E\intbl Total SVE Beats\E\cell" . "\E\intbl " rtfVal("sve-Total") "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Vent Runs\E\cell" . "\E\intbl " rtfVal("ve-Runs") "\E\cell"
-			. "\E\intbl Total SVE Runs\E\cell" . "\E\intbl " rtfVal("sve-Runs") "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Beats\E\cell" . "\E\intbl " rtfVal("ve-Beats") "\E\cell"
-			. "\E\intbl Beats\E\cell" . "\E\intbl " rtfVal("sve-Beats") "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Longest\E\cell"
-			. "\E\intbl " rtfVal("ve-Longest") strQ(fldval["ve-Longest_time"],"   (###)") "\E\cell"
-			. "\E\intbl Longest\E\cell"
-			. "\E\intbl " rtfVal("sve-Longest") strQ(fldval["sve-Longest_time"],"   (###)") "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Fastest\E\cell"
-			. "\E\intbl " rtfVal("ve-Fastest") strQ(fldval["ve-Fastest_time"],"   (###)") "\E\cell"
-			. "\E\intbl Fastest\E\cell"
-			. "\E\intbl " rtfVal("sve-Fastest") strQ(fldval["sve-Fastest_time"],"   (###)")"\E\cell"
-		 . "\E\row"
-			. "\E\intbl Triplets\E\cell" . "\E\intbl " rtfVal("ve-Triplets") "\E\cell"
-			. "\E\intbl Atrial Pairs\E\cell" . "\E\intbl " rtfVal("sve-Pairs") "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Couplets\E\cell" . "\E\intbl " rtfVal("ve-Couplets") "\E\cell"
-			. "\E\intbl Drop/Late\E\cell" . "\E\intbl " rtfVal("sve-Drop") "/" rtfVal("sve-Late") "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Single/Interp VEs\E\cell" . "\E\intbl " rtfVal("ve-SinglePVC") "/" rtfVal("ve-InterpPVC") "\E\cell"
-			. "\E\intbl Longest R-R\E\cell"
-			. "\E\intbl " rtfVal("sve-LongRR") strQ(fldval["sve-LongRR_time"], "   (###)") "\E\cell"
-		 . "\E\row"
-			. "\E\intbl R-on-T\E\cell" . "\E\intbl " rtfVal("ve-R_on_T") "\E\cell"
-			. "\E\intbl Single PACs\E\cell" . "\E\intbl " rtfVal("sve-Single") "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Single/Late VEs\E\cell" . "\E\intbl " rtfVal("ve-SingleVE") "/" rtfVal("ve-LateVE") "\E\cell"
-			. "\E\intbl Pauses\E\cell" . "\E\intbl " rtfVal("sve-Pauses") "\E\cell"
-		 . "\E\row"
-			. "\E\intbl Bi/Trigeminy\E\cell" . "\E\intbl " rtfVal("ve-Bigem") "/" rtfVal("ve-Trigem") "\E\cell"
-			. "\E\intbl Bi/Trigeminy\E\cell" . "\E\intbl " rtfVal("sve-Bigem") "/" rtfVal("sve-Trigem") "\E\cell"
-		 . "\E\row }"
-		 . " }"
+		. "\E\pard\E\cf1\E\f0\E\fs22\E\lang1033 "
+		. "Test Date(s): " fldval["dem-Test_date"] strQ(fldval["dem-Test_end"]," - ###") par
+		. par
+		. "\E\ul Indication(s) for Holter Monitoring:\E\ul0" par
+		. fldval["dem-Indication"] par
+		. par
+			. "\E\b HOLTER INTERPRETATION\E\b0" par
+		. "***" par
+		. par
+		. "\E\b HOLTER DATA\E\b0" par
+		. "{\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000 "
+			. "Min HR" cell
+			. rtfVal("hrd-Min") strQ(fldval["hrd-Min_time"],"   (###)") cell
+			. "Recording Time" cell
+			. fldval["dem-Recording_time"] cell
+		. row
+			. "Max HR" cell 
+			. rtfVal("hrd-Max") strQ(fldval["hrd-Max_time"],"   (###)") cell
+			. "Analysis Time" cell
+			. fldval["dem-Analysis_time"] cell
+		. row
+			. "Avg HR" cell . rtfVal("hrd-Avg") cell
+		. row
+			. "Total QRS" cell . rtfVal("hrd-Total_beats") cell
+		. row "}"
+		. par
+		. "{\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000"
+			. "Total VE Beats" cell . rtfVal("ve-Total") cell
+			. "Total SVE Beats" cell . rtfVal("sve-Total") cell
+		. row
+			. "Vent Runs" cell . rtfVal("ve-Runs") cell
+			. "Total SVE Runs" cell . rtfVal("sve-Runs") cell
+		. row
+			. "Beats" cell . rtfVal("ve-Beats") cell
+			. "Beats" cell . rtfVal("sve-Beats") cell
+		. row
+			. "Longest" cell . rtfVal("ve-Longest") strQ(fldval["ve-Longest_time"],"   (###)") cell
+			. "Longest" cell . rtfVal("sve-Longest") strQ(fldval["sve-Longest_time"],"   (###)") cell
+		. row
+			. "Fastest" cell . rtfVal("ve-Fastest") strQ(fldval["ve-Fastest_time"],"   (###)") cell
+			. "Fastest" cell . rtfVal("sve-Fastest") strQ(fldval["sve-Fastest_time"],"   (###)") cell
+		. row
+			. "Triplets" cell . rtfVal("ve-Triplets") cell
+			. "Atrial Pairs" cell . rtfVal("sve-Pairs") cell
+		. row
+			. "Couplets" cell . rtfVal("ve-Couplets") cell
+			. "Drop/Late" cell . rtfVal("sve-Drop") "/" rtfVal("sve-Late") cell
+		. row
+			. "Single/Interp VEs" cell . rtfVal("ve-SinglePVC") "/" rtfVal("ve-InterpPVC") cell
+			. "Longest R-R" cell . rtfVal("sve-LongRR") strQ(fldval["sve-LongRR_time"], "   (###)") cell
+		. row
+			. "R-on-T" cell . rtfVal("ve-R_on_T") cell
+			. "Single PACs" cell . rtfVal("sve-Single") cell
+		. row
+			. "Single/Late VEs" cell . rtfVal("ve-SingleVE") "/" rtfVal("ve-LateVE") cell
+			. "Pauses" cell . rtfVal("sve-Pauses") cell
+		. row
+			. "Bi/Trigeminy" cell . rtfVal("ve-Bigem") "/" rtfVal("ve-Trigem") cell
+			. "Bi/Trigeminy" cell . rtfVal("sve-Bigem") "/" rtfVal("sve-Trigem") cell
+		. row "}"
+		. " }"
 	} else if (monType="BGH") {
 		rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
-		 . "\E\pard\E\cf1\E\f0\E\fs22\E\lang1033 "
-		 . "Enrollment Date(s): " fldval["dem-Test_date"] strQ(fldval["dem-Test_end"]," - ###") "\E\par\E\par "
-		 . "\E\ul Indication(s) for Event Monitoring:\E\ul0\E\par "
-		 . fldval["dem-Indication"] "\E\par\E\par "
-
-		 . "\E\ul Number of Recordings:\E\ul0\E\par "
-		 . "Auto-trigger: " fldval["counts-Auto"] "\E\par "
-		 . "Manual: " fldval["counts-Manual"] "\E\par\E\par "
-	
-		 . "\E\b EVENT RECORDER INTERPRETATION\E\b0\E\par "
-		 . "***\E\par\E\par "
-
-		 . " }"
+		. "\E\pard\E\cf1\E\f0\E\fs22\E\lang1033 "
+		. "Enrollment Date(s): " fldval["dem-Test_date"] strQ(fldval["dem-Test_end"]," - ###") par
+		. par`
+		. "\E\ul Indication(s) for Event Monitoring:\E\ul0" par
+		. fldval["dem-Indication"] par
+		. par
+		. "\E\ul Number of Recordings:\E\ul0" par
+		. "Auto-trigger: " fldval["counts-Auto"] par
+		. "Manual: " fldval["counts-Manual"] par
+		. par
+		. "\E\b EVENT RECORDER INTERPRETATION\E\b0" par
+		. "***" par
+		. par
+		. " }"
 	}
 
 	return rtf
