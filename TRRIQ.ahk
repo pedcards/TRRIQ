@@ -4597,61 +4597,66 @@ BuildRTF() {
 		. "\E\ul Indication(s) for Holter Monitoring:\E\ul0" par
 		. fldval["dem-Indication"] par
 		. par
-			. "\E\b HOLTER INTERPRETATION\E\b0" par
-		. "***" par
+		rtf .= "\E\b HOLTER INTERPRETATION\E\b0" par
+		. "\E\{** PENDING **:" slist "\E\}" par
 		. par
-		. "\E\b HOLTER DATA\E\b0" par
-		. "{\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000 "
+		rtf .= "\E\b HOLTER DATA\E\b0" par
+		. "{"
+		. "\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000 "
 			. "Min HR" cell
 			. rtfVal("hrd-Min") strQ(fldval["hrd-Min_time"],"   (###)") cell
 			. "Recording Time" cell
-			. fldval["dem-Recording_time"] cell
-		. row
+			. fldval["dem-Recording_time"] cell row
+		. "\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000 "
 			. "Max HR" cell 
 			. rtfVal("hrd-Max") strQ(fldval["hrd-Max_time"],"   (###)") cell
 			. "Analysis Time" cell
 			. fldval["dem-Analysis_time"] cell
-		. row
-			. "Avg HR" cell . rtfVal("hrd-Avg") cell
-		. row
-			. "Total QRS" cell . rtfVal("hrd-Total_beats") cell
-		. row "}"
-		. par
-		. "{\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000"
+			. row
+		. "\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000 "
+			. "Avg HR" cell . rtfVal("hrd-Avg") cell row
+		. "\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000 "
+			. "Total QRS" cell . rtfVal("hrd-Total_beats") cell row
+		. "}" par
+		rtf .= "{"
+		. "\E\trowd\E\cellx4000\E\cellx8000 "
+			. "\E\ul Ventricular Beats\E\ul0" cell . "\E\ul Supraventricular Beats\E\ul0" cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Total VE Beats" cell . rtfVal("ve-Total") cell
-			. "Total SVE Beats" cell . rtfVal("sve-Total") cell
-		. row
+			. "Total SVE Beats" cell . rtfVal("sve-Total") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Vent Runs" cell . rtfVal("ve-Runs") cell
-			. "Total SVE Runs" cell . rtfVal("sve-Runs") cell
-		. row
+			. "Total SVE Runs" cell . rtfVal("sve-Runs") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Beats" cell . rtfVal("ve-Beats") cell
-			. "Beats" cell . rtfVal("sve-Beats") cell
-		. row
+			. "Beats" cell . rtfVal("sve-Beats") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Longest" cell . rtfVal("ve-Longest") strQ(fldval["ve-Longest_time"],"   (###)") cell
-			. "Longest" cell . rtfVal("sve-Longest") strQ(fldval["sve-Longest_time"],"   (###)") cell
-		. row
+			. "Longest" cell . rtfVal("sve-Longest") strQ(fldval["sve-Longest_time"],"   (###)") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Fastest" cell . rtfVal("ve-Fastest") strQ(fldval["ve-Fastest_time"],"   (###)") cell
-			. "Fastest" cell . rtfVal("sve-Fastest") strQ(fldval["sve-Fastest_time"],"   (###)") cell
-		. row
+			. "Fastest" cell . rtfVal("sve-Fastest") strQ(fldval["sve-Fastest_time"],"   (###)") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Triplets" cell . rtfVal("ve-Triplets") cell
-			. "Atrial Pairs" cell . rtfVal("sve-Pairs") cell
-		. row
+			. "Atrial Pairs" cell . rtfVal("sve-Pairs") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Couplets" cell . rtfVal("ve-Couplets") cell
-			. "Drop/Late" cell . rtfVal("sve-Drop") "/" rtfVal("sve-Late") cell
-		. row
+			. "Drop/Late" cell . rtfVal("sve-Drop") "/" rtfVal("sve-Late") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Single/Interp VEs" cell . rtfVal("ve-SinglePVC") "/" rtfVal("ve-InterpPVC") cell
-			. "Longest R-R" cell . rtfVal("sve-LongRR") strQ(fldval["sve-LongRR_time"], "   (###)") cell
-		. row
+			. "Longest R-R" cell . rtfVal("sve-LongRR") strQ(fldval["sve-LongRR_time"], "   (###)") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "R-on-T" cell . rtfVal("ve-R_on_T") cell
-			. "Single PACs" cell . rtfVal("sve-Single") cell
-		. row
+			. "Single PACs" cell . rtfVal("sve-Single") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Single/Late VEs" cell . rtfVal("ve-SingleVE") "/" rtfVal("ve-LateVE") cell
-			. "Pauses" cell . rtfVal("sve-Pauses") cell
-		. row
+			. "Pauses" cell . rtfVal("sve-Pauses") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Bi/Trigeminy" cell . rtfVal("ve-Bigem") "/" rtfVal("ve-Trigem") cell
-			. "Bi/Trigeminy" cell . rtfVal("sve-Bigem") "/" rtfVal("sve-Trigem") cell
-		. row "}"
-		. " }"
+			. "Bi/Trigeminy" cell . rtfVal("sve-Bigem") "/" rtfVal("sve-Trigem") cell row
+		. "}"
+		. par
+		. "}"
 	} else if (monType="BGH") {
 		rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
 		. "\E\pard\E\cf1\E\f0\E\fs22\E\lang1033 "
