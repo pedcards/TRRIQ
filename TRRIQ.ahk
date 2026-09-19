@@ -4614,9 +4614,9 @@ BuildRTF() {
 			. "Analysis Time" cell
 			. fldval["dem-Analysis_time"] cell
 			. row
-		. "\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000 "
+		. "\E\trowd\E\cellx1200\E\cellx4800 "
 			. "Avg HR" cell . rtfVal("hrd-Avg") cell row
-		. "\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000 "
+		. "\E\trowd\E\cellx1200\E\cellx4800 "
 			. "Total QRS" cell . rtfVal("hrd-Total_beats") cell row
 		. "}" par
 		rtf .= "{"
@@ -4656,7 +4656,6 @@ BuildRTF() {
 			. "Bi/Trigeminy" cell . rtfVal("ve-Bigem") "/" rtfVal("ve-Trigem") cell
 			. "Bi/Trigeminy" cell . rtfVal("sve-Bigem") "/" rtfVal("sve-Trigem") cell row
 		. "}"
-		. par
 		. "}"
 	} else if (monType="BGH") {
 		rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
