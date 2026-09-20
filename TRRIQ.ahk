@@ -4015,9 +4015,6 @@ outputfiles:
 {
 	/*	Output the results and move files around
 	*/
-	fileOut1 := trim(fileOut1,",`t`r`n") "`n"												; make sure that there is only one `n 
-	fileOut2 := trim(fileOut2,",`t`r`n") "`n"												; on the header and data lines
-	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["dem-Test_Date"])											; get the study date from PDF result
 	filenameOut := fldval["dem-MRN"] " " fldval["dem-Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
 	
@@ -4035,15 +4032,6 @@ outputfiles:
 	if (isDevt) {
 		FileCopy, % tmpFile, % path.AccessHL7out											; copy fake ORU to OutboundHL7
 	}
-	
-	/*	Save CSV in tempfiles, and copy to Import folder
-	*/
-	progress, 40, Save CSV in Import folder
-	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
-	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
-	
-	impSub := (monType~="BGH") ? "EventCSV\" : "HolterCSV\"									; Import subfolder Event or Holter
-	FileCopy, .\tempfiles\%fileNameOut%.csv, % path.import impSub "*.*", 1					; copy CSV from tempfiles to importFld\impSub
 	
 	/*	Copy PDF to OnBase
 	*/
@@ -4064,10 +4052,8 @@ outputfiles:
 	*/
 	progress, 60, Copy PDF to HolterPDF and Archive
 	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
-	FileCopy, % fileHIM, % path.holterPDF filenameOut "-short.pdf", 1						; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
-	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
 	FileMove, % path.PrevHL7in "processing\" fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 
