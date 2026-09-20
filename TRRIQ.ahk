@@ -5128,11 +5128,11 @@ Holter_BGM_SL_HL7:
 	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
 	t_time := calcDuration(fldval["hrd-Total_Time"])
-	formatField("hrd","Total_Time",t_time.DD "d " t_time.HH "h " t_time.MM "m " t_time.SS "s")
+	formatField("hrd","Total_Time",t_time.DD "d " t_time.HH "h " t_time.MM "m")
 	fldval["dem-Recording_time"] := strQ(fldval["Monitoring_Period"], parsedate("###").DHM
 									, fldval["hrd-Total_Time"])
 	a_time := calcDuration(fldval["hrd-Analyzed_Time"])
-	formatField("hrd","Analyzed_Time",a_time.DD "d " a_time.HH "h " a_time.MM "m " a_time.SS "s")
+	formatField("hrd","Analyzed_Time",a_time.DD "d " a_time.HH "h " a_time.MM "m")
 	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
 									, fldval["hrd-Analyzed_Time"])
 
@@ -5167,11 +5167,11 @@ Holter_BGM_EL_HL7:
 	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
 	t_time := calcDuration(fldval["hrd-Total_Time"])
-	formatField("hrd","Total_Time",t_time.DD "d " t_time.HH "h " t_time.MM "m " t_time.SS "s")
+	formatField("hrd","Total_Time",t_time.DD "d " t_time.HH "h " t_time.MM "m")
 	fldval["dem-Recording_time"] := strQ(fldval["Monitoring_Period"], parsedate("###").DHM
 									, fldval["hrd-Total_Time"])
 	a_time := calcDuration(fldval["hrd-Analyzed_Time"])
-	formatField("hrd","Analyzed_Time",a_time.DD "d " a_time.HH "h " a_time.MM "m " a_time.SS "s")
+	formatField("hrd","Analyzed_Time",a_time.DD "d " a_time.HH "h " a_time.MM "m")
 	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
 									, fldval["hrd-Analyzed_Time"])
 
