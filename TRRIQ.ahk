@@ -5154,10 +5154,10 @@ Holter_BGM_SL_HL7:
 		return																			; fetchGUI was quit, so skip processing
 	}
 	
-	fldval.rtf := BuildRTF()
 	fieldsToCSV()
 	fieldcoladd("","INTERP","")															; fldval["Narrative"]
 	fieldcoladd("","Mon_type","Holter")
+	fldval.rtf := BuildRTF()
 	
 	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
@@ -5193,10 +5193,10 @@ Holter_BGM_EL_HL7:
 		return																			; fetchGUI was quit, so skip processing
 	}
 	
-	fldval.rtf := BuildRTF()
 	fieldsToCSV()
 	fieldcoladd("","INTERP","")															; fldval["Narrative"]
 	fieldcoladd("","Mon_type","Holter")
+	fldval.rtf := BuildRTF()
 	
 	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
@@ -5574,8 +5574,8 @@ Event_BGH_Hl7:
 		return													; fetchGUI was quit, so skip processing
 	}
 	
-	fldval.rtf := BuildRTF()
 	fieldstoCSV()
+	fldval.rtf := BuildRTF()
 	
 	fieldcoladd("","Mon_type","Event")
 	
