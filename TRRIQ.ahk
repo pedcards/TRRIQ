@@ -4588,7 +4588,8 @@ BuildRTF() {
 	par := "\E\par "
 	cell := "\E\intbl\E\cell "
 	row := "\E\row "
-	slist := "21012900"
+	; slist := "26295"																	; TST
+	slist := "49539"																	; PROD
 
 	if (monType~="PR|HOL|Zio|Mini|BGM") {
 		rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
