@@ -4629,14 +4629,14 @@ BuildRTF() {
 			. "Vent Runs" cell . rtfVal("ve-Runs") cell
 			. "Total SVE Runs" cell . rtfVal("sve-Runs") cell row
 		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
-			. "Beats" cell . rtfVal("ve-Beats") cell
-			. "Beats" cell . rtfVal("sve-Beats") cell row
+			. "   Beats" cell . rtfVal("ve-Runs") cell
+			. "   Beats" cell . rtfVal("sve-Runs") cell row
 		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
-			. "Longest" cell . rtfVal("ve-Longest") strQ(fldval["ve-Longest_time"],"   (###)") cell
-			. "Longest" cell . rtfVal("sve-Longest") strQ(fldval["sve-Longest_time"],"   (###)") cell row
+			. "   Longest" cell . rtfVal("ve-Longest") strQ(fldval["ve-Longest_time"],"   (###)") cell
+			. "   Longest" cell . rtfVal("sve-Longest") strQ(fldval["sve-Longest_time"],"   (###)") cell row
 		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
-			. "Fastest" cell . rtfVal("ve-Fastest") strQ(fldval["ve-Fastest_time"],"   (###)") cell
-			. "Fastest" cell . rtfVal("sve-Fastest") strQ(fldval["sve-Fastest_time"],"   (###)") cell row
+			. "   Fastest" cell . rtfVal("ve-Fastest") strQ(fldval["ve-Fastest_time"],"   (###)") cell
+			. "   Fastest" cell . rtfVal("sve-Fastest") strQ(fldval["sve-Fastest_time"],"   (###)") cell row
 		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Triplets" cell . rtfVal("ve-Triplets") cell
 			. "Atrial Pairs" cell . rtfVal("sve-Pairs") cell row
