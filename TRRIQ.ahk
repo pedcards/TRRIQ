@@ -219,7 +219,7 @@ PhaseGUI:
 		Gui, Tab, INBOX
 		Gui, Add, Listview
 			, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
-			, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|Need FTP
+			, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|Status
 		Gui, ListView, WQlv_in
 		LV_ModifyCol(1,"0")																; filename and path, "0" = hidden
 		LV_ModifyCol(2,"160")															; name
