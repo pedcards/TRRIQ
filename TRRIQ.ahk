@@ -4029,6 +4029,7 @@ outputfiles:
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile														; copy ORU hl7 to tempfiles
 	FileCopy, % tmpFile, % path.AccessHL7out												; copy ORU to OutboundHL7
+	FileCopy, % tmpFile, % path.ArchiveHL7out												; copy ORU to ArchiveHL7
 	
 	/*	Copy PDF to OnBase
 	*/
