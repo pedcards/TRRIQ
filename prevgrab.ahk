@@ -28,6 +28,7 @@ Config:
 	}
 
 	; A_Args[1] := "ftp"				;*******************************
+	; A_Args[1] := "enroll"				;*******************************
 
 	gl.TRRIQ_path := A_ScriptDir
 	gl.files_dir := gl.TRRIQ_path "\files"
@@ -72,11 +73,13 @@ MainLoop:
 		PreventiceWebGrab("ftp")
 		gl.FAIL := gl.wbFail
 	} else {
-		; webStr.Enrollment := readIni("str_Enrollment")
-		webStr.Inventory := readIni("str_Inventory")
 		gl.login := readIni("str_Login")
 
-		; PreventiceWebGrab("Enrollment")
+		if (A_Args[1]="enroll") {
+			webStr.Enrollment := readIni("str_Enrollment")
+			PreventiceWebGrab("Enrollment")
+		}
+		webStr.Inventory := readIni("str_Inventory")
 		PreventiceWebGrab("Inventory")
 		if (gl.inv_ct < gl.inv_tot) {
 			gl.FAIL := true
@@ -94,8 +97,7 @@ MainLoop:
 		MsgBox,262160,, Preventice update complete!
 	}
 	
-	wbClose()
-	gl.Page.Exit()
+	wb.QuitAllSessions()
 	wb.driver.Exit()
 
 	ExitApp
@@ -135,7 +137,6 @@ PreventiceWebGrab(phase) {
 		PreventiceWebPager(phase,web.changed,web.btn)
 	}
 	
-	gl.Page.Close()																		; release Session object
 	return
 }
 
@@ -364,39 +365,30 @@ ftpDateDiff(row) {
 parsePreventiceEnrollment(tbl) {
 	global prevtxt, gl, wq
 	
-	lbl_rx := {"demo":"MRN:","dev":"Location:","prov":"GB-SCH-"}						; regex to find blocks
-	lbl_pre := {"demo":"NAME:","dev":"SERIAL:","prov":"PROVIDER:"}						; prefix to attach to strings
-	
-	lbl_demo := {"name":"NAME:","mrn":"MRN:","date":"Created Date:"}					; regex for necessary fields
-	lbl_dev := {"dev":"SERIAL:"}
-	lbl_prov := {"prov":"PROVIDER:"}
+	lbl_hdr := {"Patient Name":"name","MRN":"mrn","Created Date":"date","Device":"dev","Physician":"prov"}
 	
 	done := 0
 	checkdays := gl.settings.checkdays
 	
-	loop % (trows := tbl.getElementsByTagName("tr")).length								; loop through rows
+	ttbl := tbl.innertext "`n"
+	ttbl := RegExReplace(ttbl, "^.*?Action\n")
+	n := 1
+	While n
 	{
-		r_idx := A_index-1
-		trow := trows[r_idx]
-		if (trow.getAttribute("id")="") {												; skip the buffer rows
-			continue
+		Progress, % 10*A_Index
+		trow := stregX(ttbl,"",n,0,"Print\n",0,n)
+		if (trow="") {
+			break
 		}
 		res := []
-		loop % (tcols := trow.getElementsByTagName("td")).length						; loop through cols
-		{
-			c_idx := A_Index-1
-			txt := tcols[c_idx].innertext
-			type := ObjHasValue(lbl_rx,txt,1)											; get type of cell based on regex object
-			txt := lbl_pre[type] " " txt "`n"										
-			
-			for key,val in lbl_%type%													; loop through expected fields in lbl_type
-			{
-				i := stregX(txt,val,1,1,"\R",1)											; string between lbl and \R
-				res[key] := trim(i,": `r`n")
-			}
-		}
-		
-		res.name := format("{:U}",parsename(res.name).lastfirst)
+		RowReg := RegExMatch(trow, "(.*?)\n(\d{6,}) (\d+\/\d+\/\d+) (.*?) Dr. (.*?)\n", rr)
+			res.name := trim(rr1)
+			res.mrn := rr2
+			res.date := rr3
+			res.dev := rr4
+			res.prov := rr5
+
+		res.name := format("{:U}",res.name)
 		date := parseDate(res.date).YMD
 		
 		if (dateDiff(date)>checkdays) {													; if days > threshold, break loop
@@ -413,9 +405,54 @@ parsePreventiceEnrollment(tbl) {
 			. res.prov "|"
 			. A_now "`n"
 			. prevtxt
-		
+
 		gl.enroll_ct ++
 	}
+
+	; loop % (trows := tbl.getElementsByTagName("tr")).length()+1							; loop through rows
+	; {
+	; 	Progress, % A_Index*10
+	; 	r_idx := A_index-1
+	; 	trow := trows[r_idx]
+	; 	if (trow.getAttribute("id")="") {												; skip the buffer rows
+	; 		continue
+	; 	}
+	; 	if (thdr := trow.getElementsByTagName("th")) {
+	; 		hdr := {}
+	; 		loop % thdr.length()														; loop through hdr cols
+	; 		{
+	; 			hdr[A_Index] := lbl_hdr[trim(thdr[A_Index-1].innertext)]
+	; 		}
+	; 		continue		
+	; 	}
+	; 	res := []
+	; 	loop % (tcols := trow.getElementsByTagName("td")).length()+1					; loop through cols
+	; 	{
+	; 		c_idx := A_Index-1
+	; 		txt := tcols[c_idx].innertext
+	; 		res[hdr[A_Index]] := trim(txt)
+	; 	}
+		
+	; 	res.name := format("{:U}",res.name)
+	; 	date := parseDate(res.date).YMD
+		
+	; 	if (dateDiff(date)>checkdays) {													; if days > threshold, break loop
+	; 		break
+	; 	} else {																		; otherwise done+1 == keep paging
+	; 		done ++
+	; 	}
+		
+	; 	prevtxt := "enroll|" 															; prepends enroll item so will be read in chronologic
+	; 		. date "|"																	; rather than reverse chronologic order
+	; 		. res.name "|"
+	; 		. res.mrn "|"
+	; 		. res.dev "|"
+	; 		. res.prov "|"
+	; 		. A_now "`n"
+	; 		. prevtxt
+		
+	; 	gl.enroll_ct ++
+	; }
 	
 	return done																			; returns number of matches, or 0 (error) if no matches
 }

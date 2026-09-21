@@ -50,6 +50,7 @@ Class Rufaydium
 			this.capabilities := capabilities.Simple
 		RegExMatch(this.Driver.Version := this.Version(),"\d+",Build)
 		this.Build := Build
+		this.verifyDriver()
 	}
 
 	__Delete()
@@ -104,7 +105,7 @@ Class Rufaydium
 	{
 		if !this.capabilities.options
 		{
-			Msgbox,64,Rufaydium WebDriver Support, % "Unknown Driver Loaded`n.Please read readme and manually set capabilities for " this.Driver.Name ".exe"
+			MsgBox 0x40040,Rufaydium WebDriver Support, % "Unknown Driver Loaded`n.Please read readme and manually set capabilities for " this.Driver.Name ".exe"
 			return
 		}
 		if Binary
@@ -113,7 +114,7 @@ Class Rufaydium
 		k := this.Send( this.DriverUrl "/session","POST",this.capabilities.cap,1)
 		if !k
 		{
-			msgbox,48,Rufaydium WebDriver Error, % This.driver.Name " Error`nRufaydium is unable to access Driver Session`n as No response received against New Session request`n`nMake sure you have driver version supported with browser version"
+			MsgBox 0x40030,Rufaydium WebDriver Error, % This.driver.Name " Error`nRufaydium is unable to access Driver Session`n as No response received against New Session request`n`nMake sure you have driver version supported with browser version"
 			return
 		}
 
@@ -129,7 +130,7 @@ Class Rufaydium
 					ffbinary := A_ProgramFiles " (x86)\Mozilla Firefox\firefox.exe" ; in case 64OS has 64ahk checking 32ff loc
 				else
 				{
-					msgbox,48,Rufaydium WebDriver Support,% k.message "`n`nDriver is unable to locate Firefox binary and, Rufaydium is also unable to detect Firefox default location.`n`nIf you see this message repeatedly please file a bug report."
+					MsgBox 0x40030,Rufaydium WebDriver Support,% k.message "`n`nDriver is unable to locate Firefox binary and, Rufaydium is also unable to detect Firefox default location.`n`nIf you see this message repeatedly please file a bug report."
 					return
 				}
 				this.capabilities.Setbinary(ffbinary)
@@ -137,14 +138,14 @@ Class Rufaydium
 			}
 			else if RegExMatch(k.message,"version ([\d.]+).*\n.*version is (\d+.\d+.\d+)")
 			{
-				MsgBox, 52,Rufaydium WebDriver Support,% k.message "`n`nPlease press Yes to download latest driver"
+				MsgBox 0x40034,Rufaydium WebDriver Support,% k.message "`n`nPlease press Yes to download latest driver"
 				IfMsgBox Yes
 				{
 					this.driver.exit()
 					i := this.driver.GetDriver(k.message)
 					if !FileExist(i)
 					{
-						Msgbox,64,Rufaydium WebDriver Support,Unable to download driver`nRufaydium exiting.
+						MsgBox 0x40040,Rufaydium WebDriver Support,Unable to download driver`nRufaydium exiting.
 						ExitApp
 					}
 					This.Driver := new RunDriver(i,This.Driver.Param)
@@ -153,7 +154,7 @@ Class Rufaydium
 			}
 			else
 			{
-				msgbox, 48,Rufaydium WebDriver Support Error,% k.error "`n`n" k.message
+				MsgBox 0x40030,Rufaydium WebDriver Support Error,% k.error "`n`n" k.message
 				return k
 			}
 		}
@@ -184,7 +185,7 @@ Class Rufaydium
 	{
 		if !this.capabilities.options
 		{
-			Msgbox,64,Rufaydium WebDriver Support, % "Unknown Driver Loaded.`nPlease read readme and manually set capabilities for " this.Driver.Name ".exe"
+			MsgBox 0x40040,Rufaydium WebDriver Support, % "Unknown Driver Loaded.`nPlease read readme and manually set capabilities for " this.Driver.Name ".exe"
 			return
 		}
 		this.Driver.Options := this.capabilities.options
@@ -294,6 +295,32 @@ Class Rufaydium
 	{
 		if RegExMatch(this.build.version,"(\d+\.\d+\.\d+.\d+)",d)
 			return d
+	}
+
+	verifyDriver()
+	{
+		switch this.driver.Name, false
+		{
+			case "chromedriver":
+				RegRead, BrowserVer, HKEY_CURRENT_USER\SOFTWARE\Google\Chrome\BLBeacon, version
+				RegExMatch(BrowserVer,"\d+",BrowserBuild)
+				if (BrowserBuild > 115)
+				&& (BrowserBuild != this.Build)
+				{
+					MsgBox 0x40034,Rufaydium WebDriver Support,% k.message "`n`nPlease press Yes to download latest driver"
+					IfMsgBox Yes
+					{
+						this.driver.exit()
+						i := this.driver.GetDriver("Chrome version " BrowserVer "`nbrowser version is " BrowserVer)
+						if !FileExist(i)
+						{
+							MsgBox 0x40040,Rufaydium WebDriver Support,Unable to download driver`nRufaydium exiting.
+							ExitApp
+						}
+						This.Driver := new RunDriver(i,This.Driver.Param)
+					}
+				}
+		}
 	}
 }
 
@@ -567,7 +594,7 @@ Class Session
 
 		Set
 		{
-			msgbox, % value
+			MsgBox 0x40040, , % value
 			return this.Send("window/rect","POST",{"x":value})
 		}
 	}
@@ -794,7 +821,7 @@ Class Session
 	{
 		if !isobject(this.CDP)
 		{
-			msgbox, ,Rufaydium, Unable to Capture Full Size ScreenShot`nThis Chromium limited method
+			MsgBox 0x40040, ,Rufaydium, Unable to Capture Full Size ScreenShot`nThis Chromium limited method
 			return
 		}
 		JSOP := {"width":this.Getrect().width,"height":this.ExecuteSync("return document.documentElement.scrollHeight")+0,"deviceScaleFactor":1,"mobile":json.false}
@@ -822,7 +849,7 @@ Class Session
 				File.Close()
 			}
 			else
-				msgbox, ,Rufaydium, % "Fail to save PDF`nError : " json.Dump(Base64pdfData) "`nPlease define Print Options or use print profiles from PrintOptions.class`nSince Chrome Printing is not available in Headful mode you can try 'wkhtmltopdf' printing"
+				MsgBox 0x40010,Rufaydium, % "Fail to save PDF`nError : " json.Dump(Base64pdfData) "`nPlease define Print Options or use print profiles from PrintOptions.class`nSince Chrome Printing is not available in Headful mode you can try 'wkhtmltopdf' printing"
 		}
 		else
 		{
@@ -832,12 +859,12 @@ Class Session
 			}
 			else
 			{
-				MsgBox,36,Rufaydium, User is required to install "wkhtmltopdf" In order to enable pdf printing without Headless mode`n`nPress Yes to navigate to download page of "wkhtmltox" tool
+				MsgBox 0x40024,Rufaydium, User is required to install "wkhtmltopdf" In order to enable pdf printing without Headless mode`n`nPress Yes to navigate to download page of "wkhtmltox" tool
 				IfMsgBox Yes
 				{
 					this.NewTab()
 					this.url := "https://wkhtmltopdf.org/downloads.html"
-					MsgBox,64,Rufaydium,Please Download and install "wkhtmltox" now, according to Windows Version then Restart Rufaydium.
+					MsgBox 0x40040,Rufaydium,Please Download and install "wkhtmltox" now, according to Windows Version then Restart Rufaydium.
 				}
 			}
 		}
@@ -1051,7 +1078,7 @@ wkhtmltopdf(HtML,pdf,options)
 				msg .= "`nReason:`tUnable to read registry or Default location for`n`t" wkhtmltopdf 
 				msg .= "`n`nPlease run program as administrator or at least with registry reading privilages,"
 				msg .= "`n`nPress OK to conitnue"
-				MsgBox,,Rufaydium, % msg
+				MsgBox 0x40040, ,Rufaydium, % msg
 				return
 			}
 		}
