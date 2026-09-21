@@ -4607,8 +4607,10 @@ BuildRTF() {
 		. "\E\trowd\E\cellx4000\E\cellx8000 "
 			. "\E\ul Ventricular Beats\E\ul0" cell . "\E\ul Supraventricular Beats\E\ul0" cell row
 		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
-			. "Total VE Beats" cell . rtfVal("ve-Total") cell
-			. "Total SVE Beats" cell . rtfVal("sve-Total") cell row
+			. "Total VE Beats" cell . rtfVal("ve-Total") 
+				. (rtfVal("ve-Total")>0 ? " (" Round(rtfVal("ve-Total")/rtfVal("hrd-Total_beats"),2) "%)" : "") cell
+			. "Total SVE Beats" cell . rtfVal("sve-Total") 
+				. (rtfVal("sve-Total")>0 ? " (" Round(rtfVal("sve-Total")/rtfVal("hrd-Total_beats"),2) "%)" : "") cell row
 		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
 			. "Vent Runs" cell . rtfVal("ve-Runs") cell
 			. "Total SVE Runs" cell . rtfVal("sve-Runs") cell row
