@@ -4028,10 +4028,7 @@ outputfiles:
 	progress, 20, % tmpFile, Moving output files
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile														; copy ORU hl7 to tempfiles
-	FileCopy, % tmpFile, % path.EpicHL7out													; create copy in RawHL7
-	if (isDevt) {
-		FileCopy, % tmpFile, % path.AccessHL7out											; copy fake ORU to OutboundHL7
-	}
+	FileCopy, % tmpFile, % path.AccessHL7out												; copy ORU to OutboundHL7
 	
 	/*	Copy PDF to OnBase
 	*/
