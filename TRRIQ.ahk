@@ -1252,7 +1252,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, dev																		; device type
-			, (res.duration<3) ? "X":"")												; flag FTP if 1-2 day Holter
+			, "")																		; flag FTP if 1-2 day Holter
 		wqfiles.push(id)
 	}
 	Return
@@ -1335,7 +1335,7 @@ WQfindMissingWebgrab() {
 				, id																	; wqid
 				, ObjHasValue(monSerialStrings,res.dev,1)								; study type
 				, "No Reg"																; fulldisc present, make blank
-				, "X")
+				, "")
 			CLV_in.Row(LV_GetCount(),,"red")
 		}
 	}
