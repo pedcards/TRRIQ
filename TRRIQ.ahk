@@ -219,7 +219,7 @@ PhaseGUI:
 		Gui, Tab, INBOX
 		Gui, Add, Listview
 			, % "-Multi Grid BackgroundSilver " lvDim " greadWQlv vWQlv_in hwndHLV_in"
-			, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|Need FTP
+			, filename|Name|MRN|DOB|Location|Study Date|wqid|Type|Status
 		Gui, ListView, WQlv_in
 		LV_ModifyCol(1,"0")																; filename and path, "0" = hidden
 		LV_ModifyCol(2,"160")															; name
@@ -1252,7 +1252,7 @@ WQpreventiceResults(ByRef wqfiles) {
 			, strQ(niceDate(res.date),"###",niceDate(SubStr(x.5,1,8)))					; study date
 			, id																		; wqid
 			, dev																		; device type
-			, (res.duration<3) ? "X":"")												; flag FTP if 1-2 day Holter
+			, "")																		; flag FTP if 1-2 day Holter
 		wqfiles.push(id)
 	}
 	Return
@@ -1335,7 +1335,7 @@ WQfindMissingWebgrab() {
 				, id																	; wqid
 				, ObjHasValue(monSerialStrings,res.dev,1)								; study type
 				, "No Reg"																; fulldisc present, make blank
-				, "X")
+				, "")
 			CLV_in.Row(LV_GetCount(),,"red")
 		}
 	}
@@ -3965,8 +3965,6 @@ ProcessHl7PDF:
 		gosub Holter_BGM_EL_HL7
 	} else if (fldVal.dev~="Mini(?!\sEL|\sPlus)") {										; May be able to consolidate EL and SL
 		gosub Holter_BGM_SL_Hl7															; as the reports will be essentiall identical
-	} else if (fldVal.dev~="Mortara") {
-		gosub Holter_Pr_Hl7
 	} else {
 		eventlog("No match. OBR_TestCode=" type ", ftype=" ftype ".")
 		MsgBox % "No filetype match!"
@@ -4017,9 +4015,6 @@ outputfiles:
 {
 	/*	Output the results and move files around
 	*/
-	fileOut1 := trim(fileOut1,",`t`r`n") "`n"												; make sure that there is only one `n 
-	fileOut2 := trim(fileOut2,",`t`r`n") "`n"												; on the header and data lines
-	fileout := fileOut1 . fileout2															; concatenate the header and data lines
 	tmpDate := parseDate(fldval["dem-Test_Date"])											; get the study date from PDF result
 	filenameOut := fldval["dem-MRN"] " " fldval["dem-Name_L"] " " tmpDate.MM "-" tmpDate.DD "-" tmpDate.YYYY
 	
@@ -4033,19 +4028,8 @@ outputfiles:
 	progress, 20, % tmpFile, Moving output files
 	FileDelete, % tmpFile
 	FileAppend, % hl7Out.msg, % tmpFile														; copy ORU hl7 to tempfiles
-	FileCopy, % tmpFile, % path.EpicHL7out													; create copy in RawHL7
-	if (isDevt) {
-		FileCopy, % tmpFile, % path.AccessHL7out											; copy fake ORU to OutboundHL7
-	}
-	
-	/*	Save CSV in tempfiles, and copy to Import folder
-	*/
-	progress, 40, Save CSV in Import folder
-	FileDelete, .\tempfiles\%fileNameOut%.csv												; clear any previous CSV
-	FileAppend, %fileOut%, .\tempfiles\%fileNameOut%.csv									; create a new CSV in tempfiles
-	
-	impSub := (monType~="BGH") ? "EventCSV\" : "HolterCSV\"									; Import subfolder Event or Holter
-	FileCopy, .\tempfiles\%fileNameOut%.csv, % path.import impSub "*.*", 1					; copy CSV from tempfiles to importFld\impSub
+	FileCopy, % tmpFile, % path.AccessHL7out												; copy ORU to OutboundHL7
+	FileCopy, % tmpFile, % path.ArchiveHL7out												; copy ORU to ArchiveHL7
 	
 	/*	Copy PDF to OnBase
 	*/
@@ -4066,10 +4050,8 @@ outputfiles:
 	*/
 	progress, 60, Copy PDF to HolterPDF and Archive
 	FileCopy, % fileIn, % path.holterPDF "Archive\" filenameOut ".pdf", 1					; Copy the original PDF to holterDir Archive
-	FileCopy, % fileHIM, % path.holterPDF filenameOut "-short.pdf", 1						; Copy the shortened PDF, if it exists
 	FileDelete, %fileIn%																	; Need to use Copy+Delete because if file opened
 	FileDelete, %fileIn%-sh.pdf																;	was never completing filemove
-	;~ FileDelete, % path.PrevHL7in fileNam ".hl7"											; We can delete the original HL7, if exists
 	FileMove, % path.PrevHL7in "processing\" fileNam ".hl7", .\tempfiles\%fileNam%.hl7
 	eventlog("Move files '" fileIn "' -> '" filenameOut)
 
@@ -4456,24 +4438,7 @@ makeORU(wqid) {
 		,{19:fldval.encnum
 		, 50:wqid})
 	
-
-/*	Insert fake RTF 
-	with reading EP	and monType in OBR_4
-*/
-	if (isDevt=true) {
-		MsgBox, 36, Testing, Create ORU with fake RTF and reading EP?
-	}
-	IfMsgBox, Yes
-	{
-	;~ if (fldval.MSH_ctrlID~="EPIC") {
-		FileRead, rtf, .\files\test-RTF.txt
-		EPdoc := epList[fldval["dem-Reading"]]
-	} 
-	else
-	{
-		rtf := "###"
-		EPdoc := "###"
-	}
+	EPdoc := epList[fldval["dem-Reading"]]
 	fldval.obr4 := monEpicEAP[montype]
 	obrProv := fldvalProv()
 
@@ -4483,15 +4448,15 @@ makeORU(wqid) {
 		, 4:fldval.obr4
 		, 7:fldval.date
 		, 16:obrProv.attg
-		, 25:"F"
+		, 25:"P"
 		, 28:obrProv.cc																	; for inpatient or fellow ordered
-		, 32:EPdoc })																	; Epic test: Substitute reading EP string "NPI^LAST^FIRST"
+		, 32:EPdoc })
 	
 	buildHL7("OBX"
 		,{2:"FT"
 		, 3:"&GDT^HOLTER/EVENT RECORDER REPORT"
-		, 5:rtf																			; Epic test: Substitute test rtf
-		, 11:"F"
+		, 5:fldval.rtf
+		, 11:"P"
 		, 14:hl7time})
 	
 	if (montype~="BGH") {																; no DDE for CEM
@@ -4598,6 +4563,114 @@ makeTestORU() {
 		, % path.PrevHL7in ptDem.nameL "_" ptDem.nameF "_" ptDem.mrn "_" parseDate(ptDem.dob).YMD "_" A_Now ".hl7"
 	
 	return
+}
+
+BuildRTF() {
+	global fldval, monType
+
+	sp := " "
+	par := "\E\par "
+	cell := "\E\intbl\E\cell "
+	row := "\E\row "
+	; slist := "26295"																	; TST
+	slist := "49539"																	; PROD
+
+	if (monType~="PR|HOL|Zio|Mini|BGM") {
+		rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
+		. "\E\pard\E\cf1\E\f0\E\fs22\E\lang1033 "
+		. "Test Date(s): " fldval["dem-Test_date"] strQ(fldval["dem-Test_end"]," - ###") par
+		. par
+		. "\E\ul Indication(s) for Holter Monitoring:\E\ul0" par
+		. fldval["dem-Indication"] par
+		. par
+		rtf .= "\E\b HOLTER INTERPRETATION\E\b0" par
+		. "\E\{** PENDING **:" slist "\E\}" par
+		. par
+		rtf .= "\E\b HOLTER DATA\E\b0" par
+		. "{"
+		. "\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000 "
+			. "Min HR" cell
+			. rtfVal("hrd-Min") strQ(fldval["hrd-Min_time"],"   (###)") cell
+			. "Recording Time" cell
+			. fldval["dem-Recording_time"] cell row
+		. "\E\trowd\E\cellx1200\E\cellx4800\E\cellx6800\E\cellx10000 "
+			. "Max HR" cell 
+			. rtfVal("hrd-Max") strQ(fldval["hrd-Max_time"],"   (###)") cell
+			. "Analysis Time" cell
+			. fldval["dem-Analysis_time"] cell
+			. row
+		. "\E\trowd\E\cellx1200\E\cellx4800 "
+			. "Avg HR" cell . rtfVal("hrd-Avg") cell row
+		. "\E\trowd\E\cellx1200\E\cellx4800 "
+			. "Total QRS" cell . rtfVal("hrd-Total_beats") cell row
+		. "}" par
+		rtf .= "{"
+		. "\E\trowd\E\cellx4000\E\cellx8000 "
+			. "\E\ul Ventricular Beats\E\ul0" cell . "\E\ul Supraventricular Beats\E\ul0" cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "Total VE Beats" cell . rtfVal("ve-Total") 
+				. (rtfVal("ve-Total")>0 ? " (" Round(rtfVal("ve-Total")/rtfVal("hrd-Total_beats"),2) "%)" : "") cell
+			. "Total SVE Beats" cell . rtfVal("sve-Total") 
+				. (rtfVal("sve-Total")>0 ? " (" Round(rtfVal("sve-Total")/rtfVal("hrd-Total_beats"),2) "%)" : "") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "Vent Runs" cell . rtfVal("ve-Runs") cell
+			. "Total SVE Runs" cell . rtfVal("sve-Runs") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "   Beats" cell . rtfVal("ve-Runs") cell
+			. "   Beats" cell . rtfVal("sve-Runs") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "   Longest" cell . rtfVal("ve-Longest") strQ(fldval["ve-Longest_time"],"   (###)") cell
+			. "   Longest" cell . rtfVal("sve-Longest") strQ(fldval["sve-Longest_time"],"   (###)") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "   Fastest" cell . rtfVal("ve-Fastest") strQ(fldval["ve-Fastest_time"],"   (###)") cell
+			. "   Fastest" cell . rtfVal("sve-Fastest") strQ(fldval["sve-Fastest_time"],"   (###)") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "Triplets" cell . rtfVal("ve-Triplets") cell
+			. "Atrial Pairs" cell . rtfVal("sve-Pairs") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "Couplets" cell . rtfVal("ve-Couplets") cell
+			. "Drop/Late" cell . rtfVal("sve-Drop") "/" rtfVal("sve-Late") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "Single/Interp VEs" cell . rtfVal("ve-SinglePVC") "/" rtfVal("ve-InterpPVC") cell
+			. "Longest R-R" cell . rtfVal("sve-LongRR") strQ(fldval["sve-LongRR_time"], "   (###)") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "R-on-T" cell . rtfVal("ve-R_on_T") cell
+			. "Single PACs" cell . rtfVal("sve-Single") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "Single/Late VEs" cell . rtfVal("ve-SingleVE") "/" rtfVal("ve-LateVE") cell
+			. "Pauses" cell . rtfVal("sve-Pauses") cell row
+		. "\E\trowd\E\cellx2000\E\cellx4000\E\cellx6000\E\cellx8000 "
+			. "Bi/Trigeminy" cell . rtfVal("ve-Bigem") "/" rtfVal("ve-Trigem") cell
+			. "Bi/Trigeminy" cell . rtfVal("sve-Bigem") "/" rtfVal("sve-Trigem") cell row
+		. "}"
+		. "}"
+	} else if (monType="BGH") {
+		rtf := "{\E\rtf1\E\ansi\E\deff0\E\nouicompat{\E\fonttbl{\E\f0\E\fnil\E\fcharset0 Segoe UI;}}\E\viewkind4\E\uc1 "
+		. "\E\pard\E\cf1\E\f0\E\fs22\E\lang1033 "
+		. "Enrollment Date(s): " fldval["dem-Test_date"] strQ(fldval["dem-Test_end"]," - ###") par
+		. par`
+		. "\E\ul Indication(s) for Event Monitoring:\E\ul0" par
+		. fldval["dem-Indication"] par
+		. par
+		. "\E\ul Number of Recordings:\E\ul0" par
+		. "Auto-trigger: " fldval["counts-Auto"] par
+		. "Manual: " fldval["counts-Manual"] par
+		. par
+		. "\E\b EVENT RECORDER INTERPRETATION\E\b0" par
+		. "***" par
+		. par
+		. " }"
+	}
+
+	return rtf
+}
+rtfVal(val) {
+	global fldval
+	res := fldval[val]
+	if (res="") {
+		res := "0"
+	}
+	return res
 }
 
 fldvalProv() {
@@ -5051,44 +5124,17 @@ Holter_BGM_SL_HL7:
 		gosub processPDF																; need to reprocess from extracted PDF
 		Return
 	}
-	if !FileExist(path.holterPDF "*" fldval.wqid "_H-full.pdf") {
-		eventlog("Full disclosure PDF not found.")
-			
-		msg := cmsgbox("Missing full disclosure PDF"
-			, fldval["dem-Name_L"] ", " fldval["dem-Name_F"] "`n`n"
-			. "Click [Email] to send a message to Preventice,"
-			. "or [Cancel] to return to menu."
-			, "Email|Cancel"
-			, "E", "V")
-		if (msg~="Cancel|Close|xClose") {
-			eventlog("Skipping full disclosure. Return to menu.")
-		}
-		if (msg="Email") {
-			progress,100 ,,Generating email...
-			Eml := ComObjCreate("Outlook.Application").CreateItem(0)					; Create item [0]
-			Eml.BodyFormat := 2															; HTML format
-			
-			Eml.To := "HolterNotificationGroup@preventice.com"
-			Eml.cc := "EkgMaInbox@seattlechildrens.org; terrence.chun@seattlechildrens.org"
-			Eml.Subject := "Missing full disclosure PDF"
-			Eml.Display																	; Display first to get default signature
-			Eml.HTMLBody := "Please release the full disclosure PDF for " fldval["dem-Name_L"] ", " fldval["dem-Name_F"] 
-				. " MRN#" fldval["dem-MRN"] " study date " fldval["dem-Test_date"]
-				. " to the server.<br><br>Thank you!<br>"
-				. Eml.HTMLBody															; Prepend to existing default message
-			ObjRelease(Eml)																; or Eml:=""
-			eventlog("Email sent to Preventice.")
-		}
-		fldval.done := ""
-		Return
-	}
 	
 	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
+	t_time := calcDuration(fldval["hrd-Total_Time"])
+	formatField("hrd","Total_Time",t_time.DD "d " t_time.HH "h " t_time.MM "m")
 	fldval["dem-Recording_time"] := strQ(fldval["Monitoring_Period"], parsedate("###").DHM
-									, calcDuration(fldval["hrd-Total_Time"]).DHM " (DD:HH:MM)")
+									, fldval["hrd-Total_Time"])
+	a_time := calcDuration(fldval["hrd-Analyzed_Time"])
+	formatField("hrd","Analyzed_Time",a_time.DD "d " a_time.HH "h " a_time.MM "m")
 	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
-									, calcDuration(fldval["hrd-Analyzed_Time"]).DHM " (DD:HH:MM)")
+									, fldval["hrd-Analyzed_Time"])
 
 	gosub checkProc																		; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -5098,6 +5144,7 @@ Holter_BGM_SL_HL7:
 	fieldsToCSV()
 	fieldcoladd("","INTERP","")															; fldval["Narrative"]
 	fieldcoladd("","Mon_type","Holter")
+	fldval.rtf := BuildRTF()
 	
 	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
@@ -5119,10 +5166,14 @@ Holter_BGM_EL_HL7:
 	
 	fldval["dem-Test_date"] := parsedate(fldval["Enroll_Start_Dt"]).MDY
 	fldval["dem-Test_end"]	:= parsedate(fldval["Enroll_End_Dt"]).MDY
+	t_time := calcDuration(fldval["hrd-Total_Time"])
+	formatField("hrd","Total_Time",t_time.DD "d " t_time.HH "h " t_time.MM "m")
 	fldval["dem-Recording_time"] := strQ(fldval["Monitoring_Period"], parsedate("###").DHM
-									, calcDuration(fldval["hrd-Total_Time"]).DHM " (DD:HH:MM)")
+									, fldval["hrd-Total_Time"])
+	a_time := calcDuration(fldval["hrd-Analyzed_Time"])
+	formatField("hrd","Analyzed_Time",a_time.DD "d " a_time.HH "h " a_time.MM "m")
 	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
-									, calcDuration(fldval["hrd-Analyzed_Time"]).DHM " (DD:HH:MM)")
+									, fldval["hrd-Analyzed_Time"])
 
 	gosub checkProc																		; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -5132,6 +5183,7 @@ Holter_BGM_EL_HL7:
 	fieldsToCSV()
 	fieldcoladd("","INTERP","")															; fldval["Narrative"]
 	fieldcoladd("","Mon_type","Holter")
+	fldval.rtf := BuildRTF()
 	
 	FileCopy, %fileIn%, %fileIn%-sh.pdf
 	
@@ -5510,6 +5562,7 @@ Event_BGH_Hl7:
 	}
 	
 	fieldstoCSV()
+	fldval.rtf := BuildRTF()
 	
 	fieldcoladd("","Mon_type","Event")
 	
@@ -6611,7 +6664,8 @@ calcDuration(sec) {
 	SS := MM.rem
 
 	return { DHM: zDigit(DD.val) ":" zDigit(HH.val) ":" zDigit(MM.val)
-			, DHMS: zDigit(DD.val) ":" zDigit(HH.val) ":" zDigit(MM.val) ":" zDigit(SS.val) }
+			, DHMS: zDigit(DD.val) ":" zDigit(HH.val) ":" zDigit(MM.val) ":" zDigit(SS.val) 
+			, DD: zDigit(DD.val), HH: zDigit(HH.val), MM: zDigit(MM.val), SS: zDigit(SS.val) }
 }
 
 divTime(sec,div) {
