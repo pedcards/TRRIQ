@@ -5141,6 +5141,7 @@ Holter_BGM_SL_HL7:
 	formatField("hrd","Analyzed_Time",a_time.DD "d " a_time.HH "h " a_time.MM "m")
 	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
 									, fldval["hrd-Analyzed_Time"])
+	fldval["sve-LongRR"] := strQ(strX(fldval.newtxt,"Longest R-R (",0,13,")",1,1),"###","0")
 
 	gosub checkProc																		; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
@@ -5180,6 +5181,7 @@ Holter_BGM_EL_HL7:
 	formatField("hrd","Analyzed_Time",a_time.DD "d " a_time.HH "h " a_time.MM "m")
 	fldval["dem-Analysis_time"] := strQ(fldval["Analyzed_Data"], parsedate("###").DHM
 									, fldval["hrd-Analyzed_Time"])
+	fldval["sve-LongRR"] := strQ(strX(fldval.newtxt,"Longest R-R (",0,13,")",1,1),"###","0")
 
 	gosub checkProc																		; check validity of PDF, make demographics valid if not
 	if (fetchQuit=true) {
