@@ -3952,7 +3952,7 @@ ProcessHl7PDF:
 		return
 	}
 	
-	RunWait, .\files\pdftotext.exe -l 2 "%fileIn%" "%filenam%.txt",,min					; convert PDF pages 1-2 with no tabular structure
+	RunWait, .\files\pdftotext.exe -l 10 "%fileIn%" "%filenam%.txt",,min				; convert PDF 10 pages with no tabular structure
 	FileRead, newtxt, %filenam%.txt														; load into newtxt
 	FileDelete, %filenam%.txt
 	StringReplace, newtxt, newtxt, `r`n`r`n, `r`n, All									; remove double CRLF
@@ -3960,6 +3960,7 @@ ProcessHl7PDF:
 	FileMove %filenam%.txt, .\tempfiles\*, 1											; move a copy into tempfiles for troubleshooting
 	FileAppend % fldval.hl7string, %filenam%_hl7.txt									; create a copy of hl7 file
 	FileMove %filenam%_hl7.txt, .\tempfiles\*, 1										; move into tempfiles for troubleshooting
+	fldval.newtxt := newtxt
 	
 	progress, off
 	type := fldval["OBR_TestCode"]														; study report type in OBR_testcode field
