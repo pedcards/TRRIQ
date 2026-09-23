@@ -3097,6 +3097,10 @@ HolterConnect(phase="")
 {
 	global wq, ptDem, fetchQuit, user, isDevt
 
+	if (A_ComputerName ~= wksVM) {
+		MsgBox 0x40010, Holter Connect, Cannot launch HOLTER CONNECT`nfrom Citrix menu.`n`nNeed to run from PC shortcut.
+	} 
+
 	MsgBox 0x21, Holter Connect, Launch HOLTER CONNECT`nto import/upload Holter?
 	IfMsgBox OK, {
 		eventlog("Confirmed to launch Holter Connect.")
