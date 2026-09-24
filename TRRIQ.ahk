@@ -3099,6 +3099,7 @@ HolterConnect(phase="")
 
 	if (A_ComputerName ~= wksVM) {
 		MsgBox 0x40010, Holter Connect, Cannot launch HOLTER CONNECT`nfrom Citrix menu.`n`nNeed to run from PC shortcut.
+		Return
 	} 
 
 	MsgBox 0x21, Holter Connect, Launch HOLTER CONNECT`nto import/upload Holter?
