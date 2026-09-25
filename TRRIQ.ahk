@@ -3095,9 +3095,10 @@ findBGMenroll(serNum,dt) {
 
 HolterConnect(phase="") 
 {
-	global wq, ptDem, fetchQuit, user, isDevt
+	global wq, ptDem, fetchQuit, user, isDevt, wksVM
 
 	if (A_ComputerName ~= wksVM) {
+		eventlog("Trying to launch Holter Connect from " A_ComputerName " (" wksVM ").")
 		MsgBox 0x40010, Holter Connect, Cannot launch HOLTER CONNECT`nfrom Citrix menu.`n`nNeed to run from PC shortcut.
 		Return
 	} 
