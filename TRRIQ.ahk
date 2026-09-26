@@ -1989,7 +1989,7 @@ readWQlv:
 	pt := Object()
 	chk := Object()
 	matchProv := Object()
-	fileOut := fileOut1 := fileOut2 := ""
+	fileOut := ""
 	summBl := summ := ""
 	fullDisc := ""
 	monType := ""
@@ -3956,9 +3956,7 @@ ProcessPDF:
 {
 /*	This main loop accepts a %fileIn% filename,
  *	determines the filetype based on header contents,
- *	concatenates the CSV strings of header (fileOut1) and values (fileOut2)
- *	into a single file (fileOut),
- *	move around the temp, CSV, and PDF files.
+ *	move around the temp, and PDF files.
  */
 	RunWait, .\files\pdftotext.exe -l 2 -table -fixed 3 "%fileIn%" "%filenam%.txt",,min			; convert PDF pages 1-2 to txt file
 	newTxt:=""																			; clear the full txt variable
@@ -4346,9 +4344,8 @@ return
 fieldsToCSV() {
 /*	tabs = tab-delim string
 	"hrd-Total_beats(0)" -> fldval["hrd-Total_beats"] (default 0 if null)
-	Regenerates new fileOut
 */
-	global fldval, fileOut1, fileOut2, monType
+	global fldval, monType
 	
 	if (monType~="PR|HOL|Zio|Mini|BGM") {
 		tabs := "dem-Name_L	dem-Name_F	dem-Name_M	dem-MRN	dem-DOB	dem-Sex(NA)	dem-Site	dem-Billing	dem-Device_SN	dem-VOID1	"
@@ -4365,8 +4362,6 @@ fieldsToCSV() {
 			. "dem-Test_date	dem-Test_end	dem-VOID	dem-Billing	"
 			. "counts-Critical(0)	counts-Total(0)	counts-Serious(0)	counts-Manual(0)	counts-Stable(0)	counts-Auto(0)"
 	}
-	fileOut1 := ""
-	fileOut2 := ""
 	loop, parse, tabs, `t
 	{
 		x := A_LoopField																; PRE-LAB(default val)
@@ -4376,7 +4371,7 @@ fieldsToCSV() {
 		def := strX(x,"(",1,1,")",1,1)													; default value
 		val := fldval[fld]																; value in fldval[pre-lab]
 		res := (val = "") ? def : val													; result is value if exists, else default
-		formatfield(pre,lab,res)														; sends formatted results, i.e. recreates fresh fileOut
+		formatfield(pre,lab,res)														; sends formatted results
 	}
 	eventlog("Fields mapping complete.")
 	
@@ -5798,7 +5793,7 @@ scanParams(txt,blk,pre:="par",rx:="") {
 		labels         	values
 		SVE Count:      39,807
 		Couplets:       1,432
-	Send result to fldval and to fileout
+	Send result to fldval
 */
 	global fields, labels, fldval
 	colstr = (?<=(\s{2}))(\>\s*)?[^\s].*?(?=(\s{2}))
@@ -5949,7 +5944,6 @@ stRegX(h,BS="",BO=1,BT=0, ES="",ET=0, ByRef N="") {
 formatField(pre, lab, txt) {
 /*	Last second formatting of values
 	Generic, and per report type
-	Send result to fileOut strings
 */
 	global monType, Docs, ptDem, fldval
 
@@ -6125,13 +6119,8 @@ formatField(pre, lab, txt) {
 }
 
 fieldColAdd(pre,lab,txt) {
-	global fileOut1, fileOut2, fldVal
+	global fldVal
 	pre := (pre="") ? "" : pre "-"
-	if InStr(fileOut1,"""" pre lab """") {
-		return
-	}
-	fileOut1 .= """" pre lab ""","
-	fileOut2 .= """" txt ""","
 	fldVal[pre lab] := txt
 	return
 }
